@@ -9,11 +9,7 @@ import BattleView from './components/battle/BattleView'
 import BattleOverlay from './components/battle/BattleOverlay'
 import InfoOverlay from './components/overlay/InfoOverlay'
 import useBattlePlayback from './hooks/useBattlePlayback'
-import useGameSession, {
-  getDrawActionLabel,
-  getDiscardPhaseLabel,
-  getDraftPhaseLabel,
-} from './hooks/useGameSession'
+import useGameSession, { getDrawActionLabel } from './hooks/useGameSession'
 
 function mapBattleValues(bursts = []) {
   return bursts.reduce((acc, burst) => {
@@ -88,8 +84,6 @@ function AppContent() {
   const drawActionLabel = discardPhase ? getDrawActionLabel(selectedIds.length) : 'Battle'
   const drawActionHandler = discardPhase ? submitDiscard : startBattle
   const drawActionDisabled = discardPhase ? false : !canStartBattle
-  const drawPhaseLabel = discardPhase ? getDiscardPhaseLabel(game) : ''
-  const draftPhaseLabel = game.mode === 'draft' ? getDraftPhaseLabel(game) : ''
 
   return (
     <div className="app-shell">
@@ -131,7 +125,6 @@ function AppContent() {
             deckCount={deckCount}
             onPickCard={handleDraftPick}
             canPick={canPickDraftCard}
-            phaseLabel={draftPhaseLabel}
             showBattleButton={game.phase === 'battle-ready'}
             onStartBattle={startBattle}
             startBattleDisabled={!canStartBattle}
@@ -142,12 +135,12 @@ function AppContent() {
             centerLabel={isRecyclePicking ? 'Pick 1 Discarded Card' : ''}
             centerAction={isRecyclePicking ? resolvePlayerRecyclePick : null}
             centerCardsDisabled={!isRecyclePicking}
+            tooltipContextHand={resolvedPlayerHand}
           />
         ) : (
           <DrawBoard
             deckCount={deckCount}
             discardCount={game.playerDiscards.length}
-            phaseLabel={drawPhaseLabel}
             onPrimaryAction={drawActionHandler}
             primaryActionLabel={drawActionLabel}
             primaryActionDisabled={drawActionDisabled || isRecyclePicking}
@@ -155,6 +148,7 @@ function AppContent() {
             centerLabel={isRecyclePicking ? 'Pick 1 Discarded Card' : ''}
             centerAction={isRecyclePicking ? resolvePlayerRecyclePick : null}
             centerCardsDisabled={!isRecyclePicking}
+            tooltipContextHand={resolvedPlayerHand}
           />
         )}
 

@@ -3,6 +3,7 @@ import './ScreenMenu.css'
 
 export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, settings, onUpdateSettings }) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [fullscreen, setFullscreen] = useState(false)
   const menuRef = useRef(null)
 
   useEffect(() => {
@@ -13,6 +14,28 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
     window.addEventListener('pointerdown', handlePointerDown)
     return () => window.removeEventListener('pointerdown', handlePointerDown)
   }, [])
+
+  useEffect(() => {
+    function handleFullscreenChange() {
+      setFullscreen(Boolean(document.fullscreenElement))
+    }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    handleFullscreenChange()
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  }, [])
+
+  async function toggleFullscreen() {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen()
+      } else {
+        await document.documentElement.requestFullscreen()
+      }
+    } catch {
+      // Browser/fullscreen permission failures should not break the menu.
+    }
+  }
 
   return (
     <div className="screen-menu" ref={menuRef}>
@@ -29,6 +52,9 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
       {menuOpen && (
         <div className="screen-menu__popover ui-panel">
           <button type="button" className="ui-button" onClick={onNewGame}>New Game</button>
+          <button type="button" className="ui-button" onClick={toggleFullscreen}>
+            {fullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+          </button>
 
           <label className="screen-menu__select-row">
             <span>Mode</span>

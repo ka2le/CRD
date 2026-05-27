@@ -310,6 +310,8 @@ Recent UX polish now in baseline:
 - opponent draft picks and pack-clearing include intentional readability pauses
 - battle playback speeds up after round 10
 - battles hard-stop at 50 rounds and resolve as a tie
+- compact card hover tips explain special cards and show stat/damage card value as `+N` plus a damage icon using average damage-per-round delta
+- menu includes a fullscreen toggle and the board layout has tighter spacing/larger card presentation
 
 Recent architecture progress:
 - session/game flow has been moved out of `src/App.jsx` into focused hooks
@@ -322,11 +324,13 @@ Recent architecture progress:
 
 If context is missing after a restart, re-anchor with these files first:
 - `PROJECT.md`
+- `docs/SESSION_HANDOFF.md`
 - `docs/ARCHITECTURE.md`
 - `docs/RULES.md`
 - `docs/COMBAT.md`
 - `docs/DRAFTING.md`
 - `docs/CARD_SCHEMA.md`
+- `memory/YYYY-MM-DD.md`
 
 Current important code/data entry points:
 - `src/App.jsx`

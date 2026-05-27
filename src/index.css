@@ -16,11 +16,11 @@
   --health: #47a872;
   --damage: #c45252;
   --r: 3px;
-  --gap: 3px;
-  --pad: 4px;
+  --gap: 2px;
+  --pad: 2px;
   --font: 'Syne', sans-serif;
   --mono: 'DM Mono', monospace;
-  --card-width: min(calc(25% - 3px), calc(13dvh * 0.715));
+  --card-width: min(calc(20% - 2px), calc(15.2dvh * 0.715));
   --card-height: calc(var(--card-width) * 1.3984251969);
 
   color-scheme: dark;
@@ -102,7 +102,7 @@ a {
 
 @media (orientation: landscape) {
   :root {
-    --card-width: min(calc(12.5% - 3px), calc(24dvh * 0.715));
+    --card-width: min(calc(20% - 2px), calc(30dvh * 0.715));
     --card-height: calc(var(--card-width) * 1.3984251969);
   }
 }

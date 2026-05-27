@@ -36,7 +36,7 @@ function sumStats(stats = {}) {
   return CLASS_ORDER.reduce((sum, className) => sum + (stats[className] ?? 0), 0)
 }
 
-function getAverageRoundDamageForCard(card, stats, shieldEstimate = 0) {
+export function getAverageRoundDamageForCard(card, stats, shieldEstimate = 0) {
   if (!card || card.type !== 'action' || !card.cd || card.cd <= 0) return 0
 
   let total = 0
@@ -48,7 +48,7 @@ function getAverageRoundDamageForCard(card, stats, shieldEstimate = 0) {
   return total / cycle
 }
 
-function getShieldAverage(hand = []) {
+export function getShieldAverage(hand = []) {
   const shieldCards = hand.filter((card) => (card.effect?.shield ?? 0) > 0)
   if (!shieldCards.length) return 0
 

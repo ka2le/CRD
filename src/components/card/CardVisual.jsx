@@ -52,12 +52,7 @@ function getEffectTokens(card) {
   }
 
   if (effect.dmg) {
-    if (effect.dmg <= 3) {
-      for (let i = 0; i < effect.dmg; i += 1) {
-        tokens.push({ type: 'icon', value: DISPLAY_ICONS.dmg, alt: 'damage' })
-      }
-    } else {
-      tokens.push({ type: 'text', value: String(effect.dmg) })
+    for (let i = 0; i < effect.dmg; i += 1) {
       tokens.push({ type: 'icon', value: DISPLAY_ICONS.dmg, alt: 'damage' })
     }
   }
@@ -77,7 +72,8 @@ function getEffectTokens(card) {
 }
 
 function CardEffectRow({ card }) {
-  const tokens = card.customEffect?.length ? getCustomEffectTokens(card) : getEffectTokens(card)
+  const hasStructuredEffect = Boolean(card.effect?.dmg || card.effect?.shield)
+  const tokens = hasStructuredEffect ? getEffectTokens(card) : getCustomEffectTokens(card)
 
   return (
     <div className="card-visual__overlay card-visual__overlay--effect">

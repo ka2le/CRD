@@ -19,15 +19,16 @@ export default function DraftBoard({
   centerLabel = '',
   centerAction = null,
   centerCardsDisabled = false,
+  tooltipContextHand = [],
 }) {
   const activeCardIds = pendingOpponentPickUid ? [pendingOpponentPickUid] : []
   const isDiscarding = phase === 'draft-pack-clearing'
   const isDealing = phase === 'draft-pack-dealing'
   const centerCount = centerCards?.length ?? 0
   const centerRowClassName = centerCount >= 9
-    ? 'hand-area__row--center-grid-3'
+    ? 'hand-area__row--center-grid-5'
     : centerCount >= 6
-      ? 'hand-area__row--center-grid-4'
+      ? 'hand-area__row--center-grid-5'
       : 'hand-area__row--center-few'
 
   return (
@@ -56,6 +57,7 @@ export default function DraftBoard({
                   motionSection="draft-row"
                   className="draft-board__row draft-board__row--center-picker"
                   rowClassName={centerRowClassName}
+                  tooltipContextHand={tooltipContextHand}
                 />
               </div>
             ) : showBattleButton ? (
@@ -80,6 +82,7 @@ export default function DraftBoard({
                 preserveSpace
                 motionSection="draft-row"
                 className={["draft-board__row", isDiscarding ? 'draft-board__row--discarding' : '', isDealing ? 'draft-board__row--dealing' : ''].filter(Boolean).join(' ')}
+                tooltipContextHand={tooltipContextHand}
               />
             )}
           </div>

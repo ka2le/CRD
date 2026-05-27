@@ -12,7 +12,7 @@
   transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
-.card-button:not(:disabled):hover {
+.card-button:not(.card-button--disabled):hover {
   border-color: var(--b2);
   transform: translateY(-2px);
 }
@@ -43,13 +43,13 @@
   animation: card-button-discarded 240ms ease;
 }
 
-.card-button--copy-targetable:not(:disabled) {
+.card-button--copy-targetable:not(.card-button--disabled) {
   cursor: pointer;
   border: 2px solid rgba(120, 200, 255, 0.82);
   box-shadow: 0 0 0 2px rgba(120, 200, 255, 0.18);
 }
 
-.card-button--copy-targetable:not(:disabled):hover {
+.card-button--copy-targetable:not(.card-button--disabled):hover {
   border-color: rgba(160, 220, 255, 1);
   box-shadow: 0 0 0 2px rgba(160, 220, 255, 0.36), 0 0 18px rgba(120, 200, 255, 0.18);
 }
@@ -58,6 +58,7 @@
   animation: card-button-copy-selected 420ms ease;
 }
 
+.card-button--disabled,
 .card-button:disabled {
   cursor: default;
   transform: none;
@@ -104,6 +105,50 @@
   font-weight: 900;
   box-shadow: 0 0 14px rgba(255, 77, 97, 0.24);
   pointer-events: none;
+}
+
+.card-button__tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: 5px;
+  width: calc(100% - 10px);
+  transform: translateX(-50%) translateY(3px);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 20;
+  padding: 0.26rem 0.3rem;
+  border-radius: var(--r);
+  border: 1px solid rgba(240, 232, 210, 0.2);
+  background: rgba(5, 6, 10, 0.92);
+  color: var(--t0);
+  font-size: clamp(0.48rem, 1.6dvh, 0.62rem);
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  text-transform: none;
+  letter-spacing: 0;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+  backdrop-filter: blur(2px);
+  align-items: center;
+  justify-content: center;
+  gap: 0.16rem;
+}
+
+.card-button:hover .card-button__tooltip,
+.card-button:focus-visible .card-button__tooltip {
+  display: inline-flex;
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.card-button__tooltip-icon {
+  width: 1.05em;
+  height: 1.05em;
+  object-fit: contain;
+  filter:
+    drop-shadow(0 0 2px rgba(0, 0, 0, 0.95))
+    drop-shadow(0 1px 2px rgba(0, 0, 0, 0.9));
 }
 
 @keyframes card-button-deal-in {

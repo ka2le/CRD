@@ -41,19 +41,32 @@
 }
 
 .hand-area__row--center-grid-4,
-.hand-area__row--center-grid-3 {
+.hand-area__row--center-grid-3,
+.hand-area__row--center-grid-5 {
   flex-wrap: wrap;
   justify-content: center;
 }
 
 .hand-area__row--center-grid-4 .hand-area__motion-anchor {
-  flex: 0 0 var(--card-width);
-  width: var(--card-width);
+  flex: 0 0 min(var(--card-width), calc((100% - (var(--gap) * 3)) / 4));
+  width: min(var(--card-width), calc((100% - (var(--gap) * 3)) / 4));
 }
 
 .hand-area__row--center-grid-3 .hand-area__motion-anchor {
-  flex: 0 0 var(--card-width);
-  width: var(--card-width);
+  flex: 0 0 min(calc(var(--card-width) * 0.86), calc((100% - (var(--gap) * 2)) / 3));
+  width: min(calc(var(--card-width) * 0.86), calc((100% - (var(--gap) * 2)) / 3));
+}
+
+.hand-area__row--center-grid-5 .hand-area__motion-anchor {
+  flex: 0 0 min(calc(var(--card-width) * 0.78), calc((100% - (var(--gap) * 4)) / 5));
+  width: min(calc(var(--card-width) * 0.78), calc((100% - (var(--gap) * 4)) / 5));
+}
+
+.hand-area__row--center-grid-4 .card-button,
+.hand-area__row--center-grid-3 .card-button,
+.hand-area__row--center-grid-5 .card-button {
+  flex-basis: 100%;
+  width: 100%;
 }
 
 @media (orientation: landscape) {
@@ -63,7 +76,8 @@
   }
 
   .hand-area__row--center-grid-4,
-  .hand-area__row--center-grid-3 {
+  .hand-area__row--center-grid-3,
+  .hand-area__row--center-grid-5 {
     flex-wrap: wrap;
   }
 }

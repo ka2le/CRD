@@ -2,6 +2,7 @@ import './HandArea.css'
 import CardButton from '../card/CardButton'
 import useHandAnimation from '../../hooks/useHandAnimation'
 import { MotionAnchor, useCardMotion } from '../animation/CardMotionContext'
+import { getCardTooltip } from '../card/cardTooltip'
 
 const DUMMY_CARD = {
   uid: '__dummy_card__',
@@ -29,8 +30,10 @@ export default function HandArea({
   suppressedIds = [],
   targetableIds = [],
   battleValuesById = {},
+  tooltipContextHand = null,
 }) {
   const displayHand = hand.length === 0 && preserveSpace ? [DUMMY_CARD] : hand
+  const cardTooltipContext = tooltipContextHand ?? hand
   const { cardStates } = useHandAnimation(displayHand, { animateOnMount })
   const activeIds = new Set(activeCardIds)
   const suppressedSet = new Set(suppressedIds)
@@ -45,7 +48,7 @@ export default function HandArea({
       className,
     ].filter(Boolean).join(' ')}>
       <div className={['hand-area__row', rowClassName].filter(Boolean).join(' ')}>
-        {displayHand.map((card, index) => {
+        {displayHand.map((card) => {
           const slotKey = motionSection ? `${motionSection}::${card.uid}` : ''
           const isSuppressed = card.uid !== '__dummy_card__' && suppressedSet.has(card.uid)
           const isMasked = card.uid === '__dummy_card__' ? false : (isSuppressed || Boolean(slotKey && (hiddenSlots[slotKey] ?? 0) > 0))
@@ -63,6 +66,7 @@ export default function HandArea({
               disabled={card.uid === '__dummy_card__' ? true : cardsDisabled}
               targetable={card.uid !== '__dummy_card__' && targetableSet.has(card.uid)}
               battleValue={card.uid === '__dummy_card__' ? 0 : (battleValuesById?.[card.uid] ?? 0)}
+              tooltip={card.uid === '__dummy_card__' || hidden ? '' : getCardTooltip(card, cardTooltipContext)}
             />
           )
 

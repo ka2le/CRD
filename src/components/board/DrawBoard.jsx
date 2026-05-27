@@ -13,12 +13,13 @@ export default function DrawBoard({
   centerLabel = '',
   centerAction = null,
   centerCardsDisabled = false,
+  tooltipContextHand = [],
 }) {
   const centerCount = centerCards?.length ?? 0
   const centerRowClassName = centerCount >= 9
-    ? 'hand-area__row--center-grid-3'
+    ? 'hand-area__row--center-grid-5'
     : centerCount >= 6
-      ? 'hand-area__row--center-grid-4'
+      ? 'hand-area__row--center-grid-5'
       : 'hand-area__row--center-few'
   return (
     <section className="draw-board ui-panel table-slot">
@@ -46,6 +47,7 @@ export default function DrawBoard({
                 motionSection="draft-row"
                 className="draw-board__center-row"
                 rowClassName={centerRowClassName}
+                tooltipContextHand={tooltipContextHand}
               />
             </div>
           </div>
