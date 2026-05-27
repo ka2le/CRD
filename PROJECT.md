@@ -129,6 +129,7 @@ These files should be created and maintained as the project grows:
 - `docs/DRAFTING.md` — drafting flow and rules
 - `docs/BALANCE_NOTES.md` — why things are balanced/fun, counterplay, design goals
 - `docs/ARCHITECTURE.md` — app structure and technical architecture
+- `docs/PUBLISHING.md` — local commit, sanitized public push, and GitHub Pages deployment workflow
 - `docs/ROADMAP.md` — iterative implementation plan
 - `docs/AI_OPPONENT.md` — AI phases, heuristics, and later improvements
 - `docs/MULTIPLAYER.md` — room/seat model and future networking plan
@@ -338,6 +339,8 @@ Current important code/data entry points:
 - `python/random_headless_smoke.py`
 - `src/hooks/useBattlePlayback.js`
 - `data/cards.json`
+- `docs/PUBLISHING.md`
+- `.github/workflows/pages.yml`
 
 AI/training planning:
 - keep JS as the source of truth for game rules
