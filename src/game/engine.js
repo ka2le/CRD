@@ -16,13 +16,6 @@ function emptyStats() {
   }
 }
 
-function drawCards(deck, count) {
-  return {
-    drawn: deck.slice(0, count),
-    rest: deck.slice(count),
-  }
-}
-
 export function getCardStats(card) {
   if (card.type !== 'stat') return emptyStats()
 

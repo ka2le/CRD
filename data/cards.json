@@ -328,7 +328,10 @@
         "https://cdn.midjourney.com/c7a44b73-5293-44f6-8b2b-c394b99b223e/0_0.png"
       ],
       "stats": [],
-      "effect": {},
+      "effect": {
+        "dmg": 7,
+        "dmgType": "dragon"
+      },
       "customEffect": [
         "https://ka2le.github.io/chatgpt-apps3/images/mp/dragon.png",
         "*",

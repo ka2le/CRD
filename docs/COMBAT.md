@@ -72,6 +72,7 @@ Otherwise it contributes 0 that round.
 
 Because damage is simultaneous:
 - a player can still deal damage in a round even if that same round also pushes them to 21+ damage taken
+- lethal damage does not cancel the other player's active cards for that same round
 - double knockouts are possible
 - end-of-round checks matter more than mid-round checks
 

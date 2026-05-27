@@ -72,6 +72,7 @@ Currently wired into the playable prototype:
 - `recycle_card` — pre-battle: return 1 card from discard to hand
 - `Shield2` — battle shield support
 - `bite` — direct damage support
+- `Devour` — CD4 dragon-scaled damage support, 7 damage per dragon stat
 
 Other included special/action cards may still exist in data without full gameplay support yet.
 
