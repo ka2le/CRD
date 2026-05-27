@@ -1,0 +1,68 @@
+.screen-menu {
+  position: fixed;
+  top: 6px;
+  right: 6px;
+  z-index: 30;
+}
+
+.screen-menu__trigger {
+  width: 38px;
+  height: 38px;
+  font-size: 1rem;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.screen-menu__popover {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  display: grid;
+  gap: 4px;
+  min-width: 180px;
+  padding: 6px;
+  z-index: 20;
+}
+
+.screen-menu__checkbox-row,
+.screen-menu__select-row {
+  display: grid;
+  gap: 6px;
+  padding: 0.38rem 0.7rem;
+  border-radius: var(--r);
+  border: 1px solid var(--b1);
+  background: var(--s1);
+  color: var(--t1);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.screen-menu__checkbox-row {
+  display: inline-flex;
+  align-items: center;
+}
+
+.screen-menu__checkbox-row input {
+  accent-color: var(--gold);
+}
+
+.screen-menu__select-row select {
+  border: 1px solid var(--b2);
+  background: var(--s2);
+  color: var(--t0);
+  border-radius: var(--r);
+  padding: 0.42rem 0.5rem;
+  font: inherit;
+}
+
+@media (max-width: 480px) {
+  .screen-menu__popover .ui-button,
+  .screen-menu__select-row select {
+    font-size: 0.7rem;
+    padding: 0.32rem 0.58rem;
+  }
+}

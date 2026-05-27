@@ -1,0 +1,47 @@
+.battle-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 8, 12, 0.72);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 40;
+  backdrop-filter: blur(2px);
+}
+
+.battle-overlay__popup {
+  width: min(400px, 100%);
+  background: var(--s1);
+  border-color: var(--b2);
+  padding: 24px 20px;
+  text-align: center;
+}
+
+.battle-overlay__popup h2 {
+  margin: 0 0 8px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.battle-overlay__popup p {
+  color: var(--t1);
+  margin-bottom: 18px;
+  font-size: 0.82rem;
+  font-family: var(--mono);
+}
+
+.battle-overlay__actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .battle-overlay__actions .ui-button {
+    font-size: 0.7rem;
+    padding: 0.32rem 0.58rem;
+  }
+}

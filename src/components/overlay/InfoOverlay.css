@@ -1,0 +1,31 @@
+.info-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 8, 12, 0.72);
+  display: grid;
+  place-items: center;
+  z-index: 30;
+  padding: 20px;
+}
+
+.info-overlay__popup {
+  width: min(420px, 100%);
+  display: grid;
+  gap: 14px;
+  text-align: center;
+  padding: 20px;
+}
+
+.info-overlay__popup h2 {
+  margin: 0;
+}
+
+.info-overlay__popup p {
+  margin: 0;
+  color: var(--t1);
+}
+
+.info-overlay__actions {
+  display: flex;
+  justify-content: center;
+}

@@ -1,0 +1,170 @@
+.card-button {
+  flex: 0 0 var(--card-width);
+  width: var(--card-width);
+  text-align: left;
+  border: 1px solid var(--b1);
+  background: var(--s1);
+  border-radius: var(--r);
+  color: inherit;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.card-button:not(:disabled):hover {
+  border-color: var(--b2);
+  transform: translateY(-2px);
+}
+
+.card-button--selected {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold);
+  z-index: 2;
+}
+
+.card-button--active {
+  border-color: rgba(240, 232, 210, 0.98);
+  box-shadow: 0 0 0 2px rgba(240, 232, 210, 0.34), 0 0 24px rgba(240, 232, 210, 0.24);
+  animation: card-button-activate 620ms ease;
+  z-index: 3;
+}
+
+.card-button--entering,
+.card-button--dealing {
+  animation: card-button-deal-in 360ms ease;
+}
+
+.card-button--picked {
+  animation: card-button-picked 300ms ease;
+}
+
+.card-button--discarded {
+  animation: card-button-discarded 240ms ease;
+}
+
+.card-button--copy-targetable:not(:disabled) {
+  cursor: pointer;
+  border: 2px solid rgba(120, 200, 255, 0.82);
+  box-shadow: 0 0 0 2px rgba(120, 200, 255, 0.18);
+}
+
+.card-button--copy-targetable:not(:disabled):hover {
+  border-color: rgba(160, 220, 255, 1);
+  box-shadow: 0 0 0 2px rgba(160, 220, 255, 0.36), 0 0 18px rgba(120, 200, 255, 0.18);
+}
+
+.card-button--copy-selected {
+  animation: card-button-copy-selected 420ms ease;
+}
+
+.card-button:disabled {
+  cursor: default;
+  transform: none;
+}
+
+.card-button--back {
+  background: var(--s2);
+}
+
+.card-button--dummy {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.card-button--masked {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.card-button__image-wrap {
+  aspect-ratio: 635 / 888;
+  background: var(--bg);
+  width: 100%;
+  height: auto;
+  display: block;
+  position: relative;
+}
+
+.card-button__battle-value {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  min-width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: rgba(92, 20, 30, 0.88);
+  border: 1px solid rgba(255, 132, 145, 0.5);
+  color: #fff4f6;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  font-weight: 900;
+  box-shadow: 0 0 14px rgba(255, 77, 97, 0.24);
+  pointer-events: none;
+}
+
+@keyframes card-button-deal-in {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.88);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes card-button-activate {
+  0% {
+    transform: translateY(0) scale(1);
+    filter: brightness(1);
+  }
+  30% {
+    transform: translateY(-6px) scale(1.06);
+    filter: brightness(1.18);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes card-button-picked {
+  0% {
+    opacity: 0.72;
+    transform: translateY(-8px) scale(0.94);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes card-button-discarded {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  100% {
+    opacity: 0.4;
+    transform: translateX(20px) scale(0.9);
+  }
+}
+
+@keyframes card-button-copy-selected {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  35% {
+    transform: scale(1.04);
+    filter: brightness(1.15);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}

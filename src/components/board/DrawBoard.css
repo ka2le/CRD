@@ -1,0 +1,135 @@
+.draw-board {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  padding: var(--pad);
+}
+
+.draw-board__side {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  position: relative;
+}
+
+
+.draw-board__side--left {
+  align-items: flex-start;
+}
+
+.draw-board__side--right {
+  align-items: flex-end;
+}
+
+.draw-board__stage {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.draw-board__table {
+  width: 100%;
+  display: grid;
+  align-items: center;
+}
+
+.draw-board__phase-label {
+  color: var(--t1);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-family: var(--mono);
+}
+
+.draw-board__center-picker {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  max-width: calc(100% - 24px);
+  margin-inline: auto;
+}
+
+.draw-board__center-label {
+  color: var(--t1);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  font-family: var(--mono);
+}
+
+.draw-board__center-row {
+  width: 100%;
+  max-width: 100%;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  overflow: visible;
+}
+
+.draw-board__center-row .hand-area__row {
+  flex-wrap: wrap;
+}
+
+.draw-board__primary-action .ui-button--primary {
+  min-width: min(200px, 56vw);
+  min-height: 52px;
+  font-size: 0.9rem;
+}
+
+.draw-board__deck-stack {
+  width: min(100px, 14vw, 17dvh);
+  aspect-ratio: 0.72;
+  border-radius: var(--r);
+  border: 1px solid var(--b2);
+  background: var(--s2);
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+.draw-board__deck-stack::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px solid var(--b1);
+  border-radius: var(--r);
+}
+
+.draw-board__deck-top {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--t1);
+}
+
+.draw-board__deck-count {
+  position: absolute;
+  bottom: 10px;
+  font-size: 0.8rem;
+  font-family: var(--mono);
+  color: var(--t0);
+}
+
+@media (orientation: landscape) {
+  .draw-board__deck-stack {
+    width: min(110px, 13vw, 22dvh);
+  }
+}
+
+@media (max-width: 480px) {
+  .draw-board__phase-label {
+    font-size: 0.66rem;
+  }
+
+  .draw-board__primary-action .ui-button--primary {
+    min-height: 46px;
+    font-size: 0.82rem;
+  }
+}

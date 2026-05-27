@@ -1,0 +1,16 @@
+{
+  "name": "CRD - Critters Robots Dragons",
+  "short_name": "CRD",
+  "description": "A digital prototype of Critters Robots Dragons.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#12151f",
+  "theme_color": "#12151f",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

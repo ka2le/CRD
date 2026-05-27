@@ -1,0 +1,29 @@
+.app-shell {
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  padding: var(--pad);
+  gap: var(--gap);
+  overflow: hidden;
+}
+
+.table-layout {
+  min-height: 0;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: var(--gap);
+  overflow: hidden;
+}
+
+.table-slot {
+  min-height: 0;
+}
+
+.table-slot--top {
+  align-self: start;
+}
+
+.table-slot--bottom {
+  align-self: end;
+}
