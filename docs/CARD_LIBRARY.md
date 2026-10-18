@@ -1,90 +1,65 @@
-# CARD_LIBRARY.md
+# Current card library
 
-## Current card library status
+Reviewed 2026-10-18. Definitions: `data/cards.json`. Playable inclusion: `CORE_CARD_IDS` in `src/game/cards.js`. Use these IDs rather than display-name capitalization in code.
 
-Source of truth for current import:
-- `data/cards.json`
+There are 30 imported definitions, 27 playable. Normal deck: 70 cards. Wild Deck: 102, replacing each playable one-copy count with three and leaving other counts unchanged. Extra and monster sets are not imported.
 
-This first pass includes:
-- base cards for Critters / Robots / Dragons
-- a selection of default special cards from the provided source
+## Stats
 
-This first pass excludes:
-- EXTRA_CARDS
-- MONSTER_CARDS
+| ID | Normal copies | Stats |
+| --- | --- | --- |
+| `critter1` | 7 | +1 Critter |
+| `robot1` | 8 | +1 Robot |
+| `dragon1` | 6 | +1 Dragon |
+| `rabbit2` | 2 | +2 Critter |
+| `robot2` | 1 | +2 Robot |
+| `dragon2` | 1 | +2 Dragon |
+| `robot_critter` | 2 | +1 Robot, +1 Critter |
+| `robot_dragon` | 1 | +1 Robot, +1 Dragon |
+| `dragon_rabbit` | 2 | +1 Critter, +1 Dragon |
+| `joker` | 1 | +1 of all three classes |
 
-## Core base cards
+## Combat actions
 
-### Critter
-- `critter1` — +1 critter stat
-- `Swarm` — critter damage card
+Damage applies when triggered. Each class attack uses the full matching stat total independently.
 
-### Robot
-- `robot1` — +1 robot stat
-- `robot_attack` — robot damage card
+| ID | Normal copies | CD | Implemented effect |
+| --- | --- | --- | --- |
+| `swarm` | 8 | 1 | 1 damage per Critter stat |
+| `robot_attack` | 6 | 2 | 2 damage per Robot stat |
+| `dragons_breath` | 8 | 3 | 3 damage per Dragon stat |
+| `murder_rabbit` | 1 | 1 | 2 damage per Critter stat |
+| `robot_ulti` | 1 | 2 | 4 damage per Robot stat |
+| `dragon_ulti` | 1 | 3 | 6 damage per Dragon stat |
+| `devour` | 1 | 4 | 7 damage per Dragon stat |
+| `bite` | 2 | 2 | 3 flat damage |
+| `shield2` | 3 | 1 | 2 shield this round |
+| `double_dmg` | 1 | 2 | Double whole outgoing damage this round; copies multiply |
+| `shield_is_dmg` | 1 | 1 | Damage equal to own active shield; shield still blocks |
+| `one_off_each` | 1 | 1 | Critter stats * Robot stats * Dragon stats damage |
+| `any_off_each` | 1 | 2 | Sum of all three class stats as damage |
 
-### Dragon
-- `dragon1` — +1 dragon stat
-- `Dragons Breath` — dragon damage card
+`shield2` is CD 1 in data; the creator confirmed this current shield behavior is correct. These formulas describe code, not a claim that every special's design/balance is final.
 
-## Multi-stat cards
+## Preparation actions
 
-- `joker`
-- `robot_dragon`
-- `robot_critter`
-- `dragon_rabbit`
-- `dragon2`
-- `rabbit2`
-- `robot2`
+Each has one normal-deck copy and CD 0.
 
-## Included special/action cards
+| ID | Implemented effect |
+| --- | --- |
+| `draw_2_extra` | Add two available deck cards; retain source |
+| `draw_all_new_1` | Discard entire current hand including source; draw that count +1 |
+| `copy_card_in_hand` | Transform source into another non-copy card in hand with fresh UID |
+| `recycle_card` | Add one chosen available discard; retain source |
 
-- `recycle_card`
-- `draw_all_new_1`
-- `draw_2_extra`
-- `copy_card_in_hand`
-- `extra_turn`
-- `no_stats_to_2`
-- `double_dmg`
-- `one_off_each`
-- `shield_is_dmg`
-- `Shield2`
-- `any_off_each`
-- `bite`
-- `Dragon Ulti`
-- `Devour`
-- `Murder rabbit`
-- `robot_ulti`
+Preparation can exceed five cards. Fresh copied preparation cards activate independently. Human activation tracking/recycle selection live in the React session layer; `completeOpponentPreBattle` completes the AI privately at Battle. Current headless evaluation does not resolve preparation. The creator intends recycle as a single card usable by only one player per game; existing deck/copy handling was left unchanged in this preparation-only fix.
 
-## Notes
+## Preserved but excluded
 
-Some included cards are only partially normalized in rules terms.
+| ID | Reason |
+| --- | --- |
+| `extra_turn` | Special timing not implemented |
+| `no_stats_to_2` | Stat setup/conversion not implemented |
+| `backside` | Card-back utility, not playable |
 
-That is intentional for now.
-We are preserving the source card data while formal rules documentation catches up.
-
-### Current implemented special support
-
-Currently wired into the playable prototype:
-- `draw_2_extra` — pre-battle: draw 2 cards
-- `draw_all_new_1` — pre-battle: discard entire hand, then draw that many + 1
-- `copy_card_in_hand` — pre-battle: copy one chosen card in hand
-- `recycle_card` — pre-battle: return 1 card from discard to hand
-- `Shield2` — battle shield support
-- `bite` — direct damage support
-- `Devour` — CD4 dragon-scaled damage support, 7 damage per dragon stat
-
-Other included special/action cards may still exist in data without full gameplay support yet.
-
-## Recommended next classification pass
-
-Next, each card should be classified into one of these buckets:
-- base stat
-- base class damage
-- shield/defense
-- draw/filtering
-- copying/reuse
-- stat conversion
-- scaling finisher
-- timing modifier
-- special rule card
+Raw `customEffect` tokens preserve source artwork/text references; they are not executable definitions. See `CARD_SCHEMA.md` and `CURRENT_STATE.md` for technical limits.

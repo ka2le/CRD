@@ -7,7 +7,13 @@ The first neural-net training path should keep the game rules in JavaScript and 
 Planned shape:
 - JavaScript stays the source of truth for cards, drafting, discard flow, pre-battle actions, and battle simulation.
 - Python owns the Gymnasium `Env`, training loop, model code, and reward calculation.
-- A persistent Node worker should eventually bridge Python to the JS game functions over JSON lines or a similar small protocol.
+- A persistent Node worker already bridges Python to JS over JSON lines; the Gymnasium environment and training loop are still planned.
+
+## Current coverage (reviewed 2026-10-18)
+
+The bridge already runs both hand-building modes. It stops at `battle-ready` and calls combat immediately, without draw/redraw/copy/recycle preparation actions. Defaults are 12 rounds and a 999 lethal threshold, not normal browser match rules. The Python client chooses random legal actions and reports damage; it does not yet calculate a training reward or train a model.
+
+Next, extract full preparation state/actions into shared domain modules, bring the adapter to browser parity, then wrap it in Gymnasium. Legal actions are enumerated but arbitrary incoming actions are not comprehensively validated. See `CURRENT_STATE.md` for remaining state issues.
 
 ## First training target
 
@@ -30,7 +36,7 @@ The app should continue to behave exactly as normal when these options are not p
 - `createSeededRng(seed)` creates a deterministic RNG.
 - `shuffle(array, { rng })` accepts an optional RNG and defaults to `Math.random`.
 - `buildShuffledDeck({ seed, rng, wildDeck })` accepts deterministic shuffle inputs and defaults to the current random shuffle.
-- Pure game-module imports now use Node-compatible `.js` specifiers, and card JSON uses an import attribute so a future worker can import these modules directly.
+- Pure game-module imports now use Node-compatible `.js` specifiers, and card JSON uses an import attribute so the current worker can import these modules directly.
 
 ### Draft flow
 

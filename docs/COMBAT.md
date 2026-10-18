@@ -1,102 +1,45 @@
-# COMBAT.md
+# Combat implementation
 
-## Purpose
+Reviewed 2026-10-18 against `src/game/engine.js` and `src/hooks/useBattlePlayback.js`. Shared match rules are in `RULES.md`.
 
-This document defines the base combat flow for Critters Robots Dragons.
+## Inputs and timing
 
-## Combat overview
+`simulateBattle(playerHand, opponentHand, options)` takes prepared hands and returns complete round history and result. Defaults: `damageToWin: 21`, `maxRounds: 50`. It copies the deck option into its output but does not draw. Hands and class stats remain fixed. Preparation is the caller's responsibility.
 
-After hand-building is complete, both players enter battle with a final **5-card hand**.
+Only action cards with numeric positive CD trigger, on divisible rounds. Stat cards contribute without triggering. CD 0 and negative CDs are inactive here.
 
-Combat happens in rounds.
+Each class attack independently uses all matching stats: Critter 1 at CD 1, Robot 2 at CD 2, Dragon 3 at CD 3. Flat damage such as Bite does not need stats.
 
-### Important rule
-Both players act **simultaneously** each round.
+## Exact round sequence
 
-This means:
-- both calculate their round output for the same round number
-- both deal damage at the same time
-- both receive damage at the same time
+For both sides:
 
-## Round sequence
+1. Select triggered actions.
+2. Sum their shield values.
+3. Calculate each card's damage using fixed hand stats and own active shield total.
+4. Sum damage, then multiply by two for each triggered `double_dmg`.
+5. Subtract the opposing shield, floored at zero.
+6. Apply both sides' damage simultaneously and accumulate damage taken/dealt.
+7. Check lethal; continue if neither reached the threshold.
 
-For round `r`:
+`shield_is_dmg` uses full own active shield, not the amount blocked. Shield still prevents damage; unused shield does not persist. `one_off_each` multiplies all three class totals; `any_off_each` adds them. See `CARD_LIBRARY.md` for coefficients/CDs.
 
-1. Determine which cards are active on round `r`
-2. Calculate each player's total round effects/damage
-3. Apply both players' damage simultaneously
-4. Update cumulative damage taken / dealt
-5. Check win condition
-6. If nobody has won, continue to round `r + 1`
+Current `shield2` gives two shield at CD 1. The creator confirmed this current shield behavior is correct; the original every-other-round example is superseded.
 
-## Trigger timing
+## Result and history
 
-A card with cooldown `cd` triggers on rounds divisible by `cd`.
+One side taking 21 damage loses. Simultaneous lethal compares cumulative post-shield damage dealt, then ties if equal. The 50-round limit without lethal always ties. Headless evaluation overrides are not browser match rules.
 
-Examples:
-- `cd = 1` → rounds 1,2,3,4,5...
-- `cd = 2` → rounds 2,4,6,8...
-- `cd = 3` → rounds 3,6,9,12...
+Results include winner/reason, hands, stats, damage totals, deck, and rounds. Rounds include outgoing/post-shield damage, shield/blocked totals, triggered identities, per-card bursts, cumulative totals, and unchanged hands/stats. Draw arrays remain empty.
 
-## Base class damage model
+Per-card burst values are before whole-hand doubling and enemy shield reduction; they are not final post-modifier damage attributed to each card.
 
-### Critter
-- scales with critter stats
-- base attack cadence: every round
-- typical damage card: **1 damage per critter stat**
-- base attack timing: `cd = 1`
+## Playback
 
-### Robot
-- scales with robot stats
-- base attack cadence: every other round
-- typical damage card: **2 damage per robot stat**
-- base attack timing: `cd = 2`
+`useBattlePlayback` calls the simulator and displays history. Health starts at 21 and displays a floor of zero; cumulative damage preserves overkill for results.
 
-### Dragon
-- scales with dragon stats
-- base attack cadence: every third round
-- typical damage card: **3 damage per dragon stat**
-- base attack timing: `cd = 3`
+Defaults: 1,400 ms base interval, decreasing for upcoming rounds above round 2 by 40 ms per round, to a 350 ms minimum. Older notes saying acceleration begins after round 10 are stale. Timing affects presentation only.
 
-## Base engine rule for class damage cards
+## Coverage
 
-For a class-scaled damage card:
-
-`roundDamage = matchingStatCount * baseDamage`
-
-if the card triggers that round.
-
-Otherwise it contributes 0 that round.
-
-## Simultaneous damage implications
-
-Because damage is simultaneous:
-- a player can still deal damage in a round even if that same round also pushes them to 21+ damage taken
-- lethal damage does not cancel the other player's active cards for that same round
-- double knockouts are possible
-- end-of-round checks matter more than mid-round checks
-
-## End-of-round win check
-
-After both players take their round damage:
-
-### Case 1: only one player has taken 21+
-- the other player wins
-
-### Case 2: both players have taken 21+ in the same round
-- compare total damage dealt by each player
-- the player who dealt more total damage wins
-
-### Case 3: both players have taken 21+ and total damage dealt is also equal
-- the game is a tie
-
-## Deferred topics
-
-These are not yet fully formalized here and should be layered in later:
-- shields and exact prevention timing
-- duplicate/copy effects
-- draw-before-battle effects
-- replacement effects
-- transformed/copied cards
-- action ordering inside pre-battle windows
-- interactions between multiple special cards
+Preparation is private without inter-player turns. The session completes remaining AI preparation atomically at Battle before calling combat. Regression smoke verifies AI draw/copy/redraw/recycle chains, skips for unusable specials, and prepared first-round damage, alongside Devour simultaneous lethal. Recycle pool handling remains unchanged by request. Headless smoke does not cover preparation or browser animation; the interaction matrix remains largely untested.

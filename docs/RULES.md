@@ -1,208 +1,66 @@
-# RULES.md
+# Gameplay rules
+
+Reviewed 2026-10-18. These rules describe the shared game model and supported effects. Known implementation exceptions are identified explicitly; they do not silently redefine design intent. See `CURRENT_STATE.md` for the source review.
+
+## Match structure
+
+Two players build five-card hands using either 5 Hand Discard or Draft. Optional preparation follows, then automatic combat. The browser currently provides one human and one AI seat. Preparation may increase the combat hand beyond five.
+
+## 5 Hand Discard
+
+1. Deal five cards to each side from one shuffled deck.
+2. Choose zero through five cards to discard and refill those positions.
+3. Repeat once: there are exactly two discard/refill passes.
+4. Enter preparation after the second pass.
+
+Choosing zero still spends a pass. Currently the human refills first and the AI resolves one discard/refill pass afterward. No discard reshuffle occurs on exhaustion; draw helpers take the available deck prefix. Exhaustion/replacement edge cases need explicit rules before custom small decks become normal play.
+
+## Draft
+
+1. Reveal five cards face up in a shared row.
+2. The first picker takes one; the other side takes one of the remaining cards.
+3. Discard the remaining three and reveal five new cards.
+4. The previous second picker becomes the next first picker.
+5. After five packs, both sides have five cards and enter preparation.
+
+The first picker of the first pack should alternate between games. Current exceptions: the first New Game after initialization repeats the human starter, and final-pack leftovers are cleared without entering discard. These are implementation issues, not intended rules.
+
+## Stats and attacks
+
+Stat cards contribute their listed class symbols. Repeated symbols count separately; multi-class cards contribute to each listed class. Every class-scaled attack independently deals `matching stat total * effect.dmg` on its active rounds. Flat attacks do not require stats. Stats alone deal no damage.
+
+Base attacks: Critter 1 per stat at CD 1; Robot 2 per stat at CD 2; Dragon 3 per stat at CD 3. Stronger attacks and special formulas are in `CARD_LIBRARY.md`.
+
+## Preparation
+
+Supported IDs are `draw_2_extra`, `draw_all_new_1`, `copy_card_in_hand`, and `recycle_card`. They have CD 0, but CD 0 alone does not grant an implemented effect.
+
+- Activate available highlighted cards before Battle in a chosen order; starting Battle skips unused player specials.
+- Each card identity can activate once in that preparation state.
+- Draw 2 adds up to two deck cards; the source stays in hand.
+- Draw all new +1 discards the entire current hand, including the source, and draws that count plus one.
+- Copy transforms its source into another non-copy card in the same hand. The fresh copied identity can activate a copied preparation effect independently.
+- Recycle adds one chosen available discard to hand and removes it from that list. Its source stays in hand.
+
+Preparation is private and has no turn order between players. Newly drawn, copied or recovered supported specials can become eligible. Pressing Battle completes all remaining AI preparation before combat starts, while unused human specials are skipped. AI preparation is committed only at Battle, so it is not revealed during human preparation. Battle waits for any already-started human redraw to finish.
+
+The creator clarified that recycle is intended as one card, usable by only one person per game, and requested existing recycle/pool handling be left as is for now. Current lists remain asymmetric in discard mode and separate snapshots in draft. No deck/copy-count or pile changes are included in the preparation fix.
+
+## Automatic combat
+
+A positive-CD action triggers when `round % cd === 0`. CD 1 triggers every round, CD 2 on even rounds, CD 3 on multiples of three, CD 4 on multiples of four. Zero/negative CDs do not trigger in combat.
+
+Both sides calculate effects, then simultaneously take damage after shield prevention. Lethal damage does not cancel the other's attacks that round. Combat has no player choices, draws, or hand changes.
+
+Shields stack on their active round, prevent up to their value, and expire without carrying over. Current `shield2` has CD 1 and blocks two every round. The creator confirmed this current shield behavior is correct; the historical every-other-round example is superseded. Exact effect ordering is in `COMBAT.md`.
+
+## Outcome
+
+- If only one side has taken 21 or more damage, the other wins.
+- If both reach 21+ in the same round, higher cumulative damage actually dealt after shields wins.
+- Equal damage on simultaneous lethal ties.
+- Without lethal by the end of round 50, the result is a tie regardless of damage lead.
 
 ## Scope
 
-This document describes the current **base rules** for Critters Robots Dragons.
-
-This is the version we should implement first.
-
-Special cards exist, but support for them should be added gradually.
-
-## Core match structure
-
-There are **two modes**.
-We will support both later, but start by implementing:
-- **5 hand discard mode** first
-- **draft mode** later
-
-In both modes, the end result is the same:
-- each player ends up with a **5-card hand**
-- then the **battle phase** begins
-
-The battle rules are the same in both modes.
-
----
-
-## Mode 1: 5 hand discard mode
-
-This is the first mode to implement.
-
-### Setup
-- Each player starts with **5 cards**.
-
-### Hand refinement
-The player may:
-1. discard **any number of cards** from their hand, including **0**
-2. draw until they have **5 cards again**
-3. repeat that discard-and-draw process **one more time**
-
-So in total, each player gets:
-- an initial 5-card hand
-- **2 discard phases**
-- after the second refill, that becomes their final battle hand
-
----
-
-## Mode 2: Draft mode
-
-This will be supported later.
-
-### Draft flow
-- **5 cards** are placed face up for both players to see
-- one player takes **1 card**
-- the other player takes **1 card**
-- then **5 new cards** are flipped up
-- the player who picked **second** in the previous set now picks **first**
-- this alternates like that until both players have **5 cards** in hand
-
-### Between games
-- who goes first on the **first pick of the draft** should alternate between games
-
----
-
-## Battle phase
-
-Once both players have their final 5-card hand, the battle begins.
-
-Players do not take turns one after another during battle.
-Instead:
-- **both players act at the same time each round**
-
-So:
-- round 1 = both players do their round 1 effects/damage
-- round 2 = both players do their round 2 effects/damage
-- and so on
-
----
-
-## Classes
-
-The 3 core classes are:
-- **Critters**
-- **Robots**
-- **Dragons**
-
-Stat cards provide stats for these classes.
-Damage cards generally require matching stats to scale.
-
-Examples of the base pattern:
-- a critter damage card typically deals **1 damage per critter stat**
-- a robot damage card typically deals **2 damage per robot stat**
-- a dragon damage card typically deals **3 damage per dragon stat**
-
-The timing/cadence is part of the balance:
-- critters are fast and frequent
-- robots are medium-speed and burst every other round
-- dragons are slower and hit harder every third round
-
----
-
-## Cooldown / trigger timing
-
-Cards have a cooldown / timing value, referred to as **CD**.
-
-### Base meaning
-- **CD 1** = triggers every round
-- **CD 2** = triggers every other round
-- **CD 3** = triggers every third round
-
-### Round examples
-- on **round 1**, all **CD 1** cards trigger
-- on **round 2**, all **CD 1** and **CD 2** cards trigger
-- on **round 3**, all **CD 1** and **CD 3** cards trigger
-- on **round 4**, all **CD 1** and **CD 2** cards trigger
-- on **round 5**, all **CD 1** cards trigger
-- on **round 6**, all **CD 1**, **CD 2**, and **CD 3** cards trigger
-
-### Trigger rule
-A card with CD `n` triggers on rounds where:
-- `roundNumber % n === 0`
-
-except that CD 1 naturally triggers every round.
-
----
-
-## Damage and resolution
-
-Each round:
-- both players calculate all damage they deal that round
-- both players take damage simultaneously
-- damage totals are updated after simultaneous resolution
-
-The game continues until a win condition is reached.
-
----
-
-## Win condition
-
-The game is played until at least one player has taken a total of **21 or more damage**.
-
-### If only one player has reached 21+
-- the **other player wins**
-
-### If both players reach 21 or more in the same round
-- the winner is the player who has dealt the **most total damage**
-
-### If total damage dealt is also tied
-- the game is simply a **tie**
-
----
-
-## Special cards
-
-Special cards exist, but they should be introduced gradually in implementation.
-
-They should remain in data/docs as references even if the engine does not support all of them yet.
-
-### Current pre-battle activation rule
-Cards with **CD 0** may be activated in a dedicated **pre-battle phase** after the final hand is ready and before battle starts.
-
-- highlighted pre-battle cards can be activated before pressing **Battle**
-- the player may activate supported cards in any order
-- not activating one counts as skipping it
-- the opponent may also resolve supported pre-battle cards before battle
-
-### Currently supported pre-battle specials
-
-#### Copy card in hand
-A copy-style special card means:
-- before battle begins
-- the player chooses one other card in their hand
-- the copy card becomes a real transformed copy of that chosen card
-
-#### Draw 2 extra
-A draw special card may:
-- draw **2 additional random cards**
-- add them to the hand
-- before battle begins
-
-#### Recycle card
-A recycle special card may:
-- choose **1 card from that player's discard pile**
-- return it to hand
-- before battle begins
-
-#### Draw all new +1
-A redraw special card may:
-- discard the player's **entire current hand**
-- draw that many new cards **plus 1**
-- place the old hand into discard
-- resolve with discard animation before the new hand is revealed
-
----
-
-## First implementation boundary
-
-Implement first:
-- 5 hand discard mode
-- base 3-class stat/damage flow
-- simultaneous rounds
-- CD timing
-- 21-damage win condition
-- tie resolution
-
-Defer for later:
-- draft mode
-- full special-card support
-- extra cards
-- monster cards
+The JSON preserves unsupported `extra_turn` and `no_stats_to_2`; neither is playable. Extra and monster sets are not imported. Further special rules must be agreed explicitly rather than inferred from artwork tokens.

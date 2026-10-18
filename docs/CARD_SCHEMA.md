@@ -59,7 +59,7 @@ Current values:
 - `utility`
 
 ### `images`
-Array of image URLs. Keep these even if UI does not yet fully use them.
+Array of source image URLs retained for provenance and variant selection. The renderer resolves these through `data/image-manifest.json` to local WebP derivatives; the engine does not depend on images. After adding source URLs, run `npm run assets:prepare`. See `ASSETS.md`.
 
 ### `stats`
 For stat cards, this is an array of class names contributed by the card.
@@ -94,12 +94,12 @@ It preserves original design intent while rules are still being formalized.
 ### `cd`
 Timing / cooldown value from the source data.
 
-Current interpretation draft:
+Current combat interpretation:
 - `1` = every round from round 1
 - `2` = every other round
 - `3` = every third round
-- `0` = pre-battle / immediate / special timing
-- negative values = special timing semantics still to be formalized
+- `0` = no combat trigger; four explicitly supported IDs can activate during preparation
+- negative values = no current combat trigger; any intended semantics remain unimplemented
 - `-100` = draw-phase/special timing marker from the source system
 
 ### `tags`
@@ -116,18 +116,12 @@ The first goal is to:
 3. preserve obvious structured effects
 4. keep unusual effects in `customEffect` until we formalize them in rules docs
 
-## Next steps
+## Runtime identity and implementation boundary
 
-Create these follow-up docs:
-- `docs/CARD_LIBRARY.md`
-- `docs/RULES.md`
-- `docs/COMBAT.md`
+The JSON root contains `meta`, `classes`, and `cards`. There are 30 definitions; the explicit playable filter currently selects 27. See `CARD_LIBRARY.md` for counts and effects.
 
-And later evolve the schema to support:
-- explicit timing windows
-- targeting
-- conditional requirements
-- transforms/conversions
-- draw/discard effects
-- shield interactions
-- multiplayer-safe serialization
+`expandCardPool` adds `uid` (`id__copyNumber`) and `imageIndex` to each physical card. Copies retain the definition's `id`. Transformed copies get a fresh composite UID and provenance fields such as `copiedFromUid`, `sourceCopyUid`, `copySourceCardId`, and `isCopiedCard`.
+
+The engine reads numeric damage/shield fields generically, but several effects are implemented by explicit ID in `engine.js` and preparation helpers. `customEffect` is preserved source data, not an executable rules language. Merely adding a token or CD 0 card does not implement a behavior.
+
+Runtime timing, targeting, activation tracking and discard ownership are not fully normalized into JSON. Preparation still partly lives in the session reducer; see `ARCHITECTURE.md` and `CURRENT_STATE.md` before expanding the schema.

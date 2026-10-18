@@ -13,8 +13,8 @@ import {
   getActivatablePreBattleCards,
   getPreBattleCopyCandidates,
   resolvePreBattleActivation,
+  completeOpponentPreBattle,
 } from '../game/preBattle'
-import { pickBestCardForHand } from '../game/cardEvaluator'
 
 const STORAGE_KEY = 'crd-dev-settings-v1'
 
@@ -25,7 +25,6 @@ const DEFAULT_SETTINGS = {
 }
 
 const DEFAULT_SESSION_TIMING = {
-  opponentPreBattleDelayMs: 420,
   drawAllNewDiscardStaggerMs: 110,
   drawAllNewDiscardDurationMs: 320,
   drawAllNewRevealDelayMs: 80,
@@ -119,12 +118,6 @@ function getPlayerPreBattleView(state) {
     cards,
     armedCopyCard,
     copyCandidates,
-  }
-}
-
-function getOpponentPreBattleView(state) {
-  return {
-    cards: getActivatablePreBattleCards(state.opponentHand, state.opponentActivated),
   }
 }
 
@@ -495,61 +488,6 @@ function sessionReducer(state, action) {
       })
     }
 
-    case 'ACTIVATE_OPPONENT_PRE_BATTLE_CARD': {
-      const current = state.preBattle
-      const { cards } = getOpponentPreBattleView(current)
-      const nextOpponentCard = cards[0]
-      if (!nextOpponentCard) return state
-
-      if (nextOpponentCard.id === 'recycle_card') {
-        const opponentDiscard = current.opponentDiscard ?? []
-        if (!opponentDiscard.length) {
-          return createTransitionResult(state, {
-            preBattle: {
-              ...current,
-              activationTick: current.activationTick + 1,
-            },
-          })
-        }
-
-        const recycledCard = pickBestCardForHand(opponentDiscard, current.opponentHand) ?? opponentDiscard[0]
-        return createTransitionResult(state, {
-          preBattle: {
-            ...current,
-            opponentHand: [...current.opponentHand, recycledCard],
-            opponentDiscard: opponentDiscard.filter((card) => card.uid !== recycledCard.uid),
-            opponentActivated: [...current.opponentActivated, nextOpponentCard.uid],
-            activationTick: current.activationTick + 1,
-          },
-        })
-      }
-
-      const selectionUid = nextOpponentCard.id === 'copy_card_in_hand'
-        ? (pickBestCardForHand(getPreBattleCopyCandidates(current.opponentHand, nextOpponentCard.uid), current.opponentHand.filter((card) => card.uid !== nextOpponentCard.uid))?.uid
-          ?? getPreBattleCopyCandidates(current.opponentHand, nextOpponentCard.uid)[0]?.uid
-          ?? null)
-        : null
-
-      const result = resolvePreBattleActivation({
-        hand: current.opponentHand,
-        deck: current.deck,
-        discard: current.opponentDiscard,
-        cardUid: nextOpponentCard.uid,
-        selectionUid,
-      })
-
-      return createTransitionResult(state, {
-        preBattle: {
-          ...current,
-          opponentHand: result.hand,
-          deck: result.deck,
-          opponentDiscard: result.discard,
-          opponentActivated: [...current.opponentActivated, nextOpponentCard.uid],
-          activationTick: current.activationTick + 1,
-        },
-      })
-    }
-
     case 'RESOLVE_PLAYER_RECYCLE_PICK': {
       const current = state.preBattle
       if (!current.recycleSelection || current.recycleSelection.side !== 'player') return state
@@ -616,7 +554,9 @@ function sessionReducer(state, action) {
       }
 
     case 'START_BATTLE':
+      if (state.battleStarted || state.game.phase !== 'battle-ready' || state.preBattle.pendingResolution) return state
       return createTransitionResult(state, {
+        preBattle: completeOpponentPreBattle(state.preBattle),
         battleStarted: true,
         battleInstance: state.battleInstance + 1,
         gameSessionKey: state.gameSessionKey + 1,
@@ -694,13 +634,12 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
   } = session
 
   const discardPhase = game.mode === 'five-hand-discard' && game.phase.startsWith('player-discard')
-  const canStartBattle = !battleStarted && game.phase === 'battle-ready'
+  const canStartBattle = !battleStarted && game.phase === 'battle-ready' && !preBattle.pendingResolution
   const pendingDraftPickUid = game.pendingOpponentPickUid ?? null
   const draftActivationTick = pendingDraftPickUid ? `${pendingDraftPickUid}-${game.phase}-${game.playerHand.length}-${game.opponentHand.length}` : 'draft-idle'
   const canPickDraftCard = game.phase === 'draft-player-pick' && game.currentPicker === 'player'
 
   const playerPreBattleView = useMemo(() => getPlayerPreBattleView(preBattle), [preBattle])
-  const opponentPreBattleView = useMemo(() => getOpponentPreBattleView(preBattle), [preBattle])
   const recycleSelectionCards = useMemo(() => getRecycleSelectionCards(preBattle, 'player'), [preBattle])
   const isPreBattleReady = game.phase === 'battle-ready' && !battleStarted
   const isRecyclePicking = isPreBattleReady && Boolean(preBattle.recycleSelection?.side === 'player')
@@ -708,7 +647,6 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
   const highlightedPreBattleIds = useMemo(() => {
     const ids = [
       ...playerPreBattleView.cards.map((card) => card.uid),
-      ...opponentPreBattleView.cards.map((card) => card.uid),
     ]
 
     if (playerPreBattleView.armedCopyCard) {
@@ -716,7 +654,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     }
 
     return [...new Set(ids)]
-  }, [opponentPreBattleView.cards, playerPreBattleView.armedCopyCard, playerPreBattleView.cards, playerPreBattleView.copyCandidates])
+  }, [playerPreBattleView.armedCopyCard, playerPreBattleView.cards, playerPreBattleView.copyCandidates])
 
   const playerTargetableIds = useMemo(() => {
     const ids = [...playerPreBattleView.cards.map((card) => card.uid)]
@@ -866,25 +804,6 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
   const revealNextDraftPackAction = useCallback(() => {
     dispatch({ type: 'REVEAL_NEXT_DRAFT_PACK' })
   }, [])
-
-  useEffect(() => {
-    if (!isPreBattleReady) return undefined
-    if (isRecyclePicking) return undefined
-    if (playerPreBattleView.cards.length > 0) return undefined
-    if (opponentPreBattleView.cards.length <= 0) return undefined
-
-    const timeoutId = window.setTimeout(() => {
-      dispatch({ type: 'ACTIVATE_OPPONENT_PRE_BATTLE_CARD' })
-    }, sessionTiming.opponentPreBattleDelayMs)
-
-    return () => window.clearTimeout(timeoutId)
-  }, [
-    isPreBattleReady,
-    isRecyclePicking,
-    opponentPreBattleView.cards.length,
-    playerPreBattleView.cards.length,
-    sessionTiming.opponentPreBattleDelayMs,
-  ])
 
   useEffect(() => {
     if (pendingPreBattleAnimation?.kind !== 'draw-all-new-1') return

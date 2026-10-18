@@ -28,3 +28,17 @@
 
 As of 2026-05-24, the prototype should be treated as **working** for restart/status documentation purposes.
 Older notes describing draft/reset behavior as broadly broken were accurate during development, but are now historical and should not remain the default state description.
+
+## Source reconciliation - 2026-10-18
+
+Both modes, heuristic AI, shields and initial specials are implemented. `CURRENT_STATE.md` records the reviewed baseline and verification. The original shield cadence, complete shared recycle semantics and preparation ordering remain unresolved; documenting current code does not approve those behaviors as final rules.
+
+The earlier shared-discard decision remains intent: current human/AI preparation lists do not yet implement one authoritative shared pool. Draft final leftovers and starter initialization also need fixes. No gameplay code was changed in this review.
+
+## Creator clarification and preparation fix - 2026-10-18
+
+- Current shields work as intended: retain CD 1, two prevention each round.
+- Recycle is intended as one card usable by one player per game. No pile/copy/deck changes are requested now.
+- Preparation is private and has no inter-player turn order. On Battle, all remaining AI preparation must be complete before combat.
+- Implemented `completeOpponentPreBattle` at the Battle transition, resolving acquired-special chains and skipping unusable effects once. Removed delayed/revealed AI preparation. Block Battle while a human redraw is already resolving.
+- Leave draft leftovers/starter behavior and headless preparation coverage unchanged in this task. These clarifications supersede earlier unresolved shield/order recommendations above.

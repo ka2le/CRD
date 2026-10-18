@@ -1,39 +1,45 @@
-# ASSETS.md
+# Image assets
 
-## Current status
+Updated 2026-10-18. All 88 unique referenced images are saved locally: 75 artworks (including every alternate and excluded-card variant) and 13 icons. Originals total 550.98 MiB; game derivatives total 4.06 MiB, a 99.3% reduction.
 
-Card image URLs are currently stored directly in `data/cards.json`.
+## Locations and rendering
 
-The first import uses remote image URLs from the provided source.
+- `assets/originals/`: byte-for-byte downloaded source files, outside Vite's public directory. Preserve this archive for future exports or conversions. It is excluded from the sanitized public snapshot and `dist`.
+- `public/images/art/`: WebP artwork, quality 82, maximum 768 pixels on either axis, aspect ratio preserved and never upscaled.
+- `public/images/icon/`: lossless WebP icons, maximum 128 pixels, transparency retained. Lossless describes the encoding after resizing; full-resolution sources remain in the archive.
+- `data/image-manifest.json`: source URL to archive/game-file mapping, settings, dimensions, byte sizes and SHA-256 checksums.
+- `src/components/card/imageAssets.js`: resolves source URLs to local derivatives using Vite's base URL, including `/CRD/` on GitHub Pages.
 
-Site identity assets:
-- `public/favicon.svg` is the CRD browser/site icon.
-- `public/crd-icon.svg` is the current social preview image.
-- `public/site.webmanifest` defines the CRD install/display metadata.
+Source URLs remain in `data/cards.json` and `cardData.js` for provenance. Art, blur layers, copy overlays, custom-effect icons, battle icons, tooltips and preloads use local files. Unmapped remote references do not silently request the CDN. Rules remain independent of image loading.
 
-## Current guidance
+Output filenames include a source/settings digest so changed conversions get new browser cache URLs. Normal browser HTTP caching applies; this does not install an offline service worker or guarantee permanent browser storage.
 
-- Keep image references on cards even if UI work does not yet focus on images.
-- Treat images as presentation assets, not rules data.
-- The engine should work even if images are missing.
+## Import and rebuild
 
-## Planned evolution
+```powershell
+npm install
+npm run assets:prepare
+npm run assets:check
+npm run assets:smoke
+```
 
-Later we may:
-- download/store assets locally
-- map card ids to local asset paths
-- separate card art from card rules data
-- support alternate artworks per copy
+`assets:prepare` discovers and deduplicates card art/custom-effect URLs and display/stat icon definitions. Existing originals are reused; changed archived bytes fail checksum validation rather than being silently replaced. Unchanged derivatives are reused. Downloads use four workers, bounded retries, validation and temporary files renamed only after completion. A partial run can resume from already saved originals. A verified second run downloaded and converted zero files.
 
-## Current source patterns
+The artwork CDN rejects plain Node requests. For new downloads, its HTTP 403 response triggers the optional browser-compatible Python transport:
 
-Image sources seen so far:
-- `cdn.midjourney.com` card artworks
-- `ka2le.github.io/chatgpt-apps3/images/mp/...` icon/effect assets
+```powershell
+python -m pip install --target .image-tools -r scripts/image-requirements.txt
+npm run assets:prepare
+```
 
-## Recommendation
+`.image-tools/` is local and ignored by Git. Python/network access are unnecessary when all originals are present, and unnecessary for building or playing. Adjust settings in `scripts/prepare-images.mjs` and rerun to regenerate from originals without downloading again. Old outputs are retained; no automatic archive deletion occurs.
 
-When the card JSON and art pack are added properly later, prefer:
-- stable card ids in rules data
-- a separate asset manifest for images/icons
-- optional per-copy image arrays only when gameplay or collector behavior actually needs them
+`npm run build` first runs an offline integrity/coverage check of all required game derivatives. It does not download images or require the original archive, so sanitized public snapshots build with only the manifest and optimized files. `assets:smoke` renders every card/art variant plus copy overlays and checks local paths at both `/` and `/CRD/`.
+
+## Site identity assets
+
+- `public/favicon.svg`: browser icon.
+- `public/crd-icon.svg`: social preview.
+- `public/site.webmanifest`: install/display metadata.
+
+These SVGs remain vector files. Google Fonts in `src/index.css` remains a separate remote font dependency.

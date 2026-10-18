@@ -81,12 +81,15 @@ export default function useBattlePlayback({ battleStarted, battleInstance, playe
   const [damageFlash, setDamageFlash] = useState(null)
   const [activationTick, setActivationTick] = useState(0)
 
+  // Reset transient playback state when the active battle inputs change.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setPlaybackIndex(-1)
     setShowBattleResult(false)
     setDamageFlash(null)
     setActivationTick(0)
   }, [battleInstance, battleStarted, playerHand, opponentHand, deck])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const battleResult = useMemo(() => {
     if (!isActive) return null

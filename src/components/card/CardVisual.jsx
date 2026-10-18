@@ -1,10 +1,11 @@
 import './CardVisual.css'
 import { DISPLAY_ICONS, getStatIcon } from './cardData'
+import { getImageUrl } from './imageAssets'
 
 function IconToken({ src, alt }) {
   return (
     <span className="card-visual__icon-token">
-      <img src={src} alt={alt} className="card-visual__icon-image" />
+      <img src={getImageUrl(src)} alt={alt} className="card-visual__icon-image" />
     </span>
   )
 }
@@ -113,7 +114,7 @@ function CardCooldown({ card }) {
 }
 
 export default function CardVisual({ card, hidden = false }) {
-  const image = card.images?.[card.imageIndex ?? 0] ?? card.images?.[0]
+  const image = getImageUrl(card.images?.[card.imageIndex ?? 0] ?? card.images?.[0])
 
   return (
     <div className="card-visual">
@@ -127,7 +128,7 @@ export default function CardVisual({ card, hidden = false }) {
             <img src={image} alt="" className="card-visual__blur" />
             <img src={image} alt={card.name} className="card-visual__art" />
             {card.copyOverlayImage ? (
-              <img src={card.copyOverlayImage} alt="" className="card-visual__copy-overlay" />
+              <img src={getImageUrl(card.copyOverlayImage)} alt="" className="card-visual__copy-overlay" />
             ) : null}
             {card.type === 'stat' ? <CardStatColumn card={card} /> : null}
             {card.type === 'action' ? <CardEffectRow card={card} /> : null}

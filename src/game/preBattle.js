@@ -1,4 +1,5 @@
 import { applyCopySelection, getCopyTargetCandidates, pickAiCopyTarget } from './copyCard.js'
+import { pickBestCardForHand } from './cardEvaluator.js'
 
 export const PRE_BATTLE_CARD_IDS = new Set([
   'draw_2_extra',
@@ -26,6 +27,51 @@ export function getActivatablePreBattleCards(hand = [], activatedCardUids = []) 
 
 export function getPreBattleCopyCandidates(hand = [], sourceUid = null) {
   return getCopyTargetCandidates(hand).filter((card) => card.uid !== sourceUid)
+}
+
+// Resolve privately at the Battle boundary, including specials acquired along the way.
+export function completeOpponentPreBattle(preBattle) {
+  let current = preBattle
+  let card = getActivatablePreBattleCards(current.opponentHand, current.opponentActivated)[0]
+
+  while (card) {
+    const activated = [...current.opponentActivated, card.uid]
+
+    if (card.id === 'recycle_card') {
+      const discard = current.opponentDiscard ?? []
+      const recycled = pickBestCardForHand(discard, current.opponentHand) ?? discard[0]
+      current = {
+        ...current,
+        opponentHand: recycled ? [...current.opponentHand, recycled] : current.opponentHand,
+        opponentDiscard: recycled ? discard.filter((entry) => entry.uid !== recycled.uid) : discard,
+        opponentActivated: activated,
+      }
+    } else {
+      const candidates = getPreBattleCopyCandidates(current.opponentHand, card.uid)
+      const target = card.id === 'copy_card_in_hand'
+        ? pickBestCardForHand(candidates, current.opponentHand.filter((entry) => entry.uid !== card.uid))
+        : null
+      const result = resolvePreBattleActivation({
+        hand: current.opponentHand,
+        deck: current.deck,
+        discard: current.opponentDiscard,
+        cardUid: card.uid,
+        selectionUid: target?.uid ?? null,
+      })
+      current = {
+        ...current,
+        opponentHand: result.hand,
+        deck: result.deck,
+        opponentDiscard: result.discard,
+        opponentActivated: activated,
+      }
+    }
+
+    // Empty recycle piles and copy hands without a target are skipped once.
+    card = getActivatablePreBattleCards(current.opponentHand, current.opponentActivated)[0]
+  }
+
+  return current
 }
 
 export function resolvePreBattleActivation({

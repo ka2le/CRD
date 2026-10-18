@@ -46,6 +46,8 @@ Remove-Item Env:\GITHUB_PAGES
 
 This creates a clean copy outside the private workspace and excludes agent/memory files.
 
+Image derivatives in `public/images/` and `data/image-manifest.json` must be included. Keep `assets/originals/` and local `.image-tools/` out of the public snapshot; the archive is preserved in the private workspace. `npm run build` checks the published derivatives offline and does not need originals, Python or CDN downloads.
+
 ```powershell
 $public = Join-Path $env:TEMP 'CRD-public'
 Remove-Item -Recurse -Force $public -ErrorAction SilentlyContinue

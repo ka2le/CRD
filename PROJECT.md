@@ -1,188 +1,92 @@
-# PROJECT.md - Critters Robots Dragons
+# Critters Robots Dragons - project brief
 
-This is the main living project brief for **Critters Robots Dragons (CRD)**.
+Last reconciled with local source: **2026-10-18**.
 
-Keep this file up to date.
+`PROJECT.md` is the main living brief. Keep supporting docs and implementation aligned when rules, scope, architecture or priorities change. The assistant identity in this workspace is **CRD_Dev**.
 
-When project direction, architecture, game rules, scope, assets, or priorities change, update this file first and make other docs reference it rather than drifting out of sync.
+## Purpose and current stage
 
----
+Build the creator's two-player board game as a modular digital card battler in React. The current implementation is a local, single-browser human-versus-heuristic-AI prototype with both hand-building modes, pre-battle specials and automatic simultaneous combat. Online multiplayer is future work.
 
-## Project Purpose
+For the complete implementation review, source pointers, known issues and verification, read `docs/CURRENT_STATE.md`. For a quick explanation, read `docs/GAME_OVERVIEW.md`.
 
-We are developing a **code-based digital version** of a board game called **Critters Robots Dragons**.
+## Game model
 
-The assistant working on this project is **CRD_Dev**.
+Players assemble combinations of class stats, matching attacks and special effects. Stats do not deal damage by themselves; each matching attack scales with the full matching stat total. Base Critter attacks deal 1 per stat every round, Robot attacks 2 every second round, and Dragon attacks 3 every third round. Their long-run rates match, but burst timing changes races and counterplay.
 
-The goal is to turn the board game into a digital game, first focusing on getting the game rules, game flow, combat simulation, drafting, and cards working correctly in a modular React application.
+### Both modes are implemented
 
-Later, this should expand into a hosted multiplayer experience where **2 users can play via their own browser**.
+- **5 Hand Discard:** deal five to each side; submit two discard/refill passes, selecting any number including zero. The AI resolves one pass after each human submission, using the same remaining deck.
+- **Draft:** reveal five shared cards; each side chooses one; discard the other three; reveal a new pack and reverse first picker. Five packs produce five cards each. The intended first-pack starter also alternates between games; current initialization has an exception.
 
----
+Five cards is the hand-building target. Preparation can increase the eventual combat hand beyond five. Normal/Wild Deck is a copy-count option, not a third game mode.
 
-## Current Direction
+### Preparation
 
-### Tech direction
+Supported cards: `draw_2_extra`, `draw_all_new_1`, `copy_card_in_hand`, `recycle_card`. The human can activate eligible cards in a chosen order before Battle, or skip them. Copy transforms the source with a new identity, allowing copied preparation effects to activate independently. Preparation is private with no turn order between players. Pressing Battle resolves all remaining AI preparation atomically before combat, including newly acquired specials. Unused human specials are skipped. See `docs/RULES.md`.
 
-- Use **React**
-- Use **Git**
-- Publish the code as the public GitHub repo **CRD**
-- Host the current frontend through **GitHub Pages**
-- Work **iteratively**
-- Work **modularly**
-- Build in a way that supports later expansion to multiplayer and server-backed play
+### Combat
 
-### Near-term goal
+Combat resolves automatically with no player decisions. Positive-CD actions trigger on divisible rounds. Both sides generate shield/damage, whole-hand damage modifiers apply, opposing shield reduces damage, and both take damage simultaneously.
 
-Start with a **simple AI opponent** so the game can be played, tested, and validated before online multiplayer is built.
+Taking 21 damage loses. Simultaneous lethal compares cumulative damage actually dealt after shields; equal totals tie. Without lethal by round 50, the result is a tie regardless of damage lead. Shield expires each round. Current hands/stats remain fixed in combat.
 
-The first priority is to make sure:
+## Current implementation
 
-- the game flow works
-- drafting works
-- combat simulation works
-- cards work correctly
-- the rules are represented cleanly in code
+- React 19 / Vite static frontend with modular components and JS game modules.
+- 30 imported card definitions; 27 playable; 70-card Normal Deck or 102-card Wild Deck.
+- Wild Deck changes one-copy playable definitions to three copies; other counts stay unchanged.
+- Browser defaults: Draft, Wild Deck enabled, opponent cards visible. Menu settings persist; changing any setting starts a fresh game. Opponent hiding applies to pre-combat discard mode.
+- Stat combinations, base/ultimate class attacks, Bite, Devour, shield, damage doubling, shield-based and hybrid damage, plus the four preparation effects.
+- Shared heuristic evaluation for draft/discard/copy/recycle; no trained model.
+- Art/icon card visuals, tooltips, draft flights/masks, battle playback, log and result popup.
+- Playback accelerates for upcoming rounds above round 2, down to a minimum interval; old round-10 notes are obsolete.
+- Seeded/injected deck support and a persistent Node JSON-lines worker with Python random-action smoke client.
+- Headless currently skips preparation and evaluates 12 rounds at a 999 damage threshold by default; it is not full browser parity or a Gymnasium environment.
+- Public repo / GitHub Pages publishing configuration exists. Live deployment was not checked in this review.
 
-### Longer-term goal
+## Known differences and remaining work
 
-Later, build some kind of server/backend so **2 human players** can join from their own browsers.
+These are documented findings, not newly approved rules:
 
-The room model should support:
+1. The creator confirmed current shield behavior is correct: `shield2` blocks two every round at CD 1. This supersedes the historical cadence example below.
+2. Recycle is intended to be a single card usable by only one player per game. The creator requested no recycle/pile/deck changes in this task; existing pool/copy handling remains as implemented.
+3. Final draft completion drops the last three leftovers instead of recording them in discard.
+4. Initial draft and first New Game both start human-first; later resets alternate, and settings/mode changes are inconsistent.
+5. Fixed: Battle now completes AI preparation synchronously before combat. AI actions are not revealed during the human preparation window. Battle is disabled while an already-started human redraw is still resolving.
+6. Full preparation remains partly in the React reducer and is missing from headless actions. Interaction coverage and external action validation need strengthening.
+7. `extra_turn` and `no_stats_to_2` remain data-only/excluded. Extra and monster sets are not imported.
+8. No backend, rooms, second-human input, spectators, Gymnasium wrapper or training loop exists yet.
 
-- **P1**
-- **P2**
-- **Viewer**
+The AI preparation fix is complete. Follow-up asset work archives all 88 source images in `assets/originals/` and serves optimized local WebP files through `data/image-manifest.json`. Originals total 550.98 MiB; game images total 4.06 MiB (99.3% smaller). Preparation reruns reuse saved originals and unchanged derivatives; production builds check assets offline. See `docs/ASSETS.md`. Draft bookkeeping, starter alternation, recycle/pool behavior and headless parity remain unchanged. `docs/ROADMAP.md` gives the proposed sequence.
 
-Initial room behavior should be:
+## Architecture and future direction
 
-- the first player to load a new room becomes **P1**
-- **P2** defaults to **AI** at first
+Keep combat and mode rules in reusable `src/game/` modules. React components present state; the reducer/session layer coordinates flow, and dedicated hooks coordinate timing. Logical ownership and temporary visual visibility may differ during card flights; preserve explicit masks/suppression.
 
-But the system should be designed so this can later be swapped or expanded cleanly.
+Keep cards data-driven and JavaScript as the source of truth for future Python/Gymnasium training. Extract remaining preparation orchestration from UI/session ownership before adding network play.
 
----
+Continue using Git and publishing sanitized app snapshots to the public `CRD` repo. Follow `docs/PUBLISHING.md`; private workspace identity and memory files must stay excluded. Deployment targets GitHub Pages today; a future backend should support two browser users and P1/P2/Viewer rooms, initially with P2 defaulting to AI. This room/seat model is planned, not implemented.
 
-## Game Description (user-provided, keep this in full)
+## Verification on 2026-10-18
 
-So what we are doing here is developing a code based version of a board game i made called Critters Robots Dragons. The game will be described more later and we will have several files specifying how it works, what cards exist, rules, why its fun etc. For now lets just know that its a 2p game played by drafting cards and then simulating rounds of combat to find out who has the best hand. Quick rounds and then play again. The 3 Classes in the game are Critters, Robots and Dragons. The base is that there are stat cards that most often give 1 stat to one of these 3 classes, some cards give to more than one and some cards give 2 stats to a single class, very strong. And then for each class there are unique dmg cards, these only do dmg if you have stats. So a critter card typically does 1dmg per critter stat you have each round. Robot dmg card do 2 dmg evry other round and dragons do 3 dmg per dragon stat card every 3rd round. So basically balanced but with some strategy in regards to timing, there are for example shield cards that only exist as triggering every other round, so they line up perfectly with robots and counter them hard, and are not as effective vs dragons.
+- Production build passed.
+- Devour simultaneous-round regression smoke passed.
+- Python/Node smoke completed Draft and 5 Hand Discard at seed 7.
+- Lint failed with four existing errors; details in `docs/CURRENT_STATE.md`.
+- Browser visuals, full card interaction coverage and live hosting were not verified.
 
----
+The initial review updated documentation only. Follow-up: AI preparation now resolves at Battle in `completeOpponentPreBattle`; regression coverage includes draw/copy/redraw/recycle chains and unusable specials.
 
-## Known Assets / Inputs
+## Knowledge map
 
-- There are existing **card images**
-- There is a **JSON** for the cards that can be used later
-- These assets will be added later
-- A first extracted working card data file now exists at `data/cards.json`
-
-The implementation should be prepared to consume structured card data instead of hardcoding everything into UI components.
-
----
-
-## Planned Main UI / Domain Components
-
-These are the main components currently expected:
-
-- **Hand**
-- **Draft Board** (board where drafting is done)
-- **Deck**
-- **Battle Arena**
-- **Menu**
-
-The menu should later support options such as:
-
-- play vs AI
-- play vs another player
-- room-based entry / selection
-- seat selection for P1 / P2 / Viewer
-
----
-
-## Architectural Intent
-
-Design the project so that:
-
-1. **Core game rules are separated from UI**
-   - battle logic, card effects, turn flow, drafting logic, and simulation should live in reusable game/domain modules
-2. **Cards are data-driven**
-   - card definitions should come from structured data where possible
-3. **AI can use the same game engine as players**
-   - avoid special-case logic tied directly to the UI
-4. **Multiplayer can be layered on later**
-   - local state now, network sync later
-5. **The codebase stays modular and iterative**
-   - small steps, clean boundaries, easy refactors
-
----
-
-## Suggested Knowledge Files
-
-These files should be created and maintained as the project grows:
-
-- `PROJECT.md` — master project brief and current direction
-- `docs/GAME_OVERVIEW.md` — concise explanation of how the game works
-- `docs/RULES.md` — canonical gameplay rules
-- `docs/CARD_SCHEMA.md` — structure for card JSON/data model
-- `docs/CARD_LIBRARY.md` — actual card list and notes
-- `docs/COMBAT.md` — combat timing, sequencing, and resolution details
-- `docs/DRAFTING.md` — drafting flow and rules
-- `docs/BALANCE_NOTES.md` — why things are balanced/fun, counterplay, design goals
-- `docs/ARCHITECTURE.md` — app structure and technical architecture
-- `docs/PUBLISHING.md` — local commit, sanitized public push, and GitHub Pages deployment workflow
-- `docs/ROADMAP.md` — iterative implementation plan
-- `docs/AI_OPPONENT.md` — AI phases, heuristics, and later improvements
-- `docs/MULTIPLAYER.md` — room/seat model and future networking plan
-- `docs/ASSETS.md` — image assets, naming, import conventions
-- `docs/DECISIONS.md` — important project decisions and tradeoffs
-
----
-
-## Initial Implementation Plan
-
-### Phase 1 — Foundation
-
-- Set up React project structure
-- Define project folders and module boundaries
-- Define game state model
-- Define card data shape
-- Implement a minimal local playable loop
-
-### Phase 2 — Core Gameplay
-
-- Implement drafting flow
-- Implement hand/state transitions
-- Implement combat rounds
-- Implement class timing logic for Critters / Robots / Dragons
-- Implement shield timing and similar reactive effects
-
-### Phase 3 — Content Integration
-
-- Load card JSON
-- Connect card images
-- Validate card behavior against rules
-- Add test cases for card interactions
-
-### Phase 4 — AI Opponent
-
-- Create simple drafting and play heuristics
-- Make AI use the same rules engine
-- Tune for competent baseline play
-
-### Phase 5 — UX / Polish
-
-- Improve clarity of board state and combat resolution
-- Add feedback, animations, and round summaries
-- Improve menu / flow for replayability
-
-### Phase 6 — Multiplayer Evolution
-
-- Add room model
-- Add seat selection
-- Replace AI-only assumptions with player-slot abstraction
-- Add backend/network sync later
-
----
+- `docs/CURRENT_STATE.md`: comprehensive source review and implementation limits.
+- `docs/GAME_OVERVIEW.md`, `RULES.md`, `COMBAT.md`, `DRAFTING.md`: gameplay.
+- `docs/CARD_SCHEMA.md`, `CARD_LIBRARY.md`, `ASSETS.md`: data, exact implemented cards, assets.
+- `docs/ARCHITECTURE.md`, `AI_OPPONENT.md`, `AI_TRAINING.md`: code boundaries and AI.
+- `docs/ROADMAP.md`, `DECISIONS.md`: next work and decisions.
+- `docs/SESSION_HANDOFF.md`, `CODING_START.md`: restart maps.
+- `docs/PUBLISHING.md`: publishing/deployment procedure.
 
 ## Working Rules For This Repository
 
@@ -201,152 +105,6 @@ These files should be created and maintained as the project grows:
 - Prefer internal scrolling only in contained areas like hands or battle logs, not page-level overflow
 - Size cards so 5 cards fit side by side in both orientations and individual cards do not dominate the viewport height
 
----
+## Game Description (user-provided, keep this in full)
 
-## Rules Clarified So Far
-
-### Supported modes
-There are two modes overall:
-- **5 hand discard mode**
-- **draft mode**
-
-Implementation order:
-- start with **5 hand discard mode**
-- support **draft mode** later
-
-### 5 hand discard mode
-- each player starts with **5 cards**
-- each player may discard **any number of cards**, including 0
-- they draw back up to **5 cards**
-- they do this discard-and-refill process **twice total**
-- after that, the resulting 5 cards are the battle hand
-
-### Draft mode
-- 5 cards are placed face up for both players to see
-- one player picks 1 card
-- the other player picks 1 card
-- then 5 new cards are revealed
-- the player who picked second in the previous set now picks first
-- repeat until both players have **5 cards**
-- between games, who starts the first draft pick should alternate
-
-### Battle structure
-- both players act **simultaneously** each round
-- round 1 means both players perform all round-1 effects/damage
-- round 2 means both players perform all round-2 effects/damage
-- and so on
-
-### Cooldown timing
-- **CD 1** triggers every round
-- **CD 2** triggers every other round
-- **CD 3** triggers every third round
-- on round 1, CD 1 triggers
-- on round 2, CD 1 and CD 2 trigger
-- on round 3, CD 1 and CD 3 trigger
-- in general, CD `n` triggers on rounds divisible by `n`
-
-### Win condition
-- the game continues until at least one player has taken **21 or more total damage**
-- if only one player has reached 21+, the other player wins
-- if both reach 21+ in the same round, the player who dealt the most total damage wins
-- if total damage dealt is also tied, the game is a tie
-
-### Special cards
-- special cards exist and should stay represented in data/docs
-- engine support for them should be added gradually
-- cards with no cooldown (`cd: 0`) can participate in a dedicated pre-battle activation phase
-- this pre-battle activation phase begins when the hand becomes battle-ready and the Battle button appears
-- players may activate highlighted pre-battle cards in any order before pressing Battle
-- not activating a highlighted pre-battle card before Battle counts as skipping it
-- current supported pre-battle special flow includes drawing 2 cards and copying a card in hand
-- copy-card behavior should preserve the copied card as a real transformed card in the hand, including allowing copied pre-battle cards like draw-2 to be activated afterward if still eligible
-
-## Open Questions
-
-These still need to be filled in later:
-
-- Deckbuilding constraints, if any
-- Full card list
-- Full effect taxonomy
-- Exact shield timing/resolution details
-- Exact pre-battle action ordering when multiple special cards exist
-- AI difficulty expectations
-- Exact multiplayer/server architecture
-
----
-
-## Status
-
-Current stage: **working expanded local prototype**.
-
-Implemented now:
-- React app scaffold in workspace root
-- public GitHub Pages deployment setup for the `CRD` repository
-- `src/` in workspace root
-- modular UI/component structure
-- local playable **5 hand discard** flow
-- working draft mode flow
-- combat simulator for base stat cards and base class damage cards
-- initial support for `shield2`, `draw_2_extra`, `copy_card_in_hand`, `recycle_card`, `bite`, ulti cards, and several first-pass special damage cards
-- mobile-friendly game-shaped board layout
-- round-by-round battle playback with health reduction, damage popups, and result popup
-- draft center deck/discard stacks
-- reset/session-boundary handling for clean new games and battle playback restarts
-- alternating draft first picker between games and between packs
-- first competent shared AI evaluation layer for draft/discard/pre-battle card choices
-- first training-facing compatibility flags for seeded decks, injected decks, optional strategy hooks, movement suppression, and timing overrides
-- minimal Python-to-Node headless smoke path that plays random legal draft/discard actions and evaluates 12-round damage
-- synced opponent discard timing in 5 hand discard mode, where opponent discard now resolves once per player discard submission instead of being pre-resolved at game creation
-- shared discard pile behavior in 5 hand discard mode, so opponent-discarded cards also enter the same discard pile used by player recycle effects
-
-Still in progress / worth improving:
-- broader special-card coverage
-- stronger AI behavior
-- additional polish for layout, pacing, and animation
-- multiplayer/server play
-
-Recent UX polish now in baseline:
-- draft pack cards can present one-by-one from the deck with motion
-- opponent draft picks and pack-clearing include intentional readability pauses
-- battle playback speeds up after round 10
-- battles hard-stop at 50 rounds and resolve as a tie
-- compact card hover tips explain special cards and show stat/damage card value as `+N` plus a damage icon using average damage-per-round delta
-- menu includes a fullscreen toggle and the board layout has tighter spacing/larger card presentation
-
-Recent architecture progress:
-- session/game flow has been moved out of `src/App.jsx` into focused hooks
-- reducer-backed session state now owns game-flow transitions more explicitly
-- draft timing/animation concerns have dedicated hooks/helpers instead of living directly in the app shell
-- hand rendering now supports visual suppression of cards that are already present in game state but should not yet be visible during flight animations
-- draft row visibility can also be explicitly masked across animation/pacing gaps when cards should remain logically present but not visually reappear
-
-## Fast Resume References
-
-If context is missing after a restart, re-anchor with these files first:
-- `PROJECT.md`
-- `docs/SESSION_HANDOFF.md`
-- `docs/ARCHITECTURE.md`
-- `docs/RULES.md`
-- `docs/COMBAT.md`
-- `docs/DRAFTING.md`
-- `docs/CARD_SCHEMA.md`
-- `memory/YYYY-MM-DD.md`
-
-Current important code/data entry points:
-- `src/App.jsx`
-- `src/game/cards.js`
-- `src/game/fiveHandDiscard.js`
-- `src/game/draftMode.js`
-- `src/game/engine.js`
-- `src/game/headlessGame.js`
-- `scripts/headless-worker.mjs`
-- `python/random_headless_smoke.py`
-- `src/hooks/useBattlePlayback.js`
-- `data/cards.json`
-- `docs/PUBLISHING.md`
-- `.github/workflows/pages.yml`
-
-AI/training planning:
-- keep JS as the source of truth for game rules
-- expose a future headless JS adapter to Python/Gymnasium through a persistent Node worker
-- start training simply by reaching final hands and rewarding higher total damage after 12 simulated rounds
+So what we are doing here is developing a code based version of a board game i made called Critters Robots Dragons. The game will be described more later and we will have several files specifying how it works, what cards exist, rules, why its fun etc. For now lets just know that its a 2p game played by drafting cards and then simulating rounds of combat to find out who has the best hand. Quick rounds and then play again. The 3 Classes in the game are Critters, Robots and Dragons. The base is that there are stat cards that most often give 1 stat to one of these 3 classes, some cards give to more than one and some cards give 2 stats to a single class, very strong. And then for each class there are unique dmg cards, these only do dmg if you have stats. So a critter card typically does 1dmg per critter stat you have each round. Robot dmg card do 2 dmg evry other round and dragons do 3 dmg per dragon stat card every 3rd round. So basically balanced but with some strategy in regards to timing, there are for example shield cards that only exist as triggering every other round, so they line up perfectly with robots and counter them hard, and are not as effective vs dragons.

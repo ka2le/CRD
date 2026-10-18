@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { getExpandedCoreDeck } from '../../game/cards'
+import { getImageUrl } from './imageAssets'
 
 const loadedImages = new Set()
 
@@ -19,7 +20,7 @@ function preloadImage(src) {
 export default function ImagePreloader() {
   const imageUrls = useMemo(() => {
     const cards = getExpandedCoreDeck()
-    return Array.from(new Set(cards.flatMap((card) => card.images ?? []).filter(Boolean)))
+    return Array.from(new Set(cards.flatMap((card) => card.images ?? []).map(getImageUrl).filter(Boolean)))
   }, [])
 
   useEffect(() => {

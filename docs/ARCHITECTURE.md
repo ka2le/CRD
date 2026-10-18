@@ -1,137 +1,56 @@
-# ARCHITECTURE.md
+# Architecture
 
-## Intent
+Reviewed 2026-10-18. CRD is a static React 19/Vite frontend with reusable JavaScript game modules. No backend or multiplayer transport is implemented.
 
-Build Critters Robots Dragons as a modular React application with a clean separation between UI and game logic.
+## Code map
 
-## Current implementation shape
+| Area | Responsibility |
+| --- | --- |
+| `src/App.jsx` | Compose menu, hands, boards, battle and overlays; connect session/playback |
+| `src/game/cards.js` | Playable filter, physical copies, shuffle, seeded RNG, Wild Deck |
+| `src/game/fiveHandDiscard.js` | Deal and two discard/refill transitions with AI passes |
+| `src/game/draftMode.js` | Draft phases, picks, discard and reveal |
+| `src/game/engine.js` | Stats, CD, simultaneous damage/shields, battle history/outcome |
+| `src/game/cardEvaluator.js`, `draftAi.js` | Shared heuristic scoring and choices |
+| `src/game/preBattle.js`, `copyCard.js` | Preparation helpers and transformations |
+| `src/hooks/useGameSession.js` | Session reducer, settings, preparation tracking/selection, resets, orchestration |
+| `src/hooks/useDraftFlowEffects.js`, `draftMotion.js` | Timed draft transitions and motion coordination |
+| `src/hooks/useBattlePlayback.js` | Call simulator and play back history |
+| `src/components/animation/CardMotionContext.jsx` | DOM anchors, flying cards, masks |
+| `src/components/` | Menu, hands, boards, card visuals/tooltips, battle HUD/log/results |
+| `data/cards.json` | Card definitions and source art URLs (provenance) |
+| `data/image-manifest.json`, `src/components/card/imageAssets.js` | Source-to-local WebP mapping and Vite base-path resolution |
+| `scripts/prepare-images.mjs`, `assets/originals/`, `public/images/` | Resumable download/archive and optimized image pipeline |
+| `src/game/headlessGame.js` | No-delay mode adapter, actions and observations |
+| `scripts/headless-worker.mjs` | Persistent JSON-lines sessions |
+| `python/random_headless_smoke.py` | Random legal-action client |
 
-### Root app
-- Vite + React app at workspace root
-- `src/` lives directly in workspace root as requested
+## Current boundaries
 
-### Current code areas
-- `src/game/cards.js` — card-pool selection and deck building
-- `src/game/fiveHandDiscard.js` — 5 hand discard mode flow, including synced opponent discard passes
-- `src/game/draftMode.js` — draft state transitions
-- `src/game/cardEvaluator.js` — shared AI card scoring and selection helpers
-- `src/game/engine.js` — stat calculation, trigger timing, combat simulation
-- training-facing compatibility flags now exist across `src/game/cards.js`, `src/game/draftMode.js`, and `src/game/fiveHandDiscard.js` for seeded decks, injected decks, strategy hooks, and animation-move suppression
-- `src/hooks/useGameSession.js` — reducer-backed session state, pre-battle activation phase ownership, and action ownership
-- `src/hooks/useDraftFlowEffects.js` — timed draft sequencing/effects layer
-- `src/hooks/draftMotion.js` — draft motion helpers for pick/discard animations
-- `src/hooks/useBattlePlayback.js` — playback-only battle animation/timing over already-resolved battle hands
-- `src/App.jsx` — composition/root wiring and screen layout
-- `src/components/card/CardButton.jsx` — reusable clickable card component
-- `src/components/card/CardVisual.jsx` — art + icon overlay rendering for cards
-- `src/components/card/cardData.js` — icon URLs and rendering helpers
+Core battle/mode transitions are independent of React. The simulator returns complete history; playback timing does not affect results. AI shares stat/damage functions.
 
-### Data
-- `data/cards.json` — current working card data source
+Preparation is partly extracted: `preBattle.js` resolves draw/redraw/copy helpers and complete AI preparation. The session reducer owns human activation/recycle choices and commits `completeOpponentPreBattle` atomically in `START_BATTLE`. AI preparation is not exposed during the human preparation window. Pile state still lives in the session. Consequently headless play lacks browser preparation parity. Extracting complete preparation state/actions is a useful next step.
 
-## Current UI flow
+Draft transitions also emit optional `recentMoves` and visual markers. Boundaries are useful but the domain is not fully free of presentation metadata.
 
-### Hand-building layout
-- top menu for high-level controls and testing options
-- shared board in the center
-- player hand anchored at the bottom of the screen
-- opponent hand visible on the board for testing, with a toggle to show fronts or card backs
-- hand action buttons live with the player hand area where appropriate
-- start battle lives on the board center
-- layout should fit within the viewport; scrolling belongs inside hands/logs rather than the whole page
+## State and rendering
 
-### Battle layout
-- player hand area at bottom is hidden
-- both players' hands are shown around the battle area
-- battle area moves to center stage
-- battle plays out round by round with health reduction and damage popups
-- battle HUD shows side stat counts and a large ghosted round number in the center
-- triggered cards can show per-card battle values directly on the cards during playback
-- battle ends with a winner/tie popup that also reports the finishing round
+Browser defaults are Draft, Wild Deck enabled and opponent cards visible unless localStorage overrides them. Settings key: `crd-dev-settings-v1`. Any settings update creates a fresh game; there is no persisted saved match.
 
-## Card rendering direction
+Hands stay above/below the central board and remain during combat with triggered card values. Opponent hiding applies only before combat in discard mode.
 
-Cards should:
-- use the actual art as the visual base
-- support icon-driven overlays for stats, damage, cooldown, and later special effects
-- stay modular so visual polish does not clutter the game layout code
-- respect max-size constraints and center in their tracks instead of stretching awkwardly
+Logical ownership can advance before a card finishes flying. Preserve explicit hand suppression and row masks; animation timing must not determine ownership. Session/battle keys distinguish resets and playback instances.
 
-## Target Shape
+## Headless and deployment
 
-### UI layer
-Responsible for:
-- rendering screens and components
-- handling player interactions
-- showing combat and draft state
-- animating battle playback
-- applying visual suppression when game state and visual visibility must differ temporarily
+Factories support seeds, custom RNGs and injected decks. Modes support strategies and move suppression. Worker commands: `ping`, `reset`, `step`, `close`.
 
-### Game/domain layer
-Responsible for:
-- card definitions
-- drafting rules
-- battle timing
-- damage/shield resolution
-- win/loss outcomes
-- AI-facing simulation hooks
+Headless episodes stop at `battle-ready`, skip preparation, and evaluate 12 rounds with a 999 threshold by default. Browser combat uses 21 damage and 50 maximum rounds. Gymnasium/training are not implemented.
 
-### Session / transition layer
-Responsible for:
-- reducer-backed session state
-- action-driven game-flow transitions
-- dedicated pre-battle activation phase ownership for no-cooldown special cards
-- preserving copied activatable cards as genuinely new identities so activation eligibility is derived from current state instead of leaking source-card spent state
-- bridging pure game transitions to timed UI effects
-- keeping animation sequencing out of the core rules engine
+The GitHub Pages workflow builds on `master` using Node 22 and deploys `dist`; `GITHUB_PAGES=true` selects `/CRD/`. This review verified local build, not live deployment. Follow `PUBLISHING.md` for sanitized publishing that excludes private workspace/memory files.
 
-### Data layer
-Responsible for:
-- card JSON ingestion
-- asset references
-- future persistence/network payload compatibility
+## Quality and next boundaries
 
-## Key Rules
+Build/smokes pass; lint has four existing errors. `CURRENT_STATE.md` records verification, the completed preparation fix, and deferred draft/starter/recycle findings.
 
-- Game rules should not be trapped inside React components.
-- Animation timing should not become the source of truth for game state.
-- When a card must exist in state before it should be visible, use explicit visual suppression instead of relying on timing races.
-
-## Current prototype scope
-
-Implemented now:
-- shuffled deck from selected core cards
-- player starting hand
-- opponent starting hand
-- 2 discard phases for the player
-- synced opponent discard passes in 5 hand discard mode
-- working draft mode with alternating first picker between packs/games
-- final battle simulation
-- base stat scaling for robot/critter/dragon damage cards
-- simultaneous round resolution
-- 21-damage win logic with tie handling
-- 50-round hard cap that resolves as a tie
-- round-by-round battle playback in UI with late-battle speed-up after round 10
-- first special-card support: `shield2`, `draw_2_extra`, `copy_card_in_hand`, `bite`, ulti cards, and several first-pass special damage cards
-- session-level pre-battle activation phase for supported `cd: 0` cards
-- copied pre-battle activation cards now produce fresh copied identities so copied activatable cards can still be activated afterward
-- localStorage-backed test settings for mode, opponent-hand visibility, and wild-deck deck building
-- seeded/injected deck support for future headless training runs without changing normal app behavior
-- optional strategy hooks and move-suppression flags for future Gymnasium/Node-worker integration
-- timed draft deal/pick/discard flow polish
-- explicit visual suppression for in-state cards that should stay hidden until animation completion
-- testing toggle for opponent card fronts / backs
-- modular card rendering components
-
-Not yet implemented:
-- real AI decision making
-- broader special-card engine coverage
-- multiplayer sync
-
-## Future-friendly needs
-
-- local single-browser play first
-- AI plug-in second
-- Python/Gymnasium training should use JS as the source of truth through a headless adapter/worker rather than porting rules to Python
-- multiplayer/network sync later
-- room/seat abstraction early enough to avoid repainting the whole app later
+Keep rules out of components and visibility separate from ownership. Extract complete preparation before training parity/network sync. Future P1/P2/Viewer rooms are plans, not implemented seats or abstractions.

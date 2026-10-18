@@ -1,0 +1,1413 @@
+{
+  "version": 1,
+  "images": {
+    "https://cdn.midjourney.com/07af1083-7432-4477-b298-3c0089e8afba/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/b08e30d8ff7d1fdae5c6.png",
+      "path": "images/art/b08e30d8ff7d1fdae5c6-e5b7fb17cc61408b469a.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "d4fde66f6689542e2035037f603482bf738af2f86205a8cff9dc5eaa67d815cf",
+      "outputSha256": "19325dd5518a28ec9ef920d7b8fdb011c5bf003de1b8f9be1c11db2d0dcf7b61",
+      "originalBytes": 7584167,
+      "bytes": 51374,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/0ec87e14-9306-4bdb-abaf-bd560731cc43/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/c6d778dc859d1b64b6d4.png",
+      "path": "images/art/c6d778dc859d1b64b6d4-a40e818f58ee10d60dd6.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "a78da6925ef7fadf5506c4b3fc7fe0c119dfbadc9dde062fbba50c5718343212",
+      "outputSha256": "5279d38f3217f1a82e0e0028605a29e4eed9f6e14d0baa47966271920250a75b",
+      "originalBytes": 7839584,
+      "bytes": 38784,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/0f6b62df-2da4-4c0e-88cf-4c22fe5ba643/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/ac9a7b7161732f0b5b9d.png",
+      "path": "images/art/ac9a7b7161732f0b5b9d-2c36d3618daf7cc9152c.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "ef7f635d8920e4afdda0c8d8ae7adc203f64e5fa06d2427975d1b1c48bc6e995",
+      "outputSha256": "92dd2b877f68445f6146077d9597cad36afc611a4267ea218dc0a24338a687ab",
+      "originalBytes": 7895268,
+      "bytes": 58088,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/100679fa-50af-4fad-9a8b-8ad4623f9e65/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/fdb38f75d1b3fe529145.png",
+      "path": "images/art/fdb38f75d1b3fe529145-8023cb311f4a8c081999.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "126c7b4e5e4b1621248e1785a56a73b80acf234809e53296b95d164a3e51e6f1",
+      "outputSha256": "634c70bf2e10df8c0055f5163928af343a6c7eec795003b3a5e07cee577d8173",
+      "originalBytes": 9373533,
+      "bytes": 90980,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/12d9b18b-fa7d-4777-b58d-7e14fe0c5b74/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/0c00f54e8b40f238db49.png",
+      "path": "images/art/0c00f54e8b40f238db49-8e30017e559ab03367bc.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "2b3b356bb8e499e2f091fa5d39c115254e74b0dda479cdd8e8a68515dc86b0e4",
+      "outputSha256": "f8bbafdc71408af448b97b5ac1e0ef5de4e37be949018dc7e3b23396e77bec6f",
+      "originalBytes": 7490108,
+      "bytes": 55558,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/159c2eb9-4fc6-45ca-b02a-4a3b4f81766c/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/c8a83350abc7c6709943.png",
+      "path": "images/art/c8a83350abc7c6709943-6cc80b28a356e6a4efef.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "6c8a72f82a79e2695a4b13841a7c892fb81d4ca563d6e33d7c22dd3e5519364f",
+      "outputSha256": "b6a0f5a36a157707fd41dad3eafa6ca0d9a368dc092a23944052bf02ad92860b",
+      "originalBytes": 7598138,
+      "bytes": 42398,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/164bb496-ef9f-4b75-8994-65997ec5d065/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/f8ab3d9393d6710e5dad.png",
+      "path": "images/art/f8ab3d9393d6710e5dad-72267713693d560a4035.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "b7903034de2038cd9dd929765b3c8867d55d7d85cd1e5863d5203e9361b0d6a5",
+      "outputSha256": "060ada8d87739820b4050779ba81a2ad28dc9958a3facc99371773e6b8fafc3c",
+      "originalBytes": 8616686,
+      "bytes": 59646,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/188098a7-2428-428e-b646-7975f0a636c3/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/ff892661835b9575ff26.png",
+      "path": "images/art/ff892661835b9575ff26-4ddf1cc20879f2984fa2.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "4b90050b1072e704d1358a38e509c2a8c4b6089181da0f5f38008ed385dff255",
+      "outputSha256": "7cf13e6c6c5ef5444654a53839eff2fbf99e57070c013d0871e5809359177412",
+      "originalBytes": 7817120,
+      "bytes": 51806,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/18e6a0a5-1134-4351-b020-7a0b57162756/0_3.png": {
+      "role": "art",
+      "original": "assets/originals/ce44e361785e242bc505.png",
+      "path": "images/art/ce44e361785e242bc505-4127bc2df38e0eb3765c.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "f85fba69651f37b27b4905591f8aaf006b3cc361b72b7643b85840d58746e6f7",
+      "outputSha256": "775b1f2bef3025ccfa5183f82e77749f80e26244712526f11066a87b98727cdf",
+      "originalBytes": 1793083,
+      "bytes": 45166,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/19857464-af32-4f3d-b87a-9a287e90fefe/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/baf7adb0a7723af0d9d6.png",
+      "path": "images/art/baf7adb0a7723af0d9d6-5e68efd27c756724aa52.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "5f53123f6947e9f1ff096768dee9475a18a5f7d6eca7f59187cd0d7b551d1062",
+      "outputSha256": "dc467b0d286955b2e89b89f012b94043cee490553fce1ff7b59eeeed124cc3bb",
+      "originalBytes": 8853399,
+      "bytes": 64470,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/210b3cd1-dec8-453e-8d1a-d967cea6e283/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/a5c7df52d2e39074f816.png",
+      "path": "images/art/a5c7df52d2e39074f816-8755821436be2185caa7.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "a26d5e0ba68d442355adead90591c6a608fad7873590e6fc34a84fc47da097c5",
+      "outputSha256": "35d08be82ca3f62f330c5c6c8240e4ef4c8774882e27b2ff9c3b16fe137a5e2e",
+      "originalBytes": 9331275,
+      "bytes": 27964,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/261245f8-c25c-40c5-a8bc-2b2f6f9f186e/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/c4fbe8c65ec80ec4b97f.png",
+      "path": "images/art/c4fbe8c65ec80ec4b97f-9aab77d1373e0849955e.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "81c3a5a413fa35e8e1446d2b12355b0e965a9e61f32cc411eb10d15af971ecc8",
+      "outputSha256": "b52a8615736e787dde08adf4356bb77e58ed672a634441afa8b3d17fc1383d55",
+      "originalBytes": 7400855,
+      "bytes": 49412,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/28aa84fd-008d-49f1-9038-4b37ef1488f7/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/896434ba46c5a630531f.png",
+      "path": "images/art/896434ba46c5a630531f-3a0b5bebee38c154808a.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "f8918bfc0cad80cfe1e702c27baae06f3e76ffc3564849970c84dacdb1eb27bc",
+      "outputSha256": "798ad545f253b3b3c2e715a013f33c214171a3c304ed2f5754f40eb85eacc3c9",
+      "originalBytes": 6635699,
+      "bytes": 46812,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/2be48f0b-ec75-4f71-96ba-af841c62f337/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/ee3d37d00a6fc58d339f.png",
+      "path": "images/art/ee3d37d00a6fc58d339f-8abbb71b3b11614f6a07.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "a25ffcc62d844f94bde8028050cd2af18d2e459166a4a0637280ad2d4c24be53",
+      "outputSha256": "bcb55792da8f4c64a41054ddfc855defaf0d5f4d577f1eeb6b6a0dd8c8c31336",
+      "originalBytes": 7954539,
+      "bytes": 12354,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/2d265f52-fece-4a21-9b7f-c932985c95b9/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/8855035a2eb7cd2ae009.png",
+      "path": "images/art/8855035a2eb7cd2ae009-2eac44fbecb60f12a17e.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "c9c1fed68d6f7450db1b593f86408abe24769b25ec87cb04aff530fd4246f4c3",
+      "outputSha256": "355c0200246c544a0573d9596192e9c2cf7d1acd976ed939036a263d2d0819a6",
+      "originalBytes": 8005385,
+      "bytes": 46586,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/2d51cedb-b24f-436b-947e-cba3b41e34c4/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/3b35b124004f109cb9fd.png",
+      "path": "images/art/3b35b124004f109cb9fd-0230d58855fe9041381c.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "dd02b83542fd2adbb3d6cd511217fa846f834b5acfabf42f88c705344c6a89ae",
+      "outputSha256": "3303b006568d5b4298b78a6cf71269fb88cbd50779047d65fa694cea0d9b600a",
+      "originalBytes": 8034615,
+      "bytes": 44234,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/2dd9dd8e-43a7-4521-b1c2-357667510a5a/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/228112d51a98ea19b629.png",
+      "path": "images/art/228112d51a98ea19b629-108da35f463a70dbdc63.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "981654584aeb62b74ae40f10deae88b73dfe91b374dd1fb12d32bd1ed07f3574",
+      "outputSha256": "5965cd9484c3862421fd95c7e7e327afd15e1e75ca1307765738e105bb847d58",
+      "originalBytes": 8107860,
+      "bytes": 55052,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/2f1865c9-4a26-49a4-84a6-578ec5c7d011/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/d41dc318f41bb1a69ca7.png",
+      "path": "images/art/d41dc318f41bb1a69ca7-2426a13ba8416ddcfe0e.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "462c7b54f81d51335d9cedf565dda1997f9b17d905133d72dc574b9ffb55f802",
+      "outputSha256": "e63e61540e9897a2ab21dda510f3e0650a8b30f5aa08af45b49d8abcfb69b6fd",
+      "originalBytes": 8131461,
+      "bytes": 40002,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/31fa9c34-7edb-42e7-a9f4-3de673bd9844/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/c7775f008e7bf296f797.png",
+      "path": "images/art/c7775f008e7bf296f797-64f5a8e17bbf3cefad5a.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "d656e1955b8ea1fbe33cc4632adf18d622f17b198f7127872d0a8628e5ce40d5",
+      "outputSha256": "e51ebbade168ae31c86034e33468cd03fd9f695f616fc8a58835f1f0fc53e8be",
+      "originalBytes": 6285070,
+      "bytes": 27158,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/36577eb0-fedd-4f63-ad88-24e5e3689486/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/21c7699387089219f8a0.png",
+      "path": "images/art/21c7699387089219f8a0-c0ca6b0f8e3f0feacb0b.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "0a462ebc2968b9b886acddfb7967d5f06c84d07b0d1ff1d0899fb1bc0c4e9f3b",
+      "outputSha256": "c89bf87e5e48bc3118f9e55f6838ff21e1c25d87d65fe22a0d62c52783b4d48f",
+      "originalBytes": 6445369,
+      "bytes": 47022,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/39ed468e-94a3-45b6-ada0-285d7d0e11ba/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/13cf19a778538daf80da.png",
+      "path": "images/art/13cf19a778538daf80da-c18ffdc20a343b090b61.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "19fce609cea1b0f63ccedb9d97e9c0746d2b637d59b979d0ab2c8272ce41e693",
+      "outputSha256": "4bb07cb45188ccda1dad1a62392643899baf4cddd0c4bb69f2541c7ad65f2b27",
+      "originalBytes": 7406743,
+      "bytes": 36842,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/3d3b5799-b82c-47a3-a055-c01281b796db/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/8f24c71905293af4cbf1.png",
+      "path": "images/art/8f24c71905293af4cbf1-28b5f8252798005584f6.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "d9d6f568bb588a8b83ea71e42ac79932172d45603300b9980cbc656717f7d1c9",
+      "outputSha256": "50899f4b347ce60f1b5377d2f4580f61dadc2f9119bd82a73cb285f0aff842ca",
+      "originalBytes": 5972656,
+      "bytes": 44732,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/3f6180de-f6a2-4001-bca5-a3b7230a6276/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/d6846b785b75f103d08f.png",
+      "path": "images/art/d6846b785b75f103d08f-65ae271228295b7ffca6.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "827c13644ae4be51cae0da7447d638c1023beb9f5b00527293f6d51ac0b52a68",
+      "outputSha256": "4dd9b246600941be01a33ec183e77a09e428b7926b5497de02c9c0550ca318b8",
+      "originalBytes": 7456771,
+      "bytes": 66422,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/421982d3-be47-4b1b-b968-e92206303b35/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/cefad0c5bc7830384ab7.png",
+      "path": "images/art/cefad0c5bc7830384ab7-b41269c1e0331780f33e.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "8288c633b966a5c605689946774f18f902f86acaf6ffdcfc07af91b4f36cc0e9",
+      "outputSha256": "c5b2164f6a424a9ea4f5f75a7b87c089d70419d5398b84c7c8bd2291b26983fe",
+      "originalBytes": 7760414,
+      "bytes": 45720,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/42b797a2-1802-4598-bdf6-84e186613322/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/39c2042415c6b479ae34.png",
+      "path": "images/art/39c2042415c6b479ae34-21e927bb3d66ece15632.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "6108b35da3404a37bd5c6a533800dc43598f0881562488baa2e5e498edbb1b0d",
+      "outputSha256": "79f9a7e8e665cceab286ad4a9805d760d43586fb5a7376d59b4962f1cf15f5a1",
+      "originalBytes": 2455280,
+      "bytes": 94312,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/50b2849d-0a6f-42f0-b581-7a6070c6b179/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/06ec787a198c8b7e9016.png",
+      "path": "images/art/06ec787a198c8b7e9016-710cb61ee7b8df3d406d.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "b3cac189b08267dcd96ac1e47f7a51307a8e311e12da012f96cce599f51b8ae0",
+      "outputSha256": "10037cc757c89528bf3e718b814026f919dc18f57dbbf77d929466d984ea5145",
+      "originalBytes": 8725955,
+      "bytes": 81632,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/5413367d-1f71-4247-b4e7-7b808a88805f/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/cfd2a8dba54efbdccb4d.png",
+      "path": "images/art/cfd2a8dba54efbdccb4d-c000c426683c73a96787.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "b53944bb338477c95df5e59c6b05931d5b14ff5f77f22557949aafedbe8b04ad",
+      "outputSha256": "4da8ac65125bbe2508d12fb3b007a44bf84906198f963bdbbd67b3bdce955aae",
+      "originalBytes": 7557768,
+      "bytes": 28402,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/5b66642d-859a-4c30-8476-e58449aeffce/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/2dc31665b36a52e4eb20.png",
+      "path": "images/art/2dc31665b36a52e4eb20-dea283c04bb1a6179114.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "287b993a0c8d1d2f7f6dbb8aa9f5ebbd672da724a92ed460e0792e165af8a5bb",
+      "outputSha256": "65c4eadb817c9908ce4160f32b4533e65f4275079b6ed586899319a46e51028f",
+      "originalBytes": 9128964,
+      "bytes": 69424,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/61662bbc-0ebd-4aab-a010-d66816a1311c/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/c2ddfc365f1f935553c7.png",
+      "path": "images/art/c2ddfc365f1f935553c7-54ba289b9ef16257ffd2.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "6f375b3c15e96744faf754159c554eef04b421602dc9805d9f65ccfebf29369f",
+      "outputSha256": "dca8eaba58cc639535176370f694b5abc3045ce333c59b08105eae54d8e21c18",
+      "originalBytes": 2317965,
+      "bytes": 82218,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/637926a6-2461-49dc-ac73-25cf4084b9fe/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/b6ef8dbd93d54ff7d5ac.png",
+      "path": "images/art/b6ef8dbd93d54ff7d5ac-6687700cc27abe7cf333.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "e9ca067ef0ef122bedf76f885f817101fa147e54932350ec352ea5a206c1b434",
+      "outputSha256": "79b594820e4058fece1c2ea8cc58e5540236f14853f8fc911d33e2a1afcf1fdf",
+      "originalBytes": 6185540,
+      "bytes": 51966,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/67d516be-005c-477a-9897-a52504e7f94b/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/7f644f938cae0c10a7ce.png",
+      "path": "images/art/7f644f938cae0c10a7ce-f74ef2bf8d6622a30470.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "ebcc67fa6271e694cec9c5df306bbdb20f0e5b1d9a6fd456b08463d9bad493ea",
+      "outputSha256": "adcb91ebb54b6a9bd8f0e1c073c4b079507fc83a5674a6fee90512eff9d0334b",
+      "originalBytes": 8061821,
+      "bytes": 59198,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/681540f1-2696-4ca5-8e9e-7c6c9b1bcda5/0_3.png": {
+      "role": "art",
+      "original": "assets/originals/9a31adf3a7d01e7fbfe0.png",
+      "path": "images/art/9a31adf3a7d01e7fbfe0-c31e0e72e0fb73f9450e.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "fdaa688d54496aa252e15e012cc30690b9688066604f4a93b46a7e68e2e27489",
+      "outputSha256": "01a3ad4017f525dbfdfb0079b0e17dcf2bc418d27881b20ac6dc16109663bba7",
+      "originalBytes": 2131095,
+      "bytes": 70454,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/69a33373-caed-4ef4-b207-e1233851459a/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/e7592685d0be0ca123fa.png",
+      "path": "images/art/e7592685d0be0ca123fa-7f277aaf2cbd89caeef3.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "9a4422d62aea389ea1400968163b9a82217bf3aa978d624a946be1c9c9e00019",
+      "outputSha256": "1679b4218e62a185fb084f61a648f8b5360d3a45dbfafdfed91969663fb4e681",
+      "originalBytes": 6809147,
+      "bytes": 46694,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/6d8979f0-5a43-4613-9b57-04caef84ca98/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/166ecdb2f5a951b312fe.png",
+      "path": "images/art/166ecdb2f5a951b312fe-98fd198dd6cade383e32.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "b4149c7c5b60592c6c83cf2121368ce3dee52055d66041b8c6611e85185d0c9c",
+      "outputSha256": "8616a2236d1fcbec0679af828e60fd99d507e95b5b0e669a4b6ed3b88a89f93b",
+      "originalBytes": 7313805,
+      "bytes": 56012,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/6dc58787-784e-4e6a-801f-4464d12124a2/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/ba6e92b77283639ec16b.png",
+      "path": "images/art/ba6e92b77283639ec16b-36d6984598019ac114cf.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "3d68d3c311f583f4a272f0eb935eddf1f7e9c3348f99a2dcb375a9c0b9c3ff02",
+      "outputSha256": "85dead82f899856f58b5c5259f63ccf6b7243701ab2dacbef8487933ae3577ae",
+      "originalBytes": 8592734,
+      "bytes": 60062,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/7b6f6976-1fdc-40b1-9008-bea313ba61df/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/f48e9f1a4d300f219f75.png",
+      "path": "images/art/f48e9f1a4d300f219f75-446d715c32ed32277bdf.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "6733d7fd3704b7fcad3ee01e2994da35929575e662d0164660218c35c1e8caed",
+      "outputSha256": "847142ccf98bff8efae9cc26b1906526af76640d4e2c9b4773cc5aed814785ba",
+      "originalBytes": 8258094,
+      "bytes": 76792,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/7bcc8fdb-056e-485f-87d5-110aba1c6208/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/31a649b25e02b36793cd.png",
+      "path": "images/art/31a649b25e02b36793cd-f64c7594de7ef2875a4d.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "47aa885a589be3370b926d8d18922dc133270c1fa0ee770b467d04bdf45741cd",
+      "outputSha256": "c62779bff891359b0ba48c6e8968277731aa9986dd82c3c6b3d4502ea2923f2e",
+      "originalBytes": 9322937,
+      "bytes": 84326,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/8260e31b-2fdc-4a51-80f2-33f0802abcd1/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/1630995485996e905790.png",
+      "path": "images/art/1630995485996e905790-e46e291478d2edc5ea7d.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "60c6d8eee6bec58ed5a66e6d6b3084b6fe11a60bf27bc2813bb5cc054f2ea0d7",
+      "outputSha256": "869e871b7294f20e8021b41b76bbbd56c09a572ef3f2aae6961530f80ab9bb48",
+      "originalBytes": 8296546,
+      "bytes": 40396,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/86e89b45-c8fe-4bb1-a43c-79e185a984c4/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/28f3b416bfa97ab83c35.png",
+      "path": "images/art/28f3b416bfa97ab83c35-db7eb7d02dd21a505623.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "9bd6cf4a73e2aa73ddfb9e01a81f49e58e69625dff5028de23bca1fa2da77e1a",
+      "outputSha256": "5fce6c4500eff00486a2ef81fcd89a37eff64bc7cda82f617cc04cd5a5ecdd26",
+      "originalBytes": 8969814,
+      "bytes": 72874,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/8989a9f5-da33-4bdd-bc2b-ef7a681ea095/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/d6119345baffbfa6e226.png",
+      "path": "images/art/d6119345baffbfa6e226-daa1a1a3db8ffe161acc.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "105ea6d0081844a57f165c77caf7b204fd1bad7c5266907728d19118373dd43e",
+      "outputSha256": "696fde146ea1760ddea1d4658a0e95517763e0b92bc301c48f2d750dddcd1172",
+      "originalBytes": 8651955,
+      "bytes": 70368,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/8a1748d0-d30f-43d6-9f73-c6c3c491edd2/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/c77ff4c8475d4c6f6d6e.png",
+      "path": "images/art/c77ff4c8475d4c6f6d6e-c98633dfa413d3d0da58.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "06042641fc7c02fb296bb9a40684133f4b4bf54ecbfe4089329d4b5b07982d6f",
+      "outputSha256": "afe3804512d95e52159cca6d20b8cbbf022e5cc5cd6a6f704ea14046ec07f5b1",
+      "originalBytes": 8912809,
+      "bytes": 53142,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/8cb5923f-3c09-4600-ae07-a7194fa19483/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/f282c5e014c8914115b3.png",
+      "path": "images/art/f282c5e014c8914115b3-845bb6219b73a786cdcf.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "0b0c8e467413f2b63c7d23ffad95d407e396135bb49a6a21bd3bd535486b42c0",
+      "outputSha256": "8a2ef3b9b9aac39d561e0ccc86c98251ab11ea5258f8c528197fcc4f94b0d8b3",
+      "originalBytes": 8714190,
+      "bytes": 43140,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/8d7b2bc0-ad87-4493-9825-bd659602d026/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/480ac9df8126ba817b2f.png",
+      "path": "images/art/480ac9df8126ba817b2f-ec8d8e7927b1d49a2f51.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "a9c3c5d46cc1179ff878e327c7cb412e11cb3ef8af7811b4d4706a7f3b8d5643",
+      "outputSha256": "b6b731cbbcfb14682962eb017fcaf6f868115fcb33aaf66c5d108d64ca59e5b3",
+      "originalBytes": 10191039,
+      "bytes": 119458,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/97d565dc-a15d-4fef-bd18-327048b9f248/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/27d77bae8722954917ed.png",
+      "path": "images/art/27d77bae8722954917ed-30a3c43eb47ee7bdab3f.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "c7cd3cd5bdfb1d044f9af841f99d688995ae28ac98f4dda957407dd6e1217b32",
+      "outputSha256": "4fb7a70f384db4a7f99f401295af16ad3bc0f1bd098fb2deada2c18e21b098bf",
+      "originalBytes": 8020193,
+      "bytes": 18312,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/98e1b5b8-4db0-4bc7-b345-ccaa8d52e2af/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/f56c2d8e36542cea98d8.png",
+      "path": "images/art/f56c2d8e36542cea98d8-2b6e346888d9401e8365.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "0bf9a95a00865f6fff47cc41af08a6cfdc7176ee2d87790c6ee84af260cb2150",
+      "outputSha256": "24ed04261ea3ad24ef249f12cf19761a1620d078a4a44ba3a833f960b3f6c12f",
+      "originalBytes": 7517440,
+      "bytes": 31734,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/9e0945dd-5fa1-4cb0-8a2f-cce1d576118b/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/e920ab313a197ba4acc9.png",
+      "path": "images/art/e920ab313a197ba4acc9-b3e944a8c692750a60bd.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "1f7d5099a5a695bfd5657683e346003eb5df4dd0ba28911bbb71853aa1824f0b",
+      "outputSha256": "9da3e70cebf35b046a8fcd857eb0c51f9f0873ea89e8499232236da9a32bed0e",
+      "originalBytes": 8784559,
+      "bytes": 39020,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/a1b1aa22-bcbe-45a9-9c5f-cf78d32c8a4f/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/cd98f9cb949acce9bddc.png",
+      "path": "images/art/cd98f9cb949acce9bddc-859b5fbd565279a26cd4.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "4331f9a7ca6d55655300c0791ec6efb44563c9bd1ac897aed1b7f0399fb721ce",
+      "outputSha256": "c35c8cb3b785736be4cc72cbab6cb116a6b1681b95062f85c60c90347f0eaf4d",
+      "originalBytes": 7785321,
+      "bytes": 60544,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/a87f3c12-4ef4-4f14-852b-1e886c2eedb3/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/36eed06a36b73bde357d.png",
+      "path": "images/art/36eed06a36b73bde357d-07824db39b8510bca74c.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "a9127ceeda074f0d091c6f932c0f15e8aadda4eafa44dff26a523cee9fd34bf1",
+      "outputSha256": "681e3c360bca3d0485e5e73c2a78bd6d771a427ee32a72dd735283051d1853d0",
+      "originalBytes": 8331845,
+      "bytes": 89006,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/ace6742e-f77e-42cd-b31a-811ebef29bc9/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/c9d3ef4721e56c989ece.png",
+      "path": "images/art/c9d3ef4721e56c989ece-0e8952a2237f47a7b00a.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "9ca60024e0d9fab99bc0649e9058955005b505fe83ddcd1f4a8c97d6a179f375",
+      "outputSha256": "0e4ca630ac3b4d1c77763213646fa3ee0f58e4da7fa0bb413cf5e3a312bae0fa",
+      "originalBytes": 8815077,
+      "bytes": 59090,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/af704f54-9547-4b2d-8374-29702ce3e3eb/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/8b5834a0e7bbf832e033.png",
+      "path": "images/art/8b5834a0e7bbf832e033-d2fce570a51aad1f429c.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "c42fecf14336a8a13390552b72d094467b9a7946f7c977cb799e161295290692",
+      "outputSha256": "956b837cc2afbae3e13648839591700d4f0b65ceae42324f0ec3682dee0c0a12",
+      "originalBytes": 8912539,
+      "bytes": 64008,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/b1bee978-52b7-40ec-9294-95e4f1f67f39/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/8732c68239d21a212b69.png",
+      "path": "images/art/8732c68239d21a212b69-df892238d6a890161c96.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "8027fdc498205f267735f40c4cc954f71409a4f2838ccaf4d422a4d3770899b6",
+      "outputSha256": "aca985a208e0a8f1b378aed68f650e30262029736f149aa2cb2b0282ef93b34d",
+      "originalBytes": 8197438,
+      "bytes": 46998,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/b1d57fdb-32c9-4191-92fb-c9323975a3ab/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/b33de090cf511cb25fd1.png",
+      "path": "images/art/b33de090cf511cb25fd1-0fd8001c6c39c5c26b69.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "93a173b2f5906f6d356571e45b70e7e3fb38bc531edf7fa958aa65c9850f2297",
+      "outputSha256": "1713e3f768d581a9f6fd25944591ed9b3d5e43be178aef3f614996e780f80d05",
+      "originalBytes": 7187823,
+      "bytes": 47994,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/b2b1124c-3085-45bd-a454-d4dbaabad1bf/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/b4bbff9bfa781877a8c8.png",
+      "path": "images/art/b4bbff9bfa781877a8c8-b88425af3ee23a84b31c.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "b0b2066cadc57a142e1de77557dff84bd499890ae790ff7410533df3db5dcc63",
+      "outputSha256": "031856bc4d3dbcf5b15c7fee6cb2833b28fd39d01c1565485a1f53ab60e735ab",
+      "originalBytes": 7789165,
+      "bytes": 45052,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/b4253bcb-a82e-44c5-bc40-55dd03fdf8fa/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/d6e7373940604e19b850.png",
+      "path": "images/art/d6e7373940604e19b850-e64f00f209aa4ac17089.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "8f1bfe9a54e851260ea76418d8dbc15195fb4bc522c036f213b29d5f5dff441b",
+      "outputSha256": "42567ff0ebb6ba4df9f230e6fbc39e37d013a0ede3664944d15cdfa81458f35b",
+      "originalBytes": 9284666,
+      "bytes": 69824,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/bd44326e-0b71-4fe8-827d-ef99ea675fb7/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/3c1fe681b5a0f0f1d475.png",
+      "path": "images/art/3c1fe681b5a0f0f1d475-a63b6a6ea0cff3fe39e2.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "2b10e1fcf348ea1c8ece550a96c5be6867485170865a29e6d489844371830605",
+      "outputSha256": "1d16518aa41796d4d8f8f001c8ab23e0a4b2bf04f3610b4b21150673b49bfd47",
+      "originalBytes": 7273296,
+      "bytes": 61618,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/bf1e13ea-254c-41e4-aa2c-d02d8812427a/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/6c2e400ce8d508bcd042.png",
+      "path": "images/art/6c2e400ce8d508bcd042-b935de1226b70529a5c9.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "f3ba03bbc2d544dde858e6afe79ec504cf95c6a2f7c0c9aa6a51f60d9f4a38e2",
+      "outputSha256": "a6527d8ea5c009a7e65ce2efb2e6a450a8369383641ab7c29a1253b680b3b844",
+      "originalBytes": 9039853,
+      "bytes": 114206,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/c5692cc1-a3e0-43d6-ab00-123c97cd9e53/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/ccacacc712bb8d11f051.png",
+      "path": "images/art/ccacacc712bb8d11f051-2823c80e0f554dff89ac.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "571dd3f2d2c391b9efb3fdbc0520be033a7dde03a253bd89d3a71aeae4ddb473",
+      "outputSha256": "aa0c3b91180ce84f6c02f21e4c6874fb577699efa0c1da5da2e8f24bc3de653c",
+      "originalBytes": 7911285,
+      "bytes": 48020,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/c7a44b73-5293-44f6-8b2b-c394b99b223e/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/457aeedef59ee0735035.png",
+      "path": "images/art/457aeedef59ee0735035-21f68a7db9bd5aa083e9.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "8fd9ccbe49cbe2b94425b8f4b0a5e9e37d28a5cb5772621f9e005993dcd4373c",
+      "outputSha256": "bd0c748165eda6598010e20ed5848e10b99ede70283db16346e867a00464c4a3",
+      "originalBytes": 9058789,
+      "bytes": 51914,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/cbdf1866-c272-43e7-b926-e8baa6337461/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/c3e108e717962756fc86.png",
+      "path": "images/art/c3e108e717962756fc86-2f077dd1d9fb67460958.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "213a9d0f7c8bb50af7a4eed4dec1f1b7ec9f784e7401b6e86d8d0bf78f1bbbb5",
+      "outputSha256": "c3b2e79204633d2e4b47c2aaaf9dc8c6b9484ba5465c6b67318f4df7549a3b6d",
+      "originalBytes": 8562789,
+      "bytes": 64666,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/d0ab3f46-1a6d-4292-8fdd-bcf7863fb886/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/0581709ec1dd8b5fd5fb.png",
+      "path": "images/art/0581709ec1dd8b5fd5fb-a947d422e13a6bf36479.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "9127c715730e49478fc0d4bf55ecdc5c76bdc3f99e62dc9de7bc08b02b5d3638",
+      "outputSha256": "4ba8c9e3b07436ba97669baca4fc55af41ada8088a00c35595ffe89d9a97864d",
+      "originalBytes": 6061189,
+      "bytes": 39236,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/d1b236ca-0ad5-4fbc-9917-d06818ede597/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/227ac75e4770c6120bd7.png",
+      "path": "images/art/227ac75e4770c6120bd7-f4d9e8aa42544026f4ff.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "b16a4f9e0ee5c7387e4b467ff0d4f2ccd4cf87e15cd3131c5ce0198121857da6",
+      "outputSha256": "601b2b8ec0fc11711caa7291abca080db42f94607fc8168396e9b49ea9f92ee2",
+      "originalBytes": 10125457,
+      "bytes": 101946,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/d2a12c61-595d-4ddd-a7f8-766bc41848ba/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/8b22c21ef1d728a505da.png",
+      "path": "images/art/8b22c21ef1d728a505da-cc48bb77bd6c143cd1b5.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "5d513de8b662b51e70442e74e8f82615ece8e548b8eb1299263f88418a58672f",
+      "outputSha256": "53b558ef79d70130e97f1e4bc3c4aa1f50a6469be27af10a42442c73f55c81f0",
+      "originalBytes": 8936713,
+      "bytes": 67508,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/daa83228-5295-4c1d-bc58-c330c9a9c025/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/4313c2b33e42cdaa3220.png",
+      "path": "images/art/4313c2b33e42cdaa3220-53340580d2fe2418c692.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "f910d578d8c39a35bb5cdb818eef23a5a49b3f3f6ff14a773727b0d5c6c554d9",
+      "outputSha256": "95a1159cefeac06ef69630a90449f593f01da67c1c15be714614ee5ca4b6fb37",
+      "originalBytes": 6679136,
+      "bytes": 31000,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/de6abac3-eaf0-4da7-ad7b-71ef82c04ca9/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/0e2c06e564645739df23.png",
+      "path": "images/art/0e2c06e564645739df23-f4387a88a29e5e72dc4c.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "66e0e7b259e51448e0a1cc9b1aaa070f73330f8fea56d61b5b6023e9b71bc500",
+      "outputSha256": "16838f2da21b629db8f1155d0c7bb1c8973330e48b44f08a78d922d42bff6937",
+      "originalBytes": 9138853,
+      "bytes": 52538,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/dfc0db36-5761-4335-bb64-c4c10215177a/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/7d708eab81b4be6d3bf4.png",
+      "path": "images/art/7d708eab81b4be6d3bf4-b7cfcfd0010051893257.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "3e55c8c158de09eba0662009a7840792186eb6ff952ed4cecc7fe7bdc8ee5b56",
+      "outputSha256": "01abf417a6aa67806bb3c9e9fc1df05c06fcd0bcff123a1c52727d3b2742094d",
+      "originalBytes": 7811385,
+      "bytes": 53444,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/e53502ec-0a1e-4e34-b2e9-21e3f2bf5f16/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/95e5db26a1e14fda0b5f.png",
+      "path": "images/art/95e5db26a1e14fda0b5f-585cebc6a8eda244dd75.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "e4189a4e4f979c1dffea3284e5fe98d2c7ddaa711d9674efc8d158dd541161ca",
+      "outputSha256": "a6e667da08fc8fd9465e53d211b9adc5b009cc613952823da2ae8e66505ee8d3",
+      "originalBytes": 8219876,
+      "bytes": 80872,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/e86980b7-f91f-4779-9ab7-bde332e4cbe6/0_3.png": {
+      "role": "art",
+      "original": "assets/originals/81ed7b977addd9f5c155.png",
+      "path": "images/art/81ed7b977addd9f5c155-e3faa6b9260ca49ab968.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "dfc94366569fbac2806e4f3ae73912702693d953e915a3dcd5b018cc396ad427",
+      "outputSha256": "27b4832e292f276495f42d6614e249b987cad7532c12a9200cc75a44aba91d32",
+      "originalBytes": 1920161,
+      "bytes": 56240,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/e8f58207-584b-4ffa-bca7-8dd3858c9271/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/dab778a4b2e88f8ab595.png",
+      "path": "images/art/dab778a4b2e88f8ab595-0e5c9adbc14de29d9b4a.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "7796c93c9f2ab37ba5b48b25e5ae3464d8800e0de47df385e5fb9371317b6c2d",
+      "outputSha256": "6334a39574f476b77821202e72a6894dd13b785a4c32a438385d77eccbc468c8",
+      "originalBytes": 8421713,
+      "bytes": 79826,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/ed1dd946-8847-493f-9590-a863e7d345bb/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/aba2961e6983c4f923b0.png",
+      "path": "images/art/aba2961e6983c4f923b0-1fab29b791fec6b42864.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "2c3c4d48c5a234a1f348c7caff0fca03618ff066191175add0730fd938713668",
+      "outputSha256": "2f32ca28305ebf40085f1f4b2a8a6167d829d1319e846b3bf1c52462e6b842b2",
+      "originalBytes": 10019526,
+      "bytes": 78388,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/ef1a2d8f-b2b9-4e80-9dff-390439a77d73/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/e351aed69dbb7080dde4.png",
+      "path": "images/art/e351aed69dbb7080dde4-bbd0b933e283c8508b4a.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "c44eaccb000ebdf637b1a5a416a11fbb2ee6ec63df9dec8bb5538436338dc56c",
+      "outputSha256": "8cdfc4b403445a8a3b0333afea5defb31d8dd14934033b9eab8108d7f01145ba",
+      "originalBytes": 7258116,
+      "bytes": 39338,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/effe1b79-f800-464a-9846-21c4be535d9b/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/fc6bb7d0e04da696b12e.png",
+      "path": "images/art/fc6bb7d0e04da696b12e-25db7de542f7c9b41d0a.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "5303c5a17a1a5ec494e409c2effd333a4186caf269def95f30d49880b190a1be",
+      "outputSha256": "76374d2139fb73416475243242345c92132fe505d8ff2ab14fb2901f5e824e9f",
+      "originalBytes": 6912964,
+      "bytes": 35152,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/f4e841f1-5185-4990-9f81-4b2fb4a35f4e/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/eb0460ca4f2d3142a1b4.png",
+      "path": "images/art/eb0460ca4f2d3142a1b4-2f90592eeb7f7be0dd7b.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "bcc00fc2e6bab7b3540e976197d072e0a46f04752b6a72cb8e9dd11fe348d153",
+      "outputSha256": "f580d4109f87d46654b3c87694e165e6ce8b8bfc632914968d4ae8a94d7e4431",
+      "originalBytes": 7685982,
+      "bytes": 42792,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/f507df3e-9ff8-4f5a-9e5a-15d642933060/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/db364b88eea1428ad660.png",
+      "path": "images/art/db364b88eea1428ad660-adcf11088be2092dfc1e.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "5896204b18359b6ebf857f1b5155d9e1af86d440c626007e174b0adb8db63c2a",
+      "outputSha256": "f0084cd478edf44a710d66545a3b5dfe8e2ff2428a5fab3b82cb0b2acb163d24",
+      "originalBytes": 7498843,
+      "bytes": 45468,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/fb1b75c0-6c43-4113-ac31-609460817987/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/94e5126e8dff6abf01af.png",
+      "path": "images/art/94e5126e8dff6abf01af-a638d16c8aa6f2ca0b6a.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "dfc6d074a847faae7728aa3aea9b10928596f07ea37ddeb8c1f5a8aa9a4bc8f0",
+      "outputSha256": "5773e3d7d7fcd1e18cb5ae0bc23d0da5d76a7bfc8547842861f5fa28150f186d",
+      "originalBytes": 7681861,
+      "bytes": 29682,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/fefd7e39-251e-45e3-b30f-fb2cbd476ba7/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/78998f3d5e40360e35f4.png",
+      "path": "images/art/78998f3d5e40360e35f4-e6c002ac33c1c999cea4.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "9da3fb58ee236630c347799280a52846b2cd2b89da90fec0b4246cfc9c54ec46",
+      "outputSha256": "0f54aa5b77a3e09127aa825f0fe0eff8991ca839e982165d15ece5ead83c12de",
+      "originalBytes": 10000412,
+      "bytes": 75568,
+      "width": 550,
+      "height": 768
+    },
+    "https://ka2le.github.io/chatgpt-apps3/images/mp/arrow2.png": {
+      "role": "icon",
+      "original": "assets/originals/fecc4181a618e77bcdae.png",
+      "path": "images/icon/fecc4181a618e77bcdae-a0c36bb4637d35364202.webp",
+      "settings": {
+        "maxSize": 128,
+        "lossless": true,
+        "effort": 6
+      },
+      "sourceSha256": "d22fea9fb109342114a876ebceaa976b52f3d391dd84a0471772ae5d8c2a094b",
+      "outputSha256": "89c3ecd44b15a0a921cc2e8d3f4d62609036e3fc2788ca8ab85cad2d1d41b689",
+      "originalBytes": 16289,
+      "bytes": 714,
+      "width": 128,
+      "height": 128
+    },
+    "https://ka2le.github.io/chatgpt-apps3/images/mp/card_add.png": {
+      "role": "icon",
+      "original": "assets/originals/782d8f1b2d16cc98cc41.png",
+      "path": "images/icon/782d8f1b2d16cc98cc41-4fd845023885335746a8.webp",
+      "settings": {
+        "maxSize": 128,
+        "lossless": true,
+        "effort": 6
+      },
+      "sourceSha256": "8ccf3e7d4d5971e383680f10ffe1b1926d9f427df8ff59de62b511e6bd2db3e8",
+      "outputSha256": "158af7c1d50f3362c4fbf63cf065d73496a1f798d631f8644bdeef0581766f1e",
+      "originalBytes": 1056,
+      "bytes": 772,
+      "width": 128,
+      "height": 128
+    },
+    "https://ka2le.github.io/chatgpt-apps3/images/mp/cards_fan_outline.png": {
+      "role": "icon",
+      "original": "assets/originals/09fa348a99ff61c4736f.png",
+      "path": "images/icon/09fa348a99ff61c4736f-6c2c857bdf2f8f4cf97d.webp",
+      "settings": {
+        "maxSize": 128,
+        "lossless": true,
+        "effort": 6
+      },
+      "sourceSha256": "b9cab91c44e5268c5fd26a456649f2272cc3ceea177b81e03b01ff97e6a8b67d",
+      "outputSha256": "b171c5ff4626d7704084b0777e94ee71477ab2e526467636b46dce045a0fd176",
+      "originalBytes": 1416,
+      "bytes": 1082,
+      "width": 128,
+      "height": 128
+    },
+    "https://ka2le.github.io/chatgpt-apps3/images/mp/dragon.png": {
+      "role": "icon",
+      "original": "assets/originals/2fd493985d044eb89702.png",
+      "path": "images/icon/2fd493985d044eb89702-8b0193fcacc6b320390e.webp",
+      "settings": {
+        "maxSize": 128,
+        "lossless": true,
+        "effort": 6
+      },
+      "sourceSha256": "d6ff46a6871d669b26022557ce94a7ccd8e851b54bc0d460ddb2018515d0213a",
+      "outputSha256": "b412ebdfd6e5870bfc330b15432a55c20b5fcf428c1ad179fb23b17cf7915b15",
+      "originalBytes": 237990,
+      "bytes": 8648,
+      "width": 93,
+      "height": 128
+    },
+    "https://ka2le.github.io/chatgpt-apps3/images/mp/extra_icons/arrow_rotate.png": {
+      "role": "icon",
+      "original": "assets/originals/55a08502c2f1e55423f2.png",
+      "path": "images/icon/55a08502c2f1e55423f2-01df2a95850dad22b3d4.webp",
+      "settings": {
+        "maxSize": 128,
+        "lossless": true,
+        "effort": 6
+      },
+      "sourceSha256": "53a826208bb4fc7c316c682ddc0d35477a241eef5a255205db2969ee94fed3be",
+      "outputSha256": "2830227b7b64f4644295b145827be753759071daed8684028b35fe69c967eac3",
+      "originalBytes": 1137,
+      "bytes": 818,
+      "width": 128,
+      "height": 128
+    },
+    "https://ka2le.github.io/chatgpt-apps3/images/mp/fastforward.png": {
+      "role": "icon",
+      "original": "assets/originals/262eaed82d10ea7b9aa5.png",
+      "path": "images/icon/262eaed82d10ea7b9aa5-15ff9d3ae0b0ec65f959.webp",
+      "settings": {
+        "maxSize": 128,
+        "lossless": true,
+        "effort": 6
+      },
+      "sourceSha256": "9219ab0c7aaddbb9759acd4690f3654d631d21f0461a98b09f1406eebbb3c27c",
+      "outputSha256": "364798ca9542f3cfbc6c2ab3e824c5ae8494f0db125a4cfdcbf00b235c03bfc7",
+      "originalBytes": 11117,
+      "bytes": 2430,
+      "width": 128,
+      "height": 97
+    },
+    "https://ka2le.github.io/chatgpt-apps3/images/mp/hourglass.png": {
+      "role": "icon",
+      "original": "assets/originals/301a20e9584bcaa4ef1d.png",
+      "path": "images/icon/301a20e9584bcaa4ef1d-7f1149e6fc0d1a4ce3ce.webp",
+      "settings": {
+        "maxSize": 128,
+        "lossless": true,
+        "effort": 6
+      },
+      "sourceSha256": "69693c139c4e3c12c17881f2a1b3b2d49ea71da443a1b6a40af01aef32822ff5",
+      "outputSha256": "c6942fd83e401b7c49e3aa1419b20de5970300dfaeb1dfd689963eb6bdb6549d",
+      "originalBytes": 1046,
+      "bytes": 766,
+      "width": 128,
+      "height": 128
+    },
+    "https://ka2le.github.io/chatgpt-apps3/images/mp/rabbit.png": {
+      "role": "icon",
+      "original": "assets/originals/f18b5f3a97983f73e07c.png",
+      "path": "images/icon/f18b5f3a97983f73e07c-0fe080f927add198ef29.webp",
+      "settings": {
+        "maxSize": 128,
+        "lossless": true,
+        "effort": 6
+      },
+      "sourceSha256": "f5028410603e5fa4bb2ea168270d6bc169b3b0367d3c2c521871015b55851eb3",
+      "outputSha256": "f534542eca503675f7f6388cc21bbcbf14f1570fc0776f2fa05369936953e59e",
+      "originalBytes": 56556,
+      "bytes": 7200,
+      "width": 84,
+      "height": 128
+    },
+    "https://ka2le.github.io/chatgpt-apps3/images/mp/reuse_card.png": {
+      "role": "icon",
+      "original": "assets/originals/d5aa882888100129891e.png",
+      "path": "images/icon/d5aa882888100129891e-8ddbf58961ead3b66e88.webp",
+      "settings": {
+        "maxSize": 128,
+        "lossless": true,
+        "effort": 6
+      },
+      "sourceSha256": "8e94815832e523bb2cd9d24b94a0d259c6596e99695e6e25d99a5a7624c2599c",
+      "outputSha256": "b18627e0c83cdce16c062e1652d2a610d1fd28ccc70eb8c2ddb33dc00e3f8935",
+      "originalBytes": 1374,
+      "bytes": 1048,
+      "width": 128,
+      "height": 128
+    },
+    "https://ka2le.github.io/chatgpt-apps3/images/mp/robot_sharp.png": {
+      "role": "icon",
+      "original": "assets/originals/93d3e6667cd5d2e4047d.png",
+      "path": "images/icon/93d3e6667cd5d2e4047d-fe7e36bcd678111179ba.webp",
+      "settings": {
+        "maxSize": 128,
+        "lossless": true,
+        "effort": 6
+      },
+      "sourceSha256": "3e3978c3603a4a4c6aeaa230197e059ae2b066d195adcf7a5aa264ca831115c8",
+      "outputSha256": "9336e55eb16e9b42908be8cc91e9d55aeb952cf3d6e26d9081b84e770bf086b3",
+      "originalBytes": 162967,
+      "bytes": 4398,
+      "width": 124,
+      "height": 128
+    },
+    "https://ka2le.github.io/chatgpt-apps3/images/mp/shield.png": {
+      "role": "icon",
+      "original": "assets/originals/969d89f3910bd8c7efd4.png",
+      "path": "images/icon/969d89f3910bd8c7efd4-da340a8c96283edc1c70.webp",
+      "settings": {
+        "maxSize": 128,
+        "lossless": true,
+        "effort": 6
+      },
+      "sourceSha256": "61d3a2734e356fb79f4b75ce8d67a1125232f1002d5d707b791b9b6ddafd5fad",
+      "outputSha256": "8b53556afeaf1a7118986d8d83f626447ff543eec7da8195ab2f76bb74641d09",
+      "originalBytes": 913,
+      "bytes": 558,
+      "width": 128,
+      "height": 128
+    },
+    "https://ka2le.github.io/chatgpt-apps3/images/mp/star.png": {
+      "role": "icon",
+      "original": "assets/originals/1d1189f33b87800c7194.png",
+      "path": "images/icon/1d1189f33b87800c7194-a2480f6b5cf08ac2f603.webp",
+      "settings": {
+        "maxSize": 128,
+        "lossless": true,
+        "effort": 6
+      },
+      "sourceSha256": "42d6fa9c45af58ac7cfa8de5dc4b50f0e38bc0519278819c2b6dd900df7b2cab",
+      "outputSha256": "a074cf7f7c58b51074d461f33539faec037c4194fa205c6e1748d5f42b0b0c8d",
+      "originalBytes": 19401,
+      "bytes": 1326,
+      "width": 128,
+      "height": 128
+    },
+    "https://ka2le.github.io/chatgpt-apps3/images/mp/suit_hearts_broken.png": {
+      "role": "icon",
+      "original": "assets/originals/fea548c28a1f56c0c1f0.png",
+      "path": "images/icon/fea548c28a1f56c0c1f0-bb2bc39e9bc5ebd9f54a.webp",
+      "settings": {
+        "maxSize": 128,
+        "lossless": true,
+        "effort": 6
+      },
+      "sourceSha256": "7ec648de84394eb1553ab580d6b3808930d5438b86139b9d516176c6d707901c",
+      "outputSha256": "752a55acfabeea569042998fa6a0c5cffa03da75e52ac45fb51419bbd7dc596c",
+      "originalBytes": 1079,
+      "bytes": 778,
+      "width": 128,
+      "height": 128
+    }
+  }
+}

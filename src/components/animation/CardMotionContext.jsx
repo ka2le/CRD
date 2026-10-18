@@ -151,6 +151,8 @@ export function CardMotionProvider({ children }) {
   )
 }
 
+// This hook belongs beside the provider so consumers share its private context.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useCardMotion() {
   const context = useContext(CardMotionContext)
   if (!context) {
