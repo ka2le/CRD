@@ -1,5 +1,7 @@
 # Tabletop battle redesign study
 
+**Historical design alternatives.** The creator has now requested and approved an optional browser implementation of power − shields + class bonus; see `TABLETOP_MODE.md` for active rules and integer special conversions. The studies below do not define or validate that mode.
+
 Status: **proposal and local numerical experiment, not approved rules**. Updated 2026-10-19. Digital combat, card definitions, draft, discard and preparation remain unchanged. The single-score direction below supersedes the earlier finish/time-chart recommendation.
 
 ## Latest creator direction: one power, one type, one score

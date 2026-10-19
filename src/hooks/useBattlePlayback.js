@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { getHandStats, simulateBattle } from '../game/engine'
+import { resolveTabletopBattle } from '../game/tabletop'
 
 const BATTLE_HEALTH = 21
 const BASE_ROUND_INTERVAL_MS = 1400
@@ -56,7 +57,7 @@ function createInitialPlayback(playerHand = null, opponentHand = null, activatio
   }
 }
 
-export default function useBattlePlayback({ battleStarted, battleInstance, playerHand, opponentHand, deck, timing = {} }) {
+export default function useBattlePlayback({ battleStarted, battleInstance, playerHand, opponentHand, deck, tabletop = false, playerType = null, timing = {} }) {
   const isActive = battleStarted
   const baseRoundIntervalMs = timing.baseRoundIntervalMs
   const damageFlashMs = timing.damageFlashMs
@@ -96,11 +97,12 @@ export default function useBattlePlayback({ battleStarted, battleInstance, playe
 
   const battleResult = useMemo(() => {
     if (!isActive) return null
+    if (tabletop) return resolveTabletopBattle(playerHand, opponentHand, { playerType })
     return simulateBattle(playerHand, opponentHand, { deck })
-  }, [deck, isActive, opponentHand, playerHand])
+  }, [deck, isActive, opponentHand, playerHand, tabletop, playerType])
 
   useEffect(() => {
-    if (!isActive || !battleResult) return undefined
+    if (!isActive || !battleResult || tabletop) return undefined
 
     let timeoutId = null
     let cancelled = false
@@ -165,7 +167,7 @@ export default function useBattlePlayback({ battleStarted, battleInstance, playe
       control.stepNow = null
       if (timeoutId) window.clearTimeout(timeoutId)
     }
-  }, [battleTiming, isActive, battleResult, battleInstance])
+  }, [battleTiming, isActive, battleResult, battleInstance, tabletop])
 
   useEffect(() => {
     if (!damageFlash) return undefined
@@ -229,7 +231,7 @@ export default function useBattlePlayback({ battleStarted, battleInstance, playe
   return {
     battlePlayback,
     battleResult,
-    showBattleResult,
+    showBattleResult: tabletop ? Boolean(battleResult) : showBattleResult,
     damageFlash,
     speed,
     setSpeed,

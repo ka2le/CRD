@@ -17,6 +17,8 @@ import {
 import { applyPreparationAction, createPreparationState } from '../game/preparationState'
 import { chooseDiscardIds } from '../game/cardEvaluator'
 import { DEFAULT_OPPONENT_AI, normalizeOpponentAi, requestOpponentSearchAction } from '../game/opponentAi'
+import { getTabletopChoice, getTabletopHandKey, getCardTabletopTypes } from '../game/tabletop'
+import { createDevScenario, DEV_SCENARIO_NAMES } from '../game/devScenarios'
 
 const STORAGE_KEY = 'crd-dev-settings-v1'
 
@@ -24,6 +26,7 @@ const DEFAULT_SETTINGS = {
   gameMode: 'draft',
   showOpponentCards: true,
   wildDeck: true,
+  tabletop: false,
   opponentAi: DEFAULT_OPPONENT_AI,
 }
 
@@ -81,8 +84,8 @@ export function getOpponentDecisionKey(dealId, game) {
 }
 
 function createGameForMode(mode, draftFirstPicker = 'player', settings = DEFAULT_SETTINGS) {
-  if (mode === 'five-hand-discard') return createFiveHandDiscardGame({ wildDeck: settings.wildDeck })
-  return withOpponentAiTurn(createDraftGame({ firstPicker: draftFirstPicker, wildDeck: settings.wildDeck }), settings)
+  if (mode === 'five-hand-discard') return createFiveHandDiscardGame({ wildDeck: settings.wildDeck, tabletop: settings.tabletop })
+  return withOpponentAiTurn(createDraftGame({ firstPicker: draftFirstPicker, wildDeck: settings.wildDeck, tabletop: settings.tabletop }), settings)
 }
 
 function getNextDraftStartingPicker(current) {
@@ -128,7 +131,7 @@ function createPreBattleState(game) {
 }
 
 function getPlayerPreBattleView(state) {
-  const cards = getActivatablePreBattleCards(state.playerHand, state.playerActivated)
+  const cards = state.playerFinished ? [] : getActivatablePreBattleCards(state.playerHand, state.playerActivated)
   const armedCopyCard = cards.find((card) => card.uid === state.armedPlayerCopyUid) ?? null
   const copyCandidates = armedCopyCard ? getPreBattleCopyCandidates(state.playerHand, armedCopyCard.uid) : []
 
@@ -182,7 +185,7 @@ function createInitialSessionState() {
   const settings = loadStoredSettings()
   const game = createGameForMode(settings.gameMode, 'player', settings)
 
-  return {
+  const initial = {
     settings,
     gameMode: settings.gameMode,
     nextDraftStartingPicker: 'player',
@@ -201,10 +204,37 @@ function createInitialSessionState() {
       opponent: [],
     },
   }
+  if (import.meta.env.DEV && typeof window !== 'undefined') {
+    const query = new URLSearchParams(window.location.search)
+    if (DEV_SCENARIO_NAMES.includes(query.get('scenario'))) {
+      return sessionReducer(initial, { type: 'LOAD_DEV_SCENARIO', payload: createDevScenario({
+        name: query.get('scenario'), mode: query.get('mode') ?? 'draft', result: query.get('at') === 'result',
+      }) })
+    }
+  }
+  return initial
 }
 
 export function sessionReducer(state, action) {
   switch (action.type) {
+    case 'LOAD_DEV_SCENARIO': {
+      if (!import.meta.env.DEV) return state
+      const { game, result, playerType } = action.payload
+      let preBattle = createPreBattleState(game)
+      if (playerType) {
+        preBattle.tabletopChoice = { type: playerType, handKey: getTabletopHandKey(game.playerHand) }
+      }
+      if (result) preBattle = { ...preBattle, playerFinished: true, opponentFinished: true }
+      const next = {
+        ...state, game, preBattle, gameMode: game.mode,
+        settings: { ...state.settings, gameMode: game.mode, tabletop: true, wildDeck: true },
+        selectedIds: [], battleStarted: false, battleLogOpen: false,
+        battleInstance: state.battleInstance + 1, gameSessionKey: state.gameSessionKey + 1, dealId: state.dealId + 1,
+        lastTransition: null, pendingPlayerDraftPickAnimation: null, suppressedHandCardIds: { player: [], opponent: [] },
+      }
+      return result ? sessionReducer(next, { type: 'START_BATTLE' }) : next
+    }
+
     case 'RESET_GAME': {
       const nextMode = action.nextMode ?? state.gameMode
       const nextBattleInstance = state.battleInstance + 1
@@ -609,8 +639,26 @@ export function sessionReducer(state, action) {
         },
       }
 
+    case 'CHOOSE_TABLETOP_TYPE': {
+      if (!state.settings?.tabletop || state.battleStarted || state.game.phase !== 'battle-ready'
+        || state.preBattle.pendingResolution || state.preBattle.armedPlayerCopyUid || state.preBattle.recycleSelection) return state
+      if (getPlayerPreBattleView(state.preBattle).cards.length) return state
+      const choice = getTabletopChoice(state.preBattle)
+      const card = state.preBattle.playerHand.find((entry) => entry.uid === action.uid)
+      const types = card ? getCardTabletopTypes(card, choice) : []
+      const type = action.damageType ?? (types.length === 1 ? types[0] : null)
+      if (!types.length || (type && !types.includes(type))) return state
+      return { ...state, preBattle: { ...state.preBattle,
+        tabletopTypeCardUid: type ? null : card.uid,
+        tabletopChoice: type ? { type, cardUid: card.uid, handKey: getTabletopHandKey(state.preBattle.playerHand) } : state.preBattle.tabletopChoice,
+      } }
+    }
+
     case 'START_BATTLE':
       if (state.battleStarted || state.game.phase !== 'battle-ready' || state.preBattle.pendingResolution) return state
+      if (state.settings?.tabletop && getTabletopChoice(state.preBattle).needsChoice) {
+        return { ...state, preBattle: { ...state.preBattle, playerFinished: true, armedPlayerCopyUid: null, recycleSelection: null } }
+      }
       return createTransitionResult(state, {
         preBattle: completeOpponentPreBattle(state.preBattle),
         battleStarted: true,
@@ -705,10 +753,14 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
   const canPickDraftCard = game.phase === 'draft-player-pick' && game.currentPicker === 'player'
 
   const playerPreBattleView = useMemo(() => getPlayerPreBattleView(preBattle), [preBattle])
+  const tabletopChoice = useMemo(() => getTabletopChoice(preBattle), [preBattle])
   const recycleSelectionCards = useMemo(() => getRecycleSelectionCards(preBattle, 'player'), [preBattle])
   const isPreBattleReady = game.phase === 'battle-ready' && !battleStarted
   const isRecyclePicking = isPreBattleReady && Boolean(preBattle.recycleSelection?.side === 'player')
   const isWaitingForPlayerChoice = isPreBattleReady && (playerPreBattleView.cards.length > 0 || isRecyclePicking)
+  const choosingTabletopType = Boolean(settings.tabletop && isPreBattleReady
+    && !preBattle.pendingResolution && !preBattle.armedPlayerCopyUid && !isRecyclePicking
+    && playerPreBattleView.cards.length === 0 && tabletopChoice.types.length > 1)
   const highlightedPreBattleIds = useMemo(() => {
     const ids = [
       ...playerPreBattleView.cards.map((card) => card.uid),
@@ -757,6 +809,22 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     sequenceTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId))
     sequenceTimeoutsRef.current = []
   }, [])
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return undefined
+    function jump(name, options, result) {
+      const payload = createDevScenario({ ...options, name, result })
+      clearSequenceTimeouts()
+      dispatch({ type: 'LOAD_DEV_SCENARIO', payload })
+    }
+    const helpers = {
+      list: () => [...DEV_SCENARIO_NAMES],
+      prepare: (name = 'tie', options = {}) => jump(name, options, false),
+      result: (name = 'bonuses', options = {}) => jump(name, options, true),
+    }
+    window.crdDev = helpers
+    return () => { if (window.crdDev === helpers) delete window.crdDev }
+  }, [clearSequenceTimeouts])
 
   const scheduleTimeout = useCallback((callback, delayMs) => {
     const timeoutId = window.setTimeout(() => {
@@ -842,6 +910,10 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     if (!isPreBattleReady) return
     dispatch({ type: 'ACTIVATE_PLAYER_PRE_BATTLE_CARD', uid })
   }, [isPreBattleReady])
+
+  const choosePlayerTabletopType = useCallback((uid, damageType) => {
+    dispatch({ type: 'CHOOSE_TABLETOP_TYPE', uid, damageType })
+  }, [])
 
   const resolvePlayerRecyclePick = useCallback((uid) => {
     if (!isRecyclePicking) return
@@ -1077,6 +1149,11 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     discardPhase,
     opponentDiscarding,
     canStartBattle,
+    tabletopChoice,
+    choosingTabletopType,
+    choosePlayerTabletopType,
+    tabletopTypeCardUid: preBattle.tabletopTypeCardUid,
+    tabletopSelectedCardUid: tabletopChoice.selectedType ? preBattle.tabletopChoice?.cardUid : null,
     deckCount: resolvedDeckCount,
     pendingDraftPickUid,
     draftActivationTick,

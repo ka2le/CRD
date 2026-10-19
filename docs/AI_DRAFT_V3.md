@@ -40,3 +40,11 @@ Equal-budget comparison is paired by physical deal, seat, starter and planning R
 New collection completed in1,543.7 seconds: all8,000 families /720,000 candidate rows /23.04m simulations. Combined split:9,555 training families (859,950 rows),1,218 validation (109,620),1,227 test (110,430). Initial checkpoint verification confirms every weight, normalization array and linear coefficient is exactly equal to the frozen v2 source; only host exclusion metadata expands to12,000 families.
 
 The1,200-second continuation is active, retaining the best validation checkpoint (epoch8 at latest check). The frozen v2 reference has completed4,000 games on1,000 new deals:1,959 wins /132 draws /1,909 losses, score50.625%,2.88m exact completions. This is v2 against itself with paired independent planning streams, not evidence of a new-model gain. The v3 challenger tournament is queued after full training completes; results will be added when available.
+
+## Second continuation, run 2 (2026-10-19 evening)
+
+Warm-started from v3 `best.npz` with the same data/settings (lr 0.0002, 1,200 s) plus new `--snapshot-every 5` in `train_value.py`; 176 epochs into `.ai-runs/draft-v4/model/`. Validation cross-entropy never improved on the starting weights (0.6527 → 0.726 at the end; `best.npz` = start), the same overfitting seen in run 1 after epoch 8. Top-choice agreement with the search teacher crept up 75.1% → ~76.2% and regret 0.058 → 0.053, but play strength did not move:
+
+Score vs plain search (500 deals / 2,000 games, seed 9000000, paired with `draft-v2/confirm-*`): run1 best 53.75%, run1 last (e84) 53.42%, run2 e20 53.55%, e60 53.45%, e100 53.40%, last (e176) 53.57%; 100k shallow 53.05%, v2 deep 53.50%. Every gain over plain search sits at +2.75..+3.1pp with ±1pp intervals that overlap completely. Curves: `.ai-runs/eval-final/training-curves.png`; numbers `.ai-runs/eval-final/curve/winrate-curve.json`.
+
+Conclusion: more epochs on this dataset are exhausted. Next gains need different data (e.g. labels from neural-assisted continuations rather than heuristic rollouts, or more families), regularization, or a larger search budget, not more training time.

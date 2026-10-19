@@ -1,5 +1,6 @@
 import './BattleOverlay.css'
 import { GameIcon, SvgIcon } from '../ui/GameIcon'
+import { TabletopFormula } from './TabletopScore'
 
 const RESULT_COPY = {
   player: { title: 'Victory', tone: 'win' },
@@ -14,6 +15,7 @@ export default function BattleOverlay({ battlePlayback, battleResult, onNewGame,
   const playerDealt = battlePlayback.playerTotalDamageDealt
   const opponentDealt = battlePlayback.opponentTotalDamageDealt
   const maxDealt = Math.max(playerDealt, opponentDealt, 1)
+  const tabletop = battleResult.mode === 'tabletop'
 
   return (
     <div className={`battle-result battle-result--${copy.tone}`} onClick={onClose}>
@@ -21,6 +23,12 @@ export default function BattleOverlay({ battlePlayback, battleResult, onNewGame,
         <div className="battle-result__rays" aria-hidden="true" />
         <h2 className="battle-result__title">{copy.title}</h2>
 
+        {tabletop ? (
+          <div className="tabletop-score__formulas">
+            <TabletopFormula score={battleResult.player} label="You" />
+            <TabletopFormula score={battleResult.opponent} label="Opponent" />
+          </div>
+        ) : <>
         <div className="battle-result__meta">
           <GameIcon name="cd" />
           <span>{battlePlayback.round}</span>
@@ -45,6 +53,7 @@ export default function BattleOverlay({ battlePlayback, battleResult, onNewGame,
           </div>
         </div>
 
+        </>}
         <div className="battle-result__actions">
           <button type="button" className="ui-button ui-button--icon battle-result__view" onClick={onClose} aria-label="View the table">
             <SvgIcon name="eye" />

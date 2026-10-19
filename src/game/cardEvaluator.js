@@ -1,4 +1,6 @@
 import { getActionDamage, getHandStats } from './engine.js'
+import { getTabletopProfile } from './tabletop.js'
+import { evaluateTabletopHand, chooseTabletopDiscards } from './tabletopAi.js'
 
 const CLASS_ORDER = ['critter', 'robot', 'dragon']
 const COPY_CARD_BONUS = 220
@@ -62,6 +64,7 @@ export function getShieldAverage(hand = []) {
 }
 
 export function getHandAverageDamage(hand = []) {
+  if (hand.some((card) => card.tabletop)) return getTabletopProfile(hand).base
   const stats = getHandStats(hand)
   const shieldEstimate = getShieldAverage(hand)
 
@@ -133,6 +136,9 @@ function getCurrentPlanDamageCards(hand = [], mainPlan) {
 
 export function evaluateCardForHand(card, hand = [], options = {}) {
   if (!card) return Number.NEGATIVE_INFINITY
+  if (card.tabletop || hand.some((entry) => entry.tabletop)) {
+    return evaluateTabletopHand([...hand, card]) - evaluateTabletopHand(hand)
+  }
 
   const mainPlan = options.mainPlan ?? chooseMainPlan(hand)
   const currentAverageDamage = getHandAverageDamage(hand)
@@ -227,6 +233,7 @@ export function chooseCardsToKeep(hand = [], options = {}) {
 }
 
 export function chooseDiscardIds(hand = [], options = {}) {
+  if (hand.some((card) => card.tabletop)) return chooseTabletopDiscards(hand, options.discardCount ?? 2)
   const mainPlan = options.mainPlan ?? chooseMainPlan(hand)
   const discardCount = options.discardCount ?? 2
   const keepTarget = Math.max(0, hand.length - discardCount)

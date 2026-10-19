@@ -9,10 +9,18 @@ const LANES = [
   { key: 'dragon', every: 3, dmg: 3 },
 ]
 
-export default function HelpSheet({ open, onClose }) {
+export default function HelpSheet({ open, onClose, tabletop = false }) {
   return (
     <Sheet open={open} onClose={onClose} title={<SvgIcon name="help" />}>
       <div className="help">
+        {tabletop ? <section className="help__block help__facts">
+          <div className="help__fact"><GameIcon name="damage" /><span>Each ordinary attack gives 2 power per matching stat. Add all attacks.</span></div>
+          <div className="help__fact"><GameIcon name="star" /><span>Your largest class contribution is your main damage type. If tied, tap a highlighted card before battle. Neutral-only power uses Robot.</span></div>
+          <div className="help__fact"><GameIcon name="shield" /><span>Each enemy shield removes 2 Critter power, 1 Robot power or 0 Dragon power. Power stops at zero.</span></div>
+          <div className="help__fact"><GameIcon name="critter" /><span>After shields: Critter +1 with positive power; Robot +2 at 7 and another +1 at 11; Dragon +4 at 11 and another +2 at 14.</span></div>
+          <div className="help__fact"><GameIcon name="damage" /><span>Base − shields + bonus = score. Higher wins; equal scores tie.</span></div>
+          <div className="help__fact"><GameIcon name="star" /><span>Ultimates, including Devour: 4 per matching stat. Bite: 2. Punch: double Robot attacks, +1 per other scoring attack. Devour also offers a Dragon-type option. Hold a card for its full rule.</span></div>
+        </section> : <>
         <section className="help__block">
           <div className="help__timeline">
             <span />
@@ -39,7 +47,9 @@ export default function HelpSheet({ open, onClose }) {
           <span className="help__chip help__chip--damage">2 <GameIcon name="damage" /></span>
         </section>
 
+        </>}
         <section className="help__block help__facts">
+          {!tabletop ? <>
           <div className="help__fact">
             <span className="help__chip help__chip--shield"><GameIcon name="shield" /></span>
             <span>Blocks damage on the round it fires.</span>
@@ -52,6 +62,7 @@ export default function HelpSheet({ open, onClose }) {
             <span className="help__chip help__chip--special"><GameIcon name="star" /></span>
             <span>Glowing specials can be used before the battle.</span>
           </div>
+          </> : <div className="help__fact"><GameIcon name="star" /><span>Use specials before battle, or press Battle to finish preparation.</span></div>}
           <div className="help__fact">
             <span className="help__chip"><GameIcon name="draw" /></span>
             <span>Draft: pick 1 of 5, opponent picks 1, the rest are discarded. Five packs.</span>

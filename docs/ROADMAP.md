@@ -4,6 +4,8 @@ Source-reviewed baseline: 2026-10-18. Proposed work order; unresolved rules stil
 
 ## Implemented
 
+2026-10-19: optional tabletop scoring for both Draft and Discard, converted card symbols, main-type commitment, integer specials, tabletop-aware browser AI and immediate result formulas. See `TABLETOP_MODE.md`. Balance playtesting remains future work; offline AI training continues using digital combat.
+
 Both local human-versus-AI modes, four preparation effects, simultaneous combat, 27 playable definitions, Normal/Wild Deck, card art/tooltips, animations/masks, round playback/log/results, persisted settings, seeded/injected deck seams and Pages deployment configuration. Added 2026-10-19: full preparation decision API shared with browser, either-seat headless control, normal outcomes/rewards, private observations/history, persistent worker v2 and tested Python/Gymnasium variable-action wrapper. See `AI_ENVIRONMENT.md`.
 
 ## Latest AI planning - 2026-10-19
@@ -12,7 +14,7 @@ Newest completed step: large draft-only corpus, ~100k and four-hidden-layer/~150
 
 Current priority supersedes the broader sequence below: Draft picks only; heuristic preparation. First mixed self-play corpus, trained NumPy residual network and paired unseen-deal tournaments are complete (`AI_DRAFT_EXPERIMENT.md`). Search beats heuristic in the initial tournament; neural improvement over linear/search is not established. Next improve independent deal coverage, label quality and fresh held-out comparisons before browser promotion or broader decision learning.
 
-The creator requested search with a mathematical baseline and neural correction. The full-decision/Gymnasium slice and first observation-conditioned sampler/rollout teacher are implemented; `AI_SEARCH.md` gives commands/assumptions. Next: broader grouped corpus and held-out evaluation -> residual value network -> refined beliefs/deeper search/self-play -> browser worker. Host forks preserve real hidden state and are not unseen-world samples. Tabletop chart work remains separate/unapproved.
+The creator requested search with a mathematical baseline and neural correction. The full-decision/Gymnasium slice and first observation-conditioned sampler/rollout teacher are implemented; `AI_SEARCH.md` gives commands/assumptions. Next: broader grouped corpus and held-out evaluation -> residual value network -> refined beliefs/deeper search/self-play -> browser worker. Host forks preserve real hidden state and are not unseen-world samples. The tabletop browser mode is implemented separately; historical chart studies do not define its rules.
 
 ## Earlier scope clarification and completed fix
 

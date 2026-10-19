@@ -8,6 +8,7 @@ import {
   chooseHeadlessBaselineAction,
 } from '../src/game/headlessGame.js'
 import { evaluateRolloutActions, sampleHeadlessWorld } from '../src/game/rolloutSearch.js'
+import { describePreparationActions } from '../src/game/preparationFeatures.js'
 
 const sessions = new Map()
 
@@ -39,6 +40,11 @@ function handleRequest(request) {
   // Stateless inference: no access to a live session or its hidden deck/seed.
   if (request.command === 'evaluate') {
     return { ok: true, evaluation: evaluateRolloutActions(request.observation, request.spec, request.options) }
+  }
+
+  // Stateless: deterministic afterstates of the acting seat's own preparation options.
+  if (request.command === 'preparation-features') {
+    return { ok: true, actions: describePreparationActions(request.observation, request.legalActions) }
   }
 
   if (request.command === 'sample') {

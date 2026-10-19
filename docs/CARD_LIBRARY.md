@@ -1,5 +1,9 @@
 # Current card library
 
+These are the digital definitions. Tabletop mode derives separate per-game cards with zero cooldown and converted symbols/effects; `TABLETOP_MODE.md` lists all conversions. Imported definitions and digital deck counts stay intact.
+
+Tabletop ultimates (Murder Rabbit, Robot Ultimate, Dragon Ultimate and Devour) all give **4 power per matching stat**, double an ordinary attack. Devour retains the Dragon main-type option.
+
 Reviewed 2026-10-18. Definitions: `data/cards.json`. Playable inclusion: `CORE_CARD_IDS` in `src/game/cards.js`. Use these IDs rather than display-name capitalization in code.
 
 There are 30 imported definitions, 27 playable. Normal deck: 70 cards. Wild Deck: 102, replacing each playable one-copy count with three and leaving other counts unchanged. Extra and monster sets are not imported.

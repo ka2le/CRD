@@ -48,6 +48,7 @@ function finalizeIfDraftComplete(game) {
 export function createDraftGame({
   firstPicker = 'player',
   wildDeck = false,
+  tabletop = false,
   seed,
   rng,
   deck: providedDeck = null,
@@ -55,7 +56,7 @@ export function createDraftGame({
   includeRecentMoves = true,
   openingDraftAnimation = 'idle',
 } = {}) {
-  const deck = providedDeck ? [...providedDeck] : buildShuffledDeck({ wildDeck, seed, rng })
+  const deck = providedDeck ? [...providedDeck] : buildShuffledDeck({ wildDeck, tabletop, seed, rng })
   const openingDraw = drawCards(deck, 5)
   const openingRow = markCards(openingDraw.drawn, openingDraftAnimation)
   const pendingOpponentPickUid = firstPicker === 'opponent'

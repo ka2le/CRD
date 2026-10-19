@@ -21,6 +21,8 @@ Players assemble combinations of class stats, matching attacks and special effec
 
 Five cards is the hand-building target. Preparation can increase the eventual combat hand beyond five. Normal/Wild Deck is a copy-count option, not a third game mode.
 
+**Optional tabletop battle (2026-10-19):** Menu → Tabletop battle applies to either hand-building mode. Ordinary attacks give 2 power per matching stat, with no cooldowns or rounds. Commit the largest contributing class (click a card when tied), subtract enemy shields at Critter 2 / Robot 1 / Dragon 0, then add cumulative bonuses on remaining power: Critter +1, Robot +2 at 7 / +3 total at 11 (confirmed update), Dragon +4 at 11 / +6 total at 14. Higher final score wins; equal scores tie. Card icons, inspect/help, AI evaluation and result formulas follow the selected rules; formulas hide zero terms and use broken hearts for bonuses. The creator approved integer special conversions; balance remains experimental. See `docs/TABLETOP_MODE.md`.
+
 ### Preparation
 
 Supported cards: `draw_2_extra`, `draw_all_new_1`, `copy_card_in_hand`, `recycle_card`. The human can activate eligible cards in a chosen order before Battle, or skip them. Copy transforms the source with a new identity, allowing copied preparation effects to activate independently. Preparation is private with no turn order between players. Pressing Battle resolves all remaining AI preparation atomically before combat, including newly acquired specials. Unused human specials are skipped. See `docs/RULES.md`.
@@ -62,9 +64,15 @@ The AI preparation fix is complete. Follow-up asset work archives all 88 source 
 
 ## Architecture and future direction
 
-### Tabletop combat exploration (2026-10-19)
+### Tabletop battle mode (2026-10-19)
 
-The creator requested a lower-arithmetic tabletop resolution while preserving draft/discard structure and engine-building/counterplay. Latest direction: calculate whole-number power once, choose damage type on equal contributions before battle, apply simple shield penalties (candidate: Critter -2 / Robot -1 / Dragon -0 per enemy shield), and compare a single chart score. The chart should deliberately favor Critters at low power, Robots at middle power, Dragons at high power; the latest candidate uses bands 1–4 / 5–7 / 8+. Balance shifts and integer special-card redesigns are explicitly acceptable; exact old combat parity is not the goal. `docs/TABLETOP_COMBAT_DESIGN.md` includes a concrete score chart and the superseded finish-time exploration. Earlier diagnostics in `scripts/tabletop-combat-study.mjs` evaluate the old approximation, not the latest rules. This remains an unapproved proposal; digital rules and card values remain unchanged. Two candidate score-card designs (shield penalties −2/−1/0; bonuses Critter +1, Robot +2 at 7 / +3 at 10, Dragon +4 at 11 / +6 at 14) are viewable from Menu → Score card; see `docs/UI.md`.
+**Current implementation:** the creator requested the simpler power-minus-shields-plus-bonus candidate as an optional browser mode for Draft and Discard, with approved integer special conversions. `docs/TABLETOP_MODE.md` is the active rules and source reference. Digital round combat remains the default and offline training scope. The earlier ordinal chart and finish-time proposals below are historical alternatives, not the implemented scoring or balance evidence.
+
+Updated tabletop ultimate rule: Devour, Murder Rabbit, Robot Ultimate and Dragon Ultimate all deal **4 power per matching stat**, double an ordinary attack. Devour retains its optional Dragon main-type override.
+
+Development checks can jump straight to prepared hands/results with `crdDev.prepare()` / `crdDev.result()` or `?scenario=…&at=result`; these shortcuts are development-only. Prefer these to manually playing matches for UI verification.
+
+The creator accepts balance shifts and integer special-card redesigns to keep hand arithmetic simple. `docs/TABLETOP_COMBAT_DESIGN.md` preserves the superseded ordinal chart and finish-time explorations; earlier diagnostic percentages do not evaluate the implemented mode. Menu → Score card shows two reference designs using the confirmed thresholds (Critter +1, Robot +2 at 7 / +3 at 11, Dragon +4 at 11 / +6 at 14). See `docs/UI.md`.
 
 Keep combat and mode rules in reusable `src/game/` modules. React components present state; the reducer/session layer coordinates flow, and dedicated hooks coordinate timing. Logical ownership and temporary visual visibility may differ during card flights; preserve explicit masks/suppression.
 

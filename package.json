@@ -16,6 +16,7 @@
     "headless:test": "node --test scripts/headless-tests.mjs",
     "regression:smoke": "node scripts/regression-smoke.mjs",
     "opponent:test": "node --test scripts/opponent-ai-tests.mjs",
+    "tabletop:test": "node --test scripts/tabletop-tests.mjs",
     "opponent:benchmark": "node scripts/opponent-ai-benchmark.mjs"
   },
   "dependencies": {

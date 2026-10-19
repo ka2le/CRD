@@ -253,7 +253,7 @@ export function stepHeadlessGame(state, action) {
   return advanceToControlledDecision(applyDecision(state, resolveAction(state, action)))
 }
 
-function combatFeatures(hand) {
+export function combatFeatures(hand) {
   const result = simulateBattle(hand, [], { maxRounds: 12, damageToWin: Number.MAX_VALUE })
   return {
     stats: getHandStats(hand),

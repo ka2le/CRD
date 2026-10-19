@@ -9,6 +9,7 @@ import Pile from './components/board/Pile'
 import ShuffleIntro from './components/board/ShuffleIntro'
 import BattleArena from './components/battle/BattleArena'
 import BattleOverlay from './components/battle/BattleOverlay'
+import TabletopScore from './components/battle/TabletopScore'
 import InfoOverlay from './components/overlay/InfoOverlay'
 import CardInspectProvider from './components/overlay/CardInspect'
 import PileSheet from './components/overlay/PileSheet'
@@ -22,6 +23,7 @@ import { useElementSize } from './hooks/useFitLayout'
 import { SHUFFLE_LEAD_MS, getPackDealMs } from './hooks/dealTiming'
 import { getHandStats } from './game/engine'
 import { getHandAverageDamage } from './game/cardEvaluator'
+import { getCardTabletopTypes } from './game/tabletop'
 
 const BATTLE_HEALTH = 21
 const RESULT_LABELS = { player: 'Victory', opponent: 'Defeat', tie: 'Draw' }
@@ -81,6 +83,11 @@ function AppContent() {
     copyCandidateIds,
     isPreBattleReady,
     discardCards,
+    tabletopChoice,
+    choosingTabletopType,
+    choosePlayerTabletopType,
+    tabletopTypeCardUid,
+    tabletopSelectedCardUid,
   } = session
 
   const {
@@ -98,6 +105,8 @@ function AppContent() {
     playerHand: resolvedPlayerHand,
     opponentHand: resolvedOpponentHand,
     deck: battleDeck,
+    tabletop: settings.tabletop,
+    playerType: tabletopChoice.selectedType,
   })
 
   const [tableRef, tableSize] = useElementSize()
@@ -191,10 +200,10 @@ function AppContent() {
           type="button"
           className="ui-button ui-button--primary table__action table__action--battle"
           onClick={handlePrimaryAction}
-          disabled={!canStartBattle || isRecyclePicking}
+          disabled={!canStartBattle || isRecyclePicking || (choosingTabletopType && tabletopChoice.needsChoice)}
         >
           <SvgIcon name="swords" />
-          <span>Battle</span>
+          <span>{choosingTabletopType && tabletopChoice.needsChoice ? 'Choose type' : 'Battle'}</span>
         </button>
       )
     }
@@ -216,8 +225,8 @@ function AppContent() {
     battleRound,
     defeated: winner === 'player',
     cardsDisabled: true,
-    animateOnMount: true,
-    enterFromSection: 'draw-deck',
+    animateOnMount: !game.devScenario,
+    enterFromSection: game.devScenario ? null : 'draw-deck',
     enterBaseDelayMs: dealLeadMs + 300,
     inspectContextHand: opponentHand,
   }
@@ -228,19 +237,20 @@ function AppContent() {
     side: 'player',
     motionSection: 'player-hand',
     suppressedIds: battleStarted ? [] : (suppressedHandCardIds?.player ?? []),
-    onToggle: playerInteractive ? (isWaitingForPlayerChoice ? activatePlayerPreBattleCard : toggleSelected) : undefined,
-    cardsDisabled: !playerInteractive || !(discardPhase || isWaitingForPlayerChoice),
+    onToggle: playerInteractive ? (choosingTabletopType ? choosePlayerTabletopType : (isWaitingForPlayerChoice ? activatePlayerPreBattleCard : toggleSelected)) : undefined,
+    cardsDisabled: !playerInteractive || !(discardPhase || isWaitingForPlayerChoice || choosingTabletopType),
     discardIds: discardPhase ? selectedIds : [],
-    selectedIds: isPreBattleReady && armedPlayerCopyUid ? [armedPlayerCopyUid] : [],
+    selectedIds: isPreBattleReady && armedPlayerCopyUid ? [armedPlayerCopyUid] : (choosingTabletopType && tabletopSelectedCardUid ? [tabletopSelectedCardUid] : []),
     readyIds: isPreBattleReady ? activatablePreBattleIds : [],
-    targetableIds: isPreBattleReady ? copyCandidateIds : [],
+    targetableIds: choosingTabletopType ? playerHand.filter((card) => getCardTabletopTypes(card, tabletopChoice).length).map((card) => card.uid) : (isPreBattleReady ? copyCandidateIds : []),
+    dimmedIds: choosingTabletopType ? playerHand.filter((card) => !getCardTabletopTypes(card, tabletopChoice).length).map((card) => card.uid) : [],
     activeCardIds: battleStarted ? (battlePlayback?.playerTriggeredIds ?? []) : [],
     activationKey: battleStarted ? (battlePlayback?.activationTick ?? 0) : 0,
     battleValuesById: playerBattleValues,
     battleRound,
     defeated: winner === 'opponent',
-    animateOnMount: true,
-    enterFromSection: 'draw-deck',
+    animateOnMount: !game.devScenario,
+    enterFromSection: game.devScenario ? null : 'draw-deck',
     enterBaseDelayMs: dealLeadMs,
   }
 
@@ -256,7 +266,8 @@ function AppContent() {
           side="opponent"
           stats={opponentHidden ? {} : opponentStats}
           average={layout === 'battle' || opponentHidden ? null : opponentAverage}
-          health={battleStarted ? (battlePlayback?.opponentHealth ?? BATTLE_HEALTH) : null}
+          tabletop={settings.tabletop}
+          health={battleStarted && !settings.tabletop ? (battlePlayback?.opponentHealth ?? BATTLE_HEALTH) : null}
           lost={opponentLost}
           hitTick={damageFlash?.tick ?? null}
           shield={battleStarted ? (battlePlayback?.opponentShield ?? 0) : 0}
@@ -288,7 +299,7 @@ function AppContent() {
         </div>
 
         <div className="table__zone table__zone--center">
-          <ShuffleIntro key={dealId} />
+          {!game.devScenario ? <ShuffleIntro key={dealId} /> : null}
           {layout === 'draft' ? (
             <PackArea
               packKey={`${dealId}-${game.packNumber}`}
@@ -305,7 +316,18 @@ function AppContent() {
           {layout === 'focus' ? (
             <HandArea key="player-focus" {...playerHandProps} layout="grid" />
           ) : null}
-          {layout === 'battle' ? (
+          {choosingTabletopType ? (
+            <div className="tabletop-choice" role="status">
+              {tabletopChoice.selectedType ? <span className="tabletop-choice__selected">Main type <GameIcon name={tabletopChoice.selectedType} /></span> : <span>Choose your main damage type: tap a highlighted card</span>}
+              {tabletopTypeCardUid ? getCardTabletopTypes(playerHand.find((card) => card.uid === tabletopTypeCardUid) ?? {}, tabletopChoice).map((type) => (
+                <button key={type} type="button" className="ui-button" onClick={() => choosePlayerTabletopType(tabletopTypeCardUid, type)}><GameIcon name={type} />{type}</button>
+              )) : null}
+            </div>
+          ) : null}
+          {layout === 'battle' && settings.tabletop ? (
+            <TabletopScore result={battleResult} resultLabel={RESULT_LABELS[winner] ?? ''} onShowResult={() => setDismissedResultKey(null)} />
+          ) : null}
+          {layout === 'battle' && !settings.tabletop ? (
             <BattleArena
               battlePlayback={battlePlayback}
               impactMs={impactMs}
@@ -335,7 +357,8 @@ function AppContent() {
           side="player"
           stats={playerStats}
           average={layout === 'battle' ? null : playerAverage}
-          health={battleStarted ? (battlePlayback?.playerHealth ?? BATTLE_HEALTH) : null}
+          tabletop={settings.tabletop}
+          health={battleStarted && !settings.tabletop ? (battlePlayback?.playerHealth ?? BATTLE_HEALTH) : null}
           lost={playerLost}
           hitTick={damageFlash?.tick ?? null}
           shield={battleStarted ? (battlePlayback?.playerShield ?? 0) : 0}
@@ -378,7 +401,7 @@ function AppContent() {
         contextHand={playerHand}
       />
 
-      <HelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} />
+      <HelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} tabletop={settings.tabletop} />
       <ScoreSheet open={scoreOpen} onClose={() => setScoreOpen(false)} />
 
       <InfoOverlay

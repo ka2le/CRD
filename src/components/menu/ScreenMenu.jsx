@@ -86,6 +86,14 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
             </button>
           </div>
 
+          <label className="screen-menu__toggle">
+            <input type="checkbox" checked={Boolean(settings.tabletop)}
+              onChange={(event) => onUpdateSettings({ tabletop: event.target.checked })} />
+            <span className="screen-menu__switch" aria-hidden="true" />
+            <SvgIcon name="swords" />
+            <span>Tabletop battle</span>
+          </label>
+
           <label className="screen-menu__select">
             <span className="screen-menu__select-label">Opponent</span>
             <select

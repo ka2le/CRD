@@ -98,28 +98,6 @@
   color: var(--brass-lo);
 }
 
-.sc-tier {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  line-height: 1;
-}
-
-.sc-tier em {
-  font-style: normal;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.02em;
-  color: #8a95a8;
-  margin-bottom: 5px;
-}
-
-.sc-tier b {
-  font-family: var(--display);
-  font-weight: 700;
-  color: var(--brass-hi);
-}
-
 /* ---------- A · ledger ---------- */
 .sc-ledger {
   padding: 28px 24px 0;
@@ -159,6 +137,22 @@
 .sc-ledger__power i {
   font-style: normal;
   color: var(--brass-lo);
+}
+
+.sc-tier {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+
+.sc-tier em {
+  font-style: normal;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: #8a95a8;
+  margin-bottom: 7px;
 }
 
 .sc-ledger__table {
@@ -212,8 +206,17 @@
   padding-right: 6px;
 }
 
-.sc-ledger__tiers .sc-tier b {
-  font-size: 27px;
+.sc-ledger__tiers .sc-hearts {
+  font-size: 16px;
+}
+
+/* bonus as damage icons */
+.sc-hearts {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), 1em);
+  gap: 0.22em;
+  color: var(--damage);
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.5));
 }
 
 /* ---------- B · hand of three ---------- */
@@ -277,15 +280,16 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 18px;
+  gap: 24px;
 }
 
 .sc-hand__tiers .sc-tier em {
   color: rgba(255, 255, 255, 0.63);
 }
 
-.sc-hand__tiers .sc-tier b {
-  font-size: 30px;
+.sc-hand__tiers .sc-hearts {
+  font-size: 17px;
+  color: #e0656c;
 }
 
 .sc-hand__sh {

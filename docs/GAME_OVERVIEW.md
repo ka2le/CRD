@@ -1,5 +1,7 @@
 # Critters Robots Dragons
 
+Optional **Tabletop battle** (Menu toggle, 2026-10-19) works with both Draft and Discard: ordinary attacks give 2 power per matching stat; choose the largest contributing damage class (tap a card if tied), subtract shields and add cumulative class bonuses. Higher score wins immediately. See `TABLETOP_MODE.md` for rules and special conversions. The round-combat explanations below apply when this toggle is off.
+
 Reviewed against source on 2026-10-18. See `CURRENT_STATE.md` for implementation limits and verification, and `RULES.md` for detailed rules.
 
 CRD is a two-player card battler about building a small engine of stats, attacks, and special effects. The current app is one human versus a heuristic AI. Choices happen during hand building and pre-battle preparation; combat then resolves automatically.

@@ -75,3 +75,15 @@ The earlier shared-discard decision remains intent: current human/AI preparation
 - Compare every root action with paired complete continuations and exact battles. Report WDL mean/uncertainty, heuristic baseline value and paired residual targets. This is a shallow rollout teacher; deeper information-set search and model remain future work.
 - Added Python evaluator method, rollout-controlled episode driver and optional grouped dataset/replay output. Group the same physical deal across modes/seats before splitting labels.
 - Verified 802 sampled decision roots; full suites now 14 JS/eight Python tests. Pilot: 40 games / 20 deal families, 230 states / 2,269 action targets / 36,304 continuations. See `AI_SEARCH.md`; no held-out strength claim or neural training.
+
+## Tabletop battle mode adopted - 2026-10-19
+
+- Creator requested a persisted menu toggle for both Draft and Discard, leaving digital round combat available. Ordinary attacks give 2 per matching stat with no CD or rounds; compare one final score.
+- Commit the largest class contribution before reveal; equal contributions require tapping a stat/attack card. Multi-class cards expose their eligible types. Devour additionally allows Dragon commitment.
+- Each enemy shield card removes Critter 2 / Robot 1 / Dragon 0 power, floored at zero. Apply cumulative bonuses after shields: Critter +1 if positive; Robot +2 at 7 and +1 more at 11; Dragon +4 at 11 and +2 more at 14. Creator explicitly confirmed Robot 11 to match the concurrently updated score card, replacing the initial prompt's 10.
+- Creator approved integer specials: ultimates 4/stat, Bite 2, Punch doubles Robot attacks and gives +1 to each other positive attack per Punch, Devour 2/Dragon stat with type option, one shield per shield card. Shield damage uses own shield count; hybrids retain integer product/sum. Neutral-only power defaults to Robot.
+- Formula cleanup requested: hide zero shield/bonus terms, use broken hearts for bonus, show only final damage when unmodified. Implemented in both result overlay and table strip. See TABLETOP_MODE.md.
+
+## Tabletop Devour ultimate correction - 2026-10-19
+
+Creator confirmed Devour and similar class ultimates should be double ordinary attacks:4 power per matching stat. Devour now joins Murder Rabbit, Robot Ultimate and Dragon Ultimate at4/stat; this supersedes the earlier2/stat Devour conversion. Its optional Dragon main-type override remains. Card symbols, scorer, inspect/help and tests agree.

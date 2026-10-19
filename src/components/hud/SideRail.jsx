@@ -20,9 +20,9 @@ export function StatChips({ stats = {}, compact = false }) {
   )
 }
 
-export function AverageChip({ value }) {
+export function AverageChip({ value, tabletop = false }) {
   return (
-    <span className="avg-chip" title="Average damage per round">
+    <span className="avg-chip" title={tabletop ? 'Base power before shields and bonus' : 'Average damage per round'}>
       <GameIcon name="damage" />
       <span key={formatAverage(value)} className="avg-chip__value">{formatAverage(value)}</span>
     </span>
@@ -84,6 +84,7 @@ export default function SideRail({
   side = 'player',
   stats,
   average = null,
+  tabletop = false,
   health = null,
   maxHealth = 21,
   lost = 0,
@@ -131,7 +132,7 @@ export default function SideRail({
         </div>
       ) : (
         <>
-          {average !== null ? <AverageChip value={average} /> : null}
+          {average !== null ? <AverageChip value={average} tabletop={tabletop} /> : null}
           <span className="side-rail__spacer" />
         </>
       )}

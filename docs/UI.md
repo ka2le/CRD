@@ -1,5 +1,7 @@
 # UI and animation design
 
+2026-10-19 addition: Menu → **Tabletop battle** is a persisted toggle for either Draft or Discard. Cards show the mode's power and no hourglasses. Rails show base power before battle; help and inspect explain the current rules. After preparation, eligible cards highlight when a main damage type needs commitment; a multi-class card offers its eligible types. Tabletop battle immediately shows both **base − shields + bonus = broken hearts** formulas in the result and central strip, without HP, timing lanes or playback controls. Zero shield/bonus terms disappear; bonus uses broken hearts instead of a star, and an unmodified score displays just its final damage. See `TABLETOP_MODE.md` for rules and approved special conversions.
+
 Added 2026-10-18 with the table redesign. Rules logic is unchanged. This file describes how the player-facing table is laid out and animated.
 
 ## Principles
@@ -44,7 +46,7 @@ Card size is computed, not set by breakpoints (`hooks/useFitLayout.js`):
 - **Rails** (`hud/SideRail.jsx`): stat totals (class icon + count, dimmed at 0) and average damage per round. In battle the average is replaced by a 21-segment health bar, a shield badge, hit numbers and blocked numbers.
 - **Opponent rail:** a thinking indicator while the AI picks, progress pips (5 packs or 2 redraws), and the menu.
 - **Dock:** the deck pile, the discard pile (tap to browse it in a sheet), and the primary action: Redraw N / Keep, or Battle.
-- **Score card** (`overlay/ScoreSheet.jsx`): Menu → Score card opens a view-only sheet with two candidate tabletop scoring reference cards (Ledger and Hand of Three). They sit side by side on wide screens and in a swipe carousel with dots on phones. Cards are authored at 315×440 (63×88 mm) and scaled to fit. Bonuses are shown as running totals. Digital combat is unaffected.
+- **Score card** (`overlay/ScoreSheet.jsx`): Menu → Score card opens a reference sheet for tabletop scoring (Ledger and Hand of Three). They sit side by side on wide screens and in a swipe carousel with dots on phones. Cards are authored at 315×440 (63×88 mm) and scaled to fit. Bonuses are drawn as damage icons showing the total bonus from each power threshold (1+, 7+, 11+, 14+).
 - **Pack:** the card the AI is about to take gets a rose reticle once the deal has landed. On desktop, hovering a pack card shows the change in your average damage per round.
 
 ## Animations

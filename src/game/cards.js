@@ -1,4 +1,5 @@
 import cardsData from '../../data/cards.json' with { type: 'json' }
+import { toTabletopCard } from './tabletop.js'
 
 export const CORE_CARD_IDS = new Set([
   'critter1',
@@ -45,7 +46,7 @@ export function expandCardPool(cards, options = {}) {
 
   return cards.flatMap((card) =>
     Array.from({ length: getExpandedCopies(card, wildDeck) }, (_, index) => ({
-      ...card,
+      ...(options.tabletop ? toTabletopCard(card) : card),
       uid: `${card.id}__${index + 1}`,
       imageIndex: index % Math.max(card.images?.length ?? 1, 1),
     })),

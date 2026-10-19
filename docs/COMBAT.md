@@ -1,5 +1,7 @@
 # Combat implementation
 
+The sections below describe digital round combat. The optional **Tabletop battle** menu toggle instead uses `src/game/tabletop.js` and immediate base − shields + bonus scoring in both hand-building modes; see `TABLETOP_MODE.md` for its rules and integer special conversions.
+
 Reviewed 2026-10-18 against `src/game/engine.js` and `src/hooks/useBattlePlayback.js`. Shared match rules are in `RULES.md`.
 
 ## Inputs and timing

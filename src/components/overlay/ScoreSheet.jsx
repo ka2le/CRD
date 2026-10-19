@@ -3,12 +3,13 @@ import './ScoreSheet.css'
 import Sheet from './Sheet'
 import { GameIcon } from '../ui/GameIcon'
 
-// Tabletop scoring reference cards (view only; digital combat is unchanged).
-// Bonuses are shown as running totals at each power threshold.
+// Reference for the optional tabletop battle mode.
+// Bonuses are drawn as damage icons: the total bonus from that power upward.
+// Robots and Dragons share the 11 threshold.
 const CLASSES = [
-  { key: 'critter', shield: '−2', tiers: [['1+', '+1']] },
-  { key: 'robot', shield: '−1', tiers: [['7+', '+2'], ['10+', '+3']] },
-  { key: 'dragon', shield: '0', tiers: [['11+', '+4'], ['14+', '+6']] },
+  { key: 'critter', shield: '−2', tiers: [['1+', 1]] },
+  { key: 'robot', shield: '−1', tiers: [['7+', 2], ['11+', 3]] },
+  { key: 'dragon', shield: '0', tiers: [['11+', 4], ['14+', 6]] },
 ]
 
 const CARD_W = 315
@@ -27,11 +28,22 @@ function ScoreEquation({ className }) {
   )
 }
 
+// n damage icons, packed 1–3 per row (4 → 2×2, 6 → 3×2).
+function Hearts({ count, className = '' }) {
+  if (!count) return null
+  const cols = count <= 3 ? count : count === 4 ? 2 : 3
+  return (
+    <span className={['sc-hearts', className].filter(Boolean).join(' ')} style={{ '--cols': cols }} aria-label={`+${count}`}>
+      {Array.from({ length: count }, (_, index) => <GameIcon key={index} name="damage" />)}
+    </span>
+  )
+}
+
 function Tier({ at, bonus }) {
   return (
     <span className="sc-tier">
       <em>{at}</em>
-      <b>{bonus}</b>
+      <Hearts count={bonus} />
     </span>
   )
 }

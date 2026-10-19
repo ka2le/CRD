@@ -1,0 +1,19 @@
+.tabletop-score { display: flex; align-items: center; justify-content: center; gap: 14px; padding: 8px; }
+.tabletop-score__formulas { display: grid; gap: 6px; }
+.tabletop-formula { position: relative; display: grid; grid-template-columns: 5.8em 1.2em 1fr; gap: 7px; align-items: center; font-family: var(--mono); font-size: clamp(0.72rem, 2.5vw, 1rem); }
+.tabletop-formula__label { color: var(--t1); font-family: var(--font); font-size: 0.85em; }
+.tabletop-formula__equation { display: flex; gap: 0.45em; align-items: center; white-space: nowrap; }
+.tabletop-formula__equation > span, .tabletop-formula strong { display: inline-flex; align-items: center; gap: 0.2em; }
+.tabletop-formula strong { color: var(--brass); }
+.tabletop-formula .g-icon { font-size: 1em; }
+.tabletop-formula__damage { color: var(--damage); }
+.tabletop-formula__shield { color: var(--shield); }
+.tabletop-choice { position: absolute; z-index: 5; bottom: 2px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; width: max-content; max-width: 100%; padding: 8px 12px; background: var(--surface-lo); border: 1px solid var(--brass); border-radius: 8px; box-shadow: 0 4px 16px #0009; font-size: 0.8rem; }
+.tabletop-choice .ui-button { min-height: 36px; gap: 5px; }
+.tabletop-choice__selected { display: inline-flex; gap: 5px; align-items: center; }
+@media (max-width: 480px) {
+  .tabletop-score { gap: 6px; padding: 5px 0; }
+  .tabletop-score > .ui-button { font-size: 0.7rem; padding: 6px; }
+  .tabletop-formula { grid-template-columns: 4.8em 1em 1fr; gap: 4px; }
+  .tabletop-formula__equation { gap: 0.25em; }
+}

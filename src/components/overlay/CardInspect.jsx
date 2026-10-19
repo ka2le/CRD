@@ -40,7 +40,7 @@ function CardInspectOverlay({ entry, onClose }) {
             <div className={['card-inspect__delta', delta < 0 ? 'card-inspect__delta--neg' : ''].filter(Boolean).join(' ')}>
               <span>{formatDelta(delta)}</span>
               <GameIcon name="damage" />
-              <span className="card-inspect__delta-unit">/ round for your hand</span>
+              <span className="card-inspect__delta-unit">{card.tabletop ? 'power for your hand' : '/ round for your hand'}</span>
             </div>
           ) : null}
         </div>

@@ -9,15 +9,17 @@ import time
 import numpy as np
 
 from crd.draft_model import split_family
-from crd.value_net import ValueNet, initialize, adam_step, cross_entropy
+from crd.value_net import (FEATURE_VERSION, PREP_FEATURE_VERSION, ValueNet, initialize, adam_step,
+                           cross_entropy, prep_width)
 
 
 def load_shards(directory, additional=()):
     directories = [directory, *additional]
     if len({path.resolve() for path in directories}) != len(directories):
         raise ValueError("Dataset supplied more than once")
-    arrays = {key: [] for key in ("x", "counts", "actual", "root", "family", "draw2")}
+    arrays = {key: [] for key in ("x", "counts", "actual", "root", "family", "draw2", "prep")}
     sig = None
+    padded_sources = []
     family_codes = {}
     for source, folder in enumerate(directories):
         manifest = json.loads((folder / "manifest.json").read_text())
@@ -27,11 +29,28 @@ def load_shards(directory, additional=()):
                 raise ValueError(f"Collection incomplete: {path.name}")
             with np.load(path, allow_pickle=False) as shard:
                 current = json.loads(str(shard["signature"]))
-                if sig is not None and current != sig:
-                    raise ValueError("Mixed shard versions")
-                sig = current
+                pad = 0
+                if sig is not None and current != {k: v for k, v in sig.items() if k != "mixed_teachers"}:
+                    # Older draft-only shards may join a v3 run: zero preparation block, flag 0.
+                    same = {k: v for k, v in current.items() if k not in ("features", "teacher")} == \
+                        {k: v for k, v in sig.items() if k not in ("features", "teacher", "mixed_teachers")}
+                    if not (same and current["features"] == FEATURE_VERSION and sig["features"] == PREP_FEATURE_VERSION):
+                        raise ValueError("Mixed shard versions")
+                    pad = prep_width(len(sig["card_ids"]))
+                    if current["teacher"] != sig["teacher"]:
+                        sig.setdefault("mixed_teachers", [])
+                        if current["teacher"] not in sig["mixed_teachers"]:
+                            sig["mixed_teachers"].append(current["teacher"])
+                    if str(folder) not in padded_sources:
+                        padded_sources.append(str(folder))
+                elif sig is None:
+                    sig = current
                 for key in arrays:
-                    if key == "family":
+                    if key == "prep":
+                        arrays[key].append(shard["prep"] if "prep" in shard else np.zeros(len(shard["x"]), dtype=np.bool_))
+                    elif key == "x" and pad:
+                        arrays[key].append(np.c_[shard["x"], np.zeros((len(shard["x"]), pad), dtype=np.float32)])
+                    elif key == "family":
                         unique, inverse = np.unique(shard[key], return_inverse=True)
                         codes = np.asarray([family_codes.setdefault(str(f), len(family_codes)) for f in unique], dtype=np.int32)
                         arrays[key].append(codes[inverse])
@@ -51,13 +70,16 @@ def load_shards(directory, additional=()):
     if any(not len(part["x"]) for part in parts.values()):
         raise ValueError("Need nonempty family-disjoint splits")
     sig["dataset_families"] = sorted(family_codes)
+    if padded_sources:
+        sig["padded_draft_only_sources"] = padded_sources
     return sig, parts
 
 
 def warm_start(path, sig, hidden=None):
     model = ValueNet.load(path)
     for key, value in sig.items():
-        if key not in ("dataset_families", "actual_outcome_weight") and model.signature.get(key) != value:
+        if key not in ("dataset_families", "actual_outcome_weight", "mixed_teachers", "padded_draft_only_sources") \
+                and model.signature.get(key) != value:
             raise ValueError(f"Warm-start signature mismatch: {key}")
     widths = tuple(p.shape[1] for p in model.parameters[::2])[:-1]
     if hidden is not None and tuple(hidden) != widths:
@@ -90,6 +112,16 @@ def evaluate(model, data, outcome_weight, baseline_only=False):
               "actual_search_game_cross_entropy": cross_entropy(probabilities, actual),
               "teacher_value_mse": float(np.mean((pred - target_value) ** 2)),
               "teacher_regret": float(np.mean(regrets)), "teacher_top_choice_rate": float(np.mean(agreement))}
+    prep = data["prep"]
+    if prep.any():
+        prep_roots = np.zeros(len(regrets), dtype=bool)
+        for i, (start, end) in enumerate(zip(boundaries[:-1], boundaries[1:])):
+            prep_roots[i] = prep[start]
+        result["preparation"] = {"rows": int(prep.sum()), "roots": int(prep_roots.sum()),
+                                 "teacher_value_mse": float(np.mean((pred[prep]-target_value[prep])**2)),
+                                 "cross_entropy": cross_entropy(probabilities[prep], counts[prep]),
+                                 "teacher_regret": float(np.mean(np.asarray(regrets)[prep_roots])),
+                                 "teacher_top_choice_rate": float(np.mean(np.asarray(agreement)[prep_roots]))}
     draw2 = data["draw2"]
     if draw2.any():
         result["draw2"] = {"rows": int(draw2.sum()), "teacher_value_mse": float(np.mean((pred[draw2]-target_value[draw2])**2)),
@@ -128,7 +160,8 @@ def train_run(args):
             for start in range(0, len(order), args.batch):
                 indices = order[start:start+args.batch]
                 step += 1
-                adam_step(model, training["x"][indices], counts[indices], moments, variances, step, rate)
+                adam_step(model, training["x"][indices], counts[indices], moments, variances, step, rate,
+                          weight_decay=args.weight_decay)
             validation = evaluate(model, parts["validation"], args.outcome_weight)
             if validation["mixed_cross_entropy"] < best:
                 best, best_epoch = validation["mixed_cross_entropy"], epoch
@@ -139,6 +172,8 @@ def train_run(args):
             log.write(json.dumps(progress) + "\n")
             log.flush()
             (args.directory / "progress.json").write_text(json.dumps(progress, indent=2), encoding="utf-8")
+            if args.snapshot_every and epoch % args.snapshot_every == 0:
+                model.save(args.directory / f"epoch-{epoch:04d}.npz")
             if epoch == 1 or epoch % 5 == 0:
                 print(json.dumps(progress), flush=True)
             if time.perf_counter()-started >= args.seconds:
@@ -147,7 +182,8 @@ def train_run(args):
     chosen = ValueNet.load(args.directory / "best.npz")
     starting = ValueNet.load(args.warm_start) if args.warm_start else None
     report = {"parameters": parameter_count, "shape": shape, "epochs": epoch, "selected_epoch": best_epoch,
-              "seconds": time.perf_counter()-started, "seed": args.seed,
+              "seconds": time.perf_counter()-started, "seed": args.seed, "learning_rate": args.learning_rate,
+              "weight_decay": args.weight_decay,
               "datasets": [str(path.resolve()) for path in [args.dataset, *args.add_data]],
               "warm_start": None if args.warm_start is None else str(args.warm_start.resolve()),
               "warm_start_sha256": None if args.warm_start is None else hashlib.sha256(args.warm_start.read_bytes()).hexdigest(),
@@ -173,6 +209,8 @@ def main():
     parser.add_argument("--learning-rate", type=float, default=.0006)
     parser.add_argument("--outcome-weight", type=float, default=8)
     parser.add_argument("--seed", type=int, default=7)
+    parser.add_argument("--weight-decay", type=float, default=1e-5, help="L2 coefficient added to every gradient")
+    parser.add_argument("--snapshot-every", type=int, default=0, help="Also save epoch-NNNN.npz every N epochs (0 = off)")
     parser.add_argument("--hidden", type=lambda value: tuple(int(size) for size in value.split(",")), default=None,
                         help="Hidden widths; four-layer alternative: 280,192,128,64 (~150k total parameters)")
     args = parser.parse_args()

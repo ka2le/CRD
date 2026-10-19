@@ -11,9 +11,9 @@ def compare(reference, challenger):
     for key in ("seed", "deals", "samples", "opponent_samples", "normal_deck", "planning_seed"):
         if reference["settings"][key] != challenger["settings"][key]:
             raise ValueError(f"Unpaired settings: {key}")
-    for key in ("opponent_model", "prior", "opponent_policy"):
-        if reference["settings"].get(key, "search" if key == "opponent_policy" else None) != \
-                challenger["settings"].get(key, "search" if key == "opponent_policy" else None):
+    defaults = {"opponent_policy": "search", "opponent_prep_policy": "heuristic", "opponent_completion": "heuristic"}
+    for key in ("opponent_model", "prior", *defaults):
+        if reference["settings"].get(key, defaults.get(key)) != challenger["settings"].get(key, defaults.get(key)):
             raise ValueError(f"Unpaired settings: {key}")
     def group(report):
         values = {}

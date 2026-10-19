@@ -1,4 +1,7 @@
-"""Resumable sharded draft search self-play; each candidate evaluation becomes one row."""
+"""Resumable sharded search self-play; each candidate evaluation becomes one row.
+
+With --prep-search, preparation decisions (draw/copy/recycle order, targets, skip/finish) are
+searched and recorded too, using the v3 draft+preparation feature layout."""
 
 import argparse
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -11,7 +14,7 @@ import time
 
 import numpy as np
 
-from crd.value_net import ValueNet, features, signature
+from crd.value_net import PREP_FEATURE_VERSION, FEATURE_VERSION, ValueNet, model_features, signature
 from crd.worker import HeadlessWorker
 from draft_experiment import family_id
 
@@ -39,7 +42,11 @@ def collect_chunk(config):
         if hashlib.sha256(Path(config["model"]).read_bytes()).hexdigest() != config["model_sha256"]:
             raise ValueError("Frozen collection model changed")
         model = ValueNet.load(config["model"])
-    xx, yy, actual, roots, families, specials = [], [], [], [], [], []
+    xx, yy, actual, roots, families, specials, preps = [], [], [], [], [], [], []
+    v3 = bool(config.get("prep_search"))
+    version = PREP_FEATURE_VERSION if v3 else FEATURE_VERSION
+    completion = config.get("completion", "heuristic")
+    teacher = f"observation-sampled-{completion}-completion-v1"
     sig = None
     start = time.perf_counter()
     with HeadlessWorker(timeout=120) as worker:
@@ -51,8 +58,9 @@ def collect_chunk(config):
                                "firstPicker": first, "revealOpponent": False}
                 response = worker.request("reset", config=game_config)
                 spec = response["spec"]
-                sig = signature(spec)
-                if model and any(model.signature[key] != value for key, value in sig.items()):
+                sig = signature(spec, version, teacher)
+                if model and any(model.signature[key] != value for key, value in signature(spec, model.signature["features"]).items()
+                                 if key not in ("features", "teacher")):
                     raise ValueError("Collection model/engine mismatch")
                 family = family_id(game_config, spec)
                 guided = {side: model is not None and rng.random() < config.get("neural_fraction", .5)
@@ -63,19 +71,25 @@ def collect_chunk(config):
                     decisions += 1
                     if decisions > 1000:
                         raise RuntimeError("Guard exceeded; refusing manufactured outcomes")
-                    if response["observation"]["phase"] == "preparation":
+                    observation = response["observation"]
+                    is_prep = observation["phase"] == "preparation"
+                    if is_prep and (not v3 or len(response["legalActions"]) == 1):
                         action = worker.request("baseline")["action"]
                     else:
-                        report = worker.request("evaluate", observation=response["observation"], spec=spec,
-                                                options={"seed": planning_seed(config["planning_seed"], game, turn),
-                                                         "samples": config["samples"]})["evaluation"]
+                        options = {"seed": planning_seed(config["planning_seed"], game, turn), "samples": config["samples"]}
+                        if completion != "heuristic":
+                            options["completionPolicy"] = completion
+                        report = worker.request("evaluate", observation=observation, spec=spec, options=options)["evaluation"]
                         actions = response["legalActions"]
                         actor = response["actor"]
                         chosen = search_index(report)
-                        x = features(response["observation"], actions, spec)
-                        if guided[actor] and config["prior"] > 0:
+                        prep = worker.request("preparation-features", observation=observation,
+                                              legalActions=actions)["actions"] if is_prep else None
+                        x = model_features(version, observation, actions, spec, prep)
+                        prior_x = model_features(model.signature["features"], observation, actions, spec, prep) if model else None
+                        if guided[actor] and config["prior"] > 0 and prior_x is not None:
                             values = np.asarray([candidate["value"] for candidate in report["candidates"]], dtype=np.float32)
-                            chosen = int(np.argmax(config["samples"] * values + config["prior"] * model.values(x)))
+                            chosen = int(np.argmax(config["samples"] * values + config["prior"] * model.values(prior_x)))
                         exploring_seat = "player" if deal % 2 == 0 else "opponent"
                         if actor == exploring_seat and rng.random() < config["epsilon"]:
                             chosen = rng.randrange(len(actions))
@@ -83,22 +97,25 @@ def collect_chunk(config):
                         xx.extend(x)
                         yy.extend([[c["wins"], c["draws"], c["losses"]] for c in report["candidates"]])
                         actual.extend([[0, 0, 0] for _ in actions])
-                        roots.extend([game * 10 + turn] * len(actions))
+                        roots.extend([(game * 100 if v3 else game * 10) + turn] * len(actions))
                         families.extend([family] * len(actions))
-                        specials.extend([a["card"]["id"] == "draw_2_extra" for a in actions])
+                        specials.extend([(a.get("cardId") if is_prep else a["card"]["id"]) == "draw_2_extra" for a in actions])
+                        preps.extend([is_prep] * len(actions))
                         action = actions[chosen]
                         turn += 1
                     response = worker.request("step", action=action)
                 for index, actor in selected:
                     reward = response["rewards"][actor]
                     actual[index][0 if reward == 1 else 1 if reward == 0 else 2] = 1
+    root_count = len(set(roots))
     summary = {"offset": config["offset"], "deals": config["deals"], "games": 2 * config["deals"],
-               "roots": 20 * config["deals"], "rows": len(xx),
+               "roots": root_count, "prep_roots": len({r for r, p in zip(roots, preps) if p}), "rows": len(xx),
                "continuations": len(xx) * config["samples"], "seconds": time.perf_counter() - start}
     temporary = path.with_suffix(".temporary.npz")
     np.savez_compressed(temporary, x=np.asarray(xx, dtype=np.float32), counts=np.asarray(yy, dtype=np.uint16),
                         actual=np.asarray(actual, dtype=np.uint8), root=np.asarray(roots, dtype=np.int64),
                         family=np.asarray(families), draw2=np.asarray(specials, dtype=np.bool_),
+                        **({"prep": np.asarray(preps, dtype=np.bool_)} if v3 else {}),
                         signature=json.dumps(sig), config=identity, summary=json.dumps(summary))
     temporary.replace(path)
     return summary
@@ -119,6 +136,12 @@ def main():
     parser.add_argument("--model", type=Path, help="Frozen neural search policy mixed into actual play")
     parser.add_argument("--neural-fraction", type=float, default=.5, help="Per-seat game policy mixture probability")
     parser.add_argument("--prior", type=float, default=2)
+    parser.add_argument("--prep-search", action="store_true",
+                        help="Search and record preparation decisions too (v3 draft+preparation features)")
+    parser.add_argument("--completion", choices=["heuristic", "prep-lookahead"], default="heuristic",
+                        help="Rollout completion policy used by the search teacher")
+    parser.add_argument("--only-offsets", type=str, default=None,
+                        help="start:end deal offsets to process on this machine (manifest still covers --deals)")
     args = parser.parse_args()
     if min(args.deals, args.workers, args.chunk) < 1 or not 1 <= args.samples <= 256 or not 0 <= args.epsilon <= 1:
         parser.error("Invalid deal/worker/chunk/sample/exploration settings")
@@ -128,6 +151,7 @@ def main():
         parser.error("Invalid neural mixture/prior")
     args.directory.mkdir(parents=True, exist_ok=True)
     settings = vars(args).copy()
+    only = settings.pop("only_offsets")
     settings["directory"] = str(args.directory.resolve())
     if args.model:
         settings["model"] = str(args.model.resolve())
@@ -136,12 +160,20 @@ def main():
         # Preserve byte-for-byte legacy shard identity for resuming v2 commands.
         for key in ("model", "neural_fraction", "prior"):
             settings.pop(key)
+    # Legacy runs keep their exact shard identity; new options only appear when used.
+    if not args.prep_search:
+        settings.pop("prep_search")
+    if args.completion == "heuristic":
+        settings.pop("completion")
     manifest_path = args.directory / "manifest.json"
     if manifest_path.exists() and json.loads(manifest_path.read_text()) != settings:
         parser.error("Directory belongs to another run; use a fresh directory or original settings")
     manifest_path.write_text(json.dumps(settings, indent=2), encoding="utf-8")
     jobs = [{**settings, "offset": offset, "deals": min(args.chunk, args.deals - offset)}
             for offset in range(0, args.deals, args.chunk)]
+    if only:
+        low, high = (int(value) for value in only.split(":"))
+        jobs = [job for job in jobs if low <= job["offset"] < high]
     start = time.perf_counter()
     summaries = []
     # Workers are ordinary independent local simulator processes, not AI agents.
@@ -149,11 +181,12 @@ def main():
     with ProcessPoolExecutor(max_workers=args.workers) as executor:
         for future in as_completed([executor.submit(collect_chunk, job) for job in jobs]):
             summaries.append(future.result())
-            progress = {key: sum(row[key] for row in summaries) for key in ("deals", "games", "roots", "rows", "continuations")}
+            progress = {key: sum(row.get(key, 0) for row in summaries)
+                        for key in ("deals", "games", "roots", "prep_roots", "rows", "continuations")}
             progress["seconds"] = round(time.perf_counter() - start, 1)
             print(json.dumps(progress), flush=True)
     progress["shards"] = sorted(summaries, key=lambda row: row["offset"])
-    (args.directory / "collection.json").write_text(json.dumps(progress, indent=2), encoding="utf-8")
+    (args.directory / ("collection.json" if not only else f"collection-{only.replace(':', '-')}.json")).write_text(json.dumps(progress, indent=2), encoding="utf-8")
 
 
 if __name__ == "__main__":

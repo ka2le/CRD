@@ -181,6 +181,46 @@ function utility(state, side) {
   return state.battleResult.winner === 'tie' ? 0 : (state.battleResult.winner === side ? 1 : -1)
 }
 
+export const COMPLETION_POLICIES = ['heuristic', 'random', 'prep-lookahead']
+
+function completeWithHeuristic(state, maxDecisions) {
+  let current = state
+  let decisions = 0
+  while (!current.terminal) {
+    if (++decisions > maxDecisions) throw new Error('Rollout exceeded decision guard; no outcome label generated')
+    current = stepHeadlessGame(current, chooseHeadlessBaselineAction(current))
+  }
+  return current
+}
+
+function sameAction(left, right) {
+  return left.type === right.type && left.sourceUid === right.sourceUid && left.targetUid === right.targetUid
+}
+
+// Rollout-only completion policy: heuristic hand building, but every preparation decision
+// tries each legal option inside the SAMPLED world (heuristic continuation) and keeps the
+// best for the acting seat. It is perfect-information within that sample (it can see the
+// sampled deck order and the sampled enemy preparation), so it is a strong completion
+// approximation for labels, never a decision-time policy for live play.
+export function choosePrepLookaheadAction(state, maxDecisions = 1000) {
+  if (!state.preparation) return chooseHeadlessBaselineAction(state)
+  const side = state.actor
+  const baseline = chooseHeadlessBaselineAction(state)
+  const legal = getLegalActions(state)
+  let best = legal.find((action) => sameAction(action, baseline)) ?? legal[0]
+  let bestValue = utility(completeWithHeuristic(stepHeadlessGame(state, best), maxDecisions), side)
+  for (const action of legal) {
+    if (bestValue === 1) break
+    if (action === best) continue
+    const value = utility(completeWithHeuristic(stepHeadlessGame(state, action), maxDecisions), side)
+    if (value > bestValue) {
+      best = action
+      bestValue = value
+    }
+  }
+  return best
+}
+
 function standardError(values) {
   if (values.length < 2) return null
   const mean = values.reduce((sum, value) => sum + value, 0) / values.length
@@ -193,7 +233,7 @@ export function evaluateRolloutActions(observation, spec, {
 } = {}) {
   if (!Number.isSafeInteger(seed) || seed < 0) throw new Error('Invalid planning seed')
   if (!Number.isInteger(samples) || samples < 1 || samples > 256) throw new Error('samples must be in 1..256')
-  if (!['heuristic', 'random'].includes(completionPolicy)) throw new Error('Unknown completion policy')
+  if (!COMPLETION_POLICIES.includes(completionPolicy)) throw new Error('Unknown completion policy')
   if (!Number.isInteger(maxDecisions) || maxDecisions < 1 || maxDecisions > 10000) throw new Error('Invalid rollout decision guard')
   const seedRng = createSeededRng(seed)
   let results = null
@@ -226,7 +266,8 @@ export function evaluateRolloutActions(observation, spec, {
         if (++decisions > maxDecisions) throw new Error('Rollout exceeded decision guard; no outcome label generated')
         const actions = getLegalActions(state)
         const action = completionPolicy === 'heuristic' ? chooseHeadlessBaselineAction(state)
-          : actions[Math.floor(rng() * actions.length)]
+          : completionPolicy === 'prep-lookahead' ? choosePrepLookaheadAction(state, maxDecisions)
+            : actions[Math.floor(rng() * actions.length)]
         state = stepHeadlessGame(state, action)
       }
       results[index].outcomes.push(utility(state, observation.side))

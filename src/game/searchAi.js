@@ -11,6 +11,7 @@ import { createSeededRng, shuffle } from './cards.js'
 import { getLegalActions, stepHeadlessGame } from './headlessGame.js'
 import { chooseDiscardIds, pickBestCardForHand } from './cardEvaluator.js'
 import { pickPreparationAction } from './preBattle.js'
+import { resolveTabletopBattle, chooseTabletopType } from './tabletop.js'
 
 export const SEARCH_AI_VERSION = 'browser-root-rollout-v1'
 
@@ -116,7 +117,12 @@ function playOut(state, side, maxDecisions = 400) {
     if (++guard > maxDecisions) throw new Error('Search rollout exceeded decision guard')
     current = stepHeadlessGame(current, rulesAction(current))
   }
-  const { winner } = current.battleResult
+  const tabletop = current.battleResult.playerHand.some((card) => card.tabletop)
+    || current.battleResult.opponentHand.some((card) => card.tabletop)
+  const { winner } = tabletop
+    ? resolveTabletopBattle(current.battleResult.playerHand, current.battleResult.opponentHand, {
+      playerType: chooseTabletopType(current.battleResult.playerHand),
+    }) : current.battleResult
   if (winner === 'tie') return 0
   return winner === side ? 1 : -1
 }

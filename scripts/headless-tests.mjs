@@ -7,9 +7,11 @@ import { createPreparationState, getPreparationActions, applyPreparationAction }
 import { createFiveHandDiscardGame, applyDiscardPhase } from '../src/game/fiveHandDiscard.js'
 import {
   createHeadlessGame, stepHeadlessGame, getLegalActions, encodeObservation, createStepResponse, getHeadlessSpec,
+  chooseHeadlessBaselineAction,
 } from '../src/game/headlessGame.js'
 import { simulateBattle } from '../src/game/engine.js'
-import { sampleHeadlessWorld, evaluateRolloutActions } from '../src/game/rolloutSearch.js'
+import { sampleHeadlessWorld, evaluateRolloutActions, choosePrepLookaheadAction } from '../src/game/rolloutSearch.js'
+import { describePreparationActions } from '../src/game/preparationFeatures.js'
 
 const definitions = new Map(getCoreCards().map((card) => [card.id, card]))
 let cardSerial = 0
@@ -352,4 +354,64 @@ test('draft search cannot see the actual next packs or preparation draws', () =>
   assert.notDeepEqual(worlds[0].game.deck.slice(0, 5), worlds[1].game.deck.slice(0, 5))
   for (const world of worlds) assert.deepEqual(encodeObservation(world), observation)
   assert.notDeepEqual(root.game.deck.slice(0, 5), worlds[0].game.deck.slice(0, 5))
+})
+
+const completeHeuristically = (state) => {
+  let current = state
+  while (!current.terminal) current = stepHeadlessGame(current, chooseHeadlessBaselineAction(current))
+  return current
+}
+const utilityFor = (side, terminal) => terminal.battleResult.winner === 'tie' ? 0
+  : (terminal.battleResult.winner === side ? 1 : -1)
+
+test('preparation afterstate features match real deterministic transitions, never resolve draws', () => {
+  const multiset = (cards) => cards.map((entry) => entry.id ?? entry).sort()
+  let checked = 0
+  for (let seed = 0; seed < 60; seed++) {
+    let state = createHeadlessGame({ mode: 'draft', control: 'both', seed: 900000 + seed, wildDeck: true })
+    while (!state.terminal) {
+      if (state.preparation) {
+        const side = state.actor
+        const legal = getLegalActions(state)
+        const described = describePreparationActions(encodeObservation(state, side), legal)
+        assert.equal(described.length, legal.length)
+        legal.forEach((action, index) => {
+          const next = stepHeadlessGame(state, action)
+          const after = next.preparation[`${side}Hand`]
+          const info = described[index]
+          if (info.pendingDraws === 0) {
+            assert.deepEqual(multiset(info.handIds), multiset(after))
+            assert.deepEqual(multiset(info.pileIds), multiset(next.preparation[`${side}Discard`]))
+          } else {
+            assert.ok(after.length <= info.handIds.length + info.pendingDraws)
+          }
+          checked++
+        })
+      }
+      state = stepHeadlessGame(state, chooseHeadlessBaselineAction(state))
+    }
+  }
+  assert.ok(checked > 100, `only ${checked} preparation actions checked`)
+})
+
+test('prep-lookahead completion never does worse than the heuristic inside a full-information world', () => {
+  let compared = 0
+  let improved = 0
+  for (let seed = 0; seed < 80; seed++) {
+    let state = createHeadlessGame({ mode: 'draft', control: 'both', seed: 910000 + seed, wildDeck: true })
+    while (!state.terminal) {
+      if (state.preparation && getLegalActions(state).length > 1) {
+        const side = state.actor
+        const look = choosePrepLookaheadAction(state)
+        assert.ok(getLegalActions(state).some((action) => JSON.stringify(action) === JSON.stringify(look)))
+        const a = utilityFor(side, completeHeuristically(stepHeadlessGame(state, look)))
+        const b = utilityFor(side, completeHeuristically(stepHeadlessGame(state, chooseHeadlessBaselineAction(state))))
+        assert.ok(a >= b, `lookahead ${a} < heuristic ${b}`)
+        compared++
+        if (a > b) improved++
+      }
+      state = stepHeadlessGame(state, chooseHeadlessBaselineAction(state))
+    }
+  }
+  assert.ok(compared > 50 && improved > 0, `compared ${compared}, improved ${improved}`)
 })

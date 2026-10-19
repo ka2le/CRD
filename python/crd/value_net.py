@@ -8,6 +8,84 @@ import numpy as np
 from .draft_model import features as first_features
 
 FEATURE_VERSION = "draft-public-unseen-stats-wdl-v2"
+PREP_FEATURE_VERSION = "draft-prep-afterstate-wdl-v3"
+FEATURE_VERSIONS = (FEATURE_VERSION, PREP_FEATURE_VERSION)
+PREP_ACTION_TYPES = ("prepare", "skip-preparation", "finish-preparation")
+
+
+def draft_width(card_count):
+    return 6 * card_count + 58
+
+
+def prep_width(card_count):
+    return 1 + len(PREP_ACTION_TYPES) + 5 * card_count + 24 + 3 + 2
+
+
+def feature_width(spec_or_ids, version=PREP_FEATURE_VERSION):
+    n = len(spec_or_ids["cardTypes"]) if isinstance(spec_or_ids, dict) else len(spec_or_ids)
+    return draft_width(n) + (prep_width(n) if version == PREP_FEATURE_VERSION else 0)
+
+
+def _cycle_stats(combat):
+    cycle = np.asarray(combat["cycle"], dtype=np.float32).ravel() / 21
+    stats = np.asarray([combat["stats"][kind] for kind in ("critter", "robot", "dragon")], dtype=np.float32) / 5
+    return cycle, stats
+
+
+def preparation_features(observation, actions, spec, prep):
+    """v3 rows for preparation decisions. `prep` is the worker's stateless afterstate list."""
+    ids = [card["id"] for card in spec["cardTypes"]]
+    index = {name: i for i, name in enumerate(ids)}
+    n = len(ids)
+    if observation["phase"] != "preparation" or len(prep) != len(actions):
+        raise ValueError("Preparation features need one afterstate per legal preparation action")
+
+    def counts(card_ids):
+        result = np.zeros(n, dtype=np.float32)
+        for card_id in card_ids:
+            result[index[card_id]] += 1
+        return result / 5
+
+    own = counts(card["id"] for card in observation["playerHand"])
+    enemy = counts(card["id"] for card in observation["opponentHand"])
+    row = counts(card["id"] for card in observation["draftRow"])
+    discarded = counts(card["id"] for card in observation["discardPile"])
+    pile = counts(card["id"] for card in observation["recycleCards"])
+    cycles = np.asarray([observation[key]["cycle"] for key in ("ownCombat", "knownOpponentCombat")],
+                        dtype=np.float32).ravel() / 21
+    context = np.asarray([observation["packNumber"] / 5, observation["picksThisPack"] / 2,
+                          observation["firstPicker"] == observation["side"], observation["wildDeck"]], dtype=np.float32)
+    # Own drawn/recycled/copied cards make the draft-style partition approximate here; clamp.
+    unseen = np.maximum(np.asarray(spec["poolCounts"], dtype=np.float32) / 5 - own - enemy - row - pile, 0)
+    stats = np.asarray([observation[key]["stats"][kind] for key in ("ownCombat", "knownOpponentCombat")
+                        for kind in ("critter", "robot", "dragon")], dtype=np.float32) / 5
+    shared = np.concatenate([own, enemy, row, discarded, np.zeros(n, dtype=np.float32), cycles, context])
+    tail = np.r_[unseen, stats]
+    target_ids = {card["uid"]: card["id"] for card in observation["playerHand"] + observation["recycleCards"]}
+    rows = []
+    for action, after in zip(actions, prep):
+        kind = np.zeros(len(PREP_ACTION_TYPES), dtype=np.float32)
+        kind[PREP_ACTION_TYPES.index(action["type"])] = 1
+        source = counts([action["cardId"]] if action.get("cardId") else []) * 5
+        target = counts([target_ids[action["targetUid"]]] if action.get("targetUid") else []) * 5
+        cycle, after_stats = _cycle_stats(after["combat"])
+        block = np.concatenate([[1], kind, source, target, counts(after["handIds"]), cycle, after_stats,
+                                counts(after["remainingIds"]), counts(after["pileIds"]),
+                                [after["pendingDraws"] / 5, observation["deckCount"] / 50]])
+        rows.append(np.concatenate([shared, tail, block]))
+    return np.asarray(rows, dtype=np.float32)
+
+
+def model_features(version, observation, actions, spec, prep=None):
+    """Feature rows in the layout a given model version expects (None = unsupported decision)."""
+    if observation["phase"] == "preparation":
+        if version != PREP_FEATURE_VERSION:
+            return None
+        return preparation_features(observation, actions, spec, prep)
+    x = features(observation, actions, spec)
+    if version == PREP_FEATURE_VERSION:
+        x = np.c_[x, np.zeros((len(x), prep_width(len(spec["cardTypes"]))), dtype=np.float32)]
+    return x
 
 
 def features(observation, actions, spec):
@@ -25,10 +103,10 @@ def features(observation, actions, spec):
     return np.c_[x, np.tile(np.r_[np.maximum(unseen, 0), stats], (len(x), 1))].astype(np.float32)
 
 
-def signature(spec):
-    return {"features": FEATURE_VERSION, "rules": spec["rulesVersion"], "cards": spec["cardDataHash"],
+def signature(spec, version=FEATURE_VERSION, teacher="observation-sampled-heuristic-completion-v1"):
+    return {"features": version, "rules": spec["rulesVersion"], "cards": spec["cardDataHash"],
             "card_ids": [card["id"] for card in spec["cardTypes"]],
-            "teacher": "observation-sampled-heuristic-completion-v1", "outcomes": ["win", "draw", "loss"]}
+            "teacher": teacher, "outcomes": ["win", "draw", "loss"]}
 
 
 def softmax(logits):
@@ -71,7 +149,7 @@ class ValueNet:
     def load(cls, path):
         with np.load(path, allow_pickle=False) as data:
             sig = json.loads(str(data["signature"]))
-            if sig["features"] != FEATURE_VERSION:
+            if sig["features"] not in FEATURE_VERSIONS:
                 raise ValueError("Wrong model feature version")
             if "depth" in data:
                 depth = int(data["depth"])
@@ -140,9 +218,9 @@ def initialize(x, counts, sig, seed=7, hidden=(256, 160)):
                     np.zeros((hidden[1], 3), dtype=np.float32), np.zeros(3, dtype=np.float32))
 
 
-def adam_step(model, x, counts, moments, variances, step, rate=.0006):
+def adam_step(model, x, counts, moments, variances, step, rate=.0006, weight_decay=1e-5):
     if isinstance(model, DeepValueNet):
-        return deep_adam_step(model, x, counts, moments, variances, step, rate)
+        return deep_adam_step(model, x, counts, moments, variances, step, rate, weight_decay)
     z = np.clip((x - model.mean) / model.scale, -20, 20)
     h1 = np.tanh(z @ model.w1 + model.b1)
     h2 = np.tanh(h1 @ model.w2 + model.b2)
@@ -154,7 +232,7 @@ def adam_step(model, x, counts, moments, variances, step, rate=.0006):
     d1 = (d2 @ model.w2.T) * (1 - h1 ** 2)
     gradients = [z.T @ d1, d1.sum(axis=0), h1.T @ d2, d2.sum(axis=0), h2.T @ delta, delta.sum(axis=0)]
     for parameter, m, v, gradient in zip(model.parameters, moments, variances, gradients):
-        gradient += 1e-5 * parameter
+        gradient += weight_decay * parameter
         m *= .9
         m += .1 * gradient
         v *= .999
@@ -163,7 +241,7 @@ def adam_step(model, x, counts, moments, variances, step, rate=.0006):
     return cross_entropy(p, counts)
 
 
-def deep_adam_step(model, x, counts, moments, variances, step, rate):
+def deep_adam_step(model, x, counts, moments, variances, step, rate, weight_decay=1e-5):
     z = np.clip((x - model.mean) / model.scale, -20, 20)
     activations = [z]
     for weight, bias in zip(model.weights[:-1], model.biases[:-1]):
@@ -177,7 +255,7 @@ def deep_adam_step(model, x, counts, moments, variances, step, rate):
             delta = (delta @ model.weights[layer].T) * (1 - activations[layer] ** 2)
     gradients = [value for pair in reversed(pairs) for value in pair]
     for parameter, m, v, gradient in zip(model.parameters, moments, variances, gradients):
-        gradient += 1e-5 * parameter
+        gradient += weight_decay * parameter
         m *= .9
         m += .1 * gradient
         v *= .999

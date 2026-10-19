@@ -14,6 +14,7 @@ export function getCardAccents(card) {
   if (ALL_CLASS_IDS.has(card.id)) return [...CLASS_ORDER]
   if (card.effect?.dmgType) return [card.effect.dmgType]
   if (card.effect?.shield || card.id === 'shield_is_dmg') return ['shield']
+  if (card.tabletop && !isPreBattleActivatableCard(card)) return ['neutral']
   if (isPreBattleActivatableCard(card) || (card.cd ?? 0) <= 0) return ['special']
   return ['neutral']
 }
@@ -52,6 +53,16 @@ const SPECIAL_TEXT = {
   no_stats_to_2: 'Not in play yet.',
 }
 
+const TABLETOP_TEXT = {
+  bite: 'Adds 2 power, no stats needed.',
+  double_dmg: 'Each Punch doubles Robot attack power and adds 1 to each other attack generating power. Punches stack.',
+  devour: '4 power per Dragon stat. You may choose Dragon as your main damage type.',
+  shield2: 'One shield. Reduces enemy Critter power by 2, Robot by 1, Dragon by 0, before bonuses.',
+  shield_is_dmg: 'Adds 1 power per shield in your hand. Your shields still block.',
+  one_off_each: 'Power = Critter × Robot × Dragon stats.',
+  any_off_each: 'Power = Critter + Robot + Dragon stats.',
+}
+
 function capitalize(value) {
   return value.charAt(0).toUpperCase() + value.slice(1)
 }
@@ -66,18 +77,19 @@ export function getCardSummary(card) {
     return { timing: 'Stat', text: `${counts.join(', ')}. Powers matching attacks.` }
   }
 
-  const timing = getTimingLabel(card.cd)
+  const timing = card.tabletop && (card.effect?.dmg || TABLETOP_TEXT[card.id]) ? 'Tabletop power' : getTimingLabel(card.cd)
+  if (card.tabletop && TABLETOP_TEXT[card.id]) return { timing, text: TABLETOP_TEXT[card.id] }
   if (SPECIAL_TEXT[card.id]) return { timing, text: SPECIAL_TEXT[card.id] }
 
   const { dmg = 0, dmgType } = card.effect ?? {}
-  if (dmg && dmgType) return { timing, text: `${dmg} damage per ${capitalize(dmgType)} stat.` }
+  if (dmg && dmgType) return { timing, text: `${dmg} ${card.tabletop ? 'power' : 'damage'} per ${capitalize(dmgType)} stat.` }
   if (dmg) return { timing, text: `${dmg} damage.` }
   return { timing, text: '' }
 }
 
 // Change in average damage per round if the card joins (or is part of) `hand`.
 export function getDamageDelta(card, hand = []) {
-  if (!card || !(card.type === 'stat' || card.effect?.dmg)) return null
+  if (!card || !(card.tabletop || card.type === 'stat' || card.effect?.dmg)) return null
   const inHand = hand.some((entry) => entry.uid === card.uid)
   const base = inHand ? hand.filter((entry) => entry.uid !== card.uid) : hand
   const withCard = inHand ? hand : [...hand, card]

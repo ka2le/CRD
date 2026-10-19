@@ -9,7 +9,7 @@ import time
 
 import numpy as np
 
-from crd.value_net import ValueNet, features, signature
+from crd.value_net import ValueNet, model_features, signature
 from crd.worker import HeadlessWorker
 from collect_draft import planning_seed, search_index
 from draft_experiment import family_id
@@ -33,9 +33,10 @@ def evaluate_chunk(config):
                                      "revealOpponent": False}
                     response = worker.request("reset", config=actual_config)
                     spec = response["spec"]
-                    if any(model.signature[k] != value for k, value in signature(spec).items()):
+                    engine = {k: v for k, v in signature(spec).items() if k not in ("features", "teacher")}
+                    if any(model.signature[k] != value for k, value in engine.items()):
                         raise ValueError("Model/engine mismatch")
-                    if opponent and any(opponent.signature[k] != value for k, value in signature(spec).items()):
+                    if opponent and any(opponent.signature[k] != value for k, value in engine.items()):
                         raise ValueError("Opponent model/engine mismatch")
                     family = family_id(actual_config, spec)
                     if family in excluded:
@@ -47,28 +48,39 @@ def evaluate_chunk(config):
                         if decisions > 1000:
                             raise RuntimeError("Decision guard")
                         actor = response["actor"]
-                        if response["observation"]["phase"] == "preparation" or (
-                                actor != seat and config.get("opponent_policy") == "heuristic"):
-                            # Preparation, and optionally the opponent's draft, use the Rules AI heuristic.
+                        observation = response["observation"]
+                        legal = response["legalActions"]
+                        is_candidate = actor == seat
+                        is_prep = observation["phase"] == "preparation"
+                        prefix = "" if is_candidate else "opponent_"
+                        searched = (config.get(prefix + "prep_policy", "heuristic") == "search" and len(legal) > 1) if is_prep \
+                            else not (not is_candidate and config.get("opponent_policy") == "heuristic")
+                        if not searched:
+                            # Rules AI heuristic: preparation unless searched, and optionally the opponent's draft.
                             action = worker.request("baseline")["action"]
                         else:
                             tick = time.perf_counter()
-                            is_candidate = actor == seat
                             samples = config["samples"] if is_candidate else config["opponent_samples"]
-                            report = worker.request("evaluate", observation=response["observation"], spec=spec,
-                                                    options={"seed": planning_seed(config["planning_seed"], game, turn),
-                                                             "samples": samples})["evaluation"]
+                            options = {"seed": planning_seed(config["planning_seed"], game, turn), "samples": samples}
+                            completion = config.get(prefix + "completion", "heuristic")
+                            if completion != "heuristic":
+                                options["completionPolicy"] = completion
+                            report = worker.request("evaluate", observation=observation, spec=spec, options=options)["evaluation"]
                             simulations += report["simulations"]
                             chosen = search_index(report)
                             prior_model = model if is_candidate and config["policy"] != "base" else opponent if not is_candidate else None
+                            x = None
                             if prior_model is not None and config["prior"] > 0:
-                                p = prior_model.probabilities(features(response["observation"], response["legalActions"], spec),
-                                                              baseline_only=is_candidate and config["policy"] == "linear")
+                                prep = worker.request("preparation-features", observation=observation,
+                                                      legalActions=legal)["actions"] if is_prep else None
+                                x = model_features(prior_model.signature["features"], observation, legal, spec, prep)
+                            if x is not None:
+                                p = prior_model.probabilities(x, baseline_only=is_candidate and config["policy"] == "linear")
                                 values = np.asarray([c["value"] for c in report["candidates"]], dtype=np.float32)
                                 # A fixed number of virtual WDL samples smooths noisy search estimates.
                                 score = (samples * values + config["prior"] * (p[:, 0] - p[:, 2])) / (samples + config["prior"])
                                 chosen = int(np.argmax(score))
-                            action = response["legalActions"][chosen]
+                            action = legal[chosen]
                             if is_candidate:
                                 latencies.append(time.perf_counter() - tick)
                             turn += 1
@@ -94,6 +106,14 @@ def main():
     parser.add_argument("--chunk", type=int, default=10)
     parser.add_argument("--normal-deck", action="store_true")
     parser.add_argument("--opponent-model", type=Path, help="Frozen neural-prior search opponent (default: base search)")
+    parser.add_argument("--prep-policy", choices=["heuristic", "search"], default="heuristic",
+                        help="search = the candidate searches its own preparation decisions (order/targets/skip)")
+    parser.add_argument("--opponent-prep-policy", choices=["heuristic", "search"], default="heuristic")
+    parser.add_argument("--completion", choices=["heuristic", "prep-lookahead"], default="heuristic",
+                        help="Rollout completion policy of the candidate's search")
+    parser.add_argument("--opponent-completion", choices=["heuristic", "prep-lookahead"], default="heuristic")
+    parser.add_argument("--deal-range", type=str, default=None,
+                        help="start:end subset of the --deals schedule (merge partial reports with merge_eval.py)")
     parser.add_argument("--opponent-policy", choices=["search", "heuristic"], default="search",
                         help="heuristic = opponent drafts with the Rules AI (browser Easy) instead of searching")
     args = parser.parse_args()
@@ -106,10 +126,12 @@ def main():
     if args.opponent_model and args.output.resolve() == args.opponent_model.resolve():
         parser.error("Output must not overwrite the opponent")
     settings = vars(args).copy()
+    deal_range = settings.pop("deal_range")
     settings["model"] = str(args.model.resolve())
     settings["output"] = str(args.output.resolve())
     settings["opponent_model"] = str(args.opponent_model.resolve()) if args.opponent_model else None
-    jobs = [{**settings, "offset": offset, "deals": min(args.chunk, args.deals-offset)} for offset in range(0, args.deals, args.chunk)]
+    low, high = (int(v) for v in deal_range.split(":")) if deal_range else (0, args.deals)
+    jobs = [{**settings, "offset": offset, "deals": min(args.chunk, high-offset)} for offset in range(low, high, args.chunk)]
     start = time.perf_counter()
     games, latency = [], []
     simulations = 0
@@ -127,7 +149,7 @@ def main():
         by_family[game["family"]].append((game["reward"] + 1) / 2)
     clustered = np.asarray([np.mean(scores) for scores in by_family.values()])
     se = clustered.std(ddof=1) / np.sqrt(len(clustered)) if len(clustered) > 1 else None
-    report = {"settings": settings, "games": len(games), "independent_deals": len(clustered),
+    report = {"settings": settings, "deal_range": deal_range, "games": len(games), "independent_deals": len(clustered),
               "wins": sum(g["reward"] == 1 for g in games), "draws": sum(g["reward"] == 0 for g in games),
               "losses": sum(g["reward"] == -1 for g in games), "score": float(clustered.mean()),
               "deal_clustered_95_interval": None if se is None else [max(0, float(clustered.mean()-1.96*se)), min(1, float(clustered.mean()+1.96*se))],

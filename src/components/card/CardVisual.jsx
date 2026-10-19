@@ -74,7 +74,16 @@ function getEffectTokens(card) {
 
 function CardEffectRow({ card }) {
   const hasStructuredEffect = Boolean(card.effect?.dmg || card.effect?.shield)
-  const tokens = hasStructuredEffect ? getEffectTokens(card) : getCustomEffectTokens(card)
+  let tokens = hasStructuredEffect ? getEffectTokens(card) : getCustomEffectTokens(card)
+  if (card.tabletop && card.id === 'double_dmg') {
+    tokens = [
+      { type: 'icon', value: getStatIcon('robot'), alt: 'robot attacks' }, { type: 'text', value: '×2' },
+      { type: 'line-break' }, { type: 'text', value: '+1' }, { type: 'icon', value: DISPLAY_ICONS.dmg, alt: 'per other scoring attack' },
+    ]
+  }
+  if (card.tabletop && card.id === 'shield_is_dmg') {
+    tokens = [{ type: 'icon', value: DISPLAY_ICONS.shield, alt: 'own shields' }, { type: 'text', value: '=' }, { type: 'icon', value: DISPLAY_ICONS.dmg, alt: 'power' }]
+  }
 
   return (
     <div className="card-visual__overlay card-visual__overlay--effect">
@@ -155,7 +164,7 @@ export default function CardVisual({ card, hidden = false, charge = null }) {
         <div className="card-visual__shade" />
         {card.type === 'stat' ? <CardStatColumn card={card} /> : null}
         {card.type === 'action' ? <CardEffectRow card={card} /> : null}
-        <CardCooldown card={card} charge={charge} />
+        {!card.tabletop ? <CardCooldown card={card} charge={charge} /> : null}
       </div>
     </div>
   )
