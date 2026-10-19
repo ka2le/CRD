@@ -15,6 +15,8 @@ export const DISPLAY_ICONS = {
     dmg: 'https://ka2le.github.io/chatgpt-apps3/images/mp/suit_hearts_broken.png',
     cd: 'https://ka2le.github.io/chatgpt-apps3/images/mp/hourglass.png',
     shield: 'https://ka2le.github.io/chatgpt-apps3/images/mp/shield.png',
+    star: 'https://ka2le.github.io/chatgpt-apps3/images/mp/star.png',
+    arrow: 'https://ka2le.github.io/chatgpt-apps3/images/mp/arrow2.png',
   }),
   cardBackMark: 'CRD',
 }

@@ -6,6 +6,7 @@ This file defines the first working JSON shape for cards in Critters Robots Drag
 
 Current canonical data file:
 - `data/cards.json`
+- `data/tabletop-cards.json` contains the tabletop-only additions; `getCoreCards({ tabletop: true })` includes them, while the default digital pool does not. `tabletopOnly: true` marks these definitions. Copy counts follow the same Normal / Wild convention.
 
 ## Current scope
 
@@ -59,7 +60,7 @@ Current values:
 - `utility`
 
 ### `images`
-Array of source image URLs retained for provenance and variant selection. The renderer resolves these through `data/image-manifest.json` to local WebP derivatives; the engine does not depend on images. After adding source URLs, run `npm run assets:prepare`. See `ASSETS.md`.
+Array of source references retained for provenance and variant selection: HTTPS URLs or relative `assets/originals/` paths for creator-supplied artwork. The renderer resolves these through `data/image-manifest.json` to local WebP derivatives; the engine does not depend on images. After adding sources, run `npm run assets:prepare`. See `ASSETS.md`.
 
 ### `stats`
 For stat cards, this is an array of class names contributed by the card.

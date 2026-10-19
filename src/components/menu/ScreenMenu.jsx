@@ -3,7 +3,7 @@ import './ScreenMenu.css'
 import { GameIcon, SvgIcon } from '../ui/GameIcon'
 import { OPPONENT_AI_OPTIONS } from '../../game/opponentAi'
 
-export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, settings, onUpdateSettings, onHelp, onScoreCard }) {
+export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, settings, onUpdateSettings, onHelp, onScoreCard, onCollection }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
   const menuRef = useRef(null)
@@ -130,10 +130,16 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
             <span>Wild deck</span>
           </label>
 
-          <button type="button" className="screen-menu__item" onClick={() => run(onScoreCard)}>
-            <GameIcon name="star" />
-            <span>Score card</span>
-          </button>
+          <div className="screen-menu__row screen-menu__row--split">
+            <button type="button" className="screen-menu__item" onClick={() => run(onCollection)}>
+              <SvgIcon name="collection" />
+              <span>Collection</span>
+            </button>
+            <button type="button" className="screen-menu__item" onClick={() => run(onScoreCard)}>
+              <GameIcon name="star" />
+              <span>Score card</span>
+            </button>
+          </div>
 
           <div className="screen-menu__row">
             <button type="button" className="screen-menu__item" onClick={() => run(onHelp)}>

@@ -11,7 +11,7 @@ import { searchDecision } from '../src/game/searchAi.js'
 import { pickBestCardForHand, getHandAverageDamage } from '../src/game/cardEvaluator.js'
 import { createDevScenario, DEV_SCENARIO_NAMES } from '../src/game/devScenarios.js'
 
-const definitions = new Map(getCoreCards().map((card) => [card.id, card]))
+const definitions = new Map(getCoreCards({ tabletop: true }).map((card) => [card.id, card]))
 let serial = 0
 const card = (id) => toTabletopCard({ ...definitions.get(id), uid: `${id}-test-${++serial}` })
 const hand = (...ids) => ids.map(card)
@@ -20,8 +20,13 @@ test('tabletop decks preserve identities/copy counts; ordinary attacks are 2 wit
   for (const wildDeck of [false, true]) {
     const digital = getExpandedCoreDeck({ wildDeck })
     const tabletop = getExpandedCoreDeck({ wildDeck, tabletop: true })
-    assert.equal(tabletop.length, wildDeck ? 102 : 70)
-    assert.deepEqual(tabletop.map((entry) => entry.uid), digital.map((entry) => entry.uid))
+    assert.equal(digital.length, wildDeck ? 102 : 70)
+    assert.equal(tabletop.length, wildDeck ? 108 : 72)
+    assert.deepEqual(tabletop.filter((entry) => !entry.tabletopOnly).map((entry) => entry.uid), digital.map((entry) => entry.uid))
+    for (const id of ['shortcut', 'chameleon']) {
+      assert.equal(tabletop.filter((entry) => entry.id === id).length, wildDeck ? 3 : 1)
+      assert(!digital.some((entry) => entry.id === id))
+    }
     for (const entry of tabletop) assert.equal(entry.cd, 0)
     for (const id of ['swarm', 'robot_attack', 'dragons_breath']) {
       assert.equal(tabletop.find((entry) => entry.id === id).effect.dmg, 2)
@@ -85,20 +90,78 @@ test('ties require a valid choice and multi-stat cards expose all eligible tied 
   assert.deepEqual(getCardTabletopTypes(neutralWithDevour[0], getTabletopProfile(neutralWithDevour)), ['robot'])
 })
 
-test('integer specials, stacked Punches and Devour produce reproducible power', () => {
+test('integer specials and Devour produce reproducible power', () => {
   for (const [stat, attack] of [['rabbit2', 'murder_rabbit'], ['robot2', 'robot_ulti'], ['dragon2', 'dragon_ulti'], ['dragon2', 'devour']]) {
     const ultimate = card(attack)
     assert.equal(ultimate.effect.dmg, 4)
     assert.equal(getTabletopProfile([card(stat), ultimate]).base, 8)
   }
-  assert.equal(getTabletopProfile(hand('robot1', 'robot_attack', 'critter1', 'swarm', 'bite', 'double_dmg')).base, 10)
-  assert.equal(getTabletopProfile(hand('robot1', 'robot_attack', 'critter1', 'swarm', 'bite', 'double_dmg', 'double_dmg')).base, 16)
+  assert.equal(getTabletopProfile(hand('robot1', 'robot_attack', 'critter1', 'swarm', 'bite', 'double_dmg')).base, 6)
+  assert.equal(getTabletopProfile(hand('robot1', 'robot_attack', 'critter1', 'swarm', 'bite', 'double_dmg', 'double_dmg')).base, 6)
   assert.equal(getTabletopProfile(hand('swarm', 'double_dmg')).base, 0)
   assert.equal(getTabletopProfile(hand('shield2', 'shield2', 'shield_is_dmg')).base, 2)
   assert.equal(getTabletopProfile(hand('joker', 'one_off_each', 'any_off_each')).base, 4)
   const devour = getTabletopProfile(hand('rabbit2', 'swarm', 'dragon1', 'devour'))
   assert.equal(devour.base, 8)
   assert.deepEqual(devour.types, ['critter', 'dragon'])
+})
+
+test('2× card doubles only the earned faction bonus after shields and stacks for all factions', () => {
+  const builds = [
+    { ids: ['rabbit2', 'swarm'], base: 4, bonus: 1 },
+    { ids: ['robot2', 'robot_attack', 'robot_attack'], base: 8, bonus: 2 },
+    { ids: ['robot2', 'robot1', 'robot_attack', 'robot_attack'], base: 12, bonus: 3 },
+    { ids: ['dragon2', 'dragon1', 'dragons_breath', 'dragons_breath'], base: 12, bonus: 4 },
+    { ids: ['dragon2', 'dragon2', 'dragons_breath', 'dragons_breath'], base: 16, bonus: 6 },
+  ]
+  for (const { ids, base, bonus } of builds) {
+    for (const copies of [1, 2, 3]) {
+      const result = scoreTabletopHand([...hand(...ids), ...hand(...Array(copies).fill('double_dmg'))])
+      assert.deepEqual([result.base, result.baseBonus, result.bonus, result.score], [base, bonus, bonus * 2 ** copies, base + bonus * 2 ** copies])
+    }
+  }
+  const robots = hand('robot2', 'robot_attack', 'robot_attack', 'double_dmg')
+  assert.deepEqual([scoreTabletopHand(robots, 1).power, scoreTabletopHand(robots, 1).bonus], [7, 4])
+  assert.deepEqual([scoreTabletopHand(robots, 2).power, scoreTabletopHand(robots, 2).bonus], [6, 0])
+  assert.equal(scoreTabletopHand(hand('critter1', 'swarm', 'double_dmg'), 1).score, 0)
+  assert.equal(scoreTabletopHand(hand('double_dmg')).score, 0)
+  const tied = getTabletopProfile(hand('robot_dragon', 'robot_attack', 'dragons_breath', 'double_dmg'))
+  assert.deepEqual(tied.contributions, { critter: 0, robot: 2, dragon: 2 })
+  assert.deepEqual(tied.types, ['robot', 'dragon'])
+  const multiplier = card('double_dmg')
+  assert.equal(pickBestCardForHand([multiplier, card('bite')], hand('robot2', 'robot1', 'robot_attack', 'robot_attack')).uid, multiplier.uid)
+})
+
+test('Shortcut advances earned bonus tiers after shields, caps and applies before 2× cards', () => {
+  const robotBase = hand('robot1', 'robot_attack')
+  assert.equal(scoreTabletopHand([...robotBase, card('shortcut')]).bonus, 2)
+  assert.equal(scoreTabletopHand([...robotBase, ...hand('shortcut', 'shortcut')]).bonus, 3)
+  assert.equal(scoreTabletopHand([...robotBase, ...hand('shortcut', 'shortcut', 'shortcut')]).bonus, 3)
+  const shielded = scoreTabletopHand(hand('robot2', 'robot_attack', 'robot_attack', 'shortcut', 'double_dmg'), 2)
+  assert.deepEqual([shielded.base, shielded.power, shielded.naturalBonus, shielded.baseBonus, shielded.bonus, shielded.score], [8, 6, 0, 2, 4, 10])
+  assert.equal(scoreTabletopHand(hand('dragon1', 'dragons_breath', 'shortcut')).bonus, 4)
+  assert.equal(scoreTabletopHand(hand('dragon1', 'dragons_breath', 'shortcut', 'shortcut')).bonus, 6)
+  assert.equal(scoreTabletopHand(hand('critter1', 'swarm', 'shortcut')).bonus, 1)
+  assert.equal(scoreTabletopHand(hand('robot1', 'robot_attack', 'shortcut'), 2).bonus, 0)
+  assert.equal(scoreTabletopHand(hand('shortcut')).score, 0)
+})
+
+test('Chameleon permits every faction and uses the chosen bonus and shield cost for the whole hand', () => {
+  const cards = hand('rabbit2', 'swarm', 'shortcut', 'chameleon')
+  const profile = getTabletopProfile(cards)
+  assert.deepEqual(profile.contributions, { critter: 4, robot: 0, dragon: 0 })
+  assert.deepEqual(profile.types, ['critter', 'robot', 'dragon'])
+  assert.deepEqual(getCardTabletopTypes(cards[3], profile), ['critter', 'robot', 'dragon'])
+  const critter = scoreTabletopHand(cards, 1, 'critter')
+  const robot = scoreTabletopHand(cards, 1, 'robot')
+  const dragon = scoreTabletopHand(cards, 1, 'dragon')
+  assert.deepEqual([critter.blocked, critter.bonus, critter.score], [2, 1, 3])
+  assert.deepEqual([robot.blocked, robot.bonus, robot.score], [1, 2, 5])
+  assert.deepEqual([dragon.blocked, dragon.bonus, dragon.score], [0, 4, 8])
+  assert.throws(() => resolveTabletopBattle(cards, []), /Choose/)
+  assert.equal(chooseTabletopType(cards), 'dragon')
+  assert.equal(resolveTabletopBattle(cards, [], { playerType: 'robot' }).player.damageType, 'robot')
+  assert.equal(pickBestCardForHand([card('chameleon'), card('bite')], hand('rabbit2', 'swarm', 'shortcut')).id, 'chameleon')
 })
 
 test('both building modes keep tabletop cards through completion; AI values matching engines', () => {
@@ -149,11 +212,27 @@ test('session gates type choice, invalidates it after hand changes, preserves pr
           playerType: getTabletopChoice(result.preBattle).selectedType,
         }))
         const physicalIds = [...result.game.playerHand, ...result.game.opponentHand, ...result.game.deck].map((entry) => entry.uid)
-        assert.equal(new Set(physicalIds).size, 102)
+        assert.equal(new Set(physicalIds).size, 108)
       }
     }
     assert.throws(() => createDevScenario({ name: 'tie', playerType: 'critter' }), /Invalid main damage type/)
     assert.throws(() => createDevScenario({ playerCards: ['not-a-card'] }), /Card unavailable/)
+    for (const mode of ['draft', 'discard']) {
+      const payload = createDevScenario({ name: 'chameleon', mode, playerCards: ['rabbit2', 'swarm', 'chameleon', 'draw_2_extra', 'copy_card_in_hand'] })
+      let state = sessionReducer({ settings: {}, battleInstance: 0, gameSessionKey: 0, dealId: 0 }, { type: 'LOAD_DEV_SCENARIO', payload })
+      const chameleon = state.preBattle.playerHand.find((entry) => entry.id === 'chameleon')
+      state = sessionReducer(state, { type: 'CHOOSE_TABLETOP_TYPE', uid: chameleon.uid })
+      assert.equal(state.preBattle.tabletopTypeCardUid, chameleon.uid)
+      state = sessionReducer(state, { type: 'CANCEL_TABLETOP_TYPE' })
+      assert.equal(state.preBattle.tabletopTypeCardUid, null)
+      state = sessionReducer(state, { type: 'CHOOSE_TABLETOP_TYPE', uid: chameleon.uid, damageType: 'dragon' })
+      assert.equal(getTabletopChoice(state.preBattle).selectedType, 'dragon')
+      const copy = state.preBattle.playerHand.find((entry) => entry.id === 'copy_card_in_hand')
+      state = sessionReducer(state, { type: 'ACTIVATE_PLAYER_PRE_BATTLE_CARD', uid: copy.uid })
+      state = sessionReducer(state, { type: 'ACTIVATE_PLAYER_PRE_BATTLE_CARD', uid: chameleon.uid })
+      assert.equal(state.preBattle.playerHand.filter((entry) => entry.id === 'chameleon').length, 2)
+      assert.equal(getTabletopChoice(state.preBattle).selectedType, null)
+    }
     for (const mode of ['draft', 'five-hand-discard']) {
       const playerHand = hand('robot_dragon', 'robot_attack', 'dragons_breath', 'copy_card_in_hand')
       const opponentHand = hand('draw_2_extra', 'robot1')

@@ -16,7 +16,9 @@ export function toTabletopCard(card) {
 export function getTabletopProfile(hand = []) {
   const stats = getHandStats(hand)
   const shields = hand.reduce((sum, card) => sum + (card.effect?.shield > 0 ? 1 : 0), 0)
-  const punches = hand.filter((card) => card.id === 'double_dmg').length
+  const bonusMultiplier = 2 ** hand.filter((card) => card.id === 'double_dmg').length
+  const shortcuts = hand.filter((card) => card.id === 'shortcut').length
+  const hasChameleon = hand.some((card) => card.id === 'chameleon')
   const contributions = { critter: 0, robot: 0, dragon: 0 }
   let neutral = 0
   const attacks = []
@@ -29,7 +31,6 @@ export function getTabletopProfile(hand = []) {
     else if (card.id === 'one_off_each') power = stats.critter * stats.robot * stats.dragon
     else if (card.id === 'any_off_each') power = stats.critter + stats.robot + stats.dragon
     if (power > 0) {
-      power = type === 'robot' ? power * (2 ** punches) : power + punches
       if (type) contributions[type] += power
       else neutral += power
       attacks.push({ uid: card.uid, power, type: type ?? null })
@@ -41,9 +42,9 @@ export function getTabletopProfile(hand = []) {
   const dominantTypes = largest > 0
     ? TABLETOP_CLASSES.filter((type) => contributions[type] === largest)
     : (base > 0 ? ['robot'] : [])
-  const types = [...dominantTypes]
+  const types = hasChameleon ? [...TABLETOP_CLASSES] : [...dominantTypes]
   if (base > 0 && hand.some((card) => card.id === 'devour') && !types.includes('dragon')) types.push('dragon')
-  return { stats, shields, contributions, neutral, base, dominantTypes, types, attacks }
+  return { stats, shields, contributions, neutral, base, dominantTypes, types, attacks, bonusMultiplier, shortcuts, hasChameleon }
 }
 
 export function getTabletopBonus(type, power) {
@@ -61,8 +62,12 @@ export function scoreTabletopHand(hand, enemyShields = 0, damageType = null) {
   const shieldPenalty = enemyShields * (TABLETOP_SHIELD_COST[type] ?? 0)
   const blocked = Math.min(profile.base, shieldPenalty)
   const power = profile.base - blocked
-  const bonus = getTabletopBonus(type, power)
-  return { ...profile, damageType: type, enemyShields, shieldPenalty, blocked, power, bonus, score: power + bonus }
+  const naturalBonus = getTabletopBonus(type, power)
+  const tiers = { critter: [0, 1], robot: [0, 2, 3], dragon: [0, 4, 6] }[type] ?? [0]
+  const tierIndex = tiers.indexOf(naturalBonus)
+  const baseBonus = power > 0 ? tiers[Math.min(tierIndex + profile.shortcuts, tiers.length - 1)] : 0
+  const bonus = baseBonus * profile.bonusMultiplier
+  return { ...profile, damageType: type, enemyShields, shieldPenalty, blocked, power, naturalBonus, baseBonus, bonus, score: power + bonus }
 }
 
 // AI commits from its own hand, before reveal, without consulting enemy shields.
@@ -90,6 +95,7 @@ export function getTabletopHandKey(hand) {
 }
 
 export function getCardTabletopTypes(card, profile) {
+  if (card.id === 'chameleon') return [...TABLETOP_CLASSES]
   const neutralOnly = Object.values(profile.contributions).every((power) => power === 0)
   return profile.types.filter((type) => card.stats?.includes(type) || card.effect?.dmgType === type
     || (type === 'robot' && neutralOnly && profile.attacks.some((attack) => attack.uid === card.uid && !attack.type)))

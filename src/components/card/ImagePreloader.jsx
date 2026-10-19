@@ -19,7 +19,7 @@ function preloadImage(src) {
 
 export default function ImagePreloader() {
   const imageUrls = useMemo(() => {
-    const cards = getExpandedCoreDeck()
+    const cards = getExpandedCoreDeck({ tabletop: true })
     return Array.from(new Set(cards.flatMap((card) => card.images ?? []).map(getImageUrl).filter(Boolean)))
   }, [])
 

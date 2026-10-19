@@ -2,6 +2,8 @@
 
 2026-10-19 addition: the persisted `tabletop` setting applies independently of Draft/Discard. `cards.js` derives marked cards through `tabletop.js`; `tabletopAi.js` supplies integer-mode heuristics. Session preparation validates main-type commitment. Playback calls the pure tabletop scorer immediately; `TabletopScore.jsx` renders both formulas. Browser Search AI re-scores completed sampled hands with tabletop rules; offline digital training remains unchanged. See `TABLETOP_MODE.md`.
 
+Tabletop-only definitions live in `data/tabletop-cards.json` and are included only through explicit tabletop deck/collection options. `FactionPicker.jsx` presents the session's validated main-faction choices (including unrestricted Chameleon choices); the scorer handles Shortcut tiers and chosen-faction rules. Imported local artwork is archived separately and resolved through the existing manifest, keeping originals out of the public build.
+
 Reviewed 2026-10-18. CRD is a static React 19/Vite frontend with reusable JavaScript game modules. No backend or multiplayer transport is implemented.
 
 ## Code map

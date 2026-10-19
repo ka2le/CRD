@@ -60,6 +60,18 @@
   gap: 8px;
 }
 
+.screen-menu__row--split {
+  grid-template-columns: 1fr 1fr;
+}
+
+.screen-menu__row--split .screen-menu__item {
+  gap: 7px;
+  padding: 0 10px;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
 .screen-menu__item--square {
   justify-content: center;
   padding: 0;

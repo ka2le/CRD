@@ -54,8 +54,10 @@ const SPECIAL_TEXT = {
 }
 
 const TABLETOP_TEXT = {
+  shortcut: 'Advance your main faction bonus by one tier after shields, up to its highest tier. Requires positive power. Copies advance another tier. Adds no base power.',
+  chameleon: 'Choose Critter, Robot or Dragon as your main faction before battle. Its bonus and shield vulnerability apply to your whole hand. Adds no stats or base power.',
   bite: 'Adds 2 power, no stats needed.',
-  double_dmg: 'Each Punch doubles Robot attack power and adds 1 to each other attack generating power. Punches stack.',
+  double_dmg: 'Doubles your main faction bonus after shields. Works with any faction. Copies stack: ×2, ×4, ×8.',
   devour: '4 power per Dragon stat. You may choose Dragon as your main damage type.',
   shield2: 'One shield. Reduces enemy Critter power by 2, Robot by 1, Dragon by 0, before bonuses.',
   shield_is_dmg: 'Adds 1 power per shield in your hand. Your shields still block.',
@@ -89,6 +91,7 @@ export function getCardSummary(card) {
 
 // Change in average damage per round if the card joins (or is part of) `hand`.
 export function getDamageDelta(card, hand = []) {
+  if (card?.tabletop && ['double_dmg', 'shortcut', 'chameleon'].includes(card.id)) return null // Modifier, not base power.
   if (!card || !(card.tabletop || card.type === 'stat' || card.effect?.dmg)) return null
   const inHand = hand.some((entry) => entry.uid === card.uid)
   const base = inHand ? hand.filter((entry) => entry.uid !== card.uid) : hand

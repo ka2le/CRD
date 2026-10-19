@@ -60,6 +60,14 @@ const SVG_PATHS = {
       <path d="M4.5 7h15M9.5 7V4.8h5V7M6.5 7l1 12.5h9l1-12.5" />
     </g>
   ),
+  collection: (
+    <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
+      <rect x="3.5" y="3.5" width="7" height="7" rx="1.4" />
+      <rect x="13.5" y="3.5" width="7" height="7" rx="1.4" />
+      <rect x="3.5" y="13.5" width="7" height="7" rx="1.4" />
+      <rect x="13.5" y="13.5" width="7" height="7" rx="1.4" />
+    </g>
+  ),
   fullscreen: (
     <g fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
       <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />

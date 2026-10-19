@@ -1,0 +1,5 @@
+.faction-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 18px 0; }
+.faction-picker__option { display: flex; flex-direction: column; gap: 10px; min-height: 112px; padding: 16px 8px; color: var(--faction); }
+.faction-picker__option .g-icon { font-size: 42px; }
+.faction-picker__option[aria-pressed="true"] { border-color: var(--faction); background: color-mix(in srgb, var(--faction) 15%, transparent); }
+@media (max-width: 380px) { .faction-picker { gap: 6px; } .faction-picker__option { font-size: 0.75rem; } }

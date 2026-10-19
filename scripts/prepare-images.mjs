@@ -32,7 +32,7 @@ async function atomicWrite(filename, contents) {
 
 const sources = new Map()
 function collect(value, role = 'icon') {
-  if (typeof value === 'string' && /^https:\/\//.test(value)) {
+  if (typeof value === 'string' && (/^https:\/\//.test(value) || value.startsWith('assets/originals/'))) {
     if (!sources.has(value) || role === 'art') sources.set(value, role)
   } else if (Array.isArray(value)) {
     value.forEach((item) => collect(item, role))
@@ -41,6 +41,7 @@ function collect(value, role = 'icon') {
   }
 }
 collect(await readJson(path.join(root, 'data/cards.json')))
+collect(await readJson(path.join(root, 'data/tabletop-cards.json')))
 const iconDefinitions = await readFile(path.join(root, 'src/components/card/cardData.js'), 'utf8')
 for (const [url] of iconDefinitions.matchAll(/https:\/\/[^'"\s]+/g)) collect(url)
 
@@ -89,11 +90,13 @@ async function prepare(url, role) {
   }
 
   const sourceId = hash(url).slice(0, 20)
-  const extension = path.extname(new URL(url).pathname) || '.img'
-  const original = `assets/originals/${sourceId}${extension}`
+  const localSource = url.startsWith('assets/originals/')
+  const extension = path.extname(localSource ? url : new URL(url).pathname) || '.img'
+  const original = localSource ? url : `assets/originals/${sourceId}${extension}`
   const originalPath = path.join(root, original)
   let buffer = await optionalRead(originalPath)
   if (!buffer) {
+    if (localSource) throw new Error(`Missing original: ${original}`)
     buffer = await download(url)
     await atomicWrite(originalPath, buffer)
     downloaded += 1

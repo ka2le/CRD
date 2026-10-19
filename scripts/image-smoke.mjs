@@ -4,7 +4,9 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { createElement } from 'react'
 import { createServer } from 'vite'
 
-const { cards } = JSON.parse(await readFile(new URL('../data/cards.json', import.meta.url)))
+const digital = JSON.parse(await readFile(new URL('../data/cards.json', import.meta.url)))
+const tabletop = JSON.parse(await readFile(new URL('../data/tabletop-cards.json', import.meta.url)))
+const cards = [...digital.cards, ...tabletop.cards.map((card) => ({ ...card, tabletop: true }))]
 for (const base of ['/', '/CRD/']) {
   const server = await createServer({ base, server: { middlewareMode: true }, appType: 'custom' })
   try {

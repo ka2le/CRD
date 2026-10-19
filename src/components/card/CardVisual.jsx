@@ -77,12 +77,20 @@ function CardEffectRow({ card }) {
   let tokens = hasStructuredEffect ? getEffectTokens(card) : getCustomEffectTokens(card)
   if (card.tabletop && card.id === 'double_dmg') {
     tokens = [
-      { type: 'icon', value: getStatIcon('robot'), alt: 'robot attacks' }, { type: 'text', value: '×2' },
-      { type: 'line-break' }, { type: 'text', value: '+1' }, { type: 'icon', value: DISPLAY_ICONS.dmg, alt: 'per other scoring attack' },
+      { type: 'text', value: '2×' }, { type: 'icon', value: DISPLAY_ICONS.star, alt: 'faction bonus' },
     ]
   }
   if (card.tabletop && card.id === 'shield_is_dmg') {
     tokens = [{ type: 'icon', value: DISPLAY_ICONS.shield, alt: 'own shields' }, { type: 'text', value: '=' }, { type: 'icon', value: DISPLAY_ICONS.dmg, alt: 'power' }]
+  }
+  if (card.tabletop && card.id === 'shortcut') {
+    tokens = [{ type: 'icon', value: DISPLAY_ICONS.arrow, alt: 'next tier' }, { type: 'icon', value: DISPLAY_ICONS.star, alt: 'faction bonus' }]
+  }
+  if (card.tabletop && card.id === 'chameleon') {
+    tokens = ['critter', 'robot', 'dragon'].flatMap((type, index) => [
+      ...(index ? [{ type: 'text', value: '/' }] : []),
+      { type: 'icon', value: getStatIcon(type), alt: `choose ${type}` },
+    ])
   }
 
   return (

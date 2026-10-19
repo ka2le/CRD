@@ -15,6 +15,8 @@ import CardInspectProvider from './components/overlay/CardInspect'
 import PileSheet from './components/overlay/PileSheet'
 import HelpSheet from './components/overlay/HelpSheet'
 import ScoreSheet from './components/overlay/ScoreSheet'
+import CollectionSheet from './components/overlay/CollectionSheet'
+import FactionPicker from './components/overlay/FactionPicker'
 import SideRail, { Pips, ThinkingDots } from './components/hud/SideRail'
 import { GameIcon, SvgIcon } from './components/ui/GameIcon'
 import useBattlePlayback from './hooks/useBattlePlayback'
@@ -56,6 +58,7 @@ function AppContent() {
     battleDeck,
     discardPhase,
     opponentDiscarding,
+    opponentPreparing,
     canStartBattle,
     deckCount,
     pendingDraftPickUid,
@@ -86,6 +89,7 @@ function AppContent() {
     tabletopChoice,
     choosingTabletopType,
     choosePlayerTabletopType,
+    cancelTabletopTypeChoice,
     tabletopTypeCardUid,
     tabletopSelectedCardUid,
   } = session
@@ -113,6 +117,7 @@ function AppContent() {
   const [dismissedResultKey, setDismissedResultKey] = useState(null)
   const [helpOpen, setHelpOpen] = useState(false)
   const [scoreOpen, setScoreOpen] = useState(false)
+  const [collectionOpen, setCollectionOpen] = useState(false)
   const [pileOpen, setPileOpen] = useState(false)
 
   const layout = battleStarted
@@ -128,6 +133,7 @@ function AppContent() {
 
   const opponentHidden = game.mode === 'five-hand-discard' && !settings.showOpponentCards && !battleStarted
   const opponentThinking = (game.mode === 'draft' && game.phase === 'draft-opponent-thinking') || opponentDiscarding
+    || opponentPreparing
   const playerTurn = layout === 'draft' ? canPickDraftCard : layout === 'focus'
   const battleFinished = battleStarted && showBattleResult
   const resultDismissed = dismissedResultKey === battleKey
@@ -203,7 +209,7 @@ function AppContent() {
           disabled={!canStartBattle || isRecyclePicking || (choosingTabletopType && tabletopChoice.needsChoice)}
         >
           <SvgIcon name="swords" />
-          <span>{choosingTabletopType && tabletopChoice.needsChoice ? 'Choose type' : 'Battle'}</span>
+          <span>{choosingTabletopType && tabletopChoice.needsChoice ? 'Choose type' : (opponentPreparing ? 'Waiting' : 'Battle')}</span>
         </button>
       )
     }
@@ -232,16 +238,24 @@ function AppContent() {
   }
 
   const playerInteractive = !battleStarted
+  const chameleonIds = settings.tabletop && isPreBattleReady && !opponentPreparing
+    ? playerHand.filter((card) => card.id === 'chameleon').map((card) => card.uid) : []
+  function handlePlayerCardClick(uid) {
+    if (discardPhase) toggleSelected(uid)
+    else if (!armedPlayerCopyUid && !isRecyclePicking && (chameleonIds.includes(uid) || choosingTabletopType)) choosePlayerTabletopType(uid)
+    else if (isWaitingForPlayerChoice) activatePlayerPreBattleCard(uid)
+  }
+  const factionPickerCard = playerHand.find((card) => card.uid === tabletopTypeCardUid)
   const playerHandProps = {
     hand: playerHand,
     side: 'player',
     motionSection: 'player-hand',
     suppressedIds: battleStarted ? [] : (suppressedHandCardIds?.player ?? []),
-    onToggle: playerInteractive ? (choosingTabletopType ? choosePlayerTabletopType : (isWaitingForPlayerChoice ? activatePlayerPreBattleCard : toggleSelected)) : undefined,
-    cardsDisabled: !playerInteractive || !(discardPhase || isWaitingForPlayerChoice || choosingTabletopType),
+    onToggle: playerInteractive ? handlePlayerCardClick : undefined,
+    cardsDisabled: !playerInteractive || opponentPreparing || !(discardPhase || isWaitingForPlayerChoice || choosingTabletopType || chameleonIds.length),
     discardIds: discardPhase ? selectedIds : [],
-    selectedIds: isPreBattleReady && armedPlayerCopyUid ? [armedPlayerCopyUid] : (choosingTabletopType && tabletopSelectedCardUid ? [tabletopSelectedCardUid] : []),
-    readyIds: isPreBattleReady ? activatablePreBattleIds : [],
+    selectedIds: isPreBattleReady && armedPlayerCopyUid ? [armedPlayerCopyUid] : (isPreBattleReady && tabletopSelectedCardUid ? [tabletopSelectedCardUid] : []),
+    readyIds: isPreBattleReady ? [...activatablePreBattleIds, ...chameleonIds] : [],
     targetableIds: choosingTabletopType ? playerHand.filter((card) => getCardTabletopTypes(card, tabletopChoice).length).map((card) => card.uid) : (isPreBattleReady ? copyCandidateIds : []),
     dimmedIds: choosingTabletopType ? playerHand.filter((card) => !getCardTabletopTypes(card, tabletopChoice).length).map((card) => card.uid) : [],
     activeCardIds: battleStarted ? (battlePlayback?.playerTriggeredIds ?? []) : [],
@@ -285,6 +299,7 @@ function AppContent() {
             onUpdateSettings={updateSettings}
             onHelp={() => setHelpOpen(true)}
             onScoreCard={() => setScoreOpen(true)}
+            onCollection={() => setCollectionOpen(true)}
           />
         </SideRail>
 
@@ -319,9 +334,6 @@ function AppContent() {
           {choosingTabletopType ? (
             <div className="tabletop-choice" role="status">
               {tabletopChoice.selectedType ? <span className="tabletop-choice__selected">Main type <GameIcon name={tabletopChoice.selectedType} /></span> : <span>Choose your main damage type: tap a highlighted card</span>}
-              {tabletopTypeCardUid ? getCardTabletopTypes(playerHand.find((card) => card.uid === tabletopTypeCardUid) ?? {}, tabletopChoice).map((type) => (
-                <button key={type} type="button" className="ui-button" onClick={() => choosePlayerTabletopType(tabletopTypeCardUid, type)}><GameIcon name={type} />{type}</button>
-              )) : null}
             </div>
           ) : null}
           {layout === 'battle' && settings.tabletop ? (
@@ -402,7 +414,18 @@ function AppContent() {
       />
 
       <HelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} tabletop={settings.tabletop} />
+      <FactionPicker open={Boolean(isPreBattleReady && factionPickerCard)}
+        types={factionPickerCard ? getCardTabletopTypes(factionPickerCard, tabletopChoice) : []}
+        selectedType={tabletopChoice.selectedType}
+        onChoose={(type) => choosePlayerTabletopType(tabletopTypeCardUid, type)}
+        onClose={cancelTabletopTypeChoice} />
       <ScoreSheet open={scoreOpen} onClose={() => setScoreOpen(false)} />
+      <CollectionSheet
+        open={collectionOpen}
+        onClose={() => setCollectionOpen(false)}
+        tabletop={Boolean(settings.tabletop)}
+        wildDeck={Boolean(settings.wildDeck)}
+      />
 
       <InfoOverlay
         visible={Boolean(recycleOverlay)}

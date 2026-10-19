@@ -10,6 +10,18 @@ const SCENARIOS = {
     player: ['dragon2', 'dragon2', 'dragons_breath', 'dragons_breath', 'critter1'],
     opponent: ['robot2', 'robot1', 'robot_attack', 'robot_attack', 'critter1'],
   },
+  'double-bonus': {
+    player: ['robot2', 'robot_attack', 'robot_attack', 'double_dmg', 'shield2'],
+    opponent: ['rabbit2', 'critter1', 'swarm', 'swarm', 'shield2'],
+  },
+  shortcut: {
+    player: ['robot2', 'robot_attack', 'shortcut', 'double_dmg', 'shield2'],
+    opponent: ['dragon2', 'dragons_breath', 'shield2', 'critter1', 'robot1'],
+  },
+  chameleon: {
+    player: ['rabbit2', 'swarm', 'shortcut', 'chameleon', 'shield2'],
+    opponent: ['robot2', 'robot_attack', 'shield2', 'critter1', 'dragon1'],
+  },
   shields: {
     player: ['rabbit2', 'critter1', 'swarm', 'swarm', 'shield2'],
     opponent: ['robot2', 'robot1', 'robot_attack', 'robot_attack', 'shield2'],

@@ -4,9 +4,13 @@ These are the digital definitions. Tabletop mode derives separate per-game cards
 
 Tabletop ultimates (Murder Rabbit, Robot Ultimate, Dragon Ultimate and Devour) all give **4 power per matching stat**, double an ordinary attack. Devour retains the Dragon main-type option.
 
+The tabletop 2× card is neutral: it doubles the earned main-faction bonus after shields, rather than any attack's power. Copies stack on the bonus.
+
 Reviewed 2026-10-18. Definitions: `data/cards.json`. Playable inclusion: `CORE_CARD_IDS` in `src/game/cards.js`. Use these IDs rather than display-name capitalization in code.
 
 There are 30 imported definitions, 27 playable. Normal deck: 70 cards. Wild Deck: 102, replacing each playable one-copy count with three and leaving other counts unchanged. Extra and monster sets are not imported.
+
+Tabletop-only additions in `data/tabletop-cards.json`: **Shortcut** advances the chosen faction's earned bonus one tier after shields (positive power, capped); **Chameleon** lets the player click the card and choose any main faction, controlling bonuses and shield vulnerability. Each has one Normal / three Wild copies, so tabletop decks have 29 playable definitions and 72 / 108 cards. Both use the creator's archived artwork and icons from the local set. See `TABLETOP_MODE.md` for stacking and selection details.
 
 ## Stats
 

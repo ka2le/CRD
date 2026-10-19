@@ -2,15 +2,17 @@
 
 Implemented 2026-10-19. Menu → **Tabletop battle** is a persisted toggle, off by default, independent of Draft / Discard and Normal / Wild Deck. Changing it deals a fresh game. Digital round combat remains available when off.
 
+The tabletop deck includes two exclusive cards, **Shortcut** and **Chameleon**, defined in `data/tabletop-cards.json`. Each has one normal copy / three Wild copies, bringing tabletop decks to 72 / 108 cards (29 definitions). Digital decks remain 70 / 102 (27 definitions). Their supplied originals are archived in `assets/originals/tabletop/`; optimized WebP art uses the normal manifest pipeline and base-aware renderer. Both are available in the tabletop collection, draft, discard, draw, copy and recycle pools.
+
 ## Scoring
 
 1. Add every attack's power. An ordinary class attack contributes **2 × matching stats**; multiple attacks each use the full stat total.
-2. The class contributing most power is the main damage type. Only positive class contributions count. When tied, the human must tap an eligible stat or attack card before battle. A multi-class card opens a choice between its eligible types. All power, including neutral power, receives the chosen type's shield rule and bonus.
+2. The class contributing most power is the main damage type. Only positive class contributions count. When tied, the human must tap an eligible stat or attack card before battle. A multi-class card opens a choice between its eligible types. Chameleon permits any of the three factions: click it and choose a faction icon. All power, including neutral power, receives the chosen type's shield rule and bonus.
 3. Each opposing **shield card** subtracts 2 for Critter, 1 for Robot, 0 for Dragon. Power floors at zero.
 4. Apply bonuses to **power remaining after shields**: Critter +1 if positive; Robot +2 at 7 and another +1 at 11; Dragon +4 at 11 and another +2 at 14. Bonuses are cumulative. The creator confirmed 11 rather than the original message's 10 to match the updated score card.
 5. Compare scores. Higher wins; equality ties. No health threshold, cooldowns, rounds, cap, or overkill tiebreak.
 
-The result and the table show both formulas: **base − shield reduction + class bonus = broken hearts**, hiding zero shield/bonus terms. Bonus and final score use broken-heart icons. With no modifiers, show only final damage. Shield reduction shown is capped at base power; the accessible description/title records the actual shield count and nominal penalty. A neutral-only scoring hand uses Robot. A zero-power hand has no main type and no bonus.
+The result and the table show both formulas: **base − shield reduction + class bonus = broken hearts**, hiding zero shield/bonus terms. Bonus and final score use broken-heart icons. With no modifiers, show only final damage. Shield reduction shown is capped at base power; the accessible description/title records the actual shield count and nominal penalty. A neutral-only scoring hand uses Robot unless a type-changing card permits another choice. A zero-power hand gains no bonus (Chameleon still permits a faction choice).
 
 ## Integer specials
 
@@ -21,14 +23,20 @@ The creator approved these conversions on 2026-10-19. Balance remains experiment
 | Murder Rabbit / Robot Ultimate / Dragon Ultimate | 4 power per matching stat |
 | Bite | 2 flat power |
 | Shield | One shield card, including for shield-based power |
-| Punch (`double_dmg`) | Each Punch doubles Robot attack power; each other attack already producing positive power gains +1. With k Punches, Robot attacks multiply by 2^k; other scoring attacks gain k. Zero attacks stay zero. |
+| 2× / Punch (`double_dmg`) | Doubles the chosen faction's earned bonus after shields. Neutral effect, no base power or faction contribution. With k copies, multiply the bonus by 2^k. |
 | Devour | 4 power per Dragon stat (doubled ordinary attack, like the other ultimates); permits a Dragon main-type override before reveal |
 | Shield is damage | 1 power per own shield; shields still defend |
 | One of each | Critter stats × Robot stats × Dragon stats, neutral power |
 | Any of each | Sum of all class stats, neutral power |
 | Draw / redraw / copy / recycle | Existing preparation effects; no direct power |
+| Shortcut | With positive power remaining after shields, advance the chosen faction bonus by one tier, capped at its highest bonus; no added base power. Current default: each copy advances one tier. |
+| Chameleon | Click before battle to choose any main faction (Critters / Robots / Dragons), regardless of contributions. That faction controls the whole hand's bonus and shield vulnerability. No added stats or power. |
 
-Punch-enhanced class attacks contribute their enhanced power to the main-type comparison. Neutral attacks remain neutral. Punch does not multiply shield reductions or class bonuses. Copies stack just like additional cards.
+Shortcut uses bonus tiers Critter 0→1, Robot 0→2→3, Dragon 0→4→6. First earn the normal bonus from post-shield power, then advance once per Shortcut, then apply 2× cards. Examples: 6 Robot power + Shortcut earns +2; 8 Robot power + Shortcut earns +3; 2 Dragon power + Shortcut earns +4. Critters with positive power already have their highest tier. Fully blocked or zero-power hands gain no bonus. These are the implementation defaults for the requested "next bonus tier" effect.
+
+Chameleon can be opened during preparation, including before other preparation effects are used. Its choice can be changed until Battle. Copy target selection takes precedence over opening Chameleon. Changing the hand invalidates the previous choice; removing Chameleon removes its unrestricted faction eligibility. Extra copies do not add stats or extra faction effects. AI chooses from all three factions using its own completed hand before reveal.
+
+The 2× card affects only the earned faction bonus: base power, contributions, main-type eligibility, shield reduction and threshold checks stay unchanged. Zero bonus stays zero. It works for all factions (for example +1 becomes +2, +3 becomes +6, +6 becomes +12 with one copy). Copies stack ×2/×4/×8. Its printed effect is **2 × star**, using the local `card icons/star.png` asset's existing optimized derivative, with no BONUS text. Neutral attacks remain neutral. The scorer is shared by AI evaluation and final results; the formula shows the multiplied bonus, with its calculation in the bonus tooltip.
 
 ## Preparation and opponent
 
@@ -43,9 +51,12 @@ The AI chooses its main type from its own completed hand before reveal, without 
 Use these instead of playing through a match for UI checks. Available only with the Vite development server; helpers and fixtures are omitted from production builds.
 
 ```js
-crdDev.list()                         // plain, bonuses, shields, tie, preparation
+crdDev.list()                         // plain, bonuses, double-bonus, shortcut, chameleon, shields, tie, preparation
 crdDev.prepare('tie')                 // jump to main-type selection
 crdDev.result('bonuses')              // jump to the result overlay
+crdDev.result('double-bonus')         // Robot 8 − 1 shield + (2 × 2 bonus) = 11
+crdDev.prepare('chameleon')           // click Chameleon to open the three-faction picker
+crdDev.result('shortcut')             // preview next-tier bonus, shields and 2× interaction
 crdDev.result('shields', { mode: 'discard' })
 crdDev.result('tie', { playerType: 'robot' })
 crdDev.prepare('preparation', {
@@ -67,4 +78,4 @@ Browser automation can navigate directly to `/?scenario=plain&at=result` or `/?s
 
 The old chart/finish-time studies in `TABLETOP_COMBAT_DESIGN.md` are historical alternatives. Their balance percentages do not validate this mode. Current values require playtesting.
 
-Verified locally: production build and lint pass; tabletop 10 tests, digital/headless 15 tests, opponent 5 tests and original regression smoke pass. Browser completed both Draft and Discard, activated a tabletop draw, committed a tied Robot/Dragon type, resolved private AI preparation and displayed the simplified formulas with broken-heart bonuses.
+Verified locally: production build and lint pass; tabletop 13 tests and digital/headless 17 tests pass. Asset smoke checks 481 rendered references at each of `/` and `/CRD/`, including both new artworks. Browser preview verified Chameleon's three-faction picker and a Critter-powered hand using Robot shield cost and Shortcut bonus (4 − 1 + 2 = 5). Tests cover tabletop-only deck inclusion, tier caps, zero power, 2× interactions, all faction choices, copied Chameleons and selection invalidation. Earlier full-game browser checks and digital/opponent regressions remain recorded in session notes.

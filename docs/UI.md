@@ -59,3 +59,7 @@ Card size is computed, not set by breakpoints (`hooks/useFitLayout.js`):
 - **Battle:** each action card's hourglasses fill as rounds pass and fire when full. The firing card lunges and shows its burst value, a class-coloured damage orb flies to the enemy health bar, and the segments flash before draining. A lane strip shows which classes fire this round. Fast-forward (2.5×) and skip are available. At the end the defeated hand greys out and a result banner appears (the eye button dismisses it so you can look at the board).
 
 `--impact-ms` (derived from the round interval) keeps the orbs, health drain and hit numbers in sync at any speed.
+
+Tabletop 2× card print: `2 × star` (supplied `card icons/star.png`, served from the existing optimized icon asset). Replaces BONUS text; result-formula bonuses continue to use broken hearts.
+
+Shortcut and Chameleon are tabletop-only collection/deck entries with the creator's optimized artwork. Shortcut prints forward arrow → star. Chameleon prints the three faction icons separated by slashes; tapping it during preparation opens FactionPicker with three large colored stat icons. Selecting one commits the whole hand's main faction, shows the chosen card frame and permits Battle. Copy-target mode takes precedence. The same picker handles tied multi-class cards. Dev previews: ?scenario=chameleon and ?scenario=shortcut&at=result.

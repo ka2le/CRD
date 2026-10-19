@@ -1,0 +1,28 @@
+{
+  "cards": [
+    {
+      "id": "shortcut",
+      "name": "Shortcut",
+      "copies": 1,
+      "type": "action",
+      "images": ["assets/originals/tabletop/shortcut.png"],
+      "stats": [],
+      "effect": {},
+      "cd": 0,
+      "tabletopOnly": true,
+      "tags": ["tabletop-only", "bonus-modifier"]
+    },
+    {
+      "id": "chameleon",
+      "name": "Chameleon",
+      "copies": 1,
+      "type": "action",
+      "images": ["assets/originals/tabletop/chameleon.png"],
+      "stats": [],
+      "effect": {},
+      "cd": 0,
+      "tabletopOnly": true,
+      "tags": ["tabletop-only", "faction-choice"]
+    }
+  ]
+}

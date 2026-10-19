@@ -1,4 +1,5 @@
 import cardsData from '../../data/cards.json' with { type: 'json' }
+import tabletopCardsData from '../../data/tabletop-cards.json' with { type: 'json' }
 import { toTabletopCard } from './tabletop.js'
 
 export const CORE_CARD_IDS = new Set([
@@ -31,8 +32,9 @@ export const CORE_CARD_IDS = new Set([
   'any_off_each',
 ])
 
-export function getCoreCards() {
-  return cardsData.cards.filter((card) => CORE_CARD_IDS.has(card.id))
+export function getCoreCards(options = {}) {
+  const core = cardsData.cards.filter((card) => CORE_CARD_IDS.has(card.id))
+  return options.tabletop ? [...core, ...tabletopCardsData.cards] : core
 }
 
 function getExpandedCopies(card, wildDeck = false) {
@@ -76,7 +78,7 @@ export function shuffle(array, options = {}) {
 }
 
 export function getExpandedCoreDeck(options = {}) {
-  return expandCardPool(getCoreCards(), options)
+  return expandCardPool(getCoreCards(options), options)
 }
 
 export function buildShuffledDeck(options = {}) {

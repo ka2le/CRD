@@ -37,6 +37,7 @@ Taking 21 damage loses. Simultaneous lethal compares cumulative damage actually 
 
 - React 19 / Vite static frontend with modular components and JS game modules.
 - 30 imported card definitions; 27 playable; 70-card Normal Deck or 102-card Wild Deck.
+- Tabletop mode additionally includes Shortcut and Chameleon from `data/tabletop-cards.json`: 29 playable definitions, 72 Normal / 108 Wild cards. Each new card has one normal copy (three in Wild). Shortcut advances the earned faction bonus one tier after shields; Chameleon opens a three-faction picker and applies the selected faction's bonus/shield rule to the whole hand. See `docs/TABLETOP_MODE.md` for tier caps, zero-power behavior and assets.
 - Wild Deck changes one-copy playable definitions to three copies; other counts stay unchanged.
 - Browser defaults: Draft, Wild Deck enabled, opponent cards visible. Menu settings persist; changing any setting starts a fresh game. Opponent hiding applies to pre-combat discard mode.
 - Stat combinations, base/ultimate class attacks, Bite, Devour, shield, damage doubling, shield-based and hybrid damage, plus the four preparation effects.
@@ -69,6 +70,8 @@ The AI preparation fix is complete. Follow-up asset work archives all 88 source 
 **Current implementation:** the creator requested the simpler power-minus-shields-plus-bonus candidate as an optional browser mode for Draft and Discard, with approved integer special conversions. `docs/TABLETOP_MODE.md` is the active rules and source reference. Digital round combat remains the default and offline training scope. The earlier ordinal chart and finish-time proposals below are historical alternatives, not the implemented scoring or balance evidence.
 
 Updated tabletop ultimate rule: Devour, Murder Rabbit, Robot Ultimate and Dragon Ultimate all deal **4 power per matching stat**, double an ordinary attack. Devour retains its optional Dragon main-type override.
+
+Updated tabletop 2× card: **double the earned main-faction bonus after shields**, printed as **2 × star** using the supplied local star icon. Base power and faction contributions stay unchanged. Copies stack ×2/×4/×8 on the bonus; no earned bonus means no effect. This replaces the prior Robot-attack doubling/+1-per-other-attack conversion.
 
 Development checks can jump straight to prepared hands/results with `crdDev.prepare()` / `crdDev.result()` or `?scenario=…&at=result`; these shortcuts are development-only. Prefer these to manually playing matches for UI verification.
 

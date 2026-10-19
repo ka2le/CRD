@@ -87,3 +87,15 @@ The earlier shared-discard decision remains intent: current human/AI preparation
 ## Tabletop Devour ultimate correction - 2026-10-19
 
 Creator confirmed Devour and similar class ultimates should be double ordinary attacks:4 power per matching stat. Devour now joins Murder Rabbit, Robot Ultimate and Dragon Ultimate at4/stat; this supersedes the earlier2/stat Devour conversion. Its optional Dragon main-type override remains. Card symbols, scorer, inspect/help and tests agree.
+
+## Neutral tabletop 2× card - 2026-10-19
+
+Creator replaced the Robot-attack doubling/+1-per-other-attack conversion with doubling the earned faction bonus. Apply after enemy shields determine qualifying thresholds. Base power, class contributions and eligibility are unaffected. Any faction can benefit; zero bonus stays zero. Copies stack multiplicatively (×2/×4/×8). Printed effect is neutral BONUS ×2 with a broken-heart icon; inspect/help and AI use the same scoring. Current numerical bonuses mean high-threshold Dragons can receive a larger absolute increase than Robots; no balance-strength claim is established.
+
+## Shortcut and Chameleon - 2026-10-19
+
+- Creator supplied two images and requested two tabletop-only cards. Archived byte-for-byte in assets/originals/tabletop; WebP576×768 derivatives use manifest/base-aware serving. Definitions are separate in data/tabletop-cards.json; digital cards/decks remain unchanged.
+- One normal copy of each, three in Wild, following the existing rare-card convention. Tabletop deck72/108,29 definitions. Collection, preloads, copy/recycle/draw and browser AI recognize the additions.
+- Shortcut implementation default: after shields and with positive power, advance earned main-faction bonus one tier per copy, cap at top. No base power. Apply before2× bonus multipliers. Critter tiers0/1, Robot0/2/3, Dragon0/4/6. Asked creator to confirm next-tier interpretation; no alternate instruction received during implementation.
+- Chameleon grants unrestricted primary-faction choice. Clicking it opens the three stat icons; chosen faction supplies bonus and shield cost for all power. Choices can change before Battle, invalidate on hand changes, and do not change stats/contributions. Copy targeting takes precedence over opening its picker.
+- Added deterministic shortcut/chameleon UI scenarios and tests for mode filtering, tiers/caps/zero/stacking, all factions, copies, cancel and choice invalidation.13 tabletop/17 headless tests, lint/build/asset smoke/regression pass; browser confirmed Critter-powered hand choosing Robot:4−1+2=5.

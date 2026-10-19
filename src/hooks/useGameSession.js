@@ -16,7 +16,9 @@ import {
 } from '../game/preBattle'
 import { applyPreparationAction, createPreparationState } from '../game/preparationState'
 import { chooseDiscardIds } from '../game/cardEvaluator'
-import { DEFAULT_OPPONENT_AI, normalizeOpponentAi, requestOpponentSearchAction } from '../game/opponentAi'
+import {
+  DEFAULT_OPPONENT_AI, normalizeOpponentAi, requestOpponentPreparation, requestOpponentSearchAction,
+} from '../game/opponentAi'
 import { getTabletopChoice, getTabletopHandKey, getCardTabletopTypes } from '../game/tabletop'
 import { createDevScenario, DEV_SCENARIO_NAMES } from '../game/devScenarios'
 
@@ -33,6 +35,7 @@ const DEFAULT_SETTINGS = {
 // Minimum visible "thinking" time for a Search AI discard, so the player's own
 // discard animation finishes before the opponent's cards move.
 const SEARCH_DISCARD_MIN_THINK_MS = 650
+const SEARCH_PREPARATION_MIN_THINK_MS = 450
 
 const DEFAULT_SESSION_TIMING = {
   drawAllNewDiscardStaggerMs: 110,
@@ -641,10 +644,11 @@ export function sessionReducer(state, action) {
 
     case 'CHOOSE_TABLETOP_TYPE': {
       if (!state.settings?.tabletop || state.battleStarted || state.game.phase !== 'battle-ready'
-        || state.preBattle.pendingResolution || state.preBattle.armedPlayerCopyUid || state.preBattle.recycleSelection) return state
-      if (getPlayerPreBattleView(state.preBattle).cards.length) return state
+        || state.preBattle.pendingResolution || state.preBattle.armedPlayerCopyUid || state.preBattle.recycleSelection
+        || state.preBattle.opponentSearchKey) return state
       const choice = getTabletopChoice(state.preBattle)
       const card = state.preBattle.playerHand.find((entry) => entry.uid === action.uid)
+      if (card?.id !== 'chameleon' && getPlayerPreBattleView(state.preBattle).cards.length) return state
       const types = card ? getCardTabletopTypes(card, choice) : []
       const type = action.damageType ?? (types.length === 1 ? types[0] : null)
       if (!types.length || (type && !types.includes(type))) return state
@@ -654,19 +658,33 @@ export function sessionReducer(state, action) {
       } }
     }
 
-    case 'START_BATTLE':
+    case 'CANCEL_TABLETOP_TYPE':
+      return { ...state, preBattle: { ...state.preBattle, tabletopTypeCardUid: null } }
+
+    case 'START_BATTLE': {
       if (state.battleStarted || state.game.phase !== 'battle-ready' || state.preBattle.pendingResolution) return state
       if (state.settings?.tabletop && getTabletopChoice(state.preBattle).needsChoice) {
         return { ...state, preBattle: { ...state.preBattle, playerFinished: true, armedPlayerCopyUid: null, recycleSelection: null } }
       }
+      // Search AI prepares asynchronously (worker): mark the player done and wait for the result.
+      if (usesSearchOpponent(state.settings) && !state.preBattle.opponentFinished && !action.opponentPreparation) {
+        if (state.preBattle.opponentSearchKey) return state
+        return { ...state, preBattle: { ...state.preBattle, playerFinished: true, armedPlayerCopyUid: null,
+          recycleSelection: null, opponentSearchKey: `${state.dealId}:${state.battleInstance}` } }
+      }
+      if (action.opponentPreparation && action.decisionKey !== state.preBattle.opponentSearchKey) return state
+      const preparedPreBattle = action.opponentPreparation
+        ? { ...state.preBattle, ...action.opponentPreparation, opponentSearchKey: null }
+        : completeOpponentPreBattle(state.preBattle)
       return createTransitionResult(state, {
-        preBattle: completeOpponentPreBattle(state.preBattle),
+        preBattle: preparedPreBattle,
         battleStarted: true,
         battleInstance: state.battleInstance + 1,
         gameSessionKey: state.gameSessionKey + 1,
       }, {
         type: 'battle-started',
       })
+    }
 
     case 'CLOSE_BATTLE_OVERLAY':
       return createTransitionResult(state, {
@@ -747,7 +765,8 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
   const awaitingSearchDraftPick = searchOpponent && game.mode === 'draft'
     && game.phase === 'draft-opponent-thinking' && !game.pendingOpponentPickUid
   const opponentDecisionKey = getOpponentDecisionKey(dealId, game)
-  const canStartBattle = !battleStarted && game.phase === 'battle-ready' && !preBattle.pendingResolution
+  const opponentPreparing = Boolean(preBattle.opponentSearchKey) && !battleStarted
+  const canStartBattle = !battleStarted && game.phase === 'battle-ready' && !preBattle.pendingResolution && !opponentPreparing
   const pendingDraftPickUid = game.pendingOpponentPickUid ?? null
   const draftActivationTick = pendingDraftPickUid ? `${pendingDraftPickUid}-${game.phase}-${game.playerHand.length}-${game.opponentHand.length}` : 'draft-idle'
   const canPickDraftCard = game.phase === 'draft-player-pick' && game.currentPicker === 'player'
@@ -759,7 +778,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
   const isRecyclePicking = isPreBattleReady && Boolean(preBattle.recycleSelection?.side === 'player')
   const isWaitingForPlayerChoice = isPreBattleReady && (playerPreBattleView.cards.length > 0 || isRecyclePicking)
   const choosingTabletopType = Boolean(settings.tabletop && isPreBattleReady
-    && !preBattle.pendingResolution && !preBattle.armedPlayerCopyUid && !isRecyclePicking
+    && !preBattle.pendingResolution && !preBattle.armedPlayerCopyUid && !isRecyclePicking && !opponentPreparing
     && playerPreBattleView.cards.length === 0 && tabletopChoice.types.length > 1)
   const highlightedPreBattleIds = useMemo(() => {
     const ids = [
@@ -914,6 +933,8 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
   const choosePlayerTabletopType = useCallback((uid, damageType) => {
     dispatch({ type: 'CHOOSE_TABLETOP_TYPE', uid, damageType })
   }, [])
+
+  const cancelTabletopTypeChoice = useCallback(() => dispatch({ type: 'CANCEL_TABLETOP_TYPE' }), [])
 
   const resolvePlayerRecyclePick = useCallback((uid) => {
     if (!isRecyclePicking) return
@@ -1116,6 +1137,29 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [opponentDiscarding, opponentDecisionKey])
 
+  // Search AI preparation: after the player starts the battle, the worker plays the opponent's
+  // whole preparation (searched step by step), then the battle starts with that result.
+  const opponentSearchKey = preBattle.opponentSearchKey ?? null
+  useEffect(() => {
+    if (!opponentSearchKey || battleStarted) return undefined
+    let cancelled = false
+    let timeoutId = null
+    const startedAt = performance.now()
+    requestOpponentPreparation(preBattle, game).then((opponentPreparation) => {
+      if (cancelled) return
+      const remainingMs = Math.max(0, SEARCH_PREPARATION_MIN_THINK_MS - (performance.now() - startedAt))
+      timeoutId = window.setTimeout(() => {
+        if (!cancelled) dispatch({ type: 'START_BATTLE', opponentPreparation, decisionKey: opponentSearchKey })
+      }, remainingMs)
+    })
+    return () => {
+      cancelled = true
+      if (timeoutId) window.clearTimeout(timeoutId)
+    }
+  // The search key changes exactly when a new preparation search starts.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [opponentSearchKey])
+
   useDraftFlowEffects({
     game,
     waitingForOpponentPick: awaitingSearchDraftPick,
@@ -1148,10 +1192,12 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     battleDeck,
     discardPhase,
     opponentDiscarding,
+    opponentPreparing,
     canStartBattle,
     tabletopChoice,
     choosingTabletopType,
     choosePlayerTabletopType,
+    cancelTabletopTypeChoice,
     tabletopTypeCardUid: preBattle.tabletopTypeCardUid,
     tabletopSelectedCardUid: tabletopChoice.selectedType ? preBattle.tabletopChoice?.cardUid : null,
     deckCount: resolvedDeckCount,

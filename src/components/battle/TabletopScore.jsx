@@ -3,6 +3,7 @@ import './TabletopScore.css'
 
 export function TabletopFormula({ score, label }) {
   const hasCalculation = score.blocked > 0 || score.bonus > 0
+  const bonusTitle = `${score.baseBonus} faction bonus${score.shortcuts > 0 ? ` (Shortcut: ${score.naturalBonus} → ${score.baseBonus})` : ''}${score.bonusMultiplier > 1 ? ` × ${score.bonusMultiplier}` : ''} after shields`
   const description = `${label}: ${score.base} base${score.blocked > 0 ? ` minus ${score.blocked} shields` : ''}${score.bonus > 0 ? ` plus ${score.bonus} bonus` : ''} equals ${score.score} damage`
   return (
     <div className="tabletop-formula" aria-label={description}>
@@ -15,7 +16,7 @@ export function TabletopFormula({ score, label }) {
           <span title={`${score.enemyShields} enemy shields; ${score.shieldPenalty} penalty, capped at base power`}>{score.blocked}<GameIcon name="shield" className="tabletop-formula__shield" /></span>
         </> : null}
         {score.bonus > 0 ? <>
-          <span>+</span><span title="Class bonus after shields">{score.bonus}<GameIcon name="damage" className="tabletop-formula__damage" /></span>
+          <span>+</span><span title={bonusTitle}>{score.bonus}<GameIcon name="damage" className="tabletop-formula__damage" /></span>
         </> : null}
         {hasCalculation ? <span>=</span> : null}
         <strong>{score.score}<GameIcon name="damage" className="tabletop-formula__damage" /></strong>

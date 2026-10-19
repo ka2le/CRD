@@ -1,6 +1,38 @@
 {
   "version": 1,
   "images": {
+    "assets/originals/tabletop/chameleon.png": {
+      "role": "art",
+      "original": "assets/originals/tabletop/chameleon.png",
+      "path": "images/art/c5fd46bd57202ed4b457-bcb8c0ae60291109272b.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "844af92b5dc4485a76c2123e2dead124a07e4339f8d257a69b05829b702ce8f4",
+      "outputSha256": "ef7a40ad0e07b425f4085d336d197c40d0b74d8b5367d58a7ae499a418268dd9",
+      "originalBytes": 2633209,
+      "bytes": 102786,
+      "width": 576,
+      "height": 768
+    },
+    "assets/originals/tabletop/shortcut.png": {
+      "role": "art",
+      "original": "assets/originals/tabletop/shortcut.png",
+      "path": "images/art/7149a83ce45e63f7a0a5-8b9e66352e94cac78bd7.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "b2b0ac498354ba28f128a08c8a0802a72c2f8c6832e04ceba3e864c8967ea68c",
+      "outputSha256": "07dcc625717065b7f18869940ca56758c8f74b4669247bfa1690a18e3351a460",
+      "originalBytes": 2889262,
+      "bytes": 124884,
+      "width": 576,
+      "height": 768
+    },
     "https://cdn.midjourney.com/07af1083-7432-4477-b298-3c0089e8afba/0_0.png": {
       "role": "art",
       "original": "assets/originals/b08e30d8ff7d1fdae5c6.png",

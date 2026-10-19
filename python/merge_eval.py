@@ -8,7 +8,11 @@ import numpy as np
 
 
 def merge(reports):
-    strip = lambda s: {k: v for k, v in s.items() if k not in ("output", "workers", "chunk")}
+    def portable(value):
+        # Parts may come from different machines: compare model files relative to .ai-runs.
+        return value.replace("\\", "/").split(".ai-runs/")[-1] if isinstance(value, str) else value
+
+    strip = lambda s: {k: portable(v) for k, v in s.items() if k not in ("output", "workers", "chunk")}
     settings = reports[0]["settings"]
     if any(strip(report["settings"]) != strip(settings) for report in reports):
         raise ValueError("Partial reports have different settings")
