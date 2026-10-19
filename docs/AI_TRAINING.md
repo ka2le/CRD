@@ -1,6 +1,12 @@
 # Search and neural evaluation plan
 
-Updated **2026-10-19**. The creator requested tree search guided by mathematical evaluation plus a learned correction, then authorized finishing the environment and connecting the next pieces. Shared preparation decisions, either-seat headless control, numeric observations and the Python/Gymnasium wrapper are now implemented. Search/model training remain planned. Read `AI_ENVIRONMENT.md` for the runnable contract, setup and verification.
+Latest implementation/request: `AI_DRAFT_V2.md` supersedes the first small prototype as the active experiment. About 100k parameters, 4,000 grouped deals, per-candidate W/D/L rows, all simulated evaluations contributing through outcome counts, actual search-versus-search outcomes, ten-minute budgeted training and frozen-search tournaments. Preparation stays heuristic. Bigger data/model are hypotheses; promotion requires measured stronger search. The original v1 milestone and broader plans below remain context.
+
+## Current milestone: draft-only prototype (2026-10-19)
+
+The creator narrowed the immediate scope to Draft picks with existing heuristic preparation. This is now implemented, including data generation, a first small trained NumPy residual network and unseen-deal tournaments. Read `AI_DRAFT_EXPERIMENT.md` for executable commands and measured results. Full preparation/discard learning and deep search described below are future optional extensions. The first model uses a fitted linear outcome prior plus neural correction, rather than requiring a sampled baseline on every inference; no PyTorch dependency is needed. It predicts candidate action values, not yet a deep-search cutoff state value. Previous milestone notes saying no model exists are historical.
+
+Updated **2026-10-19**. Shared preparation decisions, either-seat headless control, numeric observations and Python/Gymnasium are implemented. Following the creator's request to continue, a stateless observation-conditioned sampler, all-action rollout teacher and grouped label generation now also work. Neural fitting/deep tree search remain planned. Read `AI_ENVIRONMENT.md` and `AI_SEARCH.md` for runnable interfaces, assumptions and verification.
 
 ## Objective and scope
 
@@ -33,10 +39,11 @@ The Stockfish analogy is search plus a fast learned position evaluator. Stockfis
 | `src/game/headlessGame.js` | Both modes, either-seat control, preparation, privacy/history, real-rule terminal rewards | Add observation-consistent hidden-world sampling and rollouts |
 | `scripts/headless-worker.mjs`, `python/crd/worker.py` | Protocol v2, versions/hash, persistent sessions, isolated host forks, bounded Python transport | Batch simulations after fair resampling exists |
 | `python/crd/env.py`, `python/gym_smoke.py` | Tested Gymnasium wrapper, numeric counts/combat cycles, variable action/history sequences, masks and replays | Attach a candidate/value evaluator and training loop |
+| `src/game/rolloutSearch.js`, `env.evaluate_actions()` | Consistent-world proposals, all-action paired rollouts, baseline/residual targets and optional JSONL output | Broader grouped data, held-out play and first neural value model |
 
 Headless now treats preparation as agent decisions and defaults to the actual 21-damage/50-round match. The old 12/999 evaluation is available only as an explicit diagnostic override. The legacy UI/heuristic average estimator still omits whole-hand doubling and penalizes draw utility/shields; new numeric combat cycles use the exact simulator including doubling. Neither raw damage nor heuristic scores are exact strategic value.
 
-Gymnasium and NumPy are installed in ignored `.ai-venv`, with reproducible requirements and integration tests. No PyTorch model, fair hidden-world search/rollout teacher, training loop or browser neural integration exists yet.
+Gymnasium/NumPy are isolated in `.ai-venv`. The first root-rollout teacher samples only permitted information, with an explicitly approximate feasible belief rather than an exact opponent-policy posterior. No PyTorch model, learning loop, deep tree search or browser neural integration exists yet.
 
 ## 1. Exact shared transitions and player information
 
@@ -91,7 +98,7 @@ Start with a compact PyTorch MLP, for example two 128-unit hidden layers, then b
 
 ## 3. Search before neural training
 
-First build a non-neural teacher: evaluate every root action with sampled complete continuations, a fixed completion policy, an explicit opponent policy and exact battles.
+Implemented first non-neural teacher: evaluate every root action with observation-consistent worlds, hand-based heuristic or random completion policies and exact battles. `AI_SEARCH.md` describes the model assumptions and conditioning of hidden prior preparation. These rollouts do not inspect a live hidden deck or optimize omniscient future decisions.
 
 - Draft: at most five root picks; account for the opponent's remaining choice and denial.
 - Discard: all 32 subsets of a five-card hand, including empty; evaluate combinations jointly.
@@ -138,7 +145,8 @@ src/game/headlessGame.js      either-seat actions/steps, observations/history an
 python/crd/env.py             Gymnasium wrapper
 python/crd/worker.py          persistent bounded bridge client; batching remains planned
 python/gym_smoke.py           masked random episodes and optional local replays
-python/crd/search.py          PLANNED: fair sampling and rollout/search orchestration
+src/game/rolloutSearch.js     current sampler and root rollout teacher; Python calls via worker
+python/crd/search.py          OPTIONAL FUTURE: higher-level Python experiment/search orchestration
 python/crd/model.py           PLANNED: small residual evaluator
 python/crd/dataset.py         PLANNED: grouped/versioned training records
 python/train_value.py         PLANNED: evaluator fitting
@@ -178,9 +186,9 @@ Train in Python, export a small numeric model, and benchmark plain JS versus an 
 
 ## Completed first slice and next work
 
-Milestone A and the minimal B contract are implemented: shared preparation choices (including ordering and targets), actual terminal outcomes, either-seat control, legal validation, private observations, deterministic replays and Gymnasium. Verification includes browser reducer parity, all supported preparation effects, 144 JS seeded replay cases, 48 Python replay episodes, environment checkers and 200 additional smoke episodes. Full interaction/balance proof is not claimed.
+Milestones A/minimal B and a first C teacher are implemented. Added sampler reconstruction at 802 roots, 14 JS/eight Python tests, 144 JS/48 Python replays and checker coverage, alongside 200 random smokes. Forty rollout pilot games produced 230 states, 2,269 action targets and 36,304 completed continuations, sharing 20 deal families; no full interaction/balance/held-out strength proof is claimed.
 
-The next slice is observation-consistent hidden-world sampling and a non-neural rollout teacher. Build/test sampling against public history and hidden-pool constraints before deriving search labels; the host fork command preserves the real hidden world and is not a fair search implementation. Then benchmark batching and fit the residual model. Existing commands now play **complete real-rule episodes**:
+The next slice is broader grouped data and fixed held-out evaluation, then the first residual model. The implemented sampler uses only public/permitted history and conditions known outcomes, but its uniform-card/random-hidden-preparation prior needs refinement if strategic posterior accuracy matters. Host forks remain privileged exact-world tools. Benchmark batching/deeper search only when needed. Existing commands play **complete real-rule episodes**:
 
 ```bash
 python python/random_headless_smoke.py --mode five-hand-discard --seed 7 --reveal-opponent

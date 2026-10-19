@@ -14,7 +14,9 @@
     "headless:worker": "node scripts/headless-worker.mjs",
     "headless:smoke": "python python/random_headless_smoke.py",
     "headless:test": "node --test scripts/headless-tests.mjs",
-    "regression:smoke": "node scripts/regression-smoke.mjs"
+    "regression:smoke": "node scripts/regression-smoke.mjs",
+    "opponent:test": "node --test scripts/opponent-ai-tests.mjs",
+    "opponent:benchmark": "node scripts/opponent-ai-benchmark.mjs"
   },
   "dependencies": {
     "react": "^19.2.6",

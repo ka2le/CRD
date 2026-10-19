@@ -5,6 +5,8 @@ No rules or damage formulas are reimplemented in Python.
 """
 
 from copy import deepcopy
+import hashlib
+import json
 from uuid import uuid4
 
 import gymnasium as gym
@@ -199,6 +201,14 @@ class CRDEnv(gym.Env):
         if response["spec"]["maxLegalActions"] > self.action_capacity:
             raise RuntimeError("Configured pool exceeds this environment's action capacity")
         self._pool_counts = response["spec"]["poolCounts"]
+        self._episode_spec = deepcopy(response["spec"])
+        family = {
+            "deal": self.config.get("deck", self._engine_seed),
+            "pool": self._episode_spec["poolCards"], "rules": self.engine_spec["rulesVersion"],
+            "cards": self.engine_spec["cardDataHash"],
+        }
+        # Group the same physical deal across modes/seats/visibility, before expanding labels.
+        self._root_family = hashlib.sha256(json.dumps(family, sort_keys=True).encode()).hexdigest()
         self._response = response
         self._actions = []
         self._episode_steps = 0
@@ -230,8 +240,24 @@ class CRDEnv(gym.Env):
         return {
             "protocol_version": 2, "rules_version": self.engine_spec["rulesVersion"],
             "card_data_hash": self.engine_spec["cardDataHash"],
+            "root_family": self._root_family,
             "config": deepcopy(self._episode_config), "actions": deepcopy(self._actions),
         }
+
+    def evaluate_actions(self, *, samples=8, seed=1, completion_policy="heuristic", max_decisions=1000):
+        """Stateless rollout teacher using only permitted observations/public pool metadata.
+
+        The planning seed is explicit and independent of replay/deal metadata. This does
+        not fork or inspect the live session, and does not advance the real game.
+        """
+        if self._ended or self._response is None:
+            raise ResetNeeded("No active decision to evaluate")
+        return self.worker.request(
+            "evaluate", observation=deepcopy(self._response["observation"]),
+            spec=self._episode_spec,
+            options={"samples": samples, "seed": seed, "completionPolicy": completion_policy,
+                     "maxDecisions": max_decisions},
+        )["evaluation"]
 
     def render(self):
         if self._response is None:

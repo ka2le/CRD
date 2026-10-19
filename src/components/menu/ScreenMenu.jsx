@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import './ScreenMenu.css'
 import { GameIcon, SvgIcon } from '../ui/GameIcon'
+import { OPPONENT_AI_OPTIONS } from '../../game/opponentAi'
 
 export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, settings, onUpdateSettings, onHelp, onScoreCard }) {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -84,6 +85,20 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
               <span>Discard</span>
             </button>
           </div>
+
+          <label className="screen-menu__select">
+            <span className="screen-menu__select-label">Opponent</span>
+            <select
+              value={settings.opponentAi}
+              onChange={(event) => run(() => onUpdateSettings({ opponentAi: event.target.value }))}
+              aria-label="Opponent"
+            >
+              {OPPONENT_AI_OPTIONS.map((option) => (
+                <option key={option.id} value={option.id}>{option.label}</option>
+              ))}
+            </select>
+            <span className="screen-menu__select-chevron" aria-hidden="true" />
+          </label>
 
           <label className="screen-menu__toggle">
             <input

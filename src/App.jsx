@@ -53,6 +53,7 @@ function AppContent() {
     dealId,
     battleDeck,
     discardPhase,
+    opponentDiscarding,
     canStartBattle,
     deckCount,
     pendingDraftPickUid,
@@ -117,7 +118,7 @@ function AppContent() {
   const opponentAverage = useMemo(() => getHandAverageDamage(opponentHand), [opponentHand])
 
   const opponentHidden = game.mode === 'five-hand-discard' && !settings.showOpponentCards && !battleStarted
-  const opponentThinking = game.mode === 'draft' && game.phase === 'draft-opponent-thinking'
+  const opponentThinking = (game.mode === 'draft' && game.phase === 'draft-opponent-thinking') || opponentDiscarding
   const playerTurn = layout === 'draft' ? canPickDraftCard : layout === 'focus'
   const battleFinished = battleStarted && showBattleResult
   const resultDismissed = dismissedResultKey === battleKey
@@ -169,7 +170,14 @@ function AppContent() {
 
   let primaryAction = null
   if (layout === 'focus') {
-    if (discardPhase) {
+    if (opponentDiscarding) {
+      primaryAction = (
+        <button type="button" className="ui-button ui-button--primary table__action" disabled>
+          <GameIcon name="redraw" />
+          <span>Waiting</span>
+        </button>
+      )
+    } else if (discardPhase) {
       const count = selectedIds.length
       primaryAction = (
         <button type="button" className="ui-button ui-button--primary table__action" onClick={handlePrimaryAction}>
@@ -194,7 +202,7 @@ function AppContent() {
 
   const phasePips = game.mode === 'draft'
     ? <Pips total={5} current={game.phase === 'battle-ready' ? 6 : game.packNumber} done={game.phase === 'battle-ready' ? 5 : game.packNumber - 1} />
-    : <Pips total={2} current={discardPhase ? game.playerDiscardsUsed + 1 : 3} done={game.playerDiscardsUsed} />
+    : <Pips total={2} current={discardPhase ? game.playerDiscardsUsed + 1 : (opponentDiscarding ? game.playerDiscardsUsed : 3)} done={opponentDiscarding ? game.playerDiscardsUsed - 1 : game.playerDiscardsUsed} />
 
   const opponentHandProps = {
     hand: opponentHand,

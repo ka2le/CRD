@@ -1,10 +1,12 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { startDraftPickFlight, animateDraftRowDiscard, getDraftDiscardSequenceMs } from './draftMotion'
 import { getPackDealMs } from './dealTiming'
 
 const DRAFT_AI_DELAY_MS = 800
 const DRAFT_PRE_DISCARD_PAUSE_MS = 600
 const DRAFT_POST_DISCARD_PAUSE_MS = 320
+// After a slow (searching) AI decides, still show its choice briefly before it picks.
+const DRAFT_MIN_EYED_MS = 450
 
 function createDraftTiming(overrides = {}) {
   return {
@@ -16,6 +18,7 @@ function createDraftTiming(overrides = {}) {
 
 export default function useDraftFlowEffects({
   game,
+  waitingForOpponentPick = false,
   resolveOpponentDraftPick,
   commitDraftDiscard,
   revealNextDraftPack,
@@ -29,13 +32,25 @@ export default function useDraftFlowEffects({
   timing = {},
 }) {
   const draftTiming = createDraftTiming(timing)
+  const thinkingRef = useRef({ key: null, startedAt: 0 })
 
   useEffect(() => {
     if (game.mode !== 'draft') return undefined
 
     if (game.phase === 'draft-opponent-thinking') {
+      // Measure the AI delay from when this decision started, not from each re-render,
+      // so time spent waiting for the Search AI counts towards it.
+      const thinkingKey = `${game.packNumber}:${game.playerHand.length}:${game.opponentHand.length}:${game.draftRow.map((card) => card.uid).join(',')}`
+      if (thinkingRef.current.key !== thinkingKey) {
+        thinkingRef.current = { key: thinkingKey, startedAt: performance.now() }
+      }
+      // The Search AI has not decided yet; this effect re-runs once it has.
+      if (waitingForOpponentPick) return undefined
+
       // A fresh pack is still being dealt: let it land before the AI picks.
       const dealLeadMs = game.picksThisPack === 0 ? getPackDealMs(game.draftRow.length, game.packNumber === 1) : 0
+      const elapsedMs = performance.now() - thinkingRef.current.startedAt
+      const delayMs = Math.max(draftTiming.aiDelayMs + dealLeadMs - elapsedMs, DRAFT_MIN_EYED_MS)
       const timeoutId = window.setTimeout(() => {
         const pickedUid = game.pendingOpponentPickUid
         const pickedCard = game.draftRow.find((card) => card.uid === pickedUid)
@@ -54,7 +69,7 @@ export default function useDraftFlowEffects({
           scheduleTimeout,
           onFlightComplete: () => revealHandCard('opponent', pickedUid),
         })
-      }, draftTiming.aiDelayMs + dealLeadMs)
+      }, delayMs)
       return () => window.clearTimeout(timeoutId)
     }
 
@@ -115,5 +130,6 @@ export default function useDraftFlowEffects({
     revealNextDraftPack,
     scheduleTimeout,
     unmaskSlot,
+    waitingForOpponentPick,
   ])
 }

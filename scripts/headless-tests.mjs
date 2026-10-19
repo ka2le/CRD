@@ -9,6 +9,7 @@ import {
   createHeadlessGame, stepHeadlessGame, getLegalActions, encodeObservation, createStepResponse, getHeadlessSpec,
 } from '../src/game/headlessGame.js'
 import { simulateBattle } from '../src/game/engine.js'
+import { sampleHeadlessWorld, evaluateRolloutActions } from '../src/game/rolloutSearch.js'
 
 const definitions = new Map(getCoreCards().map((card) => [card.id, card]))
 let cardSerial = 0
@@ -257,4 +258,98 @@ test('seeded episodes replay across both modes, pool settings and controlled sea
     }
   }
   assert.equal(count, 144)
+})
+
+test('sampled worlds reproduce observations throughout both modes, including conditioned private preparation', () => {
+  let sampledRoots = 0
+  let conditionedRoots = 0
+  for (const mode of ['draft', 'five-hand-discard']) {
+    for (const revealOpponent of [false, true]) {
+      for (let seed = 1; seed <= 20; seed++) {
+        const config = { mode, revealOpponent, control: 'both', seed }
+        const spec = getHeadlessSpec(config)
+        const rng = createSeededRng(seed + 500)
+        let state = createHeadlessGame(config)
+        while (!state.terminal) {
+          const before = JSON.stringify(state)
+          const observation = encodeObservation(state)
+          const sample = sampleHeadlessWorld(observation, spec, { seed: seed + 1000 })
+          assert.deepEqual(encodeObservation(sample.state, observation.side), observation)
+          assert.deepEqual(getLegalActions(sample.state), getLegalActions(state))
+          assert.equal(JSON.stringify(state), before)
+          if (observation.phase === 'preparation' && observation.side === 'opponent' && observation.steps > 2) conditionedRoots++
+          sampledRoots++
+          const actions = getLegalActions(state)
+          state = stepHeadlessGame(state, actions[Math.floor(rng() * actions.length)])
+        }
+      }
+    }
+  }
+  assert(sampledRoots >= 800)
+  assert(conditionedRoots > 0)
+})
+
+test('planning uses only observation/public pool, varies unseen cards and respects physical copies', () => {
+  const root = createHeadlessGame({ seed: 6, control: 'both' })
+  const spec = getHeadlessSpec()
+  const observation = encodeObservation(root)
+  const sampled = [100, 200, 300].map((seed) => sampleHeadlessWorld(observation, spec, { seed }).state)
+  assert.notDeepEqual(sampled[0].game.deck, sampled[1].game.deck)
+  for (const world of sampled) {
+    const cards = [...world.game.playerHand, ...world.game.opponentHand, ...world.game.deck]
+    assert.equal(cards.length, spec.poolCards.length)
+    assert.equal(new Set(cards.map((entry) => entry.uid)).size, cards.length)
+    assert.deepEqual(world.game.playerHand.map((entry) => entry.uid), root.game.playerHand.map((entry) => entry.uid))
+  }
+  const concealedChange = {
+    ...root, config: { ...root.config, seed: 123456 },
+    game: { ...root.game, deck: [...root.game.deck].reverse(), opponentHand: [...root.game.opponentHand].reverse() },
+  }
+  assert.deepEqual(encodeObservation(concealedChange), observation)
+  const first = evaluateRolloutActions(observation, spec, { samples: 2, seed: 9000 })
+  const second = evaluateRolloutActions(encodeObservation(concealedChange), spec, { samples: 2, seed: 9000 })
+  assert.deepEqual(second, first)
+  const reordered = Object.fromEntries(Object.entries(observation).reverse())
+  assert.deepEqual(evaluateRolloutActions(reordered, spec, { samples: 2, seed: 9000 }), first)
+  assert.equal(first.candidates.length, 32)
+  assert.equal(first.simulations, 64)
+  assert(first.candidates.every((candidate) => candidate.wins + candidate.draws + candidate.losses === 2))
+})
+
+test('rollout teacher values a winning recycle target above skipping/finishing', () => {
+  const ids = ['recycle_card', 'critter1', 'critter1', 'critter1', 'critter1',
+    'murder_rabbit', 'swarm', 'critter1', 'critter1', 'critter1', 'critter1']
+  const deck = ids.map((id) => card(id))
+  const config = { deck, control: 'both', revealOpponent: true }
+  let root = createHeadlessGame(config)
+  for (const mask of [0, 1, 0, 0]) root = stepHeadlessGame(root, { type: 'discard', mask })
+  const before = JSON.stringify(root)
+  const evaluation = evaluateRolloutActions(encodeObservation(root), getHeadlessSpec(config), { samples: 4, seed: 11 })
+  assert.equal(evaluation.candidates.length, 3)
+  assert.equal(evaluation.candidates[0].value, 1)
+  assert.equal(evaluation.candidates[1].value, -1)
+  assert.equal(evaluation.candidates[2].value, -1)
+  assert.deepEqual(evaluation.bestIndices, [0])
+  assert.equal(evaluation.baselineValue, 1)
+  assert.equal(evaluation.candidates[2].deltaFromBaseline, -2)
+  assert.equal(JSON.stringify(root), before)
+  assert.throws(() => evaluateRolloutActions(encodeObservation(root), getHeadlessSpec(config), { samples: 1, maxDecisions: 1 }), /guard/)
+  assert.throws(() => evaluateRolloutActions(encodeObservation(root), getHeadlessSpec(config), { samples: 0 }), /samples/)
+})
+
+test('draft search cannot see the actual next packs or preparation draws', () => {
+  const config = { mode: 'draft', control: 'both', seed: 54321, wildDeck: true }
+  const root = createHeadlessGame(config)
+  const spec = getHeadlessSpec(config)
+  const observation = encodeObservation(root)
+  const changedFuture = { ...root, config: { ...root.config, seed: 987654 },
+    game: { ...root.game, deck: [...root.game.deck].reverse() } }
+  assert.deepEqual(encodeObservation(changedFuture), observation)
+  const options = { samples: 8, seed: 111222 }
+  assert.deepEqual(evaluateRolloutActions(observation, spec, options),
+    evaluateRolloutActions(encodeObservation(changedFuture), spec, options))
+  const worlds = [1, 2, 3].map((seed) => sampleHeadlessWorld(observation, spec, { seed }).state)
+  assert.notDeepEqual(worlds[0].game.deck.slice(0, 5), worlds[1].game.deck.slice(0, 5))
+  for (const world of worlds) assert.deepEqual(encodeObservation(world), observation)
+  assert.notDeepEqual(root.game.deck.slice(0, 5), worlds[0].game.deck.slice(0, 5))
 })

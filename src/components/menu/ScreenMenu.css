@@ -161,3 +161,57 @@
   from { opacity: 0; transform: scale(0.92) translateY(-6px); }
   to { opacity: 1; transform: none; }
 }
+
+.screen-menu__select {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  padding: 6px 4px 2px;
+}
+
+.screen-menu__select-label {
+  padding: 0 8px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--t1);
+}
+
+.screen-menu__select select {
+  appearance: none;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 34px 0 12px;
+  border-radius: 7px;
+  border: 1px solid var(--b0);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--t0);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.screen-menu__select select:focus-visible {
+  outline: 2px solid var(--brass-hi);
+  outline-offset: 1px;
+}
+
+.screen-menu__select option {
+  background: #121d31;
+  color: var(--t0);
+}
+
+.screen-menu__select-chevron {
+  position: absolute;
+  right: 16px;
+  bottom: 17px;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--t1);
+  border-bottom: 2px solid var(--t1);
+  transform: rotate(45deg);
+  pointer-events: none;
+}

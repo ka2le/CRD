@@ -1,5 +1,7 @@
 # Current implementation review
 
+Latest AI follow-up (2026-10-19): draft-only data collection, first NumPy residual model and paired unseen-deal tournament runner are implemented. Preparation stays heuristic. See `AI_DRAFT_EXPERIMENT.md` for current commands/results; the review's older no-model statements are superseded for offline experiments. Browser behavior is unchanged.
+
 Full review against local source on **2026-10-18**, with AI preparation/headless follow-ups through **2026-10-19**. `PROJECT.md` remains the project brief; `RULES.md` describes the shared rules and identifies unresolved differences. The implemented AI environment contract and latest verification are in `AI_ENVIRONMENT.md`; original dated verification below remains historical.
 
 ## What the game is
@@ -57,7 +59,7 @@ React 19 and Vite provide a static frontend. Pure JS modules under `src/game/` o
 
 The AI is hand-written, not trained. It scores average damage improvements, matching class stats/attacks, and selected utility bonuses/penalties. Draft, discard, copy, and recycle reuse this evaluator. It does not simulate the opposing hand to choose counters or accurately value all effect combinations: its average-damage estimate omits whole-hand doubling and approximates shield timing.
 
-`headlessGame.js` and `scripts/headless-worker.mjs` now expose validated decisions for either or both seats through both modes and full preparation. Source/target choices, activation order, skips, copied/acquired specials and finishing are explicit actions. Shared preparation transitions also drive the browser reducer. Default terminal evaluation is the actual 21-damage/50-round game with +1/0/-1 outcomes; 12/999 remains an explicit diagnostic override. Python has a persistent bounded client, Gymnasium numeric observations/history, variable candidates/masks and deterministic replay. Fair hidden-world sampling, rollout search, a model and a training loop remain future work. `AI_ENVIRONMENT.md` gives commands, API, privacy boundaries and verification.
+`headlessGame.js` and worker v2 expose validated either-seat decisions through both modes and full preparation, shared with browser transitions. Normal 21/50 combat returns +1/0/-1; 12/999 is an explicit diagnostic. Python/Gymnasium supplies numeric observations/history, variable candidates/masks and replays. Added stateless observation-conditioned sampling and all-action root rollouts; these use feasible approximate beliefs, not exact strategic posteriors. Model fitting/deep search remain future work. `AI_ENVIRONMENT.md` and `AI_SEARCH.md` give working contracts and limits.
 
 GitHub Pages build/deployment configuration exists. This review did not inspect a live deployment. No backend, rooms, second-human input, seat selection, networking, or spectator implementation exists yet.
 
@@ -70,7 +72,7 @@ The initial review findings below are retained with their follow-up disposition.
 3. **Final draft leftovers disappear.** `finalizeIfDraftComplete()` clears the final row immediately, skipping `commitDraftDiscard()`. A standard five-pack draft records only 12 of the 15 unpicked cards in `draftDiscard`, affecting recycle eligibility.
 4. **Opening draft starter repeats.** Initialization creates a human-first draft and leaves `nextDraftStartingPicker` at `player`; the first New Game is therefore also human-first. Later draft resets toggle it. Mode/settings changes also do not consume that toggle consistently.
 5. **Preparation fixed.** There is no inter-player turn order; preparation is private. Battle completes all AI specials synchronously before combat, including acquired specials; empty recycle/no-target copy is marked skipped. Unused human specials remain skipped. The delayed AI activation timer was removed.
-6. **Headless follow-up implemented.** Preparation choices, browser reducer parity, either-seat control, action validation, normal outcomes and Gymnasium are covered. Privileged host forks preserve real hidden state; they must not be used as fair search until observation-consistent resampling exists.
+6. **Headless/search follow-up implemented.** Preparation, browser reducer parity, validation, normal outcomes and Gymnasium are covered. Privileged forks preserve real hidden state; separate sample/evaluate paths use only observations/public catalog and independent planning RNG, with feasible-belief approximations documented in `AI_SEARCH.md`.
 7. **Coverage expanded, not exhaustive.** Original Devour/AI-chain regressions remain. New suites cover preparation order/targets/chains, browser pending redraw behavior, invalid actions, privacy, combat timing features, exact rewards, Gymnasium and deterministic replays. Full card-interaction balance and browser animation visuals are not exhaustively verified by these tests.
 
 ## Verification on 2026-10-18
@@ -88,3 +90,5 @@ Lint locations: `CardMotionContext.jsx` (mixed component/helper exports), `useBa
 The initial review changed documentation only; the follow-up changed AI preparation at the Battle boundary and added regressions. Build and expanded regression smoke pass; lint retains the same four pre-existing errors. Draft, starter, shields, recycle pool/copy counts and headless behavior were left unchanged. Browser layout, animation timing, and live deployment were not visually verified.
 
 Later verification (2026-10-19): lint is clean after the UI redesign; build/original regressions pass. The preparation/headless/Gymnasium work passes 11 JS tests (144 seeded replay cases), six Python integration tests (48 replays plus both-mode/seat checkers), and two further 100-episode smokes. Deferred recycle/pile, draft leftover/starter and custom exhaustion findings remain. No trained model, rollout teacher or publishing is included.
+
+Further continuation the same day added observation-conditioned sampling, stateless rollout evaluation, paired baseline/residual targets and grouped JSONL output. Suites now have 14 JS/eight Python tests, including 802 sampled roots. Pilots completed 40 rollout games from 20 deal families, generating 230 states / 2,269 candidate values / 36,304 completed continuations. `AI_SEARCH.md` distinguishes this development evidence from held-out strength claims. No neural model or publishing yet.

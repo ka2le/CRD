@@ -24,6 +24,7 @@ Reviewed 2026-10-18. CRD is a static React 19/Vite frontend with reusable JavaSc
 | `data/image-manifest.json`, `src/components/card/imageAssets.js` | Source-to-local WebP mapping and Vite base-path resolution |
 | `scripts/prepare-images.mjs`, `assets/originals/`, `public/images/` | Resumable download/archive and optimized image pipeline |
 | `src/game/headlessGame.js` | No-delay mode adapter, actions and observations |
+| `src/game/rolloutSearch.js` | Stateless observation-conditioned world sampling and paired all-action rollout values |
 | `scripts/headless-worker.mjs` | Persistent JSON-lines sessions |
 | `python/crd/worker.py`, `python/random_headless_smoke.py` | Bounded persistent transport and standard-library smoke |
 | `python/crd/env.py`, `python/gym_smoke.py` | Gymnasium numeric observations, variable candidate actions/masks, replays and driver |
@@ -46,9 +47,9 @@ Logical ownership can advance before a card finishes flying. Preserve explicit h
 
 ## Headless and deployment
 
-Factories support seeds, custom RNGs and injected decks. Modes support strategies and move suppression. Discard can defer its opponent pass for external control without changing the browser's combined pass. Worker protocol v2 commands: `ping`, `describe`, `reset`, `step`, `observe`, `fork`, `close`.
+Factories support seeds, custom RNGs and injected decks. Discard can defer the opponent pass without changing browser order. Worker v2 commands: `ping`, `describe`, `reset`, `step`, `observe`, `fork`, `sample`, `evaluate`, `close`. Sample/evaluate take observations/public pool metadata and independent planning options, never a live source session.
 
-Headless now enters explicit preparation after hand building and resolves the exact 21/50 combat only when both seats finish. `control` selects player, opponent or both; automatic baseline actions use the same legal decisions. Per-seat observations hide enemy private preparation, debug state, seeds and deck order. Gymnasium wraps a single controlled seat and supplies numeric sequences, masks and terminal outcome rewards. Privileged forks isolate immutable states but preserve the actual hidden world; fair resampling/search/training remain unimplemented. Details and commands: `AI_ENVIRONMENT.md`.
+Headless enters explicit preparation and resolves 21/50 combat after both seats finish. `control` selects either/both seats; baseline policies use the same decisions. Views hide enemy private preparation, debug state, seeds and deck order. Gymnasium supplies numeric sequences/masks/reward. Privileged forks preserve the actual hidden world; separate stateless sampling/evaluation reconstructs feasible worlds from observations only. Hidden prior preparation uses a conditioned random proposal, not exact strategic inference. Deep tree search/model training remain future work. See `AI_ENVIRONMENT.md` and `AI_SEARCH.md`.
 
 The GitHub Pages workflow builds on `master` using Node 22 and deploys `dist`; `GITHUB_PAGES=true` selects `/CRD/`. This review verified local build, not live deployment. Follow `PUBLISHING.md` for sanitized publishing that excludes private workspace/memory files.
 
@@ -60,4 +61,8 @@ Keep rules out of components and visibility separate from ownership. Shared prep
 
 ## AI boundary - 2026-10-19
 
-`AI_TRAINING.md` specifies the search-plus-residual-value direction. Shared actions, observations, full preparation and exact combat now exist; Python/Gymnasium wraps the persistent worker with engine-derived damage/shield cycles. Next are observation-consistent world sampling, batched rollouts, a search teacher and PyTorch residual evaluator. Privileged snapshots/real deck order stay outside policy inputs. Final prepared-hand combat remains exact; no neural evaluator has been added yet.
+V2 experiment adds `python/crd/value_net.py` (220 public features, two-hidden-layer W/D/L residual MLP), `collect_draft.py` (parallel resumable numeric shards), `train_value.py` (longer training/checkpoints/family splits), `evaluate_search.py` and `compare_search.py` (frozen-search paired evaluation). `AI_DRAFT_V2.md` describes this active layer. JS remains the rules/rollout authority; no future deck/order/seed reaches the model or root search. All Python parallelism is ordinary local simulation processes, not delegated AI agents.
+
+Latest layer: `python/draft_experiment.py` orchestrates both-seat draft-only data/tournaments and calls worker `baseline` for existing heuristic preparation. `python/crd/draft_model.py` owns permitted-input features, grouped dataset loading, linear prior and NumPy residual MLP; `python/train_draft.py` fits/exports a local `.npz` checkpoint. `AI_DRAFT_EXPERIMENT.md` records commands and evidence. Browser inference and deeper learned cutoffs remain future work; the next paragraph describes the preceding teacher milestone.
+
+`AI_TRAINING.md` specifies the search-plus-residual-value direction. Shared decisions/Gymnasium and an initial root-rollout teacher now exist. The teacher pairs sampled futures across actions, reports uncertainty and baseline deltas, and can generate grouped targets/replays through Python. Next: broader corpus/held-out evaluation, residual evaluator, stronger beliefs and deeper/batched search. Real-state seeds/deck order stay outside decisions. Final combat remains exact; no neural evaluator yet.

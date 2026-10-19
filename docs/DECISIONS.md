@@ -1,5 +1,13 @@
 # DECISIONS.md
 
+## Larger net, search opponents and unknown future packs — 2026-10-19
+
+Creator requested much more training data, about 100k parameters and each evaluation contributing a training example. Implemented 220→256→160→3 W/D/L residual evaluator (98,842 fitted parameters); store one numeric row per candidate, with all individual rollout outcomes represented exactly by W/D/L counts in cross-entropy. Add actual search-play returns for chosen actions; keep their correlated/weighted nature explicit. Actual collection/opponents use frozen base search, with limited exploration on one side. Main strength criterion is neural-assisted search against base search at equal budgets, not beating heuristic or reducing prediction error alone. Preparation remains heuristic. Search samples possible unknown packs independently of the real deck; added explicit draft future-deck/seed isolation regression. `AI_DRAFT_V2.md` records the current large run and commands. No arbitrary reward for safe/risky play; maximize expected actual match score given relative hands and chance.
+
+## Draft-only learning milestone — 2026-10-19
+
+Creator narrowed initial AI learning to Draft picks, retaining existing heuristic preparation/card activation. Implemented mixed heuristic/random/search self-play labels, family-disjoint supervised fitting and paired unseen-deal tournaments. Use a small NumPy residual MLP with a calibrated linear outcome prior for the first working model, avoiding an additional framework dependency. General preparation/discard interfaces remain available but are outside this learning milestone. Search demonstrates gains over heuristic; neural gains are not established, so no browser promotion. `AI_DRAFT_EXPERIMENT.md` records commands/evidence and next experiments.
+
 ## Core decisions
 
 - Build with React
@@ -59,3 +67,11 @@ The earlier shared-discard decision remains intent: current human/AI preparation
 - Headless can control either or both physical seats, preserving existing refill/private-preparation scheduling and deferred pile rules. Default objective now uses actual 21/50 outcomes; old 12/999 evaluation requires an explicit diagnostic override.
 - Added protocol v2, per-seat safe observations/history, mechanical combat cycles, bounded Python transport, Gymnasium variable candidate/mask interface and versioned replays. Gymnasium/NumPy are isolated in `.ai-venv`; no neural model is added.
 - Verified shared browser reducer preparation parity, order/identity/target behavior, privacy, validation, exact rewards, both modes/seats/pools and deterministic replay. Host forks are privileged exact-world regression tools; fair hidden-world resampling and rollout teacher remain next. See `AI_ENVIRONMENT.md`.
+
+## Continued sampler/teacher implementation - 2026-10-19
+
+- Creator asked to continue. Added stateless `sample`/`evaluate` paths receiving permitted observation/public sorted pool plus an independent planning RNG, without looking up the live session.
+- Sample unseen cards without replacement; reconstruct/condition known preparation outcomes. Unknown earlier private preparation uses random feasible proposals, not a claimed exact strategic posterior. Fail explicitly on contradictions/guards rather than generating fake outcome labels.
+- Compare every root action with paired complete continuations and exact battles. Report WDL mean/uncertainty, heuristic baseline value and paired residual targets. This is a shallow rollout teacher; deeper information-set search and model remain future work.
+- Added Python evaluator method, rollout-controlled episode driver and optional grouped dataset/replay output. Group the same physical deal across modes/seats before splitting labels.
+- Verified 802 sampled decision roots; full suites now 14 JS/eight Python tests. Pilot: 40 games / 20 deal families, 230 states / 2,269 action targets / 36,304 continuations. See `AI_SEARCH.md`; no held-out strength claim or neural training.

@@ -1,0 +1,186 @@
+"""Draft WDL evaluator: one public (position, candidate) per row, ~100k parameters."""
+
+import json
+from pathlib import Path
+
+import numpy as np
+
+from .draft_model import features as first_features
+
+FEATURE_VERSION = "draft-public-unseen-stats-wdl-v2"
+
+
+def features(observation, actions, spec):
+    ids = [card["id"] for card in spec["cardTypes"]]
+    x = first_features(observation, actions, ids).astype(np.float32)
+    n = len(ids)
+    # During drafting these four locations partition ALL exposed originals.
+    # poolCounts is public composition, not the order/composition of the live deck.
+    unseen = np.asarray(spec["poolCounts"], dtype=np.float32) / 5 - sum(x[0, i*n:(i+1)*n] for i in range(4))
+    if np.any(unseen < -1e-5):
+        raise ValueError("Known draft cards exceed public pool")
+    stats = np.asarray([observation[key]["stats"][kind]
+                        for key in ("ownCombat", "knownOpponentCombat")
+                        for kind in ("critter", "robot", "dragon")], dtype=np.float32) / 5
+    return np.c_[x, np.tile(np.r_[np.maximum(unseen, 0), stats], (len(x), 1))].astype(np.float32)
+
+
+def signature(spec):
+    return {"features": FEATURE_VERSION, "rules": spec["rulesVersion"], "cards": spec["cardDataHash"],
+            "card_ids": [card["id"] for card in spec["cardTypes"]],
+            "teacher": "observation-sampled-heuristic-completion-v1", "outcomes": ["win", "draw", "loss"]}
+
+
+def softmax(logits):
+    logits = logits - logits.max(axis=1, keepdims=True)
+    exp = np.exp(logits)
+    return exp / exp.sum(axis=1, keepdims=True)
+
+
+class ValueNet:
+    def __init__(self, signature, mean, scale, linear, w1, b1, w2, b2, w3, b3):
+        self.signature = signature
+        self.mean, self.scale, self.linear = mean, scale, linear
+        self.w1, self.b1, self.w2, self.b2, self.w3, self.b3 = w1, b1, w2, b2, w3, b3
+
+    def probabilities(self, x, *, baseline_only=False):
+        z = np.clip((x - self.mean) / self.scale, -20, 20)
+        logits = z @ self.linear[:-1] + self.linear[-1]
+        if not baseline_only:
+            logits += np.tanh(np.tanh(z @ self.w1 + self.b1) @ self.w2 + self.b2) @ self.w3 + self.b3
+        return softmax(logits)
+
+    def values(self, x, *, baseline_only=False):
+        p = self.probabilities(x, baseline_only=baseline_only)
+        return p[:, 0] - p[:, 2]
+
+    @property
+    def parameters(self):
+        return [self.w1, self.b1, self.w2, self.b2, self.w3, self.b3]
+
+    def save(self, path):
+        target = Path(path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        temporary = target.with_suffix(".temporary.npz")
+        np.savez_compressed(temporary, signature=json.dumps(self.signature), **{
+            name: getattr(self, name) for name in ("mean", "scale", "linear", "w1", "b1", "w2", "b2", "w3", "b3")
+        })
+        temporary.replace(target)
+
+    @classmethod
+    def load(cls, path):
+        with np.load(path, allow_pickle=False) as data:
+            sig = json.loads(str(data["signature"]))
+            if sig["features"] != FEATURE_VERSION:
+                raise ValueError("Wrong model feature version")
+            if "depth" in data:
+                depth = int(data["depth"])
+                return DeepValueNet(sig, data["mean"], data["scale"], data["linear"],
+                                    [data[f"weight_{i}"] for i in range(depth)],
+                                    [data[f"bias_{i}"] for i in range(depth)])
+            return cls(sig, **{name: data[name] for name in ("mean", "scale", "linear", "w1", "b1", "w2", "b2", "w3", "b3")})
+
+
+class DeepValueNet(ValueNet):
+    """Same public features/objective with a configurable number of hidden layers."""
+
+    def __init__(self, signature, mean, scale, linear, weights, biases):
+        self.signature, self.mean, self.scale, self.linear = signature, mean, scale, linear
+        self.weights, self.biases = weights, biases
+
+    @property
+    def parameters(self):
+        return [parameter for pair in zip(self.weights, self.biases) for parameter in pair]
+
+    def probabilities(self, x, *, baseline_only=False):
+        z = np.clip((x - self.mean) / self.scale, -20, 20)
+        logits = z @ self.linear[:-1] + self.linear[-1]
+        if not baseline_only:
+            h = z
+            for weight, bias in zip(self.weights[:-1], self.biases[:-1]):
+                h = np.tanh(h @ weight + bias)
+            logits += h @ self.weights[-1] + self.biases[-1]
+        return softmax(logits)
+
+    def save(self, path):
+        target = Path(path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        temporary = target.with_suffix(".temporary.npz")
+        arrays = {f"weight_{i}": weight for i, weight in enumerate(self.weights)}
+        arrays.update({f"bias_{i}": bias for i, bias in enumerate(self.biases)})
+        np.savez_compressed(temporary, signature=json.dumps(self.signature), mean=self.mean, scale=self.scale,
+                            linear=self.linear, depth=len(self.weights), **arrays)
+        temporary.replace(target)
+
+
+def cross_entropy(probabilities, counts):
+    return float(-np.sum(counts * np.log(np.maximum(probabilities, 1e-8))) / counts.sum())
+
+
+def initialize(x, counts, sig, seed=7, hidden=(256, 160)):
+    rng = np.random.default_rng(seed)
+    mean, scale = x.mean(axis=0), np.maximum(x.std(axis=0), .1)
+    z = np.clip((x - mean) / scale, -20, 20)
+    design = np.c_[z, np.ones(len(z), dtype=np.float32)]
+    targets = (counts + .5) / (counts.sum(axis=1, keepdims=True) + 1.5)
+    linear = np.linalg.solve(design.T @ design + 100 * np.eye(design.shape[1], dtype=np.float32),
+                             design.T @ np.log(targets)).astype(np.float32)
+    if len(hidden) != 2:
+        sizes = [x.shape[1], *hidden, 3]
+        weights = [rng.normal(0, 1 / np.sqrt(before), (before, after)).astype(np.float32)
+                   for before, after in zip(sizes[:-2], sizes[1:-1])]
+        weights.append(np.zeros((sizes[-2], 3), dtype=np.float32))
+        biases = [np.zeros(size, dtype=np.float32) for size in sizes[1:]]
+        return DeepValueNet(sig, mean, scale, linear, weights, biases)
+    return ValueNet(sig, mean, scale, linear,
+                    rng.normal(0, 1 / np.sqrt(x.shape[1]), (x.shape[1], hidden[0])).astype(np.float32),
+                    np.zeros(hidden[0], dtype=np.float32),
+                    rng.normal(0, 1 / np.sqrt(hidden[0]), hidden).astype(np.float32),
+                    np.zeros(hidden[1], dtype=np.float32),
+                    np.zeros((hidden[1], 3), dtype=np.float32), np.zeros(3, dtype=np.float32))
+
+
+def adam_step(model, x, counts, moments, variances, step, rate=.0006):
+    if isinstance(model, DeepValueNet):
+        return deep_adam_step(model, x, counts, moments, variances, step, rate)
+    z = np.clip((x - model.mean) / model.scale, -20, 20)
+    h1 = np.tanh(z @ model.w1 + model.b1)
+    h2 = np.tanh(h1 @ model.w2 + model.b2)
+    p = softmax(z @ model.linear[:-1] + model.linear[-1] + h2 @ model.w3 + model.b3)
+    # Exactly the gradient obtained by expanding every simulated W/D/L evaluation
+    # into an individual one-hot example, without copying identical input vectors.
+    delta = (p * counts.sum(axis=1, keepdims=True) - counts) / counts.sum()
+    d2 = (delta @ model.w3.T) * (1 - h2 ** 2)
+    d1 = (d2 @ model.w2.T) * (1 - h1 ** 2)
+    gradients = [z.T @ d1, d1.sum(axis=0), h1.T @ d2, d2.sum(axis=0), h2.T @ delta, delta.sum(axis=0)]
+    for parameter, m, v, gradient in zip(model.parameters, moments, variances, gradients):
+        gradient += 1e-5 * parameter
+        m *= .9
+        m += .1 * gradient
+        v *= .999
+        v += .001 * gradient ** 2
+        parameter -= rate * (m / (1 - .9 ** step)) / (np.sqrt(v / (1 - .999 ** step)) + 1e-8)
+    return cross_entropy(p, counts)
+
+
+def deep_adam_step(model, x, counts, moments, variances, step, rate):
+    z = np.clip((x - model.mean) / model.scale, -20, 20)
+    activations = [z]
+    for weight, bias in zip(model.weights[:-1], model.biases[:-1]):
+        activations.append(np.tanh(activations[-1] @ weight + bias))
+    p = softmax(z @ model.linear[:-1] + model.linear[-1] + activations[-1] @ model.weights[-1] + model.biases[-1])
+    delta = (p * counts.sum(axis=1, keepdims=True) - counts) / counts.sum()
+    pairs = []
+    for layer in range(len(model.weights)-1, -1, -1):
+        pairs.append((activations[layer].T @ delta, delta.sum(axis=0)))
+        if layer:
+            delta = (delta @ model.weights[layer].T) * (1 - activations[layer] ** 2)
+    gradients = [value for pair in reversed(pairs) for value in pair]
+    for parameter, m, v, gradient in zip(model.parameters, moments, variances, gradients):
+        gradient += 1e-5 * parameter
+        m *= .9
+        m += .1 * gradient
+        v *= .999
+        v += .001 * gradient ** 2
+        parameter -= rate * (m / (1 - .9 ** step)) / (np.sqrt(v / (1 - .999 ** step)) + 1e-8)
+    return cross_entropy(p, counts)

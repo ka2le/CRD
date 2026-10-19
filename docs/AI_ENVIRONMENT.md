@@ -1,5 +1,7 @@
 # Headless decision environment
 
+Latest experiment: `AI_DRAFT_EXPERIMENT.md` gives the draft-only data/model/tournament workflow. It uses both-seat worker control with the existing heuristic for every preparation decision. The new `baseline` command returns the acting seat's existing heuristic action without advancing the session (terminal requests error). A trained NumPy draft model now exists offline; earlier "no trained model" descriptions below concern the initial environment milestone. Protocol remains v2 with this additive command.
+
 Implemented and verified **2026-10-19**. This is the working environment contract; `AI_TRAINING.md` describes the remaining search/neural plan.
 
 ## What works
@@ -12,7 +14,7 @@ Implemented and verified **2026-10-19**. This is the working environment contrac
 - Per-seat observations/history, numeric hand/combat features, dynamic candidates and masks, replay metadata, and isolated host forks.
 - Browser preparation and the headless adapter share `preparationState.js` transitions. The browser still owns picker/animation state and delays the redraw commit for its existing animation.
 
-The default non-controlled seat uses the existing heuristic, including its existing preparation activation order and target scoring. Training/search can replace every choice through the same action interface. No trained model, fair hidden-world sampler, rollout teacher, vector/batch simulation or browser neural opponent is implemented yet.
+The default non-controlled seat uses the existing heuristic, including its existing preparation order/target scoring. A first observation-conditioned hidden-world sampler and all-action rollout teacher are now implemented; see `AI_SEARCH.md`. Training/search can replace every choice through the same interface. No trained model, deep tree search, vector/batch simulation or browser neural opponent exists yet.
 
 ## Local commands (PowerShell)
 
@@ -34,7 +36,7 @@ python -m venv .ai-venv
 .ai-venv/Scripts/python.exe python/gym_smoke.py --mode five-hand-discard --control opponent --episodes 100 --seed 100
 ```
 
-`requirements.txt` gives compatible dependency ranges; the lock file records the tested versions. PyTorch has not been installed. Optional `--output .ai-runs/smoke.jsonl` writes local replay records; `.ai-runs/` is ignored. The output policy is masked random: its win rate is a transport/episode smoke, not AI strength evidence.
+`requirements.txt` gives compatible dependency ranges; the lock file records the tested versions. PyTorch has not been installed. Optional `--output .ai-runs/smoke.jsonl` writes local replays; `.ai-runs/` is ignored. Masked random is the default smoke policy. Use `--policy rollout --samples 16` for the new rollout evaluator and optional `--dataset .ai-runs/targets.jsonl` for grouped action targets; see `AI_SEARCH.md` for interpretation and limits.
 
 ## JavaScript and worker API
 
@@ -56,6 +58,8 @@ Commands:
 | `step` | `action`, optional `actor` | Apply one externally controlled decision; validate actor if supplied |
 | `observe` | optional physical `side` | Obtain that seat's permitted observation; only the acting seat gets legal actions |
 | `fork` | new `targetSessionId` | Host-only copy of current immutable state into an independent session |
+| `evaluate` | `observation`, public `spec`, optional `options` | Stateless observation-sampled values for every root action; no source session lookup |
+| `sample` | `observation`, public `spec`, new `targetSessionId`, optional sampling `options` | Create a consistent hypothetical world independently of live state |
 | `close` | none | Release session; closing the client process releases all sessions |
 
 `control` is `player` (default), `opponent`, or `both`. In single-seat mode the other seat advances through its heuristic decisions automatically. In `both`, each step exposes the next actor; terminal `rewards` always uses physical seat names. Refill order remains player first, opponent second. Preparation is internally serialized player first, opponent second, matching the browser's Battle boundary. This does not add visible alternating preparation turns.
@@ -98,7 +102,7 @@ Observation `side` names the physical seat. Fields `playerHand`, `activatedUids`
 
 Public/history knowledge and card UIDs remain available for action/replay handling. Python numeric encodings omit UIDs. Initial pool counts are public configuration, not remaining unseen-card counts.
 
-**A host fork preserves the actual hidden world. It is useful for deterministic regression/replay, not fair AI search.** The next search implementation must generate worlds consistent with an observation/history and restrict simulated policies to their own information. Do not treat fork-and-peek outcomes as fair rollout labels.
+**A host fork preserves the actual hidden world and is not fair AI search.** The new `sample`/`evaluate` paths instead take observations/public pool metadata and independent planning seeds, reproducing the root view while sampling unseen cards. They never query the live source session. This is an approximate feasible-world belief, not an exact posterior over a strategic opponent; see `AI_SEARCH.md`. Do not use fork-and-peek outcomes as fair labels.
 
 ## Gymnasium interface
 
@@ -116,7 +120,7 @@ with CRDEnv({"mode": "draft", "control": "player"}) as env:
             break
 ```
 
-Run a script inside `python/`, or set `PYTHONPATH=python`. Reset options allow mode, Wild Deck, opponent visibility and first picker. Reset seeds the environment RNG; it generates a separate deterministic engine seed. `replay_record()` returns that seed/config plus semantic decisions, versions and hash as explicit host metadata, outside policy observations/info.
+Run a script inside `python/`, or set `PYTHONPATH=python`. Reset options allow mode, Wild Deck, opponent visibility and first picker. Reset seeds the environment RNG; it generates a separate deterministic engine seed. `replay_record()` returns that seed/config plus semantic decisions, versions/hash and a deal-family grouping ID as explicit host metadata, outside policy observations/info. `evaluate_actions(samples=16, seed=100000)` returns non-mutating rollout values using only permitted data.
 
 The action space is a `Discrete` subclass with capacity derived from the supported pool. Its default `sample()` respects the current mask, while explicit mask/probability arguments retain Gymnasium semantics. Out-of-range/masked actions raise without changing state. No legal actions are silently clipped; a capacity mismatch fails explicitly.
 
@@ -138,9 +142,10 @@ Intermediate reward is zero. Exact match outcomes terminate; the configurable de
 
 ## Verification and limits
 
-- `npm run headless:test`: order-sensitive draw/redraw, copied/recycled chains, skips/exhaustion, browser reducer preparation parity including pending redraw/Battle guard, synchronized discard parity, validation/privacy, exact outcomes and 144 seeded replay cases across modes/seats/pools.
-- Python unittest suite: Gymnasium checker for both modes/seats, growing hands/candidates, 48 seeded replay episodes, masks/invalid actions, timeout-guard truncation, worker errors and branch isolation.
+- `npm run headless:test`: 14 tests, including order/targets, browser reducer parity, validation/privacy, exact outcomes, 144 seeded replays, 802 sampled-root reconstructions and rollout teacher checks.
+- Python unittest suite: eight tests, including Gymnasium checker for both modes/seats, growing hands/candidates, 48 replays, masks/errors/guards, branch isolation, stateless rollout evaluation and deal-family grouping.
 - Two additional 100-episode Python smokes completed (Draft player seat; discard opponent seat). Measured roughly 600 decisions/second on this local run including encoding/transport; this is not a tree-search or model throughput estimate.
+- Two additional 20-game rollout pilots generated 230 states / 2,269 action targets / 36,304 completed continuations, grouped into 20 underlying deal families. See `AI_SEARCH.md`; these are development data, not independent held-out strength evidence.
 - Build, lint and existing regression smoke pass. No gameplay balance/rules change, model training or external publishing is included.
 
 Deferred final-draft leftovers, starter alternation, recycle pool/copy-count intent and custom deck-exhaustion semantics remain documented in `CURRENT_STATE.md`. Private preparation scheduling follows current implementation; it is not a resolution of every future simultaneous/shared-pool rule question.

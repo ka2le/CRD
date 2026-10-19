@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react'
-import { createFiveHandDiscardGame, applyDiscardPhase } from '../game/fiveHandDiscard'
+import { createFiveHandDiscardGame, applyDiscardPhase, applyOpponentDiscardPhase } from '../game/fiveHandDiscard'
 import {
   createDraftGame,
   applyDraftPick,
@@ -15,6 +15,8 @@ import {
   completeOpponentPreBattle,
 } from '../game/preBattle'
 import { applyPreparationAction, createPreparationState } from '../game/preparationState'
+import { chooseDiscardIds } from '../game/cardEvaluator'
+import { DEFAULT_OPPONENT_AI, normalizeOpponentAi, requestOpponentSearchAction } from '../game/opponentAi'
 
 const STORAGE_KEY = 'crd-dev-settings-v1'
 
@@ -22,7 +24,12 @@ const DEFAULT_SETTINGS = {
   gameMode: 'draft',
   showOpponentCards: true,
   wildDeck: true,
+  opponentAi: DEFAULT_OPPONENT_AI,
 }
+
+// Minimum visible "thinking" time for a Search AI discard, so the player's own
+// discard animation finishes before the opponent's cards move.
+const SEARCH_DISCARD_MIN_THINK_MS = 650
 
 const DEFAULT_SESSION_TIMING = {
   drawAllNewDiscardStaggerMs: 110,
@@ -48,15 +55,34 @@ function loadStoredSettings() {
     return {
       ...DEFAULT_SETTINGS,
       ...parsed,
+      opponentAi: normalizeOpponentAi(parsed.opponentAi),
     }
   } catch {
     return DEFAULT_SETTINGS
   }
 }
 
+function usesSearchOpponent(settings) {
+  return settings?.opponentAi === 'search'
+}
+
+// The Search AI decides asynchronously (in a worker). Clear the Rules AI's instant
+// pick so the draft flow waits for the search result instead of using it.
+function withOpponentAiTurn(game, settings) {
+  if (!usesSearchOpponent(settings)) return game
+  if (game.mode !== 'draft' || game.phase !== 'draft-opponent-thinking') return game
+  return { ...game, pendingOpponentPickUid: null }
+}
+
+// Identifies one opponent decision, so stale search results are ignored.
+export function getOpponentDecisionKey(dealId, game) {
+  if (game.mode === 'draft') return `${dealId}:draft:${game.packNumber}:${game.picksThisPack}`
+  return `${dealId}:discard:${game.phase}`
+}
+
 function createGameForMode(mode, draftFirstPicker = 'player', settings = DEFAULT_SETTINGS) {
   if (mode === 'five-hand-discard') return createFiveHandDiscardGame({ wildDeck: settings.wildDeck })
-  return createDraftGame({ firstPicker: draftFirstPicker, wildDeck: settings.wildDeck })
+  return withOpponentAiTurn(createDraftGame({ firstPicker: draftFirstPicker, wildDeck: settings.wildDeck }), settings)
 }
 
 function getNextDraftStartingPicker(current) {
@@ -290,7 +316,10 @@ export function sessionReducer(state, action) {
     }
 
     case 'SUBMIT_DISCARD': {
-      const nextGame = applyDiscardPhase(state.game, state.selectedIds)
+      // Search AI answers asynchronously, so the opponent's pass is deferred until it decides.
+      const nextGame = applyDiscardPhase(state.game, state.selectedIds, {
+        deferOpponent: usesSearchOpponent(state.settings),
+      })
       return createTransitionResult(state, {
         game: nextGame,
         preBattle: createPreBattleState(nextGame),
@@ -302,8 +331,35 @@ export function sessionReducer(state, action) {
       })
     }
 
+    case 'APPLY_OPPONENT_DISCARD': {
+      if (action.decisionKey !== getOpponentDecisionKey(state.dealId, state.game)) return state
+      if (!state.game.phase.startsWith('opponent-discard')) return state
+      const handIds = new Set(state.game.opponentHand.map((card) => card.uid))
+      const selectedIds = (action.selectedIds ?? []).filter((uid) => handIds.has(uid))
+      const nextGame = applyOpponentDiscardPhase(state.game, selectedIds)
+      return createTransitionResult(state, {
+        game: nextGame,
+        preBattle: createPreBattleState(nextGame),
+      }, {
+        type: 'discard-submitted',
+        moves: (nextGame.recentMoves ?? []).filter((move) => move.from?.section === 'opponent-hand'),
+        sourceRects: action.sourceRects ?? {},
+      })
+    }
+
+    case 'SET_OPPONENT_DRAFT_PICK': {
+      const { game } = state
+      if (action.decisionKey !== getOpponentDecisionKey(state.dealId, game)) return state
+      if (game.phase !== 'draft-opponent-thinking' || game.pendingOpponentPickUid) return state
+      if (!game.draftRow.some((card) => card.uid === action.uid)) return state
+      return {
+        ...state,
+        game: { ...game, pendingOpponentPickUid: action.uid },
+      }
+    }
+
     case 'PLAYER_DRAFT_PICK': {
-      const nextGame = applyDraftPick(state.game, action.uid)
+      const nextGame = withOpponentAiTurn(applyDraftPick(state.game, action.uid), state.settings)
       return createTransitionResult(state, {
         game: nextGame,
         preBattle: createPreBattleState(nextGame),
@@ -355,7 +411,7 @@ export function sessionReducer(state, action) {
     }
 
     case 'REVEAL_NEXT_DRAFT_PACK': {
-      const nextGame = withDraftDealingAnimation(revealNextDraftPack(state.game))
+      const nextGame = withOpponentAiTurn(withDraftDealingAnimation(revealNextDraftPack(state.game)), state.settings)
       return createTransitionResult(state, {
         game: nextGame,
         preBattle: createPreBattleState(nextGame),
@@ -586,6 +642,7 @@ export function sessionReducer(state, action) {
         ...state.settings,
         ...action.patch,
       }
+      nextSettings.opponentAi = normalizeOpponentAi(nextSettings.opponentAi)
 
       const nextMode = nextSettings.gameMode ?? state.gameMode
       const nextGame = nextMode === 'draft'
@@ -636,6 +693,12 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
   } = session
 
   const discardPhase = game.mode === 'five-hand-discard' && game.phase.startsWith('player-discard')
+  const opponentDiscarding = game.mode === 'five-hand-discard' && game.phase.startsWith('opponent-discard')
+  const searchOpponent = settings.opponentAi === 'search'
+  const dealId = session.dealId
+  const awaitingSearchDraftPick = searchOpponent && game.mode === 'draft'
+    && game.phase === 'draft-opponent-thinking' && !game.pendingOpponentPickUid
+  const opponentDecisionKey = getOpponentDecisionKey(dealId, game)
   const canStartBattle = !battleStarted && game.phase === 'battle-ready' && !preBattle.pendingResolution
   const pendingDraftPickUid = game.pendingOpponentPickUid ?? null
   const draftActivationTick = pendingDraftPickUid ? `${pendingDraftPickUid}-${game.phase}-${game.playerHand.length}-${game.opponentHand.length}` : 'draft-idle'
@@ -932,8 +995,58 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     scheduleTimeout,
   ])
 
+  // Search AI draft pick: ask the worker, then hand the pick to the normal draft flow.
+  useEffect(() => {
+    if (!awaitingSearchDraftPick) return undefined
+    let cancelled = false
+    requestOpponentSearchAction(game).then((choice) => {
+      if (cancelled || !choice?.uid) return
+      dispatch({ type: 'SET_OPPONENT_DRAFT_PICK', uid: choice.uid, decisionKey: opponentDecisionKey })
+    })
+    return () => { cancelled = true }
+  // The decision key changes exactly when a new decision starts.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [awaitingSearchDraftPick, opponentDecisionKey])
+
+  // Search AI discard pass: runs after the player's pass, then animates like a normal discard.
+  useEffect(() => {
+    if (!opponentDiscarding) return undefined
+    let cancelled = false
+    let timeoutId = null
+    const startedAt = performance.now()
+    const decide = searchOpponent
+      ? requestOpponentSearchAction(game)
+      : Promise.resolve(null)
+    decide.then((choice) => {
+      if (cancelled) return
+      const remainingMs = Math.max(0, SEARCH_DISCARD_MIN_THINK_MS - (performance.now() - startedAt))
+      timeoutId = window.setTimeout(() => {
+        if (cancelled) return
+        const sourceRects = {}
+        game.opponentHand.forEach((card) => {
+          const rect = serializeRect(getAnchorRect('opponent-hand', card.uid))
+          if (rect) sourceRects[`opponent-hand::${card.uid}`] = rect
+        })
+        dispatch({
+          type: 'APPLY_OPPONENT_DISCARD',
+          // A null choice (e.g. the opponent was switched mid-pass) falls back to the Rules AI.
+          selectedIds: choice?.selectedIds ?? chooseDiscardIds(game.opponentHand, { discardCount: 2 }),
+          sourceRects,
+          decisionKey: opponentDecisionKey,
+        })
+      }, remainingMs)
+    })
+    return () => {
+      cancelled = true
+      if (timeoutId) window.clearTimeout(timeoutId)
+    }
+  // The decision key changes exactly when a new decision starts.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [opponentDiscarding, opponentDecisionKey])
+
   useDraftFlowEffects({
     game,
+    waitingForOpponentPick: awaitingSearchDraftPick,
     resolveOpponentDraftPick: resolveOpponentDraftPickAction,
     commitDraftDiscard: commitDraftDiscardAction,
     revealNextDraftPack: revealNextDraftPackAction,
@@ -962,6 +1075,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     battleResult,
     battleDeck,
     discardPhase,
+    opponentDiscarding,
     canStartBattle,
     deckCount: resolvedDeckCount,
     pendingDraftPickUid,

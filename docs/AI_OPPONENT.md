@@ -1,5 +1,7 @@
 # AI opponent
 
+Latest offline experiment (2026-10-19): draft-only rollout scores 79.25% against this heuristic on 100 unseen deals / 400 games; a first trained NumPy network and experimental search correction also run. See `AI_DRAFT_EXPERIMENT.md`. Preparation remains this existing policy. Browser opponent remains heuristic; neural gains are not established.
+
 Reviewed 2026-10-18. Both browser modes use a hand-written heuristic AI. No trained model or difficulty selection exists.
 
 ## Implemented choices
@@ -25,4 +27,8 @@ Preparation is private with no inter-player turn order; the AI must finish befor
 
 ## Proposed next architecture - 2026-10-19
 
-The creator requested search guided by calculated mechanics and a small learned correction. The decision environment/Gymnasium first slice is complete; keep this heuristic as a named baseline/completion policy. Next build observation-consistent hidden-world sampling and non-neural rollout search, then fit a residual evaluator on searched continuations and match outcomes. Terminal combat remains exact. The model should estimate unfinished-hand potential, draws, preparation and opponent adaptation; card value is contextual. No trained evaluator or search opponent has been added yet.
+The environment and initial observation-conditioned root-rollout teacher now work. Python can compare every legal action using sampled continuations with this heuristic as a completion policy; browser play still uses the original heuristic. `AI_SEARCH.md` explains feasible-belief assumptions, paired uncertainty, baseline deltas and grouped labels. Next expand data/held-out evaluation and fit the residual model; no trained evaluator/browser search opponent exists yet. Final combat remains exact, and learned card value should remain contextual.
+
+## Browser opponent selection (2026-10-19)
+
+The menu now has an Opponent dropdown: **Rules AI (Easy)**, the heuristic above, and **Search AI (Medium)**, a browser root-rollout search for draft picks and discard passes run in a Web Worker. Preparation stays on the Rules AI. In cloud benchmarks it scored about 86% (draft) and 66% (discard) against the Rules AI. See `OPPONENT_SELECTION.md`. The neural model is not wired in yet.

@@ -50,6 +50,9 @@ export function getHeadlessSpec(config = {}) {
       cd: card.cd ?? null, copies: card.copies,
     })),
     poolCounts: getCoreCards().map((definition) => pool.filter((card) => card.id === definition.id).length),
+    // Public physical-card catalog, deliberately sorted rather than in deal/shuffle order.
+    poolCards: pool.map((card) => ({ id: card.id, uid: card.uid }))
+      .sort((a, b) => a.uid < b.uid ? -1 : (a.uid > b.uid ? 1 : 0)),
     maxHandCards,
     maxLegalActions: Math.max(32, 1 + maxHandCards * (maxHandCards + 1)),
     actionTypes: ['draft-pick', 'discard', 'prepare', 'skip-preparation', 'finish-preparation'],
@@ -183,7 +186,7 @@ function applyDecision(state, action) {
   return settle(next)
 }
 
-function baselineAction(state) {
+export function chooseHeadlessBaselineAction(state) {
   if (state.preparation) return pickPreparationAction(state.preparation, state.actor)
   const hand = state.game[`${state.actor}Hand`]
   if (state.game.mode === 'draft') {
@@ -207,7 +210,7 @@ function advanceToControlledDecision(state) {
   let guard = 0
   while (!next.terminal && next.config.control !== 'both' && next.actor !== next.config.control) {
     if (++guard > 10000) throw new Error('Automatic opponent exceeded decision guard')
-    next = applyDecision(next, resolveAction(next, baselineAction(next)))
+    next = applyDecision(next, resolveAction(next, chooseHeadlessBaselineAction(next)))
   }
   return next
 }

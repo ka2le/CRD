@@ -5,7 +5,9 @@ import {
   createStepResponse,
   stepHeadlessGame,
   getHeadlessSpec,
+  chooseHeadlessBaselineAction,
 } from '../src/game/headlessGame.js'
+import { evaluateRolloutActions, sampleHeadlessWorld } from '../src/game/rolloutSearch.js'
 
 const sessions = new Map()
 
@@ -33,6 +35,21 @@ function handleRequest(request) {
   }
 
   if (request.command === 'describe') return { ok: true, spec: describe(request.config) }
+
+  // Stateless inference: no access to a live session or its hidden deck/seed.
+  if (request.command === 'evaluate') {
+    return { ok: true, evaluation: evaluateRolloutActions(request.observation, request.spec, request.options) }
+  }
+
+  if (request.command === 'sample') {
+    if (typeof request.targetSessionId !== 'string' || !request.targetSessionId || sessions.has(request.targetSessionId)) {
+      throw new Error('sample needs a new nonempty targetSessionId')
+    }
+    const sampled = sampleHeadlessWorld(request.observation, request.spec, request.options)
+    sessions.set(request.targetSessionId, sampled.state)
+    return { ok: true, sessionId: request.targetSessionId, attempts: sampled.attempts,
+      ...createStepResponse(sampled.state, request.observation.side) }
+  }
 
   if (request.command === 'reset') {
     const sessionId = request.sessionId ?? 'default'
@@ -64,6 +81,12 @@ function handleRequest(request) {
   if (request.command === 'observe') {
     return { ok: true, sessionId: request.sessionId ?? 'default',
       ...createStepResponse(getSession(request.sessionId ?? 'default'), request.side) }
+  }
+
+  if (request.command === 'baseline') {
+    const state = getSession(request.sessionId ?? 'default')
+    if (state.terminal) throw new Error('No baseline action after terminal')
+    return { ok: true, action: chooseHeadlessBaselineAction(state) }
   }
 
   // Privileged host operation. It does not resample hidden worlds and is NOT fair search.

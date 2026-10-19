@@ -157,6 +157,43 @@ class EnvironmentTests(unittest.TestCase):
         finally:
             env.close()
 
+    def test_rollout_teacher_is_stateless_and_available_at_all_decision_types(self):
+        for mode in ("draft", "five-hand-discard"):
+            env = CRDEnv({"mode": mode}, worker=self.worker)
+            try:
+                _, info = env.reset(seed=15, options={"wildDeck": False})
+                before = self.worker.request("observe", sessionId=env.session_id)
+                evaluation = env.evaluate_actions(samples=2, seed=11000)
+                self.assertEqual(len(evaluation["candidates"]), len(info["legal_actions"]))
+                self.assertEqual(evaluation["simulations"], 2 * len(info["legal_actions"]))
+                self.assertEqual(self.worker.request("observe", sessionId=env.session_id)["observation"], before["observation"])
+                self.assertEqual(evaluation, env.evaluate_actions(samples=2, seed=11000))
+                while info["observation"]["phase"] != "preparation":
+                    action = 0
+                    _, _, _, _, info = env.step(action)
+                evaluation = env.evaluate_actions(samples=2, seed=12000)
+                self.assertEqual([entry["action"] for entry in evaluation["candidates"]], info["legal_actions"])
+                self.worker.request("sample", targetSessionId=f"sample-{mode}",
+                                    observation=info["observation"],
+                                    spec=env._episode_spec, options={"seed": 13000})
+            finally:
+                env.close()
+
+    def test_root_family_groups_the_same_deal_across_modes_and_seats(self):
+        families = set()
+        for mode in ("draft", "five-hand-discard"):
+            for control in ("player", "opponent"):
+                env = CRDEnv({"mode": mode, "control": control}, worker=self.worker)
+                try:
+                    _, info = env.reset(seed=150)
+                    record = env.replay_record()
+                    families.add(record["root_family"])
+                    self.assertNotIn("root_family", info)
+                    self.assertNotIn("root_family", info["observation"])
+                finally:
+                    env.close()
+        self.assertEqual(len(families), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

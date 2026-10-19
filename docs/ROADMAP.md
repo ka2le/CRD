@@ -8,7 +8,11 @@ Both local human-versus-AI modes, four preparation effects, simultaneous combat,
 
 ## Latest AI planning - 2026-10-19
 
-The creator requested search guided by mathematical evaluation plus a neural correction. `AI_TRAINING.md` replaces the earlier 12-round damage objective with actual win/draw/loss. The shared decision environment and Gymnasium first slice are implemented. Next: observation-consistent hidden-world sampler -> sampled-rollout teacher -> residual value network -> self-play/tournaments -> browser Web Worker. Host forks preserve actual hidden state and must not substitute for fair sampling. Tabletop chart work remains a separate unapproved proposal.
+Newest completed step: large draft-only corpus, ~100k and four-hidden-layer/~150k W/D/L nets, two600-second training runs and neural-assisted search versus frozen base search (`AI_DRAFT_V2.md`). Both improve the tested base search; extra depth's strength advantage is inconclusive. All candidate evaluations contribute, with public unseen composition/relative-hand inputs and actual search-game returns. Next improve searched-opponent calibration/independent coverage, test learned cutoffs and browser integration. No arbitrary risk reward or actual future-pack access.
+
+Current priority supersedes the broader sequence below: Draft picks only; heuristic preparation. First mixed self-play corpus, trained NumPy residual network and paired unseen-deal tournaments are complete (`AI_DRAFT_EXPERIMENT.md`). Search beats heuristic in the initial tournament; neural improvement over linear/search is not established. Next improve independent deal coverage, label quality and fresh held-out comparisons before browser promotion or broader decision learning.
+
+The creator requested search with a mathematical baseline and neural correction. The full-decision/Gymnasium slice and first observation-conditioned sampler/rollout teacher are implemented; `AI_SEARCH.md` gives commands/assumptions. Next: broader grouped corpus and held-out evaluation -> residual value network -> refined beliefs/deeper search/self-play -> browser worker. Host forks preserve real hidden state and are not unseen-world samples. Tabletop chart work remains separate/unapproved.
 
 ## Earlier scope clarification and completed fix
 
@@ -35,7 +39,7 @@ Completed: pressing Battle resolves all AI preparation, including special chains
 - Confirm existing special formulas/balance with the creator.
 - Formalize `extra_turn` and `no_stats_to_2` before enabling them.
 - Improve whole-hand AI evaluation and opponent-aware timing/counters through the staged search/residual-value plan in `AI_TRAINING.md`.
-- Gymnasium and outcome rewards now work. Add observation-consistent world sampling and batched rollout search before training; do not use privileged exact-world forks as fair AI.
+- Gymnasium and the observation-conditioned root-rollout teacher now work. Expand grouped data/evaluation, then fit the residual model; refine priors and batch/deepen search as evidence warrants. Do not use privileged exact-world forks as unseen samples.
 - Keep extra/monster sets as separate future scope.
 
 ## 4. Presentation

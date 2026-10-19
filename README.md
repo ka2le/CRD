@@ -40,12 +40,16 @@ The game serves local WebP art and icons. Full-resolution originals are preserve
 
 ## Headless Smoke
 
+Latest AI work: [larger draft W/D/L experiment](docs/AI_DRAFT_V2.md), with a completed4,000-deal corpus, ~99k/two-layer and ~150k/four-layer models and paired search-versus-search comparisons. Models remain offline; browser AI remains heuristic.
+
+The first [draft-only training experiment](docs/AI_DRAFT_EXPERIMENT.md) now runs data collection, a small NumPy residual model and paired unseen-deal tournaments. Preparation uses the existing heuristic; browser AI remains unchanged. That guide supersedes older no-model milestone notes below.
+
 ```bash
 npm run headless:smoke -- --mode draft --seed 7 --reveal-opponent
 npm run headless:test
 ```
 
-For the isolated Python/Gymnasium setup, variable action masks, replay API and training boundaries, see [AI environment](docs/AI_ENVIRONMENT.md). The [search/neural plan](docs/AI_TRAINING.md) describes the next work; no trained model exists yet.
+For Python/Gymnasium setup and variable actions, see [AI environment](docs/AI_ENVIRONMENT.md). A first [observation-sampled rollout teacher](docs/AI_SEARCH.md) now compares every choice and generates grouped action targets without reading the real deck. The [search/neural plan](docs/AI_TRAINING.md) describes remaining learning/deeper search; no trained model exists yet.
 
 ## Project Notes
 
@@ -53,4 +57,4 @@ The project keeps game rules and state transitions in reusable JS modules under 
 
 ## Verification baseline
 
-On 2026-10-19, build, lint, existing regressions, 11 focused JS headless tests (including 144 seeded replay cases), six Python integration tests (including Gymnasium checkers and 48 replays), and two additional 100-episode smokes pass. Headless includes optional ordered preparation and defaults to actual 21/50 combat with outcome rewards. Earlier 12-round smoke/lint findings in the original review are historical. See `docs/AI_ENVIRONMENT.md` and `docs/CURRENT_STATE.md` for limits.
+On 2026-10-19, build/lint/regressions, 14 JS tests (including 144 replays and 802 sampled-root reconstructions), eight Python tests (including checkers and 48 replays), and 200 random episodes pass. Headless includes ordered preparation and actual 21/50 rewards. Rollout pilots also produced 230 decision states and 2,269 candidate targets; they are development data, not held-out strength proof. Earlier smoke/lint findings are historical. See `docs/AI_ENVIRONMENT.md`, `docs/AI_SEARCH.md` and `docs/CURRENT_STATE.md` for limits.
