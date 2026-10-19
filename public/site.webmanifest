@@ -1,7 +1,7 @@
 {
   "name": "CRD - Critters Robots Dragons",
   "short_name": "CRD",
-  "id": "/CRD/",
+  "id": "/CRD/?app=critters-robots-dragons",
   "description": "A digital prototype of Critters Robots Dragons.",
   "start_url": "/CRD/",
   "scope": "/CRD/",
