@@ -9,6 +9,10 @@ Added 2026-10-18 with the table redesign. Rules logic is unchanged. This file de
 - Teaching is opt-in: long-press or right-click any card to inspect it, and Menu → How to play opens a visual timing sheet.
 - Mobile portrait comes first, and every layout fits the screen with no page scroll.
 
+## Installed app
+
+- The web app manifest requests `fullscreen` display for installed PWA launches. Browsers that do not support that display mode may fall back to their closest supported app window mode.
+
 ## Visual language
 
 - Style follows the app icon: "classy poker meets minimalist sci-fi meets fantasy battle". Midnight navy felt with a faint brass hex weave (`--hex`), champagne/brass ink (`--brass`), muted jewel tones, flat colour and real drop shadows instead of glows/bloom.

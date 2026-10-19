@@ -5,7 +5,7 @@
   "description": "A digital prototype of Critters Robots Dragons.",
   "start_url": "/CRD/",
   "scope": "/CRD/",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#03060c",
   "theme_color": "#0d1626",
   "icons": [
