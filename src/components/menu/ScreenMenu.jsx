@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import './ScreenMenu.css'
 import { GameIcon, SvgIcon } from '../ui/GameIcon'
 
-export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, settings, onUpdateSettings, onHelp }) {
+export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, settings, onUpdateSettings, onHelp, onScoreCard }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
   const menuRef = useRef(null)
@@ -106,6 +106,11 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
             <GameIcon name="star" />
             <span>Wild deck</span>
           </label>
+
+          <button type="button" className="screen-menu__item" onClick={() => run(onScoreCard)}>
+            <GameIcon name="star" />
+            <span>Score card</span>
+          </button>
 
           <div className="screen-menu__row">
             <button type="button" className="screen-menu__item" onClick={() => run(onHelp)}>

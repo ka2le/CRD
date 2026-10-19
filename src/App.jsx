@@ -13,6 +13,7 @@ import InfoOverlay from './components/overlay/InfoOverlay'
 import CardInspectProvider from './components/overlay/CardInspect'
 import PileSheet from './components/overlay/PileSheet'
 import HelpSheet from './components/overlay/HelpSheet'
+import ScoreSheet from './components/overlay/ScoreSheet'
 import SideRail, { Pips, ThinkingDots } from './components/hud/SideRail'
 import { GameIcon, SvgIcon } from './components/ui/GameIcon'
 import useBattlePlayback from './hooks/useBattlePlayback'
@@ -101,6 +102,7 @@ function AppContent() {
   const [tableRef, tableSize] = useElementSize()
   const [dismissedResultKey, setDismissedResultKey] = useState(null)
   const [helpOpen, setHelpOpen] = useState(false)
+  const [scoreOpen, setScoreOpen] = useState(false)
   const [pileOpen, setPileOpen] = useState(false)
 
   const layout = battleStarted
@@ -263,6 +265,7 @@ function AppContent() {
             settings={settings}
             onUpdateSettings={updateSettings}
             onHelp={() => setHelpOpen(true)}
+            onScoreCard={() => setScoreOpen(true)}
           />
         </SideRail>
 
@@ -368,6 +371,7 @@ function AppContent() {
       />
 
       <HelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} />
+      <ScoreSheet open={scoreOpen} onClose={() => setScoreOpen(false)} />
 
       <InfoOverlay
         visible={Boolean(recycleOverlay)}

@@ -44,6 +44,7 @@ Card size is computed, not set by breakpoints (`hooks/useFitLayout.js`):
 - **Rails** (`hud/SideRail.jsx`): stat totals (class icon + count, dimmed at 0) and average damage per round. In battle the average is replaced by a 21-segment health bar, a shield badge, hit numbers and blocked numbers.
 - **Opponent rail:** a thinking indicator while the AI picks, progress pips (5 packs or 2 redraws), and the menu.
 - **Dock:** the deck pile, the discard pile (tap to browse it in a sheet), and the primary action: Redraw N / Keep, or Battle.
+- **Score card** (`overlay/ScoreSheet.jsx`): Menu → Score card opens a view-only sheet with two candidate tabletop scoring reference cards (Ledger and Hand of Three). They sit side by side on wide screens and in a swipe carousel with dots on phones. Cards are authored at 315×440 (63×88 mm) and scaled to fit. Bonuses are shown as running totals. Digital combat is unaffected.
 - **Pack:** the card the AI is about to take gets a rose reticle once the deal has landed. On desktop, hovering a pack card shows the change in your average damage per round.
 
 ## Animations
