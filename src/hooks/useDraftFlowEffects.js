@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { startDraftPickFlight, animateDraftRowDiscard, getDraftDiscardSequenceMs } from './draftMotion'
+import { getPackDealMs } from './dealTiming'
 
 const DRAFT_AI_DELAY_MS = 800
 const DRAFT_PRE_DISCARD_PAUSE_MS = 600
@@ -33,6 +34,8 @@ export default function useDraftFlowEffects({
     if (game.mode !== 'draft') return undefined
 
     if (game.phase === 'draft-opponent-thinking') {
+      // A fresh pack is still being dealt: let it land before the AI picks.
+      const dealLeadMs = game.picksThisPack === 0 ? getPackDealMs(game.draftRow.length, game.packNumber === 1) : 0
       const timeoutId = window.setTimeout(() => {
         const pickedUid = game.pendingOpponentPickUid
         const pickedCard = game.draftRow.find((card) => card.uid === pickedUid)
@@ -51,7 +54,7 @@ export default function useDraftFlowEffects({
           scheduleTimeout,
           onFlightComplete: () => revealHandCard('opponent', pickedUid),
         })
-      }, draftTiming.aiDelayMs)
+      }, draftTiming.aiDelayMs + dealLeadMs)
       return () => window.clearTimeout(timeoutId)
     }
 

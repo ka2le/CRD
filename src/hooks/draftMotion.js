@@ -1,7 +1,7 @@
 const DRAFT_POST_PICK_PAUSE_MS = 180
 const DRAFT_DISCARD_STAGGER_MS = 110
-const DRAFT_DISCARD_DURATION_MS = 320
-const PICK_MOVE_DURATION_MS = 360
+const DRAFT_DISCARD_DURATION_MS = 420
+const PICK_MOVE_DURATION_MS = 480
 
 export function startDraftPickFlight({
   pickedCard,
@@ -66,7 +66,7 @@ export function animateDraftRowDiscard({
         face: 'up',
         durationMs: DRAFT_DISCARD_DURATION_MS,
         rotateDeg: 10,
-        scaleTo: 0.72,
+        scaleTo: 1,
         fadeOut: true,
         hideSource: true,
         hideDestinationUntilEnd: false,

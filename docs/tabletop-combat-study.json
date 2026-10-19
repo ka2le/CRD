@@ -1,0 +1,1562 @@
+{
+  "date": "2026-10-18",
+  "description": "Random physical five-card combat-only deals conditioned on both hands having raw damage. No draft/discard policies or preparation. Diagnostic agreement, not win rates or balance validation.",
+  "examples": [
+    {
+      "name": "Robots win on 4 at equal raw average",
+      "idsA": [
+        "robot1",
+        "robot1",
+        "robot1",
+        "robot_attack",
+        "robot_attack"
+      ],
+      "idsB": [
+        "dragon1",
+        "dragon1",
+        "dragon1",
+        "dragons_breath",
+        "dragons_breath"
+      ],
+      "rawAverage": [
+        6,
+        6
+      ],
+      "exact": {
+        "winner": "player",
+        "a": {
+          "round": 4,
+          "total": 24
+        },
+        "b": {
+          "round": 6,
+          "total": 36
+        }
+      },
+      "battleRound": 4,
+      "battleTotals": [
+        24,
+        18
+      ],
+      "collapsed": {
+        "winner": "player",
+        "a": {
+          "round": 4,
+          "total": 24
+        },
+        "b": {
+          "round": 6,
+          "total": 36
+        }
+      }
+    },
+    {
+      "name": "Critters win on 5 at equal raw average",
+      "idsA": [
+        "rabbit2",
+        "rabbit2",
+        "critter1",
+        "swarm",
+        "draw_2_extra"
+      ],
+      "idsB": [
+        "dragon2",
+        "dragon2",
+        "dragon1",
+        "dragons_breath",
+        "draw_2_extra"
+      ],
+      "rawAverage": [
+        5,
+        5
+      ],
+      "exact": {
+        "winner": "player",
+        "a": {
+          "round": 5,
+          "total": 25
+        },
+        "b": {
+          "round": 6,
+          "total": 30
+        }
+      },
+      "battleRound": 5,
+      "battleTotals": [
+        25,
+        15
+      ],
+      "collapsed": {
+        "winner": "player",
+        "a": {
+          "round": 5,
+          "total": 25
+        },
+        "b": {
+          "round": 6,
+          "total": 30
+        }
+      }
+    },
+    {
+      "name": "Lower power Critters beat higher power Dragons",
+      "idsA": [
+        "rabbit2",
+        "rabbit2",
+        "critter1",
+        "swarm",
+        "draw_2_extra"
+      ],
+      "idsB": [
+        "dragon1",
+        "dragon1",
+        "dragon1",
+        "dragons_breath",
+        "dragons_breath"
+      ],
+      "rawAverage": [
+        5,
+        6
+      ],
+      "exact": {
+        "winner": "player",
+        "a": {
+          "round": 5,
+          "total": 25
+        },
+        "b": {
+          "round": 6,
+          "total": 36
+        }
+      },
+      "battleRound": 5,
+      "battleTotals": [
+        25,
+        18
+      ],
+      "collapsed": {
+        "winner": "player",
+        "a": {
+          "round": 5,
+          "total": 25
+        },
+        "b": {
+          "round": 6,
+          "total": 36
+        }
+      }
+    },
+    {
+      "name": "Shield reverses focused Critter/Dragon race",
+      "idsA": [
+        "critter1",
+        "critter1",
+        "swarm",
+        "swarm",
+        "shield2"
+      ],
+      "idsB": [
+        "dragon1",
+        "dragon1",
+        "dragons_breath",
+        "dragons_breath",
+        "shield2"
+      ],
+      "rawAverage": [
+        4,
+        4
+      ],
+      "exact": {
+        "winner": "opponent",
+        "a": {
+          "round": 11,
+          "total": 22
+        },
+        "b": {
+          "round": 9,
+          "total": 30
+        }
+      },
+      "battleRound": 9,
+      "battleTotals": [
+        18,
+        30
+      ],
+      "collapsed": {
+        "winner": "opponent",
+        "a": {
+          "round": 11,
+          "total": 22
+        },
+        "b": {
+          "round": 9,
+          "total": 30
+        }
+      }
+    },
+    {
+      "name": "Bite lets Dragons beat Critters on 4",
+      "idsA": [
+        "dragon2",
+        "dragon2",
+        "dragon1",
+        "dragons_breath",
+        "bite"
+      ],
+      "idsB": [
+        "rabbit2",
+        "rabbit2",
+        "critter1",
+        "swarm",
+        "robot1"
+      ],
+      "rawAverage": [
+        6.5,
+        5
+      ],
+      "exact": {
+        "winner": "player",
+        "a": {
+          "round": 4,
+          "total": 21
+        },
+        "b": {
+          "round": 5,
+          "total": 25
+        }
+      },
+      "battleRound": 4,
+      "battleTotals": [
+        21,
+        20
+      ],
+      "collapsed": {
+        "winner": "opponent",
+        "a": {
+          "round": 6,
+          "total": 39
+        },
+        "b": {
+          "round": 5,
+          "total": 25
+        }
+      }
+    },
+    {
+      "name": "Moving support onto Dragon rhythm evades shields",
+      "idsA": [
+        "dragon2",
+        "dragon1",
+        "dragons_breath",
+        "bite",
+        "shield2"
+      ],
+      "idsB": [
+        "robot1",
+        "robot1",
+        "robot_attack",
+        "robot_attack",
+        "shield2"
+      ],
+      "rawAverage": [
+        4.5,
+        4
+      ],
+      "exact": {
+        "winner": "opponent",
+        "a": {
+          "round": 9,
+          "total": 27
+        },
+        "b": {
+          "round": 8,
+          "total": 24
+        }
+      },
+      "battleRound": 8,
+      "battleTotals": [
+        20,
+        24
+      ],
+      "collapsed": {
+        "winner": "player",
+        "a": {
+          "round": 6,
+          "total": 23
+        },
+        "b": {
+          "round": 8,
+          "total": 24
+        }
+      }
+    },
+    {
+      "name": "Mixed timing cannot be inherited from lead",
+      "idsA": [
+        "critter1",
+        "swarm",
+        "dragon1",
+        "dragons_breath",
+        "shield2"
+      ],
+      "idsB": [
+        "critter1",
+        "critter1",
+        "swarm",
+        "swarm",
+        "shield2"
+      ],
+      "rawAverage": [
+        2,
+        4
+      ],
+      "exact": {
+        "winner": "opponent",
+        "a": {
+          "round": 33,
+          "total": 22
+        },
+        "b": {
+          "round": 11,
+          "total": 22
+        }
+      },
+      "battleRound": 11,
+      "battleTotals": [
+        6,
+        22
+      ],
+      "collapsed": {
+        "winner": "opponent",
+        "a": {
+          "round": "never",
+          "total": 0
+        },
+        "b": {
+          "round": 11,
+          "total": 22
+        }
+      }
+    }
+  ],
+  "singleAttackTables": [
+    {
+      "power": 1,
+      "shield0": [
+        {
+          "round": 21,
+          "total": 21
+        },
+        {
+          "round": 22,
+          "total": 22
+        },
+        {
+          "round": 21,
+          "total": 21
+        }
+      ],
+      "shield1": [
+        {
+          "round": "never",
+          "total": 0
+        },
+        {
+          "round": "never",
+          "total": 0
+        },
+        {
+          "round": "never",
+          "total": 16
+        }
+      ]
+    },
+    {
+      "power": 2,
+      "shield0": [
+        {
+          "round": 11,
+          "total": 22
+        },
+        {
+          "round": 12,
+          "total": 24
+        },
+        {
+          "round": 12,
+          "total": 24
+        }
+      ],
+      "shield1": [
+        {
+          "round": "never",
+          "total": 0
+        },
+        {
+          "round": 22,
+          "total": 22
+        },
+        {
+          "round": 18,
+          "total": 24
+        }
+      ]
+    },
+    {
+      "power": 3,
+      "shield0": [
+        {
+          "round": 7,
+          "total": 21
+        },
+        {
+          "round": 8,
+          "total": 24
+        },
+        {
+          "round": 9,
+          "total": 27
+        }
+      ],
+      "shield1": [
+        {
+          "round": 21,
+          "total": 21
+        },
+        {
+          "round": 12,
+          "total": 24
+        },
+        {
+          "round": 9,
+          "total": 21
+        }
+      ]
+    },
+    {
+      "power": 4,
+      "shield0": [
+        {
+          "round": 6,
+          "total": 24
+        },
+        {
+          "round": 6,
+          "total": 24
+        },
+        {
+          "round": 6,
+          "total": 24
+        }
+      ],
+      "shield1": [
+        {
+          "round": 11,
+          "total": 22
+        },
+        {
+          "round": 8,
+          "total": 24
+        },
+        {
+          "round": 9,
+          "total": 30
+        }
+      ]
+    },
+    {
+      "power": 5,
+      "shield0": [
+        {
+          "round": 5,
+          "total": 25
+        },
+        {
+          "round": 6,
+          "total": 30
+        },
+        {
+          "round": 6,
+          "total": 30
+        }
+      ],
+      "shield1": [
+        {
+          "round": 7,
+          "total": 21
+        },
+        {
+          "round": 6,
+          "total": 24
+        },
+        {
+          "round": 6,
+          "total": 26
+        }
+      ]
+    },
+    {
+      "power": 6,
+      "shield0": [
+        {
+          "round": 4,
+          "total": 24
+        },
+        {
+          "round": 4,
+          "total": 24
+        },
+        {
+          "round": 6,
+          "total": 36
+        }
+      ],
+      "shield1": [
+        {
+          "round": 6,
+          "total": 24
+        },
+        {
+          "round": 6,
+          "total": 30
+        },
+        {
+          "round": 6,
+          "total": 32
+        }
+      ]
+    },
+    {
+      "power": 7,
+      "shield0": [
+        {
+          "round": 3,
+          "total": 21
+        },
+        {
+          "round": 4,
+          "total": 28
+        },
+        {
+          "round": 3,
+          "total": 21
+        }
+      ],
+      "shield1": [
+        {
+          "round": 5,
+          "total": 25
+        },
+        {
+          "round": 4,
+          "total": 24
+        },
+        {
+          "round": 6,
+          "total": 38
+        }
+      ]
+    },
+    {
+      "power": 8,
+      "shield0": [
+        {
+          "round": 3,
+          "total": 24
+        },
+        {
+          "round": 4,
+          "total": 32
+        },
+        {
+          "round": 3,
+          "total": 24
+        }
+      ],
+      "shield1": [
+        {
+          "round": 4,
+          "total": 24
+        },
+        {
+          "round": 4,
+          "total": 28
+        },
+        {
+          "round": 3,
+          "total": 22
+        }
+      ]
+    },
+    {
+      "power": 9,
+      "shield0": [
+        {
+          "round": 3,
+          "total": 27
+        },
+        {
+          "round": 4,
+          "total": 36
+        },
+        {
+          "round": 3,
+          "total": 27
+        }
+      ],
+      "shield1": [
+        {
+          "round": 3,
+          "total": 21
+        },
+        {
+          "round": 4,
+          "total": 32
+        },
+        {
+          "round": 3,
+          "total": 25
+        }
+      ]
+    },
+    {
+      "power": 10,
+      "shield0": [
+        {
+          "round": 3,
+          "total": 30
+        },
+        {
+          "round": 4,
+          "total": 40
+        },
+        {
+          "round": 3,
+          "total": 30
+        }
+      ],
+      "shield1": [
+        {
+          "round": 3,
+          "total": 24
+        },
+        {
+          "round": 4,
+          "total": 36
+        },
+        {
+          "round": 3,
+          "total": 28
+        }
+      ]
+    },
+    {
+      "power": 11,
+      "shield0": [
+        {
+          "round": 2,
+          "total": 22
+        },
+        {
+          "round": 2,
+          "total": 22
+        },
+        {
+          "round": 3,
+          "total": 33
+        }
+      ],
+      "shield1": [
+        {
+          "round": 3,
+          "total": 27
+        },
+        {
+          "round": 4,
+          "total": 40
+        },
+        {
+          "round": 3,
+          "total": 31
+        }
+      ]
+    },
+    {
+      "power": 12,
+      "shield0": [
+        {
+          "round": 2,
+          "total": 24
+        },
+        {
+          "round": 2,
+          "total": 24
+        },
+        {
+          "round": 3,
+          "total": 36
+        }
+      ],
+      "shield1": [
+        {
+          "round": 3,
+          "total": 30
+        },
+        {
+          "round": 2,
+          "total": 22
+        },
+        {
+          "round": 3,
+          "total": 34
+        }
+      ]
+    }
+  ],
+  "studies": [
+    {
+      "wild": false,
+      "coreOnly": true,
+      "tested": 10000,
+      "collapsedMismatch": 522,
+      "averageMismatch": 1130,
+      "focused": 4989,
+      "focusedMismatch": 0,
+      "mixed": 5011,
+      "mixedMismatch": 522,
+      "withPunch": 0,
+      "withPunchMismatch": 0,
+      "exactTie": 957,
+      "collapsedTie": 1074,
+      "failures": [
+        {
+          "a": [
+            "dragons_breath",
+            "dragons_breath",
+            "dragon1",
+            "robot1",
+            "robot_attack"
+          ],
+          "b": [
+            "swarm",
+            "shield2",
+            "critter1",
+            "dragon1",
+            "dragons_breath"
+          ],
+          "exact": {
+            "winner": "opponent",
+            "a": {
+              "round": 15,
+              "total": 24
+            },
+            "b": {
+              "round": 12,
+              "total": 24
+            }
+          },
+          "collapsed": {
+            "winner": "player",
+            "a": {
+              "round": 9,
+              "total": 21
+            },
+            "b": {
+              "round": 11,
+              "total": 22
+            }
+          }
+        },
+        {
+          "a": [
+            "robot_attack",
+            "shield2",
+            "dragon1",
+            "dragons_breath",
+            "dragon1"
+          ],
+          "b": [
+            "robot1",
+            "dragon2",
+            "dragons_breath",
+            "robot_attack",
+            "rabbit2"
+          ],
+          "exact": {
+            "winner": "player",
+            "a": {
+              "round": 12,
+              "total": 24
+            },
+            "b": {
+              "round": 15,
+              "total": 24
+            }
+          },
+          "collapsed": {
+            "winner": "opponent",
+            "a": {
+              "round": 12,
+              "total": 24
+            },
+            "b": {
+              "round": 9,
+              "total": 21
+            }
+          }
+        },
+        {
+          "a": [
+            "shield2",
+            "rabbit2",
+            "robot1",
+            "swarm",
+            "robot_attack"
+          ],
+          "b": [
+            "dragons_breath",
+            "robot_critter",
+            "robot_critter",
+            "robot2",
+            "robot_attack"
+          ],
+          "exact": {
+            "winner": "tie",
+            "a": {
+              "round": 8,
+              "total": 24
+            },
+            "b": {
+              "round": 8,
+              "total": 24
+            }
+          },
+          "collapsed": {
+            "winner": "player",
+            "a": {
+              "round": 7,
+              "total": 21
+            },
+            "b": {
+              "round": 8,
+              "total": 24
+            }
+          }
+        },
+        {
+          "a": [
+            "robot_attack",
+            "robot_critter",
+            "critter1",
+            "dragon1",
+            "swarm"
+          ],
+          "b": [
+            "swarm",
+            "swarm",
+            "robot1",
+            "robot_attack",
+            "shield2"
+          ],
+          "exact": {
+            "winner": "tie",
+            "a": {
+              "round": 22,
+              "total": 22
+            },
+            "b": {
+              "round": 22,
+              "total": 22
+            }
+          },
+          "collapsed": {
+            "winner": "player",
+            "a": {
+              "round": 21,
+              "total": 21
+            },
+            "b": {
+              "round": 22,
+              "total": 22
+            }
+          }
+        },
+        {
+          "a": [
+            "robot1",
+            "swarm",
+            "dragon1",
+            "dragons_breath",
+            "critter1"
+          ],
+          "b": [
+            "robot1",
+            "dragon1",
+            "dragon1",
+            "dragons_breath",
+            "critter1"
+          ],
+          "exact": {
+            "winner": "tie",
+            "a": {
+              "round": 12,
+              "total": 24
+            },
+            "b": {
+              "round": 12,
+              "total": 24
+            }
+          },
+          "collapsed": {
+            "winner": "player",
+            "a": {
+              "round": 11,
+              "total": 22
+            },
+            "b": {
+              "round": 12,
+              "total": 24
+            }
+          }
+        }
+      ]
+    },
+    {
+      "wild": true,
+      "coreOnly": true,
+      "tested": 10000,
+      "collapsedMismatch": 359,
+      "averageMismatch": 850,
+      "focused": 4989,
+      "focusedMismatch": 0,
+      "mixed": 5011,
+      "mixedMismatch": 359,
+      "withPunch": 0,
+      "withPunchMismatch": 0,
+      "exactTie": 938,
+      "collapsedTie": 1014,
+      "failures": [
+        {
+          "a": [
+            "swarm",
+            "robot1",
+            "robot_attack",
+            "shield2",
+            "swarm"
+          ],
+          "b": [
+            "robot1",
+            "dragons_breath",
+            "dragon1",
+            "critter1",
+            "robot_attack"
+          ],
+          "exact": {
+            "winner": "player",
+            "a": {
+              "round": 22,
+              "total": 22
+            },
+            "b": {
+              "round": 33,
+              "total": 21
+            }
+          },
+          "collapsed": {
+            "winner": "tie",
+            "a": {
+              "round": 22,
+              "total": 22
+            },
+            "b": {
+              "round": 22,
+              "total": 22
+            }
+          }
+        },
+        {
+          "a": [
+            "robot_attack",
+            "dragon1",
+            "robot1",
+            "dragon2",
+            "robot1"
+          ],
+          "b": [
+            "robot_dragon",
+            "dragons_breath",
+            "critter1",
+            "swarm",
+            "robot2"
+          ],
+          "exact": {
+            "winner": "tie",
+            "a": {
+              "round": 12,
+              "total": 24
+            },
+            "b": {
+              "round": 12,
+              "total": 24
+            }
+          },
+          "collapsed": {
+            "winner": "opponent",
+            "a": {
+              "round": 12,
+              "total": 24
+            },
+            "b": {
+              "round": 11,
+              "total": 22
+            }
+          }
+        },
+        {
+          "a": [
+            "shield2",
+            "swarm",
+            "critter1",
+            "dragon2",
+            "dragon2"
+          ],
+          "b": [
+            "dragon_rabbit",
+            "dragons_breath",
+            "robot1",
+            "swarm",
+            "robot_attack"
+          ],
+          "exact": {
+            "winner": "opponent",
+            "a": {
+              "round": 21,
+              "total": 21
+            },
+            "b": {
+              "round": 18,
+              "total": 24
+            }
+          },
+          "collapsed": {
+            "winner": "tie",
+            "a": {
+              "round": 21,
+              "total": 21
+            },
+            "b": {
+              "round": 21,
+              "total": 21
+            }
+          }
+        },
+        {
+          "a": [
+            "dragon1",
+            "swarm",
+            "joker",
+            "swarm",
+            "robot1"
+          ],
+          "b": [
+            "robot1",
+            "swarm",
+            "dragons_breath",
+            "critter1",
+            "robot_dragon"
+          ],
+          "exact": {
+            "winner": "player",
+            "a": {
+              "round": 11,
+              "total": 22
+            },
+            "b": {
+              "round": 12,
+              "total": 24
+            }
+          },
+          "collapsed": {
+            "winner": "tie",
+            "a": {
+              "round": 11,
+              "total": 22
+            },
+            "b": {
+              "round": 11,
+              "total": 22
+            }
+          }
+        },
+        {
+          "a": [
+            "dragon1",
+            "dragons_breath",
+            "joker",
+            "robot_critter",
+            "shield2"
+          ],
+          "b": [
+            "dragon_rabbit",
+            "dragons_breath",
+            "dragons_breath",
+            "swarm",
+            "swarm"
+          ],
+          "exact": {
+            "winner": "tie",
+            "a": {
+              "round": 12,
+              "total": 24
+            },
+            "b": {
+              "round": 12,
+              "total": 24
+            }
+          },
+          "collapsed": {
+            "winner": "opponent",
+            "a": {
+              "round": 12,
+              "total": 24
+            },
+            "b": {
+              "round": 11,
+              "total": 22
+            }
+          }
+        }
+      ]
+    },
+    {
+      "wild": false,
+      "coreOnly": false,
+      "tested": 10000,
+      "collapsedMismatch": 363,
+      "averageMismatch": 563,
+      "focused": 4218,
+      "focusedMismatch": 17,
+      "mixed": 5782,
+      "mixedMismatch": 346,
+      "withPunch": 1306,
+      "withPunchMismatch": 62,
+      "exactTie": 574,
+      "collapsedTie": 611,
+      "failures": [
+        {
+          "a": [
+            "dragon1",
+            "dragons_breath",
+            "dragons_breath",
+            "robot1",
+            "robot_attack"
+          ],
+          "b": [
+            "shield2",
+            "any_off_each",
+            "robot_critter",
+            "dragons_breath",
+            "swarm"
+          ],
+          "exact": {
+            "winner": "opponent",
+            "a": {
+              "round": 15,
+              "total": 24
+            },
+            "b": {
+              "round": 11,
+              "total": 21
+            }
+          },
+          "collapsed": {
+            "winner": "player",
+            "a": {
+              "round": 9,
+              "total": 21
+            },
+            "b": {
+              "round": 11,
+              "total": 22
+            }
+          }
+        },
+        {
+          "a": [
+            "swarm",
+            "dragons_breath",
+            "rabbit2",
+            "dragon_rabbit",
+            "critter1"
+          ],
+          "b": [
+            "joker",
+            "shield2",
+            "robot_attack",
+            "robot_attack",
+            "swarm"
+          ],
+          "exact": {
+            "winner": "opponent",
+            "a": {
+              "round": 8,
+              "total": 22
+            },
+            "b": {
+              "round": 8,
+              "total": 24
+            }
+          },
+          "collapsed": {
+            "winner": "player",
+            "a": {
+              "round": 7,
+              "total": 21
+            },
+            "b": {
+              "round": 8,
+              "total": 24
+            }
+          }
+        },
+        {
+          "a": [
+            "robot_ulti",
+            "shield2",
+            "bite",
+            "dragons_breath",
+            "swarm"
+          ],
+          "b": [
+            "swarm",
+            "robot_attack",
+            "dragons_breath",
+            "robot_critter",
+            "shield2"
+          ],
+          "exact": {
+            "winner": "tie",
+            "a": {
+              "round": 42,
+              "total": 21
+            },
+            "b": {
+              "round": 42,
+              "total": 21
+            }
+          },
+          "collapsed": {
+            "winner": "player",
+            "a": {
+              "round": 42,
+              "total": 21
+            },
+            "b": {
+              "round": "never",
+              "total": 0
+            }
+          }
+        },
+        {
+          "a": [
+            "robot1",
+            "dragon_rabbit",
+            "robot_attack",
+            "swarm",
+            "double_dmg"
+          ],
+          "b": [
+            "dragon1",
+            "robot1",
+            "one_off_each",
+            "shield2",
+            "robot_critter"
+          ],
+          "exact": {
+            "winner": "opponent",
+            "a": {
+              "round": 12,
+              "total": 24
+            },
+            "b": {
+              "round": 11,
+              "total": 22
+            }
+          },
+          "collapsed": {
+            "winner": "player",
+            "a": {
+              "round": 10,
+              "total": 25
+            },
+            "b": {
+              "round": 11,
+              "total": 22
+            }
+          }
+        },
+        {
+          "a": [
+            "dragons_breath",
+            "dragon1",
+            "dragon_rabbit",
+            "robot_attack",
+            "robot_critter"
+          ],
+          "b": [
+            "dragon1",
+            "swarm",
+            "shield2",
+            "dragons_breath",
+            "dragons_breath"
+          ],
+          "exact": {
+            "winner": "opponent",
+            "a": {
+              "round": 15,
+              "total": 24
+            },
+            "b": {
+              "round": 12,
+              "total": 24
+            }
+          },
+          "collapsed": {
+            "winner": "player",
+            "a": {
+              "round": 9,
+              "total": 21
+            },
+            "b": {
+              "round": 12,
+              "total": 24
+            }
+          }
+        }
+      ]
+    },
+    {
+      "wild": true,
+      "coreOnly": false,
+      "tested": 10000,
+      "collapsedMismatch": 310,
+      "averageMismatch": 523,
+      "focused": 3852,
+      "focusedMismatch": 29,
+      "mixed": 6148,
+      "mixedMismatch": 281,
+      "withPunch": 2626,
+      "withPunchMismatch": 101,
+      "exactTie": 434,
+      "collapsedTie": 474,
+      "failures": [
+        {
+          "a": [
+            "shield2",
+            "robot_dragon",
+            "any_off_each",
+            "dragon1",
+            "dragons_breath"
+          ],
+          "b": [
+            "double_dmg",
+            "dragon_rabbit",
+            "robot1",
+            "dragons_breath",
+            "bite"
+          ],
+          "exact": {
+            "winner": "player",
+            "a": {
+              "round": 6,
+              "total": 21
+            },
+            "b": {
+              "round": 8,
+              "total": 23
+            }
+          },
+          "collapsed": {
+            "winner": "tie",
+            "a": {
+              "round": 6,
+              "total": 21
+            },
+            "b": {
+              "round": 6,
+              "total": 21
+            }
+          }
+        },
+        {
+          "a": [
+            "robot_dragon",
+            "shield2",
+            "robot_attack",
+            "dragon1",
+            "robot1"
+          ],
+          "b": [
+            "dragons_breath",
+            "devour",
+            "murder_rabbit",
+            "swarm",
+            "robot_dragon"
+          ],
+          "exact": {
+            "winner": "player",
+            "a": {
+              "round": 12,
+              "total": 24
+            },
+            "b": {
+              "round": 12,
+              "total": 21
+            }
+          },
+          "collapsed": {
+            "winner": "opponent",
+            "a": {
+              "round": 12,
+              "total": 24
+            },
+            "b": {
+              "round": 12,
+              "total": 27
+            }
+          }
+        },
+        {
+          "a": [
+            "robot1",
+            "shield2",
+            "joker",
+            "murder_rabbit",
+            "robot_attack"
+          ],
+          "b": [
+            "robot_ulti",
+            "swarm",
+            "robot_critter",
+            "devour",
+            "robot_critter"
+          ],
+          "exact": {
+            "winner": "tie",
+            "a": {
+              "round": 6,
+              "total": 24
+            },
+            "b": {
+              "round": 6,
+              "total": 24
+            }
+          },
+          "collapsed": {
+            "winner": "opponent",
+            "a": {
+              "round": 6,
+              "total": 24
+            },
+            "b": {
+              "round": 6,
+              "total": 30
+            }
+          }
+        },
+        {
+          "a": [
+            "shield_is_dmg",
+            "dragon_rabbit",
+            "robot1",
+            "robot_ulti",
+            "one_off_each"
+          ],
+          "b": [
+            "robot_ulti",
+            "dragon_rabbit",
+            "one_off_each",
+            "murder_rabbit",
+            "any_off_each"
+          ],
+          "exact": {
+            "winner": "tie",
+            "a": {
+              "round": 8,
+              "total": 24
+            },
+            "b": {
+              "round": 8,
+              "total": 24
+            }
+          },
+          "collapsed": {
+            "winner": "opponent",
+            "a": {
+              "round": 8,
+              "total": 24
+            },
+            "b": {
+              "round": 7,
+              "total": 21
+            }
+          }
+        },
+        {
+          "a": [
+            "dragons_breath",
+            "robot1",
+            "joker",
+            "critter1",
+            "swarm"
+          ],
+          "b": [
+            "swarm",
+            "critter1",
+            "dragon2",
+            "robot1",
+            "devour"
+          ],
+          "exact": {
+            "winner": "opponent",
+            "a": {
+              "round": 8,
+              "total": 22
+            },
+            "b": {
+              "round": 7,
+              "total": 21
+            }
+          },
+          "collapsed": {
+            "winner": "player",
+            "a": {
+              "round": 7,
+              "total": 21
+            },
+            "b": {
+              "round": 8,
+              "total": 36
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "lookupFootprint": [
+    {
+      "coreOnly": true,
+      "wild": true,
+      "handSize": 5,
+      "legalMultisets": 8183,
+      "signatures": 95
+    },
+    {
+      "coreOnly": false,
+      "wild": true,
+      "handSize": 5,
+      "legalMultisets": 79327,
+      "signatures": 1152
+    }
+  ]
+}

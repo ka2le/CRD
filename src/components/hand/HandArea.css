@@ -1,83 +1,66 @@
 .hand-area {
-  display: block;
-  overflow: hidden;
-  padding: var(--pad);
-  background: var(--s0);
+  position: relative;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.hand-area--preserve-space {
-  min-height: calc(var(--card-height) + (var(--pad) * 2) + 2px);
+.hand-area--grid {
+  height: 100%;
 }
 
 .hand-area__row {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--gap);
   justify-content: center;
-  align-content: flex-start;
-  align-items: flex-start;
-  width: 100%;
-  min-height: var(--card-height);
-}
-
-.hand-area__row:empty::before {
-  content: '';
-  display: block;
-  width: 100%;
-  min-height: var(--card-height);
-}
-
-.hand-area__motion-anchor {
-  flex: 0 0 var(--card-width);
-  width: var(--card-width);
-}
-
-.hand-area__motion-anchor > .card-button {
+  align-items: center;
   width: 100%;
 }
 
-.hand-area__row--center-few {
+.hand-area--grid .hand-area__row {
+  flex-wrap: wrap;
+  align-content: center;
+  gap: var(--hand-gap);
+  margin-inline: auto;
+}
+
+.hand-area--row .hand-area__row {
   flex-wrap: nowrap;
+  gap: 0;
 }
 
-.hand-area__row--center-grid-4,
-.hand-area__row--center-grid-3,
-.hand-area__row--center-grid-5 {
-  flex-wrap: wrap;
-  justify-content: center;
+.hand-area--row .hand-area__slot + .hand-area__slot {
+  margin-left: var(--hand-gap);
 }
 
-.hand-area__row--center-grid-4 .hand-area__motion-anchor {
-  flex: 0 0 min(var(--card-width), calc((100% - (var(--gap) * 3)) / 4));
-  width: min(var(--card-width), calc((100% - (var(--gap) * 3)) / 4));
+.hand-area__slot {
+  position: relative;
+  flex: 0 0 auto;
+  perspective: 1100px;
+  transition: width 0.35s var(--ease-out), margin 0.35s var(--ease-out);
 }
 
-.hand-area__row--center-grid-3 .hand-area__motion-anchor {
-  flex: 0 0 min(calc(var(--card-width) * 0.86), calc((100% - (var(--gap) * 2)) / 3));
-  width: min(calc(var(--card-width) * 0.86), calc((100% - (var(--gap) * 2)) / 3));
+/* Fanned overlap: slight arc so the stack reads as a held hand. */
+.hand-area__row--overlap .hand-area__slot {
+  box-shadow: none;
 }
 
-.hand-area__row--center-grid-5 .hand-area__motion-anchor {
-  flex: 0 0 min(calc(var(--card-width) * 0.78), calc((100% - (var(--gap) * 4)) / 5));
-  width: min(calc(var(--card-width) * 0.78), calc((100% - (var(--gap) * 4)) / 5));
+.hand-area__row--overlap .hand-area__slot .card__face {
+  box-shadow: -6px 0 14px rgba(0, 0, 0, 0.55);
 }
 
-.hand-area__row--center-grid-4 .card-button,
-.hand-area__row--center-grid-3 .card-button,
-.hand-area__row--center-grid-5 .card-button {
-  flex-basis: 100%;
-  width: 100%;
+.hand-area__slot--empty {
+  aspect-ratio: 635 / 888;
+  border-radius: calc(var(--card-w) * 0.075);
+  border: 1.5px dashed rgba(240, 232, 210, 0.1);
+  background: rgba(240, 232, 210, 0.015);
 }
 
-@media (orientation: landscape) {
-  .hand-area__row {
-    flex-wrap: nowrap;
-    align-items: flex-start;
-  }
+.hand-area--opponent .hand-area__slot--empty {
+  border-color: rgba(255, 111, 145, 0.14);
+}
 
-  .hand-area__row--center-grid-4,
-  .hand-area__row--center-grid-3,
-  .hand-area__row--center-grid-5 {
-    flex-wrap: wrap;
-  }
+.hand-area--player .hand-area__slot--empty {
+  border-color: rgba(246, 196, 83, 0.16);
 }

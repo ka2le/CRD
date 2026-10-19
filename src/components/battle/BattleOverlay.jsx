@@ -1,25 +1,58 @@
 import './BattleOverlay.css'
+import { GameIcon, SvgIcon } from '../ui/GameIcon'
 
-function getWinnerLabel(winner) {
-  if (winner === 'player') return 'You Win'
-  if (winner === 'opponent') return 'Opponent Wins'
-  return 'Tie Game'
+const RESULT_COPY = {
+  player: { title: 'Victory', tone: 'win' },
+  opponent: { title: 'Defeat', tone: 'loss' },
+  tie: { title: 'Draw', tone: 'tie' },
 }
 
 export default function BattleOverlay({ battlePlayback, battleResult, onNewGame, onClose, visible }) {
-  if (!visible || !battlePlayback) return null
+  if (!visible || !battlePlayback || !battleResult) return null
 
-  const winnerText = battleResult ? getWinnerLabel(battleResult.winner) : null
+  const copy = RESULT_COPY[battleResult.winner] ?? RESULT_COPY.tie
+  const playerDealt = battlePlayback.playerTotalDamageDealt
+  const opponentDealt = battlePlayback.opponentTotalDamageDealt
+  const maxDealt = Math.max(playerDealt, opponentDealt, 1)
 
   return (
-    <div className="battle-overlay" onClick={onClose}>
-      <div className="battle-overlay__popup ui-panel" onClick={(event) => event.stopPropagation()}>
-        <h2>{winnerText}</h2>
-        <p>
-          Round {battlePlayback.round} · You dealt {battlePlayback.playerTotalDamageDealt} · Opponent dealt {battlePlayback.opponentTotalDamageDealt}
-        </p>
-        <div className="battle-overlay__actions">
-          <button type="button" className="ui-button ui-button--primary" onClick={onNewGame}>New Game</button>
+    <div className={`battle-result battle-result--${copy.tone}`} onClick={onClose}>
+      <div className="battle-result__panel" onClick={(event) => event.stopPropagation()}>
+        <div className="battle-result__rays" aria-hidden="true" />
+        <h2 className="battle-result__title">{copy.title}</h2>
+
+        <div className="battle-result__meta">
+          <GameIcon name="cd" />
+          <span>{battlePlayback.round}</span>
+        </div>
+
+        <div className="battle-result__bars" aria-label="Damage dealt">
+          <div className="battle-result__bar battle-result__bar--player">
+            <span className="battle-result__side" aria-hidden="true" />
+            <span className="battle-result__track">
+              <span className="battle-result__fill" style={{ width: `${(playerDealt / maxDealt) * 100}%` }} />
+            </span>
+            <GameIcon name="damage" />
+            <span className="battle-result__value">{playerDealt}</span>
+          </div>
+          <div className="battle-result__bar battle-result__bar--opponent">
+            <span className="battle-result__side" aria-hidden="true" />
+            <span className="battle-result__track">
+              <span className="battle-result__fill" style={{ width: `${(opponentDealt / maxDealt) * 100}%` }} />
+            </span>
+            <GameIcon name="damage" />
+            <span className="battle-result__value">{opponentDealt}</span>
+          </div>
+        </div>
+
+        <div className="battle-result__actions">
+          <button type="button" className="ui-button ui-button--icon battle-result__view" onClick={onClose} aria-label="View the table">
+            <SvgIcon name="eye" />
+          </button>
+          <button type="button" className="ui-button ui-button--primary battle-result__again" onClick={onNewGame}>
+            <SvgIcon name="replay" />
+            Play again
+          </button>
         </div>
       </div>
     </div>

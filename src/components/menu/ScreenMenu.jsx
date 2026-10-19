@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import './ScreenMenu.css'
+import { GameIcon, SvgIcon } from '../ui/GameIcon'
 
-export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, settings, onUpdateSettings }) {
+export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, settings, onUpdateSettings, onHelp }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
   const menuRef = useRef(null)
@@ -37,53 +38,84 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
     }
   }
 
+  function run(action) {
+    setMenuOpen(false)
+    action?.()
+  }
+
   return (
     <div className="screen-menu" ref={menuRef}>
       <button
         type="button"
-        className="screen-menu__trigger ui-button"
+        className="screen-menu__trigger ui-button ui-button--icon"
         aria-label="Open menu"
         aria-expanded={menuOpen}
         onClick={() => setMenuOpen((open) => !open)}
       >
-        ☰
+        <SvgIcon name={menuOpen ? 'close' : 'menu'} />
       </button>
 
       {menuOpen && (
         <div className="screen-menu__popover ui-panel">
-          <button type="button" className="ui-button" onClick={onNewGame}>New Game</button>
-          <button type="button" className="ui-button" onClick={toggleFullscreen}>
-            {fullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+          <button type="button" className="screen-menu__item screen-menu__item--primary" onClick={() => run(onNewGame)}>
+            <SvgIcon name="replay" />
+            <span>New game</span>
           </button>
 
-          <label className="screen-menu__select-row">
-            <span>Mode</span>
-            <select
-              value={gameMode}
-              onChange={(event) => onChangeGameMode(event.target.value)}
+          <div className="screen-menu__segmented" role="radiogroup" aria-label="Mode">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={gameMode === 'draft'}
+              className={gameMode === 'draft' ? 'is-on' : ''}
+              onClick={() => run(() => gameMode !== 'draft' && onChangeGameMode('draft'))}
             >
-              <option value="draft">Draft</option>
-              <option value="five-hand-discard">5 Hand Discard</option>
-            </select>
-          </label>
+              <GameIcon name="copy" />
+              <span>Draft</span>
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={gameMode === 'five-hand-discard'}
+              className={gameMode === 'five-hand-discard' ? 'is-on' : ''}
+              onClick={() => run(() => gameMode !== 'five-hand-discard' && onChangeGameMode('five-hand-discard'))}
+            >
+              <GameIcon name="redraw" />
+              <span>Discard</span>
+            </button>
+          </div>
 
-          <label className="screen-menu__checkbox-row">
+          <label className="screen-menu__toggle">
             <input
               type="checkbox"
               checked={settings.showOpponentCards}
               onChange={(event) => onUpdateSettings({ showOpponentCards: event.target.checked })}
             />
-            <span>Show Opponent Cards</span>
+            <span className="screen-menu__switch" aria-hidden="true" />
+            <SvgIcon name="eye" />
+            <span>Opponent cards</span>
           </label>
 
-          <label className="screen-menu__checkbox-row">
+          <label className="screen-menu__toggle">
             <input
               type="checkbox"
               checked={settings.wildDeck}
               onChange={(event) => onUpdateSettings({ wildDeck: event.target.checked })}
             />
-            <span>Wild Deck</span>
+            <span className="screen-menu__switch" aria-hidden="true" />
+            <GameIcon name="star" />
+            <span>Wild deck</span>
           </label>
+
+          <div className="screen-menu__row">
+            <button type="button" className="screen-menu__item" onClick={() => run(onHelp)}>
+              <SvgIcon name="help" />
+              <span>How to play</span>
+            </button>
+            <button type="button" className="screen-menu__item screen-menu__item--square" onClick={() => run(toggleFullscreen)} aria-label={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}>
+              <SvgIcon name="fullscreen" />
+            </button>
+          </div>
         </div>
       )}
     </div>

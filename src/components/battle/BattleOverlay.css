@@ -1,47 +1,151 @@
-.battle-overlay {
+.battle-result {
+  --tone: var(--player);
   position: fixed;
   inset: 0;
-  background: rgba(7, 8, 12, 0.72);
+  z-index: 70;
   display: grid;
   place-items: center;
   padding: 20px;
-  z-index: 40;
-  backdrop-filter: blur(2px);
+  background: radial-gradient(circle at 50% 45%, rgba(10, 12, 20, 0.55), rgba(4, 5, 9, 0.88));
+  animation: result-fade 0.35s ease;
 }
 
-.battle-overlay__popup {
-  width: min(400px, 100%);
-  background: var(--s1);
-  border-color: var(--b2);
-  padding: 24px 20px;
-  text-align: center;
+.battle-result--loss { --tone: var(--opponent); }
+.battle-result--tie { --tone: #cfd6e6; }
+
+.battle-result__panel {
+  position: relative;
+  width: min(360px, 100%);
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  padding: 26px 22px 20px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(28, 33, 52, 0.96), rgba(12, 14, 22, 0.96));
+  border: 1px solid color-mix(in srgb, var(--tone) 55%, transparent);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 60px color-mix(in srgb, var(--tone) 22%, transparent);
+  overflow: hidden;
+  animation: result-pop 0.5s var(--ease-spring);
 }
 
-.battle-overlay__popup h2 {
-  margin: 0 0 8px;
-  font-size: 1.4rem;
+.battle-result__rays {
+  position: absolute;
+  left: 50%;
+  top: 46px;
+  width: 520px;
+  height: 520px;
+  translate: -50% -50%;
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--tone) 18%, transparent) 0deg 10deg, transparent 10deg 24deg);
+  -webkit-mask: radial-gradient(circle, #000 0%, transparent 60%);
+  mask: radial-gradient(circle, #000 0%, transparent 60%);
+  animation: result-rays 14s linear infinite;
+  pointer-events: none;
+}
+
+.battle-result__title {
+  position: relative;
+  margin: 0;
+  font-size: clamp(2.2rem, 11vw, 3rem);
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+  line-height: 1;
+  color: var(--tone);
+  text-shadow: 0 0 24px color-mix(in srgb, var(--tone) 60%, transparent), 0 2px 0 rgba(0, 0, 0, 0.6);
 }
 
-.battle-overlay__popup p {
+.battle-result__meta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   color: var(--t1);
-  margin-bottom: 18px;
-  font-size: 0.82rem;
+  font-family: var(--mono);
+  font-size: 0.9rem;
+}
+
+.battle-result__bars {
+  position: relative;
+  width: 100%;
+  display: grid;
+  gap: 8px;
+}
+
+.battle-result__bar {
+  --side: var(--player);
+  display: grid;
+  grid-template-columns: 4px 1fr auto 2.2em;
+  align-items: center;
+  gap: 8px;
   font-family: var(--mono);
 }
 
-.battle-overlay__actions {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
+.battle-result__bar--opponent { --side: var(--opponent); }
+
+.battle-result__side {
+  height: 18px;
+  border-radius: 3px;
+  background: var(--side);
 }
 
-@media (max-width: 480px) {
-  .battle-overlay__actions .ui-button {
-    font-size: 0.7rem;
-    padding: 0.32rem 0.58rem;
-  }
+.battle-result__track {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.battle-result__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--side) 50%, transparent), var(--side));
+  animation: result-fill 0.9s var(--ease-out) 0.2s both;
+  transform-origin: left;
+}
+
+.battle-result__bar .g-icon {
+  color: var(--damage);
+}
+
+.battle-result__value {
+  text-align: right;
+  font-size: 1rem;
+}
+
+.battle-result__actions {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.battle-result__again {
+  min-height: 44px;
+  padding-inline: 1.3rem;
+  font-size: 0.85rem;
+}
+
+.battle-result__view {
+  width: 44px;
+  height: 44px;
+}
+
+@keyframes result-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes result-pop {
+  0% { transform: scale(0.7) translateY(30px); opacity: 0; }
+  100% { transform: none; opacity: 1; }
+}
+
+@keyframes result-rays {
+  to { rotate: 360deg; }
+}
+
+@keyframes result-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
 }

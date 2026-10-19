@@ -2,13 +2,14 @@
   position: relative;
   width: 100%;
   height: 100%;
+  container-type: inline-size;
 }
 
 .card-visual__art-shell {
-  position: relative;
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  inset: 0;
   overflow: hidden;
+  background: #090a10;
 }
 
 .card-visual__blur {
@@ -17,8 +18,8 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: blur(8px);
-  transform: scale(1.08);
+  filter: blur(8px) saturate(1.1);
+  transform: scale(1.1);
   opacity: 0.7;
 }
 
@@ -30,44 +31,70 @@
   object-fit: contain;
 }
 
+/* Soft left-edge shade keeps the icon column legible on bright art. */
+.card-visual__shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.32) 0%, rgba(0, 0, 0, 0) 32%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.22) 0%, rgba(0, 0, 0, 0) 22%);
+}
+
 .card-visual__copy-overlay {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
-  opacity: 0.2;
+  opacity: 0.22;
   pointer-events: none;
 }
 
+/* Card back */
 .card-visual__back-face {
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  inset: 0;
   display: grid;
   place-items: center;
-  background: var(--s2);
-  position: relative;
   overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(246, 196, 83, 0.16) 0%, rgba(246, 196, 83, 0) 46%),
+    repeating-linear-gradient(45deg, rgba(240, 232, 210, 0.05) 0 1px, transparent 1px 9px),
+    repeating-linear-gradient(-45deg, rgba(240, 232, 210, 0.05) 0 1px, transparent 1px 9px),
+    linear-gradient(160deg, #20253a 0%, #12151f 60%, #0c0e16 100%);
 }
 
 .card-visual__back-face::before {
   content: '';
   position: absolute;
-  inset: 0;
-  background-image:
-    repeating-linear-gradient(45deg, var(--b0) 0, var(--b0) 1px, transparent 1px, transparent 12px),
-    repeating-linear-gradient(-45deg, var(--b0) 0, var(--b0) 1px, transparent 1px, transparent 12px);
+  inset: 5cqw;
+  border: max(1px, 0.9cqw) solid rgba(246, 196, 83, 0.32);
+  border-radius: 5cqw;
 }
 
-.card-visual__back-mark {
-  font-size: clamp(0.55rem, 1.2vw, 0.85rem);
-  font-weight: 800;
-  letter-spacing: 0.18em;
-  color: var(--t2);
+.card-visual__back-ring {
   position: relative;
-  text-transform: uppercase;
+  width: 56cqw;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: max(1px, 1cqw) solid rgba(246, 196, 83, 0.4);
+  box-shadow: 0 0 6cqw rgba(246, 196, 83, 0.12), inset 0 0 6cqw rgba(246, 196, 83, 0.08);
 }
 
+.card-visual__back-icon {
+  position: absolute;
+  width: 20cqw;
+  height: 20cqw;
+  object-fit: contain;
+  opacity: 0.82;
+}
+
+.card-visual__back-icon--critter { left: 50%; top: 9%; transform: translateX(-50%); filter: drop-shadow(0 0 3px var(--critter)); }
+.card-visual__back-icon--robot { left: 9%; bottom: 14%; filter: drop-shadow(0 0 3px var(--robot)); }
+.card-visual__back-icon--dragon { right: 9%; bottom: 14%; filter: drop-shadow(0 0 3px var(--dragon)); }
+
+/* Printed icon overlays (scale with the card, like ink on a real card) */
 .card-visual__overlay {
   position: absolute;
   inset: 0;
@@ -78,21 +105,21 @@
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
-  padding: 3.5%;
+  padding: 4cqw;
 }
 
 .card-visual__overlay--stat {
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
-  padding: 4% 5%;
+  padding: 5cqw 5.5cqw;
 }
 
 .card-visual__overlay--cooldown {
   display: flex;
   align-items: flex-end;
   justify-content: flex-start;
-  padding: 4% 5%;
+  padding: 5cqw 5.5cqw;
 }
 
 .card-visual__token-row {
@@ -114,23 +141,28 @@
 .card-visual__cooldown-column {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1.2cqw;
 }
 
 .card-visual__icon-token {
-  width: min(16%, 26px);
+  width: 14cqw;
   aspect-ratio: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: opacity 0.2s ease, transform 0.25s var(--ease-spring), filter 0.2s ease;
+}
+
+.card-visual__overlay--stat .card-visual__icon-token {
+  width: 15cqw;
 }
 
 .card-visual__overlay--effect .card-visual__icon-token {
-  width: min(19%, 42px);
+  width: 15.5cqw;
 }
 
 .card-visual__overlay--cooldown .card-visual__icon-token {
-  width: min(18%, 34px);
+  width: 12.5cqw;
 }
 
 .card-visual__icon-image {
@@ -138,20 +170,35 @@
   height: 100%;
   object-fit: contain;
   filter:
-    drop-shadow(0 0 2px rgba(0, 0, 0, 0.96))
+    drop-shadow(0 0 1.5px rgba(0, 0, 0, 0.96))
     drop-shadow(0 1px 3px rgba(0, 0, 0, 0.88));
+}
+
+/* Battle charge: hourglasses fill up as the round count approaches the CD. */
+.card-visual__icon-token--unlit {
+  opacity: 0.28;
+  transform: scale(0.86);
+}
+
+.card-visual__icon-token--lit .card-visual__icon-image {
+  filter:
+    drop-shadow(0 0 1.5px rgba(0, 0, 0, 0.9))
+    drop-shadow(0 0 4px var(--accent, #fff))
+    drop-shadow(0 0 8px var(--accent, #fff));
 }
 
 .card-visual__text-token {
   color: white;
   font-weight: 800;
-  font-size: clamp(0.35rem, 1.4vw, 0.7rem);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  font-size: 9cqw;
+  line-height: 1;
+  padding: 0 0.6cqw;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 2px rgba(0, 0, 0, 0.9);
   font-family: var(--mono);
 }
 
 .card-visual__placeholder {
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  inset: 0;
   background: var(--s2);
 }

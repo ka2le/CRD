@@ -39,7 +39,7 @@ Taking 21 damage loses. Simultaneous lethal compares cumulative damage actually 
 - Browser defaults: Draft, Wild Deck enabled, opponent cards visible. Menu settings persist; changing any setting starts a fresh game. Opponent hiding applies to pre-combat discard mode.
 - Stat combinations, base/ultimate class attacks, Bite, Devour, shield, damage doubling, shield-based and hybrid damage, plus the four preparation effects.
 - Shared heuristic evaluation for draft/discard/copy/recycle; no trained model.
-- Art/icon card visuals, tooltips, draft flights/masks, battle playback, log and result popup.
+- Art/icon card visuals with class-tinted frames, fit-to-screen table layout (pack/hand hero zones), HUD rails with stats, health and turn glow, shuffle/deal/flip/FLIP/flight animations, battle charge pips, damage orbs, speed/skip, result banner, card inspect (long-press) and a visual help sheet. See `docs/UI.md`.
 - Playback accelerates for upcoming rounds above round 2, down to a minimum interval; old round-10 notes are obsolete.
 - Seeded/injected deck support and a persistent Node JSON-lines worker with Python random-action smoke client.
 - Headless currently skips preparation and evaluates 12 rounds at a 999 damage threshold by default; it is not full browser parity or a Gymnasium environment.
@@ -62,6 +62,10 @@ The AI preparation fix is complete. Follow-up asset work archives all 88 source 
 
 ## Architecture and future direction
 
+### Tabletop combat exploration (2026-10-19)
+
+The creator requested a lower-arithmetic tabletop resolution while preserving draft/discard structure and engine-building/counterplay. `docs/TABLETOP_COMBAT_DESIGN.md` evaluates normalized power plus a finish-time/tempo lookup, including measured mixed-hand and Punch compromises, against the unchanged engine. `scripts/tabletop-combat-study.mjs` reproduces the diagnostic. This is an unapproved design proposal; digital rules and card values remain unchanged.
+
 Keep combat and mode rules in reusable `src/game/` modules. React components present state; the reducer/session layer coordinates flow, and dedicated hooks coordinate timing. Logical ownership and temporary visual visibility may differ during card flights; preserve explicit masks/suppression.
 
 Keep cards data-driven and JavaScript as the source of truth for future Python/Gymnasium training. Extract remaining preparation orchestration from UI/session ownership before adding network play.
@@ -73,7 +77,7 @@ Continue using Git and publishing sanitized app snapshots to the public `CRD` re
 - Production build passed.
 - Devour simultaneous-round regression smoke passed.
 - Python/Node smoke completed Draft and 5 Hand Discard at seed 7.
-- Lint failed with four existing errors; details in `docs/CURRENT_STATE.md`.
+- Lint failed with four existing errors; details in `docs/CURRENT_STATE.md`. Fixed by the 2026-10-18 UI redesign: lint is now clean.
 - Browser visuals, full card interaction coverage and live hosting were not verified.
 
 The initial review updated documentation only. Follow-up: AI preparation now resolves at Battle in `completeOpponentPreBattle`; regression coverage includes draw/copy/redraw/recycle chains and unusable specials.
@@ -84,6 +88,7 @@ The initial review updated documentation only. Follow-up: AI preparation now res
 - `docs/GAME_OVERVIEW.md`, `RULES.md`, `COMBAT.md`, `DRAFTING.md`: gameplay.
 - `docs/CARD_SCHEMA.md`, `CARD_LIBRARY.md`, `ASSETS.md`: data, exact implemented cards, assets.
 - `docs/ARCHITECTURE.md`, `AI_OPPONENT.md`, `AI_TRAINING.md`: code boundaries and AI.
+- `docs/UI.md`: table layout, HUD, visual language and animation system.
 - `docs/ROADMAP.md`, `DECISIONS.md`: next work and decisions.
 - `docs/SESSION_HANDOFF.md`, `CODING_START.md`: restart maps.
 - `docs/PUBLISHING.md`: publishing/deployment procedure.
@@ -101,9 +106,10 @@ The initial review updated documentation only. Follow-up: AI preparation now res
 - Avoid developer subtitles or overly explicit implementation labels in the main UI
 - Avoid instructional microcopy that sounds mechanical when cleaner game-language would do
 - Remove unnecessary subtitles and state-explaining text when the interface already makes the state obvious
-- Keep the whole game fitted to the screen in both portrait and landscape when possible
-- Prefer internal scrolling only in contained areas like hands or battle logs, not page-level overflow
-- Size cards so 5 cards fit side by side in both orientations and individual cards do not dominate the viewport height
+- Keep the whole game fitted to the screen in both portrait and landscape; mobile portrait is the primary target
+- Prefer internal scrolling only in contained sheets (discard pile, help), not page-level overflow
+- Cards should take most of the screen: size them with the fit helpers in `src/hooks/useFitLayout.js` (the hero zone gets the space, rows overlap beyond 5 cards) rather than fixed breakpoints
+- Explain with symbols, colour, position and motion before text; keep extra info behind long-press inspect or the help sheet (see `docs/UI.md`)
 
 ## Game Description (user-provided, keep this in full)
 

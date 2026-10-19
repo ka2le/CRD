@@ -1,10 +1,10 @@
 import './CardVisual.css'
-import { DISPLAY_ICONS, getStatIcon } from './cardData'
+import { DISPLAY_ICONS, STAT_ICONS, getStatIcon } from './cardData'
 import { getImageUrl } from './imageAssets'
 
-function IconToken({ src, alt }) {
+function IconToken({ src, alt, className = '' }) {
   return (
-    <span className="card-visual__icon-token">
+    <span className={['card-visual__icon-token', className].filter(Boolean).join(' ')}>
       <img src={getImageUrl(src)} alt={alt} className="card-visual__icon-image" />
     </span>
   )
@@ -99,42 +99,63 @@ function CardStatColumn({ card }) {
   )
 }
 
-function CardCooldown({ card }) {
+function CardCooldown({ card, charge = null }) {
   if (typeof card.cd !== 'number' || card.cd <= 0) return null
+  const charging = typeof charge === 'number'
 
   return (
     <div className="card-visual__overlay card-visual__overlay--cooldown">
-      <div className="card-visual__cooldown-column">
-        {Array.from({ length: card.cd }).map((_, index) => (
-          <IconToken key={`cd-${index}`} src={DISPLAY_ICONS.cd} alt="cooldown" />
-        ))}
+      <div className={['card-visual__cooldown-column', charging ? 'card-visual__cooldown-column--charging' : ''].filter(Boolean).join(' ')}>
+        {Array.from({ length: card.cd }).map((_, index) => {
+          // Hourglasses fill from the bottom up, matching how the column reads.
+          const litFromBottom = card.cd - index <= charge
+          const stateClass = !charging ? '' : (litFromBottom ? 'card-visual__icon-token--lit' : 'card-visual__icon-token--unlit')
+          return <IconToken key={`cd-${index}`} src={DISPLAY_ICONS.cd} alt="cooldown" className={stateClass} />
+        })}
       </div>
     </div>
   )
 }
 
-export default function CardVisual({ card, hidden = false }) {
+export function CardBack() {
+  return (
+    <div className="card-visual__back-face">
+      <div className="card-visual__back-ring">
+        <img src={STAT_ICONS.critter} alt="" className="card-visual__back-icon card-visual__back-icon--critter" />
+        <img src={STAT_ICONS.robot} alt="" className="card-visual__back-icon card-visual__back-icon--robot" />
+        <img src={STAT_ICONS.dragon} alt="" className="card-visual__back-icon card-visual__back-icon--dragon" />
+      </div>
+    </div>
+  )
+}
+
+export default function CardVisual({ card, hidden = false, charge = null }) {
   const image = getImageUrl(card.images?.[card.imageIndex ?? 0] ?? card.images?.[0])
+
+  if (hidden) {
+    return (
+      <div className="card-visual">
+        <CardBack />
+      </div>
+    )
+  }
 
   return (
     <div className="card-visual">
       <div className="card-visual__art-shell">
-        {hidden ? (
-          <div className="card-visual__back-face">
-            <div className="card-visual__back-mark">{DISPLAY_ICONS.cardBackMark}</div>
-          </div>
-        ) : (
+        {image ? (
           <>
-            <img src={image} alt="" className="card-visual__blur" />
-            <img src={image} alt={card.name} className="card-visual__art" />
-            {card.copyOverlayImage ? (
-              <img src={getImageUrl(card.copyOverlayImage)} alt="" className="card-visual__copy-overlay" />
-            ) : null}
-            {card.type === 'stat' ? <CardStatColumn card={card} /> : null}
-            {card.type === 'action' ? <CardEffectRow card={card} /> : null}
-            <CardCooldown card={card} />
+            <img src={image} alt="" className="card-visual__blur" draggable="false" />
+            <img src={image} alt={card.name} className="card-visual__art" draggable="false" />
           </>
-        )}
+        ) : <div className="card-visual__placeholder" />}
+        {card.copyOverlayImage ? (
+          <img src={getImageUrl(card.copyOverlayImage)} alt="" className="card-visual__copy-overlay" draggable="false" />
+        ) : null}
+        <div className="card-visual__shade" />
+        {card.type === 'stat' ? <CardStatColumn card={card} /> : null}
+        {card.type === 'action' ? <CardEffectRow card={card} /> : null}
+        <CardCooldown card={card} charge={charge} />
       </div>
     </div>
   )

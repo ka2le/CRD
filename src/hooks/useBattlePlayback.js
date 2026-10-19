@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { getHandStats, simulateBattle } from '../game/engine'
 
 const BATTLE_HEALTH = 21
@@ -80,6 +80,8 @@ export default function useBattlePlayback({ battleStarted, battleInstance, playe
   const [showBattleResult, setShowBattleResult] = useState(false)
   const [damageFlash, setDamageFlash] = useState(null)
   const [activationTick, setActivationTick] = useState(0)
+  const [speed, setSpeedState] = useState(1)
+  const controlRef = useRef({ speed: 1, skip: false, stepNow: null })
 
   // Reset transient playback state when the active battle inputs change.
   /* eslint-disable react-hooks/set-state-in-effect */
@@ -88,6 +90,7 @@ export default function useBattlePlayback({ battleStarted, battleInstance, playe
     setShowBattleResult(false)
     setDamageFlash(null)
     setActivationTick(0)
+    controlRef.current.skip = false
   }, [battleInstance, battleStarted, playerHand, opponentHand, deck])
   /* eslint-enable react-hooks/set-state-in-effect */
 
@@ -102,12 +105,24 @@ export default function useBattlePlayback({ battleStarted, battleInstance, playe
     let timeoutId = null
     let cancelled = false
     let nextIndex = 0
+    const control = controlRef.current
+    const lastIndex = battleResult.rounds.length - 1
+
+    const schedule = (callback, delayMs) => {
+      timeoutId = window.setTimeout(callback, delayMs / Math.max(control.speed, 0.25))
+    }
+
+    const showResult = () => {
+      if (!cancelled) setShowBattleResult(true)
+    }
 
     const step = () => {
       if (cancelled) return
 
+      if (control.skip && nextIndex < lastIndex) nextIndex = lastIndex
+
       if (nextIndex >= battleResult.rounds.length) {
-        setShowBattleResult(true)
+        showResult()
         return
       }
 
@@ -125,23 +140,29 @@ export default function useBattlePlayback({ battleStarted, battleInstance, playe
       nextIndex += 1
 
       if (nextIndex >= battleResult.rounds.length) {
-        timeoutId = window.setTimeout(() => {
-          if (!cancelled) setShowBattleResult(true)
-        }, getRoundIntervalMs(round.round + 1, battleTiming))
+        // Let the final blow land before the result appears.
+        timeoutId = window.setTimeout(showResult, control.skip ? 900 : Math.max(1100, getRoundIntervalMs(round.round + 1, battleTiming) / control.speed))
         return
       }
 
       const upcomingRound = battleResult.rounds[nextIndex]
-      timeoutId = window.setTimeout(step, getRoundIntervalMs(upcomingRound.round, battleTiming))
+      schedule(step, getRoundIntervalMs(upcomingRound.round, battleTiming))
+    }
+
+    control.stepNow = () => {
+      if (cancelled) return
+      if (timeoutId) window.clearTimeout(timeoutId)
+      step()
     }
 
     const openingRound = battleResult.rounds[0]
     if (openingRound) {
-      timeoutId = window.setTimeout(step, getRoundIntervalMs(openingRound.round, battleTiming))
+      schedule(step, getRoundIntervalMs(openingRound.round, battleTiming))
     }
 
     return () => {
       cancelled = true
+      control.stepNow = null
       if (timeoutId) window.clearTimeout(timeoutId)
     }
   }, [battleTiming, isActive, battleResult, battleInstance])
@@ -192,10 +213,27 @@ export default function useBattlePlayback({ battleStarted, battleInstance, playe
     }
   }, [activationTick, battleResult, isActive, opponentHand, playbackIndex, playerHand])
 
+  const setSpeed = useCallback((nextSpeed) => {
+    controlRef.current.speed = nextSpeed
+    setSpeedState(nextSpeed)
+  }, [])
+
+  const skipToEnd = useCallback(() => {
+    controlRef.current.skip = true
+    controlRef.current.stepNow?.()
+  }, [])
+
+  const currentRound = battlePlayback?.round ?? 0
+  const roundIntervalMs = Math.round(getRoundIntervalMs(currentRound + 1, battleTiming) / speed)
+
   return {
     battlePlayback,
     battleResult,
     showBattleResult,
     damageFlash,
+    speed,
+    setSpeed,
+    skipToEnd,
+    roundIntervalMs,
   }
 }

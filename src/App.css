@@ -1,29 +1,119 @@
 .app-shell {
   height: 100dvh;
+  width: 100%;
   display: grid;
-  grid-template-rows: minmax(0, 1fr);
-  padding: var(--pad);
-  gap: var(--gap);
+  padding:
+    max(var(--pad), env(safe-area-inset-top))
+    max(var(--pad), env(safe-area-inset-right))
+    max(var(--pad), env(safe-area-inset-bottom))
+    max(var(--pad), env(safe-area-inset-left));
   overflow: hidden;
 }
 
-.table-layout {
+.table {
+  position: relative;
   min-height: 0;
   height: 100%;
+  width: 100%;
+  max-width: 1500px;
+  margin-inline: auto;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: var(--gap);
   overflow: hidden;
 }
 
-.table-slot {
+/* Draft: pack is the hero; both hands frame it. */
+.table--draft {
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+}
+
+/* Discard + preparation: your hand is the hero. */
+.table--focus {
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+}
+
+/* Battle: both hands share the table around a slim arena. */
+.table--battle {
+  grid-template-rows: auto minmax(0, 1fr) auto minmax(0, 1fr) auto;
+}
+
+.table__zone {
+  position: relative;
   min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.table-slot--top {
-  align-self: start;
+.table__zone--center {
+  align-items: stretch;
 }
 
-.table-slot--bottom {
-  align-self: end;
+.table__zone--center > * {
+  flex: 1 1 auto;
+}
+
+.table--battle .table__zone--center {
+  align-items: center;
+}
+
+.table--battle .table__zone--opponent,
+.table--battle .table__zone--player {
+  align-items: stretch;
+}
+
+.table--battle .table__zone--opponent > .hand-area {
+  align-items: flex-end;
+}
+
+.table--battle .table__zone--player > .hand-area {
+  align-items: flex-start;
+}
+
+.table__piles {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.table__action {
+  min-height: 40px;
+  padding-inline: 1rem;
+  font-size: 0.8rem;
+}
+
+.table__action .g-icon,
+.table__action .svg-icon {
+  font-size: 1.1rem;
+}
+
+.table__action--battle {
+  padding-inline: 1.2rem;
+}
+
+/* Bottom rail is the dock: taller and touch friendly. */
+.table > .side-rail--player {
+  height: var(--dock-h);
+}
+
+@media (min-width: 900px) {
+  :root {
+    --rail-h: 50px;
+    --dock-h: 64px;
+    --gap: 10px;
+    --pad: 12px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  :root {
+    --rail-h: 36px;
+    --dock-h: 44px;
+    --gap: 4px;
+    --pad: 4px;
+  }
+
+  .table__action {
+    min-height: 34px;
+  }
 }

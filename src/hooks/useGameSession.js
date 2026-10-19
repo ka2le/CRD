@@ -175,6 +175,7 @@ function createInitialSessionState() {
     battleLogOpen: false,
     battleInstance: 0,
     gameSessionKey: 0,
+    dealId: 1,
     lastTransition: null,
     pendingPlayerDraftPickAnimation: null,
     suppressedHandCardIds: {
@@ -212,6 +213,8 @@ function sessionReducer(state, action) {
           battleLogOpen: false,
           battleInstance: nextBattleInstance,
           gameSessionKey: nextGameSessionKey,
+          dealId: state.dealId + 1,
+          suppressedHandCardIds: { player: [], opponent: [] },
         }, {
           type: 'game-reset',
           mode: nextMode,
@@ -236,6 +239,8 @@ function sessionReducer(state, action) {
         battleLogOpen: false,
         battleInstance: nextBattleInstance,
         gameSessionKey: nextGameSessionKey,
+        dealId: state.dealId + 1,
+        suppressedHandCardIds: { player: [], opponent: [] },
       }, {
         type: 'game-reset',
         mode: nextMode,
@@ -301,6 +306,7 @@ function sessionReducer(state, action) {
       }, {
         type: 'discard-submitted',
         moves: nextGame.recentMoves ?? [],
+        sourceRects: action.sourceRects ?? {},
       })
     }
 
@@ -507,6 +513,16 @@ function sessionReducer(state, action) {
       })
     }
 
+    case 'CANCEL_PLAYER_RECYCLE_PICK':
+      if (!state.preBattle.recycleSelection) return state
+      return {
+        ...state,
+        preBattle: {
+          ...state.preBattle,
+          recycleSelection: null,
+        },
+      }
+
     case 'RESOLVE_PRE_BATTLE_PENDING_DRAW_ALL_NEW_1': {
       const current = state.preBattle
       const resolution = current.pendingResolution
@@ -602,6 +618,8 @@ function sessionReducer(state, action) {
         battleLogOpen: false,
         battleInstance: state.battleInstance + 1,
         gameSessionKey: state.gameSessionKey + 1,
+        dealId: state.dealId + 1,
+        suppressedHandCardIds: { player: [], opponent: [] },
       }, {
         type: 'settings-updated',
       })
@@ -703,20 +721,6 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     return timeoutId
   }, [])
 
-  const animateMovesFromCurrentLayout = useCallback((moves) => {
-    moves.forEach((move) => {
-      const fromRect = getMoveRect(getAnchorRect, move.from)
-      const toRect = getMoveRect(getAnchorRect, move.to)
-      if (!fromRect || !toRect) return
-
-      animateCardMove({
-        ...move,
-        fromRect,
-        toRect,
-      })
-    })
-  }, [animateCardMove, getAnchorRect])
-
   const clearTransition = useCallback(() => {
     dispatch({ type: 'CLEAR_TRANSITION' })
   }, [])
@@ -757,8 +761,16 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
 
   const submitDiscard = useCallback(() => {
     if (!discardPhase) return
-    dispatch({ type: 'SUBMIT_DISCARD' })
-  }, [discardPhase])
+    // Cards leaving the hand unmount on commit, so capture where they sit now.
+    const sourceRects = {}
+    ;[['player-hand', game.playerHand], ['opponent-hand', game.opponentHand]].forEach(([section, cards]) => {
+      cards.forEach((card) => {
+        const rect = serializeRect(getAnchorRect(section, card.uid))
+        if (rect) sourceRects[`${section}::${card.uid}`] = rect
+      })
+    })
+    dispatch({ type: 'SUBMIT_DISCARD', sourceRects })
+  }, [discardPhase, game.playerHand, game.opponentHand, getAnchorRect])
 
   const handleDraftPick = useCallback((uid) => {
     if (!canPickDraftCard) return
@@ -788,6 +800,10 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     if (!isRecyclePicking) return
     dispatch({ type: 'RESOLVE_PLAYER_RECYCLE_PICK', uid })
   }, [isRecyclePicking])
+
+  const cancelPlayerRecyclePick = useCallback(() => {
+    dispatch({ type: 'CANCEL_PLAYER_RECYCLE_PICK' })
+  }, [])
 
   const closePreBattleInfoOverlay = useCallback(() => {
     dispatch({ type: 'CLOSE_PRE_BATTLE_INFO_OVERLAY' })
@@ -831,7 +847,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
           face: 'up',
           durationMs: sessionTiming.drawAllNewDiscardDurationMs,
           rotateDeg: 10,
-          scaleTo: 0.72,
+          scaleTo: 1,
           fadeOut: true,
           hideSource: true,
           hideDestinationUntilEnd: false,
@@ -872,7 +888,24 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     if (!lastTransition) return
 
     if (lastTransition.type === 'discard-submitted') {
-      animateMovesFromCurrentLayout(lastTransition.moves ?? [])
+      // Replacements deal themselves in from the deck; only fly the discards.
+      const sourceRects = lastTransition.sourceRects ?? {}
+      const toPile = (lastTransition.moves ?? [])
+        .filter((move) => move.to?.section === 'player-discard')
+        .map((move, index) => ({
+          ...move,
+          fromRect: sourceRects[`${move.from.section}::${move.from.slot}`] ?? null,
+          durationMs: 420,
+          delayMs: index * 70,
+          hideSource: false,
+          hideDestinationUntilEnd: false,
+        }))
+        .filter((move) => move.fromRect)
+      toPile.forEach((move) => {
+        const toRect = getMoveRect(getAnchorRect, move.to)
+        if (!toRect) return
+        animateCardMove({ ...move, toRect })
+      })
       clearTransition()
       return
     }
@@ -904,7 +937,6 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     clearTransition()
   }, [
     animateCardMove,
-    animateMovesFromCurrentLayout,
     clearPendingPlayerDraftPickAnimation,
     clearTransition,
     game.playerHand,
@@ -942,6 +974,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     battleLogOpen,
     toggleBattleLog,
     battleKey,
+    dealId: session.dealId,
     battleResult,
     battleDeck,
     discardPhase,
@@ -969,7 +1002,14 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     armedPlayerCopyUid: preBattle.armedPlayerCopyUid,
     recycleSelectionCards,
     isRecyclePicking,
+    cancelPlayerRecyclePick,
     recycleOverlay,
+    activatablePreBattleIds: playerPreBattleView.cards.map((card) => card.uid),
+    copyCandidateIds: playerPreBattleView.armedCopyCard ? playerPreBattleView.copyCandidates.map((card) => card.uid) : [],
+    isPreBattleReady,
+    discardCards: isPreBattleReady
+      ? preBattle.playerDiscard
+      : (game.mode === 'draft' ? game.draftDiscard : game.playerDiscards),
     resolvedPlayerHand,
     resolvedOpponentHand,
   }

@@ -1,0 +1,109 @@
+.card-inspect {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(4, 5, 9, 0.78);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: inspect-fade 0.18s ease;
+}
+
+.card-inspect__stage {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  animation: inspect-pop 0.32s var(--ease-spring);
+}
+
+.card-inspect__card {
+  position: relative;
+  width: min(78vw, calc(62dvh * 0.715), 420px);
+  aspect-ratio: 635 / 888;
+  overflow: hidden;
+  container-type: inline-size;
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 40px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.card-inspect__frame {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  padding: 3px;
+  background: linear-gradient(135deg, var(--accent-a), var(--accent-b) 50%, var(--accent-c));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+
+.card-inspect__info {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  max-width: min(420px, 90vw);
+  text-align: center;
+}
+
+.card-inspect__timing {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  background: color-mix(in srgb, var(--accent) 14%, rgba(10, 12, 20, 0.8));
+  color: var(--t0);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.card-inspect__hourglasses {
+  display: inline-flex;
+  gap: 1px;
+  color: var(--accent);
+  font-size: 0.95rem;
+}
+
+.card-inspect__text {
+  margin: 0;
+  color: var(--t0);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.card-inspect__delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--health);
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.card-inspect__delta--neg {
+  color: var(--damage);
+}
+
+.card-inspect__delta-unit {
+  color: var(--t1);
+  font-family: var(--font);
+  font-size: 0.75rem;
+}
+
+@keyframes inspect-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes inspect-pop {
+  from { transform: scale(0.82) translateY(14px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}

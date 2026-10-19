@@ -17,7 +17,8 @@ Reviewed 2026-10-18. CRD is a static React 19/Vite frontend with reusable JavaSc
 | `src/hooks/useDraftFlowEffects.js`, `draftMotion.js` | Timed draft transitions and motion coordination |
 | `src/hooks/useBattlePlayback.js` | Call simulator and play back history |
 | `src/components/animation/CardMotionContext.jsx` | DOM anchors, flying cards, masks |
-| `src/components/` | Menu, hands, boards, card visuals/tooltips, battle HUD/log/results |
+| `src/components/` | Menu, hands, pack, piles, card visuals/inspect, HUD rails, battle arena/results, sheets (see `UI.md`) |
+| `src/hooks/useFitLayout.js`, `src/hooks/dealTiming.js` | Fit-to-box card sizing; shared shuffle/deal pacing |
 | `data/cards.json` | Card definitions and source art URLs (provenance) |
 | `data/image-manifest.json`, `src/components/card/imageAssets.js` | Source-to-local WebP mapping and Vite base-path resolution |
 | `scripts/prepare-images.mjs`, `assets/originals/`, `public/images/` | Resumable download/archive and optimized image pipeline |
@@ -51,6 +52,6 @@ The GitHub Pages workflow builds on `master` using Node 22 and deploys `dist`; `
 
 ## Quality and next boundaries
 
-Build/smokes pass; lint has four existing errors. `CURRENT_STATE.md` records verification, the completed preparation fix, and deferred draft/starter/recycle findings.
+Build/smokes pass; lint is clean since the 2026-10-18 UI redesign. `CURRENT_STATE.md` records verification, the completed preparation fix, and deferred draft/starter/recycle findings.
 
 Keep rules out of components and visibility separate from ownership. Extract complete preparation before training parity/network sync. Future P1/P2/Viewer rooms are plans, not implemented seats or abstractions.

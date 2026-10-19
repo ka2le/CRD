@@ -1,0 +1,374 @@
+.side-rail {
+  --side: var(--player);
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: var(--rail-h);
+  padding: 0 8px 0 12px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(20, 24, 38, 0.82), rgba(10, 12, 20, 0.82));
+  border: 1px solid var(--b1);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.side-rail--opponent {
+  --side: var(--opponent);
+}
+
+/* Side colour tab on the left edge identifies who this is without a label. */
+.side-rail__marker {
+  position: absolute;
+  left: 4px;
+  top: 22%;
+  bottom: 22%;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--side);
+  opacity: 0.75;
+}
+
+.side-rail--turn {
+  border-color: color-mix(in srgb, var(--side) 65%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--side) 30%, transparent), 0 0 22px color-mix(in srgb, var(--side) 28%, transparent);
+}
+
+.side-rail--turn .side-rail__marker {
+  opacity: 1;
+  box-shadow: 0 0 8px var(--side);
+  animation: rail-marker 1.2s ease-in-out infinite alternate;
+}
+
+.side-rail--winner {
+  border-color: var(--side);
+  box-shadow: 0 0 26px color-mix(in srgb, var(--side) 40%, transparent);
+}
+
+.side-rail__spacer {
+  flex: 1 1 auto;
+}
+
+/* Stat chips */
+.stat-chips {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--t0);
+  line-height: 1;
+}
+
+.stat-chip .g-icon {
+  font-size: 1.15rem;
+}
+
+.stat-chip--critter .g-icon { color: var(--critter); }
+.stat-chip--robot .g-icon { color: var(--robot); }
+.stat-chip--dragon .g-icon { color: var(--dragon); }
+
+.stat-chip--zero {
+  opacity: 0.32;
+}
+
+.stat-chip__value {
+  display: inline-block;
+  min-width: 0.7em;
+  animation: chip-bump 0.4s var(--ease-spring);
+}
+
+.stat-chips--compact {
+  gap: 6px;
+}
+
+.stat-chips--compact .stat-chip {
+  font-size: 0.8rem;
+}
+
+.stat-chips--compact .stat-chip .g-icon {
+  font-size: 0.95rem;
+}
+
+.avg-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255, 77, 97, 0.1);
+  border: 1px solid rgba(255, 77, 97, 0.28);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--t0);
+}
+
+.avg-chip .g-icon {
+  color: var(--damage);
+  font-size: 0.95rem;
+}
+
+.avg-chip__value {
+  animation: chip-bump 0.4s var(--ease-spring);
+}
+
+/* Pips */
+.pips {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pip {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  transform: rotate(45deg);
+  background: rgba(240, 232, 210, 0.14);
+  border: 1px solid rgba(240, 232, 210, 0.2);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.pip--done {
+  background: rgba(240, 232, 210, 0.5);
+  border-color: transparent;
+}
+
+.pip--current {
+  background: var(--player);
+  border-color: #fff3cf;
+  box-shadow: 0 0 8px var(--player);
+}
+
+/* Thinking */
+.thinking-dots {
+  display: inline-flex;
+  gap: 4px;
+  padding: 0 4px;
+}
+
+.thinking-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--opponent);
+  animation: thinking 1s ease-in-out infinite;
+}
+
+.thinking-dots span:nth-child(2) { animation-delay: 0.15s; }
+.thinking-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+/* Battle vitals */
+.side-rail__vitals {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.health {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.health__track {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: repeat(21, minmax(0, 1fr));
+  gap: 2px;
+  height: 14px;
+  padding: 2px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.health__seg {
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.health__seg--on {
+  background: linear-gradient(180deg, #8dffb5, var(--health) 60%, #2c9a5a);
+  box-shadow: 0 0 6px rgba(95, 224, 143, 0.35);
+}
+
+.health--low .health__seg--on {
+  background: linear-gradient(180deg, #ffb3a1, #ff6a55 60%, #b8322a);
+  box-shadow: 0 0 6px rgba(255, 106, 85, 0.45);
+}
+
+.health__seg--lost {
+  animation: hp-lost var(--impact-ms, 900ms) linear forwards;
+}
+
+.health__value {
+  font-family: var(--mono);
+  font-size: 1.05rem;
+  font-weight: 500;
+  min-width: 1.6em;
+  text-align: right;
+  color: var(--t0);
+  animation: chip-bump 0.35s var(--ease-spring);
+}
+
+.health--dead .health__value {
+  color: var(--damage);
+}
+
+.side-rail__shield {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 7px 2px 5px;
+  border-radius: 999px;
+  color: var(--shield);
+  background: rgba(142, 216, 255, 0.12);
+  border: 1px solid rgba(142, 216, 255, 0.45);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  box-shadow: 0 0 12px rgba(142, 216, 255, 0.3);
+  animation: shield-up 0.35s var(--ease-spring);
+}
+
+.side-rail__hit {
+  position: absolute;
+  left: 40%;
+  top: 50%;
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 1.35rem;
+  color: #fff;
+  text-shadow: 0 0 10px var(--damage), 0 0 2px #000, 0 2px 4px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  animation: hit-pop 900ms var(--ease-out) forwards;
+  animation-delay: calc(var(--impact-ms, 900ms) * 0.36);
+  opacity: 0;
+}
+
+.side-rail__block {
+  position: absolute;
+  left: 20%;
+  top: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  color: var(--shield);
+  text-shadow: 0 0 8px rgba(142, 216, 255, 0.7), 0 1px 3px #000;
+  pointer-events: none;
+  opacity: 0;
+  animation: hit-pop 900ms var(--ease-out) forwards;
+  animation-delay: calc(var(--impact-ms, 900ms) * 0.36);
+}
+
+.side-rail--hit {
+  animation: rail-shake 0.35s ease;
+  animation-delay: calc(var(--impact-ms, 900ms) * 0.36);
+}
+
+@keyframes rail-marker {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
+}
+
+@keyframes chip-bump {
+  0% { transform: scale(1.5); color: #fff; }
+  100% { transform: scale(1); }
+}
+
+@keyframes thinking {
+  0%, 100% { transform: translateY(0); opacity: 0.35; }
+  50% { transform: translateY(-4px); opacity: 1; }
+}
+
+@keyframes hp-lost {
+  0%, 34% { background: var(--health); box-shadow: 0 0 6px rgba(95, 224, 143, 0.35); }
+  42% { background: #fff; box-shadow: 0 0 12px #fff; }
+  62% { background: var(--damage); box-shadow: 0 0 8px var(--damage); }
+  100% { background: rgba(255, 255, 255, 0.06); box-shadow: none; }
+}
+
+@keyframes shield-up {
+  from { transform: scale(0.4); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes hit-pop {
+  0% { opacity: 0; transform: translate(-50%, -30%) scale(0.6); }
+  20% { opacity: 1; transform: translate(-50%, -60%) scale(1.25); }
+  70% { opacity: 1; transform: translate(-50%, -80%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -120%) scale(0.95); }
+}
+
+@keyframes rail-shake {
+  0%, 100% { transform: none; }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+
+@media (max-width: 460px) {
+  .side-rail--crowded .avg-chip {
+    display: none;
+  }
+
+  .side-rail--crowded .stat-chips {
+    gap: 5px;
+  }
+
+  .side-rail--crowded .stat-chip {
+    font-size: 0.8rem;
+  }
+
+  .side-rail--crowded .stat-chip .g-icon {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .side-rail {
+    gap: 8px;
+    padding: 0 6px 0 11px;
+  }
+
+  .stat-chips {
+    gap: 7px;
+  }
+
+  .stat-chip {
+    font-size: 0.85rem;
+  }
+
+  .health__track {
+    gap: 1px;
+    height: 12px;
+  }
+}
+
+.side-rail--opponent .side-rail__hit,
+.side-rail--opponent .side-rail__block {
+  animation-name: hit-pop-down;
+}
+
+@keyframes hit-pop-down {
+  0% { opacity: 0; transform: translate(-50%, -70%) scale(0.6); }
+  20% { opacity: 1; transform: translate(-50%, -40%) scale(1.25); }
+  70% { opacity: 1; transform: translate(-50%, -10%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, 40%) scale(0.95); }
+}

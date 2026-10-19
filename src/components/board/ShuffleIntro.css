@@ -1,0 +1,40 @@
+.shuffle-intro {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 8;
+}
+
+.shuffle-intro__deck {
+  position: relative;
+  width: min(30vw, 15dvh, 130px);
+  aspect-ratio: 635 / 888;
+  transform-origin: 50% 50%;
+}
+
+.shuffle-intro__card {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  border-radius: 7.5%/5.4%;
+  container-type: inline-size;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.55);
+  outline: 1px solid rgba(246, 196, 83, 0.25);
+  animation: shuffle-riffle var(--riffle-ms) cubic-bezier(.45, 0, .25, 1) both;
+  animation-delay: calc(var(--i) * 18ms);
+}
+
+.shuffle-intro__card:nth-child(odd) { --dir: -1; }
+.shuffle-intro__card:nth-child(even) { --dir: 1; }
+
+@keyframes shuffle-riffle {
+  0% { transform: translateY(30%) scale(0.7); opacity: 0; }
+  15% { transform: none; opacity: 1; }
+  40% { transform: translateX(calc(var(--dir) * 62%)) rotate(calc(var(--dir) * 10deg)); }
+  58% { transform: translateX(calc(var(--dir) * 62%)) translateY(-4%) rotate(calc(var(--dir) * 4deg)); }
+  82% { transform: translateX(calc(var(--dir) * 4%)) translateY(calc(var(--i) * -0.6%)); }
+  100% { transform: translateY(calc(var(--i) * -0.6%)); opacity: 1; }
+}
