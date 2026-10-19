@@ -1,10 +1,9 @@
 const APP_BASE_URL = new URL('./', self.registration.scope)
 const APP_SCOPE = APP_BASE_URL.pathname
 const CACHE_PREFIX = 'crd-pwa:/CRD/:'
-const CACHE_NAME = `${CACHE_PREFIX}v1`
+const CACHE_NAME = `${CACHE_PREFIX}v2`
 const APP_SHELL = APP_BASE_URL.href
 const STATIC_ASSETS = [
-  'site.webmanifest',
   'favicon.svg',
   'favicon.ico',
   'apple-touch-icon.png',
@@ -43,6 +42,12 @@ self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
   if (request.method !== 'GET' || url.origin !== self.location.origin || !url.pathname.startsWith(APP_SCOPE)) return
+
+  // Installation metadata must refresh when the server changes app identity or scope.
+  if (url.pathname === new URL('site.webmanifest', APP_BASE_URL).pathname) {
+    event.respondWith(fetch(request, { cache: 'no-store' }))
+    return
+  }
 
   if (request.mode === 'navigate') {
     event.respondWith((async () => {

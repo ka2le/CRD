@@ -42,4 +42,6 @@ npm run assets:prepare
 - `public/crd-icon.svg`: social preview.
 - `public/site.webmanifest`: install/display metadata.
 
+The service worker fetches installation metadata from the network without caching it. Cache version v2 removes the earlier cache that could retain an obsolete manifest and app identity indefinitely. Keep manifest requests out of the general asset cache.
+
 These SVGs remain vector files. Google Fonts in `src/index.css` remains a separate remote font dependency.
