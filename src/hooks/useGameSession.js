@@ -12,9 +12,9 @@ import { startDraftPickFlight } from './draftMotion'
 import {
   getActivatablePreBattleCards,
   getPreBattleCopyCandidates,
-  resolvePreBattleActivation,
   completeOpponentPreBattle,
 } from '../game/preBattle'
+import { applyPreparationAction, createPreparationState } from '../game/preparationState'
 
 const STORAGE_KEY = 'crd-dev-settings-v1'
 
@@ -90,16 +90,8 @@ function serializeRect(rect) {
 }
 
 function createPreBattleState(game) {
-  const sharedDraftDiscard = Array.isArray(game.draftDiscard) ? [...game.draftDiscard] : []
-
   return {
-    playerHand: game.playerHand,
-    opponentHand: game.opponentHand,
-    deck: Array.isArray(game.deck) ? [...game.deck] : [],
-    playerDiscard: Array.isArray(game.playerDiscards) ? [...game.playerDiscards] : sharedDraftDiscard,
-    opponentDiscard: Array.isArray(game.opponentDiscards) ? [...game.opponentDiscards] : sharedDraftDiscard,
-    playerActivated: [],
-    opponentActivated: [],
+    ...createPreparationState(game),
     armedPlayerCopyUid: null,
     recycleSelection: null,
     infoOverlay: null,
@@ -185,7 +177,7 @@ function createInitialSessionState() {
   }
 }
 
-function sessionReducer(state, action) {
+export function sessionReducer(state, action) {
   switch (action.type) {
     case 'RESET_GAME': {
       const nextMode = action.nextMode ?? state.gameMode
@@ -392,26 +384,17 @@ function sessionReducer(state, action) {
 
       const copyTarget = armedCopyCard ? copyCandidates.find((card) => card.uid === uid) : null
       if (copyTarget && armedCopyCard) {
-        const result = resolvePreBattleActivation({
-          hand: current.playerHand,
-          deck: current.deck,
-          discard: current.playerDiscard,
-          cardUid: armedCopyCard.uid,
-          selectionUid: uid,
+        const result = applyPreparationAction(current, 'player', {
+          type: 'prepare', sourceUid: armedCopyCard.uid, targetUid: uid,
         })
-
-        const previousHandIds = new Set(current.playerHand.map((card) => card.uid))
-        const copiedNewCards = result.hand.filter((card) => !previousHandIds.has(card.uid))
-        const copiedNewCardIds = new Set(copiedNewCards.map((card) => card.uid))
-        const nextPlayerActivated = [...current.playerActivated, armedCopyCard.uid].filter((activatedUid) => !copiedNewCardIds.has(activatedUid))
 
         return createTransitionResult(state, {
           preBattle: {
             ...current,
-            playerHand: result.hand,
+            playerHand: result.playerHand,
             deck: result.deck,
-            playerDiscard: result.discard,
-            playerActivated: nextPlayerActivated,
+            playerDiscard: result.playerDiscard,
+            playerActivated: result.playerActivated,
             armedPlayerCopyUid: null,
             recycleSelection: null,
             activationTick: current.activationTick + 1,
@@ -420,13 +403,6 @@ function sessionReducer(state, action) {
       }
 
       if (!directCard) return state
-
-      const result = resolvePreBattleActivation({
-        hand: current.playerHand,
-        deck: current.deck,
-        discard: current.playerDiscard,
-        cardUid: directCard.uid,
-      })
 
       if (directCard.id === 'recycle_card') {
         if ((current.playerDiscard?.length ?? 0) <= 0) {
@@ -457,11 +433,13 @@ function sessionReducer(state, action) {
         })
       }
 
+      const result = applyPreparationAction(current, 'player', { type: 'prepare', sourceUid: directCard.uid })
+
       if (directCard.id === 'draw_all_new_1') {
         return createTransitionResult(state, {
           preBattle: {
             ...current,
-            playerActivated: [...current.playerActivated, directCard.uid],
+            playerActivated: result.playerActivated,
             armedPlayerCopyUid: null,
             recycleSelection: null,
             pendingAnimation: {
@@ -469,9 +447,10 @@ function sessionReducer(state, action) {
               discardedCards: current.playerHand,
             },
             pendingResolution: {
-              hand: result.hand,
+              hand: result.playerHand,
               deck: result.deck,
-              discard: result.discard,
+              discard: result.playerDiscard,
+              drawnCount: result.playerDrawnCount,
             },
             activationTick: current.activationTick + 1,
           },
@@ -481,10 +460,11 @@ function sessionReducer(state, action) {
       return createTransitionResult(state, {
         preBattle: {
           ...current,
-          playerHand: result.hand,
+          playerHand: result.playerHand,
           deck: result.deck,
-          playerDiscard: result.discard,
-          playerActivated: [...current.playerActivated, directCard.uid],
+          playerDiscard: result.playerDiscard,
+          playerActivated: result.playerActivated,
+          playerDrawnCount: result.playerDrawnCount,
           armedPlayerCopyUid: null,
           recycleSelection: null,
           pendingAnimation: null,
@@ -500,13 +480,16 @@ function sessionReducer(state, action) {
 
       const pickedCard = (current.playerDiscard ?? []).find((card) => card.uid === action.uid)
       if (!pickedCard) return state
+      const result = applyPreparationAction(current, 'player', {
+        type: 'prepare', sourceUid: current.recycleSelection.sourceUid, targetUid: pickedCard.uid,
+      })
 
       return createTransitionResult(state, {
         preBattle: {
           ...current,
-          playerHand: [...current.playerHand, pickedCard],
-          playerDiscard: current.playerDiscard.filter((card) => card.uid !== pickedCard.uid),
-          playerActivated: [...current.playerActivated, current.recycleSelection.sourceUid],
+          playerHand: result.playerHand,
+          playerDiscard: result.playerDiscard,
+          playerActivated: result.playerActivated,
           recycleSelection: null,
           activationTick: current.activationTick + 1,
         },
@@ -535,6 +518,7 @@ function sessionReducer(state, action) {
           playerHand: resolution.hand,
           deck: resolution.deck,
           playerDiscard: resolution.discard,
+          playerDrawnCount: resolution.drawnCount,
           pendingAnimation: null,
           pendingResolution: null,
         },
