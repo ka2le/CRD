@@ -19,10 +19,9 @@
   inset: 0;
   display: block;
   overflow: hidden;
-  border-radius: 7.5%/5.4%;
+  border-radius: 3.5%/2.5%;
   container-type: inline-size;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.55);
-  outline: 1px solid rgba(246, 196, 83, 0.25);
   animation: shuffle-riffle var(--riffle-ms) cubic-bezier(.45, 0, .25, 1) both;
   animation-delay: calc(var(--i) * 18ms);
 }

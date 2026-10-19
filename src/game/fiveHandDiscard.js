@@ -96,15 +96,13 @@ export function createFiveHandDiscardGame(options = {}) {
 export function applyDiscardPhase(game, selectedIds, options = {}) {
   const {
     includeRecentMoves = true,
-    opponentDiscardStrategy = chooseDiscardIds,
-    opponentDiscardCount = 2,
+    deferOpponent = false,
   } = options
   const selected = new Set(selectedIds)
   const refillCount = selectedIds.length
   const refill = drawCards(game.deck, refillCount)
   let refillIndex = 0
   const moves = []
-  const opponentMoves = []
 
   const nextPlayerHand = game.playerHand.map((card) => {
     if (!selected.has(card.uid)) return card
@@ -145,11 +143,21 @@ export function applyDiscardPhase(game, selectedIds, options = {}) {
     deck: refill.rest,
     playerHand: nextPlayerHand,
     playerDiscards: [...game.playerDiscards, ...playerDiscarded],
+    playerDiscardsUsed: game.playerDiscardsUsed + 1,
+    phase: `opponent-discard-${game.playerDiscardsUsed + 1}`,
+    recentMoves: includeRecentMoves ? moves : [],
   }
 
-  const opponentResult = resolveOpponentDiscardPass(afterPlayerGame, {
-    opponentDiscardStrategy,
-    opponentDiscardCount,
+  return deferOpponent ? afterPlayerGame : applyOpponentDiscardPhase(afterPlayerGame, null, options)
+}
+
+// Optional external selection exposes the second seat without changing browser pass order.
+export function applyOpponentDiscardPhase(game, selectedIds = null, options = {}) {
+  const { includeRecentMoves = true } = options
+  const opponentMoves = []
+  const opponentResult = resolveOpponentDiscardPass(game, {
+    ...options,
+    ...(selectedIds === null ? {} : { opponentDiscardStrategy: () => selectedIds }),
   })
   opponentResult.discarded.forEach((card, index) => {
     opponentMoves.push({
@@ -164,7 +172,7 @@ export function applyDiscardPhase(game, selectedIds, options = {}) {
     })
   })
 
-  const nextDiscardsUsed = game.playerDiscardsUsed + 1
+  const nextDiscardsUsed = game.playerDiscardsUsed
   const nextOpponentDiscardsUsed = (game.opponentDiscardsUsed ?? 0) + 1
   const isDone = nextDiscardsUsed >= 2
   const nextOpponentDebug = {
@@ -175,15 +183,15 @@ export function applyDiscardPhase(game, selectedIds, options = {}) {
   }
 
   return {
-    ...afterPlayerGame,
+    ...game,
     deck: opponentResult.deck,
     opponentHand: opponentResult.hand,
-    playerDiscards: [...afterPlayerGame.playerDiscards, ...opponentResult.discarded],
+    playerDiscards: [...game.playerDiscards, ...opponentResult.discarded],
     opponentDiscards: [...game.opponentDiscards, ...opponentResult.discarded],
     opponentDiscardsUsed: nextOpponentDiscardsUsed,
     opponentDebug: nextOpponentDebug,
     playerDiscardsUsed: nextDiscardsUsed,
     phase: isDone ? 'battle-ready' : `player-discard-${nextDiscardsUsed + 1}`,
-    recentMoves: includeRecentMoves ? [...moves, ...opponentMoves] : [],
+    recentMoves: includeRecentMoves ? [...(game.recentMoves ?? []), ...opponentMoves] : [],
   }
 }

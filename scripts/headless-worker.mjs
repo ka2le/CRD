@@ -1,11 +1,18 @@
 import readline from 'node:readline'
+import { createHash } from 'node:crypto'
 import {
   createHeadlessGame,
   createStepResponse,
   stepHeadlessGame,
+  getHeadlessSpec,
 } from '../src/game/headlessGame.js'
 
 const sessions = new Map()
+
+function describe(config = {}) {
+  const spec = getHeadlessSpec(config)
+  return { ...spec, cardDataHash: createHash('sha256').update(JSON.stringify(spec.cardTypes)).digest('hex') }
+}
 
 function send(message) {
   process.stdout.write(`${JSON.stringify(message)}\n`)
@@ -20,9 +27,12 @@ function getSession(id) {
 }
 
 function handleRequest(request) {
+  if (!request || typeof request !== 'object' || Array.isArray(request)) throw new Error('Request must be an object')
   if (request.command === 'ping') {
     return { ok: true, pong: true }
   }
+
+  if (request.command === 'describe') return { ok: true, spec: describe(request.config) }
 
   if (request.command === 'reset') {
     const sessionId = request.sessionId ?? 'default'
@@ -32,6 +42,7 @@ function handleRequest(request) {
     return {
       ok: true,
       sessionId,
+      spec: describe(request.config),
       ...createStepResponse(state),
     }
   }
@@ -39,6 +50,7 @@ function handleRequest(request) {
   if (request.command === 'step') {
     const sessionId = request.sessionId ?? 'default'
     const state = getSession(sessionId)
+    if (request.actor !== undefined && request.actor !== state.actor) throw new Error('Wrong actor')
     const nextState = stepHeadlessGame(state, request.action)
     sessions.set(sessionId, nextState)
 
@@ -47,6 +59,22 @@ function handleRequest(request) {
       sessionId,
       ...createStepResponse(nextState),
     }
+  }
+
+  if (request.command === 'observe') {
+    return { ok: true, sessionId: request.sessionId ?? 'default',
+      ...createStepResponse(getSession(request.sessionId ?? 'default'), request.side) }
+  }
+
+  // Privileged host operation. It does not resample hidden worlds and is NOT fair search.
+  // Branches share immutable state until step replaces one session's value.
+  if (request.command === 'fork') {
+    if (typeof request.targetSessionId !== 'string' || !request.targetSessionId || sessions.has(request.targetSessionId)) {
+      throw new Error('fork needs a new nonempty targetSessionId')
+    }
+    const state = getSession(request.sessionId ?? 'default')
+    sessions.set(request.targetSessionId, state)
+    return { ok: true, sessionId: request.targetSessionId, ...createStepResponse(state) }
   }
 
   if (request.command === 'close') {

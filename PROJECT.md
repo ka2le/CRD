@@ -1,6 +1,6 @@
 # Critters Robots Dragons - project brief
 
-Last reconciled with local source: **2026-10-18**.
+Last full implementation review: **2026-10-18**. AI environment implemented **2026-10-19**.
 
 `PROJECT.md` is the main living brief. Keep supporting docs and implementation aligned when rules, scope, architecture or priorities change. The assistant identity in this workspace is **CRD_Dev**.
 
@@ -39,10 +39,10 @@ Taking 21 damage loses. Simultaneous lethal compares cumulative damage actually 
 - Browser defaults: Draft, Wild Deck enabled, opponent cards visible. Menu settings persist; changing any setting starts a fresh game. Opponent hiding applies to pre-combat discard mode.
 - Stat combinations, base/ultimate class attacks, Bite, Devour, shield, damage doubling, shield-based and hybrid damage, plus the four preparation effects.
 - Shared heuristic evaluation for draft/discard/copy/recycle; no trained model.
-- Art/icon card visuals with class-tinted frames, fit-to-screen table layout (pack/hand hero zones), HUD rails with stats, health and turn glow, shuffle/deal/flip/FLIP/flight animations, battle charge pips, damage orbs, speed/skip, result banner, card inspect (long-press) and a visual help sheet. See `docs/UI.md`.
+- Art/icon card visuals (borderless, near-square cards; brass-on-navy style matching the app icon), fit-to-screen table layout (pack/hand hero zones), HUD rails with stats, health and turn indicator, shuffle/deal/flip/FLIP/flight animations, battle charge pips, damage orbs, speed/skip, result banner, card inspect (long-press) and a visual help sheet. See `docs/UI.md`.
 - Playback accelerates for upcoming rounds above round 2, down to a minimum interval; old round-10 notes are obsolete.
 - Seeded/injected deck support and a persistent Node JSON-lines worker with Python random-action smoke client.
-- Headless currently skips preparation and evaluates 12 rounds at a 999 damage threshold by default; it is not full browser parity or a Gymnasium environment.
+- Headless exposes both modes and every preparation decision (source/target, order, skip/finish), either-seat control, private observations/history and normal 21/50 outcomes. Python Gymnasium wrapper supplies numeric combat features, variable legal candidates/masks and replays. No trained model/search teacher yet; see `docs/AI_ENVIRONMENT.md`.
 - Public repo / GitHub Pages publishing configuration exists. Live deployment was not checked in this review.
 
 ## Known differences and remaining work
@@ -54,21 +54,29 @@ These are documented findings, not newly approved rules:
 3. Final draft completion drops the last three leftovers instead of recording them in discard.
 4. Initial draft and first New Game both start human-first; later resets alternate, and settings/mode changes are inconsistent.
 5. Fixed: Battle now completes AI preparation synchronously before combat. AI actions are not revealed during the human preparation window. Battle is disabled while an already-started human redraw is still resolving.
-6. Full preparation remains partly in the React reducer and is missing from headless actions. Interaction coverage and external action validation need strengthening.
+6. Shared preparation transitions and headless actions are now implemented and tested against the browser reducer. React retains presentation/animation orchestration. Fair hidden-world resampling, rollout search and learning remain next.
 7. `extra_turn` and `no_stats_to_2` remain data-only/excluded. Extra and monster sets are not imported.
-8. No backend, rooms, second-human input, spectators, Gymnasium wrapper or training loop exists yet.
+8. No backend, rooms, second-human browser input, spectators, search teacher, neural model or training loop exists yet.
 
-The AI preparation fix is complete. Follow-up asset work archives all 88 source images in `assets/originals/` and serves optimized local WebP files through `data/image-manifest.json`. Originals total 550.98 MiB; game images total 4.06 MiB (99.3% smaller). Preparation reruns reuse saved originals and unchanged derivatives; production builds check assets offline. See `docs/ASSETS.md`. Draft bookkeeping, starter alternation, recycle/pool behavior and headless parity remain unchanged. `docs/ROADMAP.md` gives the proposed sequence.
+The AI preparation fix is complete. Follow-up asset work archives all 88 source images in `assets/originals/` and serves optimized local WebP files through `data/image-manifest.json`. Originals total 550.98 MiB; game images total 4.06 MiB (99.3% smaller). Preparation reruns reuse saved originals and unchanged derivatives; production builds check assets offline. See `docs/ASSETS.md`. Headless now supports full preparation decisions and the Gymnasium interface; deferred draft bookkeeping, starter alternation and recycle/pool behavior remain unchanged. `docs/ROADMAP.md` gives the proposed sequence.
 
 ## Architecture and future direction
 
 ### Tabletop combat exploration (2026-10-19)
 
-The creator requested a lower-arithmetic tabletop resolution while preserving draft/discard structure and engine-building/counterplay. `docs/TABLETOP_COMBAT_DESIGN.md` evaluates normalized power plus a finish-time/tempo lookup, including measured mixed-hand and Punch compromises, against the unchanged engine. `scripts/tabletop-combat-study.mjs` reproduces the diagnostic. This is an unapproved design proposal; digital rules and card values remain unchanged.
+The creator requested a lower-arithmetic tabletop resolution while preserving draft/discard structure and engine-building/counterplay. Latest direction: calculate whole-number power once, choose damage type on equal contributions before battle, apply simple shield penalties (candidate: Critter -2 / Robot -1 / Dragon -0 per enemy shield), and compare a single chart score. The chart should deliberately favor Critters at low power, Robots at middle power, Dragons at high power; the latest candidate uses bands 1–4 / 5–7 / 8+. Balance shifts and integer special-card redesigns are explicitly acceptable; exact old combat parity is not the goal. `docs/TABLETOP_COMBAT_DESIGN.md` includes a concrete score chart and the superseded finish-time exploration. Earlier diagnostics in `scripts/tabletop-combat-study.mjs` evaluate the old approximation, not the latest rules. This remains an unapproved proposal; digital rules and card values remain unchanged.
 
 Keep combat and mode rules in reusable `src/game/` modules. React components present state; the reducer/session layer coordinates flow, and dedicated hooks coordinate timing. Logical ownership and temporary visual visibility may differ during card flights; preserve explicit masks/suppression.
 
-Keep cards data-driven and JavaScript as the source of truth for future Python/Gymnasium training. Extract remaining preparation orchestration from UI/session ownership before adding network play.
+Keep cards data-driven and JavaScript authoritative for Python/Gymnasium simulation. Pure preparation decisions now live in `src/game/preparationState.js`; the browser owns target-picker/animation orchestration. Build future search/network interfaces on these shared rules.
+
+### Search and neural AI plan (2026-10-19)
+
+The creator requested a Stockfish-inspired search-plus-neural-evaluation approach. Proposed design: exact shared JS rules and terminal combat, search over drafting/discard/preparation choices with sampled unseen draws, and a small Python/PyTorch value network correcting a mathematical/completion baseline at unfinished cutoffs. Learn contextual future potential and opponent responses rather than relearning damage arithmetic. Optimize actual win/draw/loss, not the existing headless 12-round damage diagnostic.
+
+`docs/AI_TRAINING.md` gives the staged plan. Preparation decisions, both-seat headless control, observation boundaries, exact terminal rewards and a tested Gymnasium wrapper are implemented; `docs/AI_ENVIRONMENT.md` gives runnable commands/protocol. The creator emphasized that activation order and copy/recycle targets are agent choices, not fixed preprocessing. Next: observation-consistent hidden-world sampling, non-neural rollout teacher, residual value training, self-play/tournaments and browser inference. Host forks preserve actual hidden state and must not be used as fair search. Keep seeds/private hands/deck order outside policy inputs. The tabletop chart remains a separate proposal.
+
+Verification: build, lint, original regressions, 11 JS headless tests (including 144 seeded replay cases), six Python integration tests (including checker coverage and 48 replay episodes) and two extra 100-episode Gym smokes pass. Gymnasium/NumPy are isolated in ignored `.ai-venv`; no PyTorch/model training added.
 
 Continue using Git and publishing sanitized app snapshots to the public `CRD` repo. Follow `docs/PUBLISHING.md`; private workspace identity and memory files must stay excluded. Deployment targets GitHub Pages today; a future backend should support two browser users and P1/P2/Viewer rooms, initially with P2 defaulting to AI. This room/seat model is planned, not implemented.
 
@@ -87,7 +95,7 @@ The initial review updated documentation only. Follow-up: AI preparation now res
 - `docs/CURRENT_STATE.md`: comprehensive source review and implementation limits.
 - `docs/GAME_OVERVIEW.md`, `RULES.md`, `COMBAT.md`, `DRAFTING.md`: gameplay.
 - `docs/CARD_SCHEMA.md`, `CARD_LIBRARY.md`, `ASSETS.md`: data, exact implemented cards, assets.
-- `docs/ARCHITECTURE.md`, `AI_OPPONENT.md`, `AI_TRAINING.md`: code boundaries and AI.
+- `docs/ARCHITECTURE.md`, `AI_OPPONENT.md`, `AI_TRAINING.md`: code boundaries and AI plan; `AI_ENVIRONMENT.md`: implemented worker/Gymnasium contract and commands.
 - `docs/UI.md`: table layout, HUD, visual language and animation system.
 - `docs/ROADMAP.md`, `DECISIONS.md`: next work and decisions.
 - `docs/SESSION_HANDOFF.md`, `CODING_START.md`: restart maps.

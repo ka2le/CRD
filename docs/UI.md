@@ -11,9 +11,12 @@ Added 2026-10-18 with the table redesign. Rules logic is unchanged. This file de
 
 ## Visual language
 
-- Class colours come from the card icons: Critter `--critter` (green), Robot `--robot` (cyan), Dragon `--dragon` (ember). Shield is light blue, preparation specials violet, damage red.
-- Side colours: you are gold (`--player`), the opponent is rose (`--opponent`). Each HUD rail has a side-coloured tab, and the side that is acting glows.
-- Every card frame is tinted by its class, with a gradient for multi-class cards (`getCardAccents` in `card/cardMeta.js`).
+- Style follows the app icon: "classy poker meets minimalist sci-fi meets fantasy battle". Midnight navy felt with a faint brass hex weave (`--hex`), champagne/brass ink (`--brass`), muted jewel tones, flat colour and real drop shadows instead of glows/bloom.
+- Type: Cinzel (`--display`) for titles, result banner and primary buttons; Manrope (`--font`) for UI; DM Mono (`--mono`) for numbers.
+- Class colours are muted jewel tones: Critter `--critter` (sage), Robot `--robot` (steel blue), Dragon `--dragon` (copper), each with a `-deep` variant matching the icon's card backs. Shield is pale blue, preparation specials lilac, damage oxblood red.
+- Side colours: you are brass (`--player`), the opponent is dusty rose (`--opponent`). Each HUD rail has a thin side-coloured tab, and the acting side's rail gets a tinted edge (no glow).
+- Cards are nearly square-cornered (`--card-round`, 3.5% of width) and borderless. A flat ring just outside the card (`.card__frame`) appears only for states: selected/focus (brass), discard (red), firing (class colour, gradient for multi-class via `getCardAccents` in `card/cardMeta.js`), targetable/ready (pulsing), AI-eyed (rose).
+- Damage orbs are drawn as poker chips; buttons and panels use small radii (5-12px).
 - Icons are the card art's silhouette PNGs, used as CSS masks (`ui/GameIcon.jsx`) so they can be tinted. The extra UI glyphs (menu, swords, skip and so on) are inline SVG.
 - Printed card icons scale with the card through container query units (`cqw`), like ink on a physical card.
 

@@ -6,12 +6,12 @@
   display: grid;
   place-items: center;
   padding: 20px;
-  background: radial-gradient(circle at 50% 45%, rgba(10, 12, 20, 0.55), rgba(4, 5, 9, 0.88));
+  background: radial-gradient(circle at 50% 45%, rgba(8, 13, 23, 0.6), rgba(3, 5, 10, 0.9));
   animation: result-fade 0.35s ease;
 }
 
 .battle-result--loss { --tone: var(--opponent); }
-.battle-result--tie { --tone: #cfd6e6; }
+.battle-result--tie { --tone: #b9c2d3; }
 
 .battle-result__panel {
   position: relative;
@@ -20,10 +20,10 @@
   justify-items: center;
   gap: 14px;
   padding: 26px 22px 20px;
-  border-radius: 22px;
-  background: linear-gradient(180deg, rgba(28, 33, 52, 0.96), rgba(12, 14, 22, 0.96));
-  border: 1px solid color-mix(in srgb, var(--tone) 55%, transparent);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 60px color-mix(in srgb, var(--tone) 22%, transparent);
+  border-radius: 12px;
+  background: var(--hex) center / 28px 48px, linear-gradient(180deg, var(--surface-hi), var(--surface-lo));
+  border: 1px solid color-mix(in srgb, var(--tone) 35%, transparent);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.65);
   overflow: hidden;
   animation: result-pop 0.5s var(--ease-spring);
 }
@@ -35,7 +35,7 @@
   width: 520px;
   height: 520px;
   translate: -50% -50%;
-  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--tone) 18%, transparent) 0deg 10deg, transparent 10deg 24deg);
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--tone) 6%, transparent) 0deg 10deg, transparent 10deg 24deg);
   -webkit-mask: radial-gradient(circle, #000 0%, transparent 60%);
   mask: radial-gradient(circle, #000 0%, transparent 60%);
   animation: result-rays 14s linear infinite;
@@ -45,13 +45,14 @@
 .battle-result__title {
   position: relative;
   margin: 0;
-  font-size: clamp(2.2rem, 11vw, 3rem);
-  font-weight: 800;
-  letter-spacing: 0.12em;
+  font-family: var(--display);
+  font-size: clamp(2.1rem, 10vw, 2.8rem);
+  font-weight: 700;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   line-height: 1;
   color: var(--tone);
-  text-shadow: 0 0 24px color-mix(in srgb, var(--tone) 60%, transparent), 0 2px 0 rgba(0, 0, 0, 0.6);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.6);
 }
 
 .battle-result__meta {
@@ -84,14 +85,14 @@
 
 .battle-result__side {
   height: 18px;
-  border-radius: 3px;
+  border-radius: 1px;
   background: var(--side);
 }
 
 .battle-result__track {
-  height: 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
+  height: 8px;
+  border-radius: 2px;
+  background: rgba(214, 190, 140, 0.07);
   overflow: hidden;
 }
 
@@ -99,7 +100,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--side) 50%, transparent), var(--side));
+  background: var(--side);
   animation: result-fill 0.9s var(--ease-out) 0.2s both;
   transform-origin: left;
 }

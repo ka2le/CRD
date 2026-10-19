@@ -13,6 +13,7 @@
     "preview": "vite preview",
     "headless:worker": "node scripts/headless-worker.mjs",
     "headless:smoke": "python python/random_headless_smoke.py",
+    "headless:test": "node --test scripts/headless-tests.mjs",
     "regression:smoke": "node scripts/regression-smoke.mjs"
   },
   "dependencies": {

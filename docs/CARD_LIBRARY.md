@@ -52,7 +52,7 @@ Each has one normal-deck copy and CD 0.
 | `copy_card_in_hand` | Transform source into another non-copy card in hand with fresh UID |
 | `recycle_card` | Add one chosen available discard; retain source |
 
-Preparation can exceed five cards. Fresh copied preparation cards activate independently. Human activation tracking/recycle selection live in the React session layer; `completeOpponentPreBattle` completes the AI privately at Battle. Current headless evaluation does not resolve preparation. The creator intends recycle as a single card usable by only one player per game; existing deck/copy handling was left unchanged in this preparation-only fix.
+Preparation can exceed five cards. Fresh copied preparation cards activate independently. Shared activation/target transitions now live in `preparationState.js`; React owns picker/animation orchestration. `completeOpponentPreBattle` completes the heuristic AI privately at Battle. Headless exposes source/target/order/skip/finish as agent decisions, including newly acquired specials; see `AI_ENVIRONMENT.md`. The creator intends recycle as a single card usable by only one player per game; existing deck/pool/copy handling remains unchanged.
 
 ## Preserved but excluded
 

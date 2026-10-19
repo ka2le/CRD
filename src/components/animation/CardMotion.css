@@ -15,7 +15,7 @@
 .card-motion-flight__card {
   position: absolute;
   inset: 0;
-  border-radius: calc(var(--card-w, 100px) * 0.075);
+  border-radius: calc(var(--card-w, 100px) * var(--card-round, 0.035));
   filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.55));
 }
 

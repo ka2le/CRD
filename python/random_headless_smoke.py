@@ -1,52 +1,7 @@
 import argparse
 import json
 import random
-import subprocess
-import sys
-from pathlib import Path
-
-
-ROOT = Path(__file__).resolve().parents[1]
-WORKER = ROOT / "scripts" / "headless-worker.mjs"
-
-
-class HeadlessWorker:
-    def __init__(self):
-        self._next_id = 1
-        self.process = subprocess.Popen(
-            ["node", str(WORKER)],
-            cwd=ROOT,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            encoding="utf-8",
-        )
-
-    def request(self, command, **payload):
-        request_id = self._next_id
-        self._next_id += 1
-        message = {"id": request_id, "command": command, **payload}
-        self.process.stdin.write(json.dumps(message) + "\n")
-        self.process.stdin.flush()
-
-        line = self.process.stdout.readline()
-        if not line:
-            stderr = self.process.stderr.read()
-            raise RuntimeError(f"worker stopped without response\n{stderr}")
-
-        response = json.loads(line)
-        if not response.get("ok"):
-            raise RuntimeError(response.get("error", "worker returned an unknown error"))
-        return response
-
-    def close(self):
-        if self.process.poll() is None:
-            self.process.terminate()
-            try:
-                self.process.wait(timeout=2)
-            except subprocess.TimeoutExpired:
-                self.process.kill()
+from crd.worker import HeadlessWorker
 
 
 def describe_action(action):
@@ -70,10 +25,6 @@ def run_random_episode(mode, seed, reveal_opponent):
                 "seed": seed,
                 "wildDeck": True,
                 "revealOpponent": reveal_opponent,
-                "battleEvaluation": {
-                    "maxRounds": 12,
-                    "damageToWin": 999,
-                },
             },
         )
 
@@ -100,9 +51,9 @@ def run_random_episode(mode, seed, reveal_opponent):
             step += 1
 
         battle = observation["battle"]
-        print("terminal battle-ready")
+        print(f"terminal winner={battle['winner']} reward={response['reward']}")
         print(
-            "12-round damage: "
+            "match damage: "
             f"player={battle['playerTotalDamageDealt']} "
             f"opponent={battle['opponentTotalDamageDealt']} "
             f"rounds={battle['rounds']}"

@@ -34,4 +34,4 @@ The UI plays back resolved rounds with health, shields, triggered cards, damage 
 
 ## Current scope
 
-The static React/Vite app includes both modes, 27 playable definitions, shared heuristic AI, animations, persisted settings, and an early Python/Node headless bridge. Online multiplayer, rooms, spectators, trained AI, and full source-card support remain future work. The creator confirmed existing shield behavior and clarified single-card recycle intent. AI preparation now finishes at Battle; deferred bookkeeping/pool findings are documented in `CURRENT_STATE.md`.
+The static React/Vite app includes both modes, 27 playable definitions, shared heuristic AI, animations and persisted settings. A full-decision Python/Node/Gymnasium environment now includes preparation order/targets, either-seat control and normal match outcomes; see `AI_ENVIRONMENT.md`. Online multiplayer, rooms, spectators, trained AI, and full source-card support remain future work. The creator confirmed current shields and single-card recycle intent. Browser AI preparation finishes at Battle; deferred bookkeeping/pool findings are in `CURRENT_STATE.md`.

@@ -42,3 +42,20 @@ The earlier shared-discard decision remains intent: current human/AI preparation
 - Preparation is private and has no inter-player turn order. On Battle, all remaining AI preparation must be complete before combat.
 - Implemented `completeOpponentPreBattle` at the Battle transition, resolving acquired-special chains and skipping unusable effects once. Removed delayed/revealed AI preparation. Block Battle while a human redraw is already resolving.
 - Leave draft leftovers/starter behavior and headless preparation coverage unchanged in this task. These clarifications supersede earlier unresolved shield/order recommendations above.
+
+## Creator AI direction and proposed implementation - 2026-10-19
+
+- Creator requested a search-heavy AI with calculated card/hand contributions and a neural correction for contextual value, inspired by Stockfish's search/evaluation split.
+- Proposed path is documented in `AI_TRAINING.md`: JS rules stay authoritative, Python/Gymnasium exposes the full decision game, sampled search generates value targets, and a small PyTorch residual evaluator learns unfinished-hand potential. Exact final combat needs no approximation.
+- Proposed objective is actual win/draw/loss under current digital rules, replacing the earlier future-training suggestion to maximize 12-round damage. Existing diagnostic adapter behavior is unchanged.
+- Hidden information requires observation-safe sampling and policies; do not search the actual shuffled deck or expose private preparation. Initial rollout search precedes any advanced information-set tree implementation.
+- Extract full preparation and legal/either-seat transitions before collecting training data. Keep previously deferred rule/pile changes separate and version rules/data.
+- This records the requested direction and a proposed implementation sequence, not approval of every model/search hyperparameter or a completed implementation. Tabletop rules remain a separate proposal.
+
+## Environment implementation authorized - 2026-10-19
+
+- Creator clarified that preparation order and copy/recycle targets require estimated-value decisions just like picks/discards, and asked to finish the environment and attach further pieces where easy.
+- Implemented shared preparation actions: source/target activation, per-source skip, finish, and dynamically recomputed choices for acquired specials. Browser retains UI selection/animation state over those pure transitions.
+- Headless can control either or both physical seats, preserving existing refill/private-preparation scheduling and deferred pile rules. Default objective now uses actual 21/50 outcomes; old 12/999 evaluation requires an explicit diagnostic override.
+- Added protocol v2, per-seat safe observations/history, mechanical combat cycles, bounded Python transport, Gymnasium variable candidate/mask interface and versioned replays. Gymnasium/NumPy are isolated in `.ai-venv`; no neural model is added.
+- Verified shared browser reducer preparation parity, order/identity/target behavior, privacy, validation, exact rewards, both modes/seats/pools and deterministic replay. Host forks are privileged exact-world regression tools; fair hidden-world resampling and rollout teacher remain next. See `AI_ENVIRONMENT.md`.

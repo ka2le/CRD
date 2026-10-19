@@ -3,3 +3,7 @@ dist/
 .vite/
 *.local
 .image-tools/
+.ai-venv/
+.ai-runs/
+__pycache__/
+*.pyc

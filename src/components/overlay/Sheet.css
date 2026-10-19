@@ -5,7 +5,7 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  background: rgba(4, 5, 9, 0.6);
+  background: rgba(3, 6, 12, 0.65);
   animation: sheet-fade 0.2s ease;
 }
 
@@ -15,9 +15,9 @@
   max-height: min(82dvh, 760px);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  border-radius: 22px 22px 0 0;
-  background: linear-gradient(180deg, rgba(30, 35, 54, 0.98), rgba(12, 14, 22, 0.98));
-  border: 1px solid var(--b1);
+  border-radius: 12px 12px 0 0;
+  background: linear-gradient(180deg, var(--surface-hi), var(--surface-lo));
+  border: 1px solid var(--b0);
   border-top-color: color-mix(in srgb, var(--sheet-accent) 70%, transparent);
   box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.55);
   padding-bottom: env(safe-area-inset-bottom);
@@ -49,9 +49,10 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-size: 0.85rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
+  font-family: var(--display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--t0);
 }

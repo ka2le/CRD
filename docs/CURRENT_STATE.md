@@ -1,6 +1,6 @@
 # Current implementation review
 
-Reviewed against local source on **2026-10-18**, with the creator's follow-up clarifications and AI preparation fix applied. This is an implementation snapshot, not a new rules decision. `PROJECT.md` remains the project brief; `RULES.md` describes the shared rules and identifies unresolved differences.
+Full review against local source on **2026-10-18**, with AI preparation/headless follow-ups through **2026-10-19**. `PROJECT.md` remains the project brief; `RULES.md` describes the shared rules and identifies unresolved differences. The implemented AI environment contract and latest verification are in `AI_ENVIRONMENT.md`; original dated verification below remains historical.
 
 ## What the game is
 
@@ -57,7 +57,7 @@ React 19 and Vite provide a static frontend. Pure JS modules under `src/game/` o
 
 The AI is hand-written, not trained. It scores average damage improvements, matching class stats/attacks, and selected utility bonuses/penalties. Draft, discard, copy, and recycle reuse this evaluator. It does not simulate the opposing hand to choose counters or accurately value all effect combinations: its average-damage estimate omits whole-hand doubling and approximates shield timing.
 
-`headlessGame.js` and `scripts/headless-worker.mjs` expose JSON-lines reset/step operations to Python. They already play both hand-building modes without animation. The adapter stops at `battle-ready` and evaluates immediately, **without preparation actions**. Defaults are 12 rounds and a 999 damage threshold, unlike browser matches. The Python smoke script chooses random legal actions and reports damage; a Gymnasium environment, training loop, model, and formal reward are not implemented.
+`headlessGame.js` and `scripts/headless-worker.mjs` now expose validated decisions for either or both seats through both modes and full preparation. Source/target choices, activation order, skips, copied/acquired specials and finishing are explicit actions. Shared preparation transitions also drive the browser reducer. Default terminal evaluation is the actual 21-damage/50-round game with +1/0/-1 outcomes; 12/999 remains an explicit diagnostic override. Python has a persistent bounded client, Gymnasium numeric observations/history, variable candidates/masks and deterministic replay. Fair hidden-world sampling, rollout search, a model and a training loop remain future work. `AI_ENVIRONMENT.md` gives commands, API, privacy boundaries and verification.
 
 GitHub Pages build/deployment configuration exists. This review did not inspect a live deployment. No backend, rooms, second-human input, seat selection, networking, or spectator implementation exists yet.
 
@@ -70,8 +70,8 @@ The initial review findings below are retained with their follow-up disposition.
 3. **Final draft leftovers disappear.** `finalizeIfDraftComplete()` clears the final row immediately, skipping `commitDraftDiscard()`. A standard five-pack draft records only 12 of the 15 unpicked cards in `draftDiscard`, affecting recycle eligibility.
 4. **Opening draft starter repeats.** Initialization creates a human-first draft and leaves `nextDraftStartingPicker` at `player`; the first New Game is therefore also human-first. Later draft resets toggle it. Mode/settings changes also do not consume that toggle consistently.
 5. **Preparation fixed.** There is no inter-player turn order; preparation is private. Battle completes all AI specials synchronously before combat, including acquired specials; empty recycle/no-target copy is marked skipped. Unused human specials remain skipped. The delayed AI activation timer was removed.
-6. **Headless/browser rules coverage differs.** Training currently ignores preparation specials. Legal actions are enumerated, but adapter/worker validation is not a complete trust boundary for arbitrary submitted IDs/actions.
-7. **Coverage is narrow.** The regression smoke checks Devour's simultaneous lethal round and now covers AI preparation chains, immutability, idempotence, unusable specials and prepared first-round damage. Headless smoke exercises flow, not the full card interaction matrix or browser animation behavior.
+6. **Headless follow-up implemented.** Preparation choices, browser reducer parity, either-seat control, action validation, normal outcomes and Gymnasium are covered. Privileged host forks preserve real hidden state; they must not be used as fair search until observation-consistent resampling exists.
+7. **Coverage expanded, not exhaustive.** Original Devour/AI-chain regressions remain. New suites cover preparation order/targets/chains, browser pending redraw behavior, invalid actions, privacy, combat timing features, exact rewards, Gymnasium and deterministic replays. Full card-interaction balance and browser animation visuals are not exhaustively verified by these tests.
 
 ## Verification on 2026-10-18
 
@@ -86,3 +86,5 @@ The initial review findings below are retained with their follow-up disposition.
 Lint locations: `CardMotionContext.jsx` (mixed component/helper exports), `useBattlePlayback.js` (state reset in effect), `usePrevious.js` (ref access during render), and `vite.config.js` (`process` missing from lint globals).
 
 The initial review changed documentation only; the follow-up changed AI preparation at the Battle boundary and added regressions. Build and expanded regression smoke pass; lint retains the same four pre-existing errors. Draft, starter, shields, recycle pool/copy counts and headless behavior were left unchanged. Browser layout, animation timing, and live deployment were not visually verified.
+
+Later verification (2026-10-19): lint is clean after the UI redesign; build/original regressions pass. The preparation/headless/Gymnasium work passes 11 JS tests (144 seeded replay cases), six Python integration tests (48 replays plus both-mode/seat checkers), and two further 100-episode smokes. Deferred recycle/pile, draft leftover/starter and custom exhaustion findings remain. No trained model, rollout teacher or publishing is included.

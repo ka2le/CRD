@@ -1,43 +1,55 @@
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Manrope:wght@500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
 :root {
-  /* Table */
-  --bg: #06070b;
-  --felt-0: #161a28;
-  --felt-1: #0b0d15;
-  --s0: rgba(14, 17, 27, 0.86);
-  --s1: #141826;
-  --s2: #1c2133;
-  --glass: rgba(10, 12, 20, 0.72);
-  --b0: rgba(240, 232, 210, 0.06);
-  --b1: rgba(240, 232, 210, 0.12);
-  --b2: rgba(240, 232, 210, 0.24);
-  --t0: #f3ecdc;
-  --t1: #a39d8f;
-  --t2: #5b5850;
+  /* Table: midnight navy felt with a faint brass hex weave (from the app icon) */
+  --bg: #05080f;
+  --felt-0: #12203a;
+  --felt-1: #0a1322;
+  --s0: rgba(13, 21, 36, 0.9);
+  --s1: #0f192a;
+  --s2: #16223a;
+  --surface-hi: rgba(18, 29, 49, 0.96);
+  --surface-lo: rgba(9, 14, 25, 0.96);
+  --glass: rgba(9, 14, 25, 0.8);
+  --b0: rgba(214, 190, 140, 0.07);
+  --b1: rgba(214, 190, 140, 0.14);
+  --b2: rgba(214, 190, 140, 0.26);
+  --t0: #efe6d2;
+  --t1: #a59c88;
+  --t2: #5d584d;
+  --hex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='48' viewBox='0 0 28 48'%3E%3Cpath d='M14 0L28 8V24L14 32L0 24V8ZM14 32V48' fill='none' stroke='%23d6be8c' stroke-opacity='0.055' stroke-width='1'/%3E%3C/svg%3E");
 
-  /* Classes, taken from the card iconography */
-  --critter: #9be15d;
-  --robot: #4fd2ff;
-  --dragon: #ff7a3d;
-  --shield: #8ed8ff;
-  --special: #c7a2ff;
-  --neutral: #efe3c2;
-  --damage: #ff4d61;
-  --health: #5fe08f;
+  /* Brass / champagne: the ink of the icon */
+  --brass: #d6be8c;
+  --brass-hi: #eedfbb;
+  --brass-lo: #9c8457;
+
+  /* Classes: muted jewel tones (icon card backs, lifted for legibility) */
+  --critter: #8fb878;
+  --robot: #86a9d6;
+  --dragon: #d0805e;
+  --critter-deep: #123326;
+  --robot-deep: #142441;
+  --dragon-deep: #3d1612;
+  --shield: #9cc1d4;
+  --special: #b8a5d8;
+  --neutral: #e3d4b0;
+  --damage: #c9545c;
+  --health: #7fb58a;
 
   /* Sides */
-  --player: #f6c453;
-  --opponent: #ff6f91;
+  --player: var(--brass);
+  --opponent: #c7737a;
 
   --gold: var(--player);
   --r: 6px;
-  --card-r: 7%;
+  --card-round: 0.035;
   --gap: 6px;
   --pad: 6px;
   --rail-h: 44px;
   --dock-h: 58px;
-  --font: 'Syne', system-ui, sans-serif;
+  --font: 'Manrope', system-ui, sans-serif;
+  --display: 'Cinzel', 'Times New Roman', serif;
   --mono: 'DM Mono', ui-monospace, monospace;
   --ease-out: cubic-bezier(0.2, 0.9, 0.25, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -61,7 +73,11 @@ html, body, #root {
 body {
   background-color: var(--bg);
   background-image:
+    radial-gradient(130% 85% at 50% 45%, transparent 35%, rgba(3, 5, 10, 0.75) 100%),
+    var(--hex),
     radial-gradient(120% 70% at 50% 50%, var(--felt-0) 0%, var(--felt-1) 55%, var(--bg) 100%);
+  background-size: auto, 28px 48px, auto;
+  background-position: center, center, center;
   font-family: var(--font);
   color: var(--t0);
   min-width: 300px;
@@ -114,8 +130,8 @@ img {
 /* Generic chrome */
 .ui-panel {
   background: var(--glass);
-  border: 1px solid var(--b1);
-  border-radius: 12px;
+  border: 1px solid var(--b0);
+  border-radius: 10px;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
@@ -125,11 +141,11 @@ img {
   align-items: center;
   justify-content: center;
   gap: 0.45em;
-  border: 1px solid var(--b2);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--b1);
+  background: rgba(214, 190, 140, 0.05);
   color: var(--t0);
   padding: 0.5rem 0.85rem;
-  border-radius: 999px;
+  border-radius: 8px;
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -138,7 +154,8 @@ img {
 }
 
 .ui-button:hover:not(:disabled) {
-  border-color: rgba(240, 232, 210, 0.42);
+  border-color: var(--b2);
+  background: rgba(214, 190, 140, 0.09);
 }
 
 .ui-button:active:not(:disabled) {
@@ -157,24 +174,18 @@ img {
 }
 
 .ui-button--primary {
-  background: linear-gradient(180deg, #ffd978 0%, var(--player) 45%, #d99a22 100%);
-  border-color: rgba(255, 230, 160, 0.9);
-  color: #1b1405;
-  font-weight: 800;
-  box-shadow: 0 6px 18px rgba(246, 196, 83, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  background: linear-gradient(180deg, var(--brass-hi) 0%, var(--brass) 55%, #bfa36c 100%);
+  border-color: transparent;
+  color: #15110a;
+  font-family: var(--display);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .ui-button--primary:hover:not(:disabled) {
-  border-color: #fff1c4;
-}
-
-.ui-button--primary:not(:disabled) {
-  animation: ui-primary-breathe 2.4s ease-in-out infinite;
-}
-
-@keyframes ui-primary-breathe {
-  0%, 100% { box-shadow: 0 6px 18px rgba(246, 196, 83, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.55); }
-  50% { box-shadow: 0 6px 28px rgba(246, 196, 83, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.55); }
+  border-color: transparent;
+  background: linear-gradient(180deg, #f5e8c8 0%, var(--brass-hi) 55%, var(--brass) 100%);
 }
 
 @media (prefers-reduced-motion: reduce) {

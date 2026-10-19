@@ -19,12 +19,12 @@
 
 .pack-area--turn-player::before {
   opacity: 1;
-  background: radial-gradient(70% 45% at 50% 100%, rgba(246, 196, 83, 0.13), transparent 70%);
+  background: radial-gradient(70% 45% at 50% 100%, rgba(214, 190, 140, 0.07), transparent 70%);
 }
 
 .pack-area--turn-opponent::before {
   opacity: 1;
-  background: radial-gradient(70% 45% at 50% 0%, rgba(255, 111, 145, 0.13), transparent 70%);
+  background: radial-gradient(70% 45% at 50% 0%, rgba(199, 115, 122, 0.07), transparent 70%);
 }
 
 .pack-area__grid {
@@ -47,6 +47,6 @@
   content: '';
   position: absolute;
   inset: 4%;
-  border-radius: calc(var(--card-w) * 0.075);
-  border: 1.5px dashed rgba(240, 232, 210, 0.08);
+  border-radius: calc(var(--card-w) * var(--card-round, 0.035));
+  border: 1px dashed rgba(214, 190, 140, 0.1);
 }

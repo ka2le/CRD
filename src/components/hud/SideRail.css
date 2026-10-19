@@ -7,10 +7,10 @@
   gap: 10px;
   height: var(--rail-h);
   padding: 0 8px 0 12px;
-  border-radius: 14px;
-  background: linear-gradient(180deg, rgba(20, 24, 38, 0.82), rgba(10, 12, 20, 0.82));
-  border: 1px solid var(--b1);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(18, 29, 49, 0.9), rgba(9, 15, 27, 0.9));
+  border: 1px solid var(--b0);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -24,26 +24,23 @@
   left: 4px;
   top: 22%;
   bottom: 22%;
-  width: 3px;
-  border-radius: 3px;
+  width: 2px;
+  border-radius: 1px;
   background: var(--side);
-  opacity: 0.75;
+  opacity: 0.7;
 }
 
 .side-rail--turn {
-  border-color: color-mix(in srgb, var(--side) 65%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--side) 30%, transparent), 0 0 22px color-mix(in srgb, var(--side) 28%, transparent);
+  border-color: color-mix(in srgb, var(--side) 45%, transparent);
 }
 
 .side-rail--turn .side-rail__marker {
   opacity: 1;
-  box-shadow: 0 0 8px var(--side);
   animation: rail-marker 1.2s ease-in-out infinite alternate;
 }
 
 .side-rail--winner {
-  border-color: var(--side);
-  box-shadow: 0 0 26px color-mix(in srgb, var(--side) 40%, transparent);
+  border-color: color-mix(in srgb, var(--side) 70%, transparent);
 }
 
 .side-rail__spacer {
@@ -103,9 +100,9 @@
   align-items: center;
   gap: 3px;
   padding: 3px 8px;
-  border-radius: 999px;
-  background: rgba(255, 77, 97, 0.1);
-  border: 1px solid rgba(255, 77, 97, 0.28);
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--damage) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--damage) 26%, transparent);
   font-family: var(--mono);
   font-size: 0.8rem;
   color: var(--t0);
@@ -132,20 +129,19 @@
   height: 8px;
   border-radius: 2px;
   transform: rotate(45deg);
-  background: rgba(240, 232, 210, 0.14);
-  border: 1px solid rgba(240, 232, 210, 0.2);
+  background: rgba(214, 190, 140, 0.12);
+  border: 1px solid rgba(214, 190, 140, 0.2);
   transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
 .pip--done {
-  background: rgba(240, 232, 210, 0.5);
+  background: rgba(214, 190, 140, 0.45);
   border-color: transparent;
 }
 
 .pip--current {
   background: var(--player);
-  border-color: #fff3cf;
-  box-shadow: 0 0 8px var(--player);
+  border-color: var(--brass-hi);
 }
 
 /* Thinking */
@@ -191,24 +187,22 @@
   gap: 2px;
   height: 14px;
   padding: 2px;
-  border-radius: 6px;
-  background: rgba(0, 0, 0, 0.45);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 0 0 1px var(--b0);
 }
 
 .health__seg {
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.06);
+  border-radius: 1px;
+  background: rgba(214, 190, 140, 0.06);
 }
 
 .health__seg--on {
-  background: linear-gradient(180deg, #8dffb5, var(--health) 60%, #2c9a5a);
-  box-shadow: 0 0 6px rgba(95, 224, 143, 0.35);
+  background: linear-gradient(180deg, #a3cbaa, var(--health) 60%, #5a8f66);
 }
 
 .health--low .health__seg--on {
-  background: linear-gradient(180deg, #ffb3a1, #ff6a55 60%, #b8322a);
-  box-shadow: 0 0 6px rgba(255, 106, 85, 0.45);
+  background: linear-gradient(180deg, #e3a080, var(--dragon) 60%, #9c4a38);
 }
 
 .health__seg--lost {
@@ -234,13 +228,12 @@
   align-items: center;
   gap: 2px;
   padding: 2px 7px 2px 5px;
-  border-radius: 999px;
+  border-radius: 5px;
   color: var(--shield);
-  background: rgba(142, 216, 255, 0.12);
-  border: 1px solid rgba(142, 216, 255, 0.45);
+  background: color-mix(in srgb, var(--shield) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--shield) 40%, transparent);
   font-family: var(--mono);
   font-size: 0.8rem;
-  box-shadow: 0 0 12px rgba(142, 216, 255, 0.3);
   animation: shield-up 0.35s var(--ease-spring);
 }
 
@@ -251,8 +244,8 @@
   font-family: var(--mono);
   font-weight: 500;
   font-size: 1.35rem;
-  color: #fff;
-  text-shadow: 0 0 10px var(--damage), 0 0 2px #000, 0 2px 4px rgba(0, 0, 0, 0.8);
+  color: var(--brass-hi);
+  text-shadow: 0 1px 0 #000, 0 2px 6px rgba(0, 0, 0, 0.85);
   pointer-events: none;
   animation: hit-pop 900ms var(--ease-out) forwards;
   animation-delay: calc(var(--impact-ms, 900ms) * 0.36);
@@ -269,7 +262,7 @@
   font-family: var(--mono);
   font-size: 0.95rem;
   color: var(--shield);
-  text-shadow: 0 0 8px rgba(142, 216, 255, 0.7), 0 1px 3px #000;
+  text-shadow: 0 1px 0 #000, 0 2px 6px rgba(0, 0, 0, 0.85);
   pointer-events: none;
   opacity: 0;
   animation: hit-pop 900ms var(--ease-out) forwards;
@@ -287,7 +280,7 @@
 }
 
 @keyframes chip-bump {
-  0% { transform: scale(1.5); color: #fff; }
+  0% { transform: scale(1.4); color: var(--brass-hi); }
   100% { transform: scale(1); }
 }
 
@@ -297,10 +290,10 @@
 }
 
 @keyframes hp-lost {
-  0%, 34% { background: var(--health); box-shadow: 0 0 6px rgba(95, 224, 143, 0.35); }
-  42% { background: #fff; box-shadow: 0 0 12px #fff; }
-  62% { background: var(--damage); box-shadow: 0 0 8px var(--damage); }
-  100% { background: rgba(255, 255, 255, 0.06); box-shadow: none; }
+  0%, 34% { background: var(--health); }
+  42% { background: var(--brass-hi); }
+  62% { background: var(--damage); }
+  100% { background: rgba(214, 190, 140, 0.06); }
 }
 
 @keyframes shield-up {

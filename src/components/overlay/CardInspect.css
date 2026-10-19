@@ -5,7 +5,7 @@
   display: grid;
   place-items: center;
   padding: 18px;
-  background: rgba(4, 5, 9, 0.78);
+  background: rgba(3, 6, 12, 0.82);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   animation: inspect-fade 0.18s ease;
@@ -24,11 +24,13 @@
   aspect-ratio: 635 / 888;
   overflow: hidden;
   container-type: inline-size;
-  border-radius: 18px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 40px color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 3.5%/2.5%;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
 }
 
+/* Borderless cards: keep the element but don't draw it. */
 .card-inspect__frame {
+  display: none;
   position: absolute;
   inset: 0;
   border-radius: inherit;
@@ -53,9 +55,9 @@
   align-items: center;
   gap: 8px;
   padding: 5px 12px;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
-  background: color-mix(in srgb, var(--accent) 14%, rgba(10, 12, 20, 0.8));
+  border-radius: 5px;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, rgba(9, 14, 25, 0.85));
   color: var(--t0);
   font-size: 0.78rem;
   font-weight: 700;

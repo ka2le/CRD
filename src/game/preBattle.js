@@ -28,7 +28,7 @@ export function pickPreparationAction(state, side = 'opponent') {
 // Browser baseline only: training can select each action itself instead.
 export function completeOpponentPreBattle(preBattle) {
   let current = preBattle
-  while (getActivatablePreBattleCards(current.opponentHand, current.opponentActivated).length) {
+  while (!current.opponentFinished && getActivatablePreBattleCards(current.opponentHand, current.opponentActivated).length) {
     current = applyPreparationAction(current, 'opponent', pickPreparationAction(current, 'opponent'))
   }
   return current

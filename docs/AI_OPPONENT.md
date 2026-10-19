@@ -19,6 +19,10 @@ This baseline does not evaluate the opposing hand for counterpicks, fully simula
 
 ## Integration
 
-Strategy hooks and seeded decks support experiments. The Python smoke chooses random human-side actions against these heuristics; it does not train. Headless play currently skips preparation; see `AI_TRAINING.md`.
+Strategy hooks and seeded decks support experiments. Headless now exposes every drafting/discard/preparation choice for either seat, with this heuristic as the optional non-controlled policy. Browser and headless preparation share explicit actions/transitions. The Python Gymnasium wrapper has numeric features, dynamic candidates/masks and outcome rewards; random smokes do not train. See `AI_ENVIRONMENT.md` for the working interface and `AI_TRAINING.md` for the remaining plan.
 
 Preparation is private with no inter-player turn order; the AI must finish before combat. This is now enforced at Battle. The creator requested pile handling remain unchanged. Then improve whole-hand evaluation and interaction coverage before adding difficulty tiers/training.
+
+## Proposed next architecture - 2026-10-19
+
+The creator requested search guided by calculated mechanics and a small learned correction. The decision environment/Gymnasium first slice is complete; keep this heuristic as a named baseline/completion policy. Next build observation-consistent hidden-world sampling and non-neural rollout search, then fit a residual evaluator on searched continuations and match outcomes. Terminal combat remains exact. The model should estimate unfinished-hand potential, draws, preparation and opponent adaptation; card value is contextual. No trained evaluator or search opponent has been added yet.

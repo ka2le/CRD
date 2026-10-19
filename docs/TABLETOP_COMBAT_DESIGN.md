@@ -1,6 +1,60 @@
 # Tabletop battle redesign study
 
-Status: **proposal and local numerical experiment, not approved rules**. Completed 2026-10-19. Digital combat, card definitions, draft, discard and preparation remain unchanged.
+Status: **proposal and local numerical experiment, not approved rules**. Updated 2026-10-19. Digital combat, card definitions, draft, discard and preparation remain unchanged. The single-score direction below supersedes the earlier finish/time-chart recommendation.
+
+## Latest creator direction: one power, one type, one score
+
+The creator explicitly accepts meaningful balance shifts and rounded/reworked specials. The key value lies in multiplicative hand building, risk/reward, adaptation to the opponent and deck, and reactive drafting, rather than reproducing every old battle outcome. A change in card valuation is not itself a reason to reject a simpler system. No fractions, round calculation, lethal threshold, damage ledger or overkill tiebreak should be part of tabletop resolution.
+
+Requested shield candidate: each enemy shield subtracts **2 power from Critter, 1 from Robot, 0 from Dragon**. Equal class contributions allow the player to choose a type before battle. Devour can become 2 power per Dragon stat plus permission to choose Dragon damage type. Other specials may be rounded or redesigned.
+
+Latest refinement: deliberately make Critters strongest at low power, Robots at middle power, and Dragons at high power. These are comparisons at equal adjusted power, not a guarantee that a weaker hand beats a much stronger one. Stop deriving the score order from old lethal outcomes; author the curves for this strategic identity.
+
+### Concrete single-score chart candidate
+
+1. Calculate each class's power using matching stats multiplied by attack strength. Ordinary attacks have strength 1 and ultimates strength 2. Add the class contributions together for total power.
+2. Largest class contribution determines damage type; if tied, choose secretly before the simultaneous reveal. Multi-class stat icons count independently in the appropriate class products. Neutral additions do not become another stat multiplier.
+3. Reveal power, damage type and shields together. Subtract enemy shield count multiplied by 2/1/0 according to **your** damage type. Floor power at zero.
+4. Find the adjusted-power row and your damage-type column. That entry is the complete battle score. Higher wins; equal scores draw. Both sides calculate independently, with no resolution order and no combat choices after reveal.
+
+| Adjusted power | Critter score | Robot score | Dragon score |
+| --- | --- | --- | --- |
+| 0 | 0 | 0 | 0 |
+| 1 | 4 | 2 | 1 |
+| 2 | 7 | 4 | 2 |
+| 3 | 10 | 7 | 4 |
+| 4 | 12 | 10 | 6 |
+| 5 | 14 | 15 | 10 |
+| 6 | 16 | 18 | 14 |
+| 7 | 18 | 21 | 18 |
+| 8 | 20 | 23 | 24 |
+| 9 | 22 | 25 | 27 |
+| 10 | 24 | 27 | 30 |
+| 11 | 26 | 29 | 32 |
+| 12 | 28 | 31 | 34 |
+
+These are deliberately authored prototype scores, replacing the previous chart derived from old basic-hand finishes. At equal adjusted power, Critters lead at 1–4, Robots at 5–7, Dragons at 8–12. All columns increase strictly: another power always helps, even outside a class's favored band. Scores determine ordering, not damage or margins of victory. Breakpoints and score differences are playtest parameters, not approved card balance.
+
+The chart range is an example, not a cap on hand strength. Enlarged/prepared hands and strong specials require extended rows. A simple provisional continuation after 12 is +2 score per additional power in every column, keeping Dragons ahead at equal high power without an ever-growing lead. Do not cap scores or power silently. Players would read the extended printed chart, not need this authoring formula.
+
+Examples:
+
+- At power 4, Critters score 12, Robots 10, Dragons 6: Critters lead.
+- At power 6, Critters score 16, Robots 18, Dragons 14: Robots lead.
+- At power 9, Critters score 22, Robots 25, Dragons 27: Dragons lead.
+- Critter power 4 scores 12, beating Dragon power 5's score of 10. Dragon power 8 scores 24, tying Critter power 10. Class identity can offset some raw power without making raw power irrelevant.
+- Three hypothetical equal-power-6 hands, each facing one enemy shield, become Critter power 4 / Robot power 5 / Dragon power 6: scores 12 / 15 / 14. Robots retain a middle-band advantage despite Dragon shield immunity.
+- Robot power 6 with no shield versus Critter power 6 with one shield: Robot power becomes 5 and scores 15; Critter power stays 6 and scores 16. Critters win. A shield only reduces the opposing hand, never its owner's power.
+- One Critter stat and one Swarm plus one Dragon stat and one Breath contribute 1+1 power. The owner may choose either tied damage type before reveal. Against a shield, choosing Dragon prevents the shield penalty; that choice is legitimate under this new ruleset.
+
+### Integer special candidates, for subsequent development
+
+- Bite: +2 flat power. It is added once and is not multiplied by class stats. A purely neutral offensive hand can use Robot type/column as a fixed default; choosing Dragon freely for neutral-only hands would give automatic shield immunity.
+- Punch: double the power from Robot attacks; other attacks that already contribute positive power each add +1 flat power. This is a deliberately different integer effect, retaining Robot preference while still helping other builds. Define stacking and interaction with neutral attacks before treating a full conversion as final; no old half-power multiplier is required.
+- Devour: 2 power per Dragon stat, with an optional Dragon-type override declared before reveal. Its contribution still requires Dragon stats. The override changes the whole hand's damage type, which can protect mixed or neutral power from shields; that is part of its new value.
+- Shield-based damage and hybrid cards may also receive integer formulas. Their previous exact long-run output is no longer a conversion constraint. Do not reintroduce a CD4/Heavy tempo merely to preserve Devour timing.
+
+This direction is conceptually simpler than the historical proposal: only the class products and one shield subtraction are calculated; the chart supplies a single comparable integer. The earlier 40,000-matchup agreement results do **not** evaluate this new shield rule, chart-plus-rounded-card system or its strategic balance.
 
 ## Design brief
 

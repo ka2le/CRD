@@ -4,9 +4,13 @@ Source-reviewed baseline: 2026-10-18. Proposed work order; unresolved rules stil
 
 ## Implemented
 
-Both local human-versus-AI modes, four preparation effects, simultaneous combat, 27 playable definitions, Normal/Wild Deck, card art/tooltips, animations/masks, round playback/log/results, persisted settings, seeded/injected deck seams, Node/Python smoke bridge and Pages deployment configuration.
+Both local human-versus-AI modes, four preparation effects, simultaneous combat, 27 playable definitions, Normal/Wild Deck, card art/tooltips, animations/masks, round playback/log/results, persisted settings, seeded/injected deck seams and Pages deployment configuration. Added 2026-10-19: full preparation decision API shared with browser, either-seat headless control, normal outcomes/rewards, private observations/history, persistent worker v2 and tested Python/Gymnasium variable-action wrapper. See `AI_ENVIRONMENT.md`.
 
-## Latest scope clarification and completed fix
+## Latest AI planning - 2026-10-19
+
+The creator requested search guided by mathematical evaluation plus a neural correction. `AI_TRAINING.md` replaces the earlier 12-round damage objective with actual win/draw/loss. The shared decision environment and Gymnasium first slice are implemented. Next: observation-consistent hidden-world sampler -> sampled-rollout teacher -> residual value network -> self-play/tournaments -> browser Web Worker. Host forks preserve actual hidden state and must not substitute for fair sampling. Tabletop chart work remains a separate unapproved proposal.
+
+## Earlier scope clarification and completed fix
 
 The creator confirmed current CD 1 shields are correct, recycle is intended as one card for one player per game, and preparation is private without inter-player turns. Only the AI preparation completion fix was requested; other findings remain unchanged.
 
@@ -21,18 +25,17 @@ Completed: pressing Battle resolves all AI preparation, including special chains
 
 ## 2. Shared engine and quality
 
-- Extract full preparation transitions/activation tracking from React.
-- Add preparation to headless actions for browser parity.
-- Validate external actions before future server use.
+- Complete: shared preparation transitions, headless actions, either-seat control and external action validation, with browser reducer parity coverage.
+- Harden/extend the simulation protocol as future server/search requirements become concrete.
 - Add interaction coverage for lethal, shields, doubling, copying and recycling.
-- Resolve four current lint errors.
+- Preserve clean lint from the 2026-10-18 UI redesign; the earlier four-error review is historical.
 
 ## 3. Content and AI
 
 - Confirm existing special formulas/balance with the creator.
 - Formalize `extra_turn` and `no_stats_to_2` before enabling them.
-- Improve whole-hand AI evaluation and opponent-aware timing/counters.
-- Add Gymnasium, observation/action encoding and reward after parity.
+- Improve whole-hand AI evaluation and opponent-aware timing/counters through the staged search/residual-value plan in `AI_TRAINING.md`.
+- Gymnasium and outcome rewards now work. Add observation-consistent world sampling and batched rollout search before training; do not use privileged exact-world forks as fair AI.
 - Keep extra/monster sets as separate future scope.
 
 ## 4. Presentation

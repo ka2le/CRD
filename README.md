@@ -8,7 +8,7 @@ Current build:
 - draft mode
 - simultaneous battle playback
 - first-pass special card and AI support
-- early Python-to-Node headless smoke path for future training and server work
+- complete headless decision episodes and Python/Gymnasium interface, including preparation order/targets
 
 ## How it plays
 
@@ -42,7 +42,10 @@ The game serves local WebP art and icons. Full-resolution originals are preserve
 
 ```bash
 npm run headless:smoke -- --mode draft --seed 7 --reveal-opponent
+npm run headless:test
 ```
+
+For the isolated Python/Gymnasium setup, variable action masks, replay API and training boundaries, see [AI environment](docs/AI_ENVIRONMENT.md). The [search/neural plan](docs/AI_TRAINING.md) describes the next work; no trained model exists yet.
 
 ## Project Notes
 
@@ -50,4 +53,4 @@ The project keeps game rules and state transitions in reusable JS modules under 
 
 ## Verification baseline
 
-On 2026-10-18, production build, combat regression smoke and both Python headless modes passed. Lint reports four existing errors. Headless currently skips preparation and uses 12-round damage evaluation, so it does not cover the complete browser match. See `docs/CURRENT_STATE.md` for details.
+On 2026-10-19, build, lint, existing regressions, 11 focused JS headless tests (including 144 seeded replay cases), six Python integration tests (including Gymnasium checkers and 48 replays), and two additional 100-episode smokes pass. Headless includes optional ordered preparation and defaults to actual 21/50 combat with outcome rewards. Earlier 12-round smoke/lint findings in the original review are historical. See `docs/AI_ENVIRONMENT.md` and `docs/CURRENT_STATE.md` for limits.

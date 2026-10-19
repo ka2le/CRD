@@ -52,15 +52,15 @@
 
 .hand-area__slot--empty {
   aspect-ratio: 635 / 888;
-  border-radius: calc(var(--card-w) * 0.075);
-  border: 1.5px dashed rgba(240, 232, 210, 0.1);
-  background: rgba(240, 232, 210, 0.015);
+  border-radius: calc(var(--card-w) * var(--card-round, 0.035));
+  border: 1px dashed rgba(214, 190, 140, 0.1);
+  background: rgba(214, 190, 140, 0.015);
 }
 
 .hand-area--opponent .hand-area__slot--empty {
-  border-color: rgba(255, 111, 145, 0.14);
+  border-color: rgba(199, 115, 122, 0.16);
 }
 
 .hand-area--player .hand-area__slot--empty {
-  border-color: rgba(246, 196, 83, 0.16);
+  border-color: rgba(214, 190, 140, 0.18);
 }

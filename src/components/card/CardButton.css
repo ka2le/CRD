@@ -1,5 +1,6 @@
 .card {
-  --card-radius: calc(var(--card-w, 100px) * 0.075);
+  --card-radius: calc(var(--card-w, 100px) * var(--card-round, 0.035));
+  --ring-gap: max(2px, calc(var(--card-w, 100px) * 0.03));
   --lift: 0px;
   position: relative;
   display: block;
@@ -40,31 +41,28 @@
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   background: #0b0c12;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.6);
+  transition: box-shadow 0.25s ease, filter 0.25s ease;
 }
 
 .card__face--back {
   transform: rotateY(180deg);
 }
 
-/* Class-coloured frame: gradient ring for multi-class cards. */
+/* Cards are borderless. This ring sits just outside the card and only
+   appears for states (selected, firing, targetable...), flat and unlit. */
 .card__frame {
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
+  inset: calc(var(--ring-gap) * -1);
+  border-radius: calc(var(--card-radius) + var(--ring-gap));
   pointer-events: none;
-  padding: max(1.5px, calc(var(--card-w, 100px) * 0.018));
+  padding: max(1.5px, calc(var(--card-w, 100px) * 0.014));
   background: linear-gradient(135deg, var(--accent-a), var(--accent-b) 50%, var(--accent-c));
-  opacity: 0.55;
+  opacity: 0;
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-  transition: opacity 0.2s ease, filter 0.2s ease;
-}
-
-.card--facedown .card__frame {
-  opacity: 0.25;
-  background: linear-gradient(135deg, rgba(246, 196, 83, 0.8), rgba(246, 196, 83, 0.3));
+  transition: opacity 0.2s ease;
 }
 
 .card--dummy {
@@ -82,9 +80,8 @@
     --lift: calc(var(--card-w, 100px) * -0.06);
   }
 
-  .card--interactive:hover .card__frame {
-    opacity: 1;
-    filter: drop-shadow(0 0 6px var(--accent));
+  .card--interactive:hover .card__face {
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.6);
   }
 }
 
@@ -94,7 +91,7 @@
 
 .card:focus-visible .card__frame {
   opacity: 1;
-  filter: drop-shadow(0 0 5px var(--player));
+  background: var(--player);
 }
 
 /* Selected (copy source armed, generic selection) */
@@ -106,7 +103,6 @@
 .card--selected .card__frame {
   opacity: 1;
   background: var(--player);
-  filter: drop-shadow(0 0 8px var(--player));
 }
 
 /* Marked for discard: tilts away, tints, shows the bin mark. */
@@ -123,34 +119,30 @@
 .card--discard-marked .card__frame {
   opacity: 1;
   background: var(--damage);
-  filter: drop-shadow(0 0 7px var(--damage));
 }
 
-/* Battle fire */
+/* Battle fire: flat class-coloured ring + real depth, no bloom. */
 .card--active .card__frame {
   opacity: 1;
-  padding: max(2px, calc(var(--card-w, 100px) * 0.03));
-  filter: drop-shadow(0 0 6px var(--accent)) drop-shadow(0 0 14px var(--accent));
+  padding: max(2px, calc(var(--card-w, 100px) * 0.02));
 }
 
 .card--active .card__face--front {
-  box-shadow: 0 0 0 1px var(--accent), 0 0 calc(var(--card-w, 100px) * 0.25) color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.6), 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 
 /* Pre-battle special ready to use */
 .card--ready .card__frame {
   opacity: 1;
-  background: linear-gradient(135deg, var(--special), #fff 50%, var(--special));
+  background: linear-gradient(135deg, var(--special), var(--brass-hi) 50%, var(--special));
   background-size: 220% 220%;
-  animation: card-ready-sheen 1.8s linear infinite;
-  filter: drop-shadow(0 0 7px var(--special));
+  animation: card-ready-sheen 3.2s linear infinite;
 }
 
 .card--targetable:not(.card--ready) .card__frame {
   opacity: 1;
   background: var(--robot);
-  filter: drop-shadow(0 0 6px var(--robot));
-  animation: card-target-pulse 1.1s ease-in-out infinite;
+  animation: card-target-pulse 1.4s ease-in-out infinite;
 }
 
 /* AI is eyeing this card in the pack (appears once the deal has landed) */
@@ -163,7 +155,7 @@
   inset: -5%;
   border-radius: calc(var(--card-radius) * 1.3);
   pointer-events: none;
-  border: 2px dashed color-mix(in srgb, var(--opponent) 75%, transparent);
+  border: 1.5px dashed color-mix(in srgb, var(--opponent) 70%, transparent);
   opacity: 0;
   animation: card-reticle 0.9s ease-out var(--eyed-delay, 0ms) infinite;
 }
@@ -174,12 +166,12 @@
 
 @keyframes card-eyed-frame {
   from { opacity: 0.55; }
-  to { opacity: 1; background: var(--opponent); filter: drop-shadow(0 0 8px var(--opponent)); }
+  to { opacity: 1; background: var(--opponent); }
 }
 
 @keyframes card-dim {
   from { filter: none; }
-  to { filter: brightness(0.6) saturate(0.7); }
+  to { filter: brightness(0.55) saturate(0.6); }
 }
 
 .card--defeated .card__face--front {
@@ -187,7 +179,7 @@
 }
 
 .card--defeated .card__frame {
-  opacity: 0.15;
+  opacity: 0;
 }
 
 /* Badges */
@@ -208,14 +200,14 @@
 
 .card__badge--discard {
   background: var(--damage);
-  color: #fff;
-  box-shadow: 0 0 0 2px rgba(10, 10, 16, 0.8), 0 4px 10px rgba(0, 0, 0, 0.5);
+  color: #fbf3e4;
+  box-shadow: 0 0 0 2px var(--s1), 0 4px 10px rgba(0, 0, 0, 0.5);
 }
 
 .card__badge--ready {
-  background: radial-gradient(circle, #fff 0%, var(--special) 70%);
-  color: #2a1450;
-  box-shadow: 0 0 0 2px rgba(10, 10, 16, 0.8), 0 0 12px var(--special);
+  background: var(--special);
+  color: #1e1636;
+  box-shadow: 0 0 0 2px var(--s1), 0 4px 10px rgba(0, 0, 0, 0.5);
   animation: card-badge-pop 0.3s var(--ease-spring), card-ready-bob 1.4s ease-in-out infinite 0.3s;
 }
 
@@ -226,15 +218,15 @@
   translate: -50% -50%;
   min-width: 1.6em;
   padding: 0.1em 0.35em;
-  border-radius: 999px;
+  border-radius: 6px;
   font-family: var(--mono);
   font-weight: 500;
   font-size: max(13px, calc(var(--card-w, 100px) * 0.19));
   line-height: 1.1;
   text-align: center;
-  color: #fff;
-  background: color-mix(in srgb, var(--accent) 80%, #000);
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.5), 0 0 18px var(--accent);
+  color: var(--t0);
+  background: color-mix(in srgb, var(--accent) 28%, #0b1220);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--accent) 80%, transparent), 0 6px 14px rgba(0, 0, 0, 0.55);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
   pointer-events: none;
   z-index: 5;
@@ -250,9 +242,9 @@
   align-items: center;
   gap: 0.25em;
   padding: 0.2em 0.55em;
-  border-radius: 999px;
-  background: rgba(6, 8, 14, 0.86);
-  border: 1px solid var(--b2);
+  border-radius: 5px;
+  background: rgba(7, 12, 22, 0.9);
+  border: 0;
   font-family: var(--mono);
   font-size: max(11px, calc(var(--card-w, 100px) * 0.085));
   color: var(--t0);
@@ -278,8 +270,8 @@
 }
 
 @keyframes card-target-pulse {
-  0%, 100% { filter: drop-shadow(0 0 3px var(--robot)); }
-  50% { filter: drop-shadow(0 0 10px var(--robot)); }
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
 }
 
 @keyframes card-reticle {
