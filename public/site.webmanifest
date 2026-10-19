@@ -1,11 +1,12 @@
 {
   "name": "CRD - Critters Robots Dragons",
   "short_name": "CRD",
-  "id": "/CRD/?app=critters-robots-dragons",
+  "id": "/CRD/app",
   "description": "A digital prototype of Critters Robots Dragons.",
-  "start_url": "/CRD/",
-  "scope": "/CRD/",
-  "display": "standalone",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
   "background_color": "#03060c",
   "theme_color": "#0d1626",
   "icons": [
