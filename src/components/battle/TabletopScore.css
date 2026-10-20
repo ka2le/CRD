@@ -8,6 +8,7 @@
 .tabletop-formula .g-icon { font-size: 1em; }
 .tabletop-formula__damage { color: var(--damage); }
 .tabletop-formula__shield { color: var(--shield); }
+.tabletop-formula__ability { color: var(--t1); font-size: 0.85em; padding: 0 0.3em; border-radius: 4px; background: rgba(214, 190, 140, 0.08); }
 .tabletop-choice { position: absolute; z-index: 5; bottom: 2px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; width: max-content; max-width: 100%; padding: 8px 12px; background: var(--surface-lo); border: 1px solid var(--brass); border-radius: 8px; box-shadow: 0 4px 16px #0009; font-size: 0.8rem; }
 .tabletop-choice .ui-button { min-height: 36px; gap: 5px; }
 .tabletop-choice__selected { display: inline-flex; gap: 5px; align-items: center; }

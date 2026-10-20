@@ -3,6 +3,13 @@ import './ScreenMenu.css'
 import { GameIcon, SvgIcon } from '../ui/GameIcon'
 import { OPPONENT_AI_OPTIONS } from '../../game/opponentAi'
 
+// Round-by-round battle, or one of the two tabletop scoring rule sets.
+const BATTLE_RULES = [
+  { value: false, label: 'Battle' },
+  { value: 'threshold', label: 'Threshold' },
+  { value: 'abilities', label: 'Abilities' },
+]
+
 export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, settings, onUpdateSettings, onHelp, onScoreCard, onCollection, onTestDeck }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
@@ -101,13 +108,23 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
             </button>
           </div>
 
-          <label className="screen-menu__toggle">
-            <input type="checkbox" checked={Boolean(settings.tabletop)}
-              onChange={(event) => onUpdateSettings({ tabletop: event.target.checked })} />
-            <span className="screen-menu__switch" aria-hidden="true" />
-            <SvgIcon name="swords" />
-            <span>Tabletop battle</span>
-          </label>
+          <div className="screen-menu__group">
+            <span className="screen-menu__select-label">Battle</span>
+            <div className="screen-menu__segmented screen-menu__segmented--three" role="radiogroup" aria-label="Battle rules">
+              {BATTLE_RULES.map(({ value, label }) => (
+                <button
+                  key={label}
+                  type="button"
+                  role="radio"
+                  aria-checked={(settings.tabletop || false) === value}
+                  className={(settings.tabletop || false) === value ? 'is-on' : ''}
+                  onClick={() => run(() => (settings.tabletop || false) !== value && onUpdateSettings({ tabletop: value }))}
+                >
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
 
           <label className="screen-menu__select">
             <span className="screen-menu__select-label">Opponent</span>

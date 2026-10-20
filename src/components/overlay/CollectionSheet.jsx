@@ -35,7 +35,7 @@ export default function CollectionSheet({ open, onClose, tabletop = false, wildD
   const groups = useMemo(() => {
     // One entry per artwork, so every illustration of a card is shown.
     const cards = getCoreCards({ tabletop }).flatMap((card) => {
-      const base = tabletop ? toTabletopCard(card) : card
+      const base = tabletop ? toTabletopCard(card, tabletop) : card
       const imageCount = Math.max(card.images?.length ?? 1, 1)
       return Array.from({ length: imageCount }, (_, imageIndex) => ({
         ...base,

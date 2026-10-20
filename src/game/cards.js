@@ -1,6 +1,6 @@
 import cardsData from '../../data/cards.json' with { type: 'json' }
 import tabletopCardsData from '../../data/tabletop-cards.json' with { type: 'json' }
-import { toTabletopCard } from './tabletop.js'
+import { toTabletopCard, normalizeTabletopRules, isCardInTabletopRules } from './tabletop.js'
 
 export const CORE_CARD_IDS = new Set([
   'critter1',
@@ -32,9 +32,12 @@ export const CORE_CARD_IDS = new Set([
   'any_off_each',
 ])
 
+// options.tabletop: false (round-by-round battle), 'threshold' or 'abilities' (true = 'threshold').
 export function getCoreCards(options = {}) {
   const core = cardsData.cards.filter((card) => CORE_CARD_IDS.has(card.id))
-  return options.tabletop ? [...core, ...tabletopCardsData.cards] : core
+  const rules = normalizeTabletopRules(options.tabletop)
+  if (!rules) return core
+  return [...core, ...tabletopCardsData.cards].filter((card) => isCardInTabletopRules(card, rules))
 }
 
 function getExpandedCopies(card, wildDeck = false) {
@@ -48,7 +51,7 @@ export function expandCardPool(cards, options = {}) {
 
   return cards.flatMap((card) =>
     Array.from({ length: getExpandedCopies(card, wildDeck) }, (_, index) => ({
-      ...(options.tabletop ? toTabletopCard(card) : card),
+      ...(options.tabletop ? toTabletopCard(card, options.tabletop) : card),
       uid: `${card.id}__${index + 1}`,
       imageIndex: index % Math.max(card.images?.length ?? 1, 1),
     })),

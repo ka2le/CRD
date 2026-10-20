@@ -442,7 +442,7 @@ function AppContent() {
       <CollectionSheet
         open={collectionOpen}
         onClose={() => setCollectionOpen(false)}
-        tabletop={Boolean(settings.tabletop)}
+        tabletop={settings.tabletop}
         wildDeck={Boolean(settings.wildDeck)}
       />
 

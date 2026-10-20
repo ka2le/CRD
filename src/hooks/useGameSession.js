@@ -19,7 +19,7 @@ import { chooseDiscardIds } from '../game/cardEvaluator'
 import {
   DEFAULT_OPPONENT_AI, normalizeOpponentAi, requestOpponentPreparation, requestOpponentSearchAction,
 } from '../game/opponentAi'
-import { getTabletopChoice, getTabletopHandKey, getCardTabletopTypes } from '../game/tabletop'
+import { getTabletopChoice, getTabletopHandKey, getCardTabletopTypes, normalizeTabletopRules } from '../game/tabletop'
 import { createDevScenario, DEV_SCENARIO_NAMES } from '../game/devScenarios'
 import {
   GAME_ZONE_KEYS, PREPARATION_ZONE_KEYS, getTestDeckZones, moveTestCardToTop, swapTestCards,
@@ -69,6 +69,7 @@ function loadStoredSettings() {
       ...DEFAULT_SETTINGS,
       ...parsed,
       opponentAi: normalizeOpponentAi(parsed.opponentAi),
+      tabletop: normalizeTabletopRules(parsed.tabletop),
     }
   } catch {
     return DEFAULT_SETTINGS
@@ -276,7 +277,7 @@ export function sessionReducer(state, action) {
       if (result) preBattle = { ...preBattle, playerFinished: true, opponentFinished: true }
       const next = {
         ...state, game, preBattle, gameMode: game.mode,
-        settings: { ...state.settings, gameMode: game.mode, tabletop: true, wildDeck: true },
+        settings: { ...state.settings, gameMode: game.mode, tabletop: 'threshold', wildDeck: true },
         selectedIds: [], battleStarted: false, battleLogOpen: false,
         battleInstance: state.battleInstance + 1, gameSessionKey: state.gameSessionKey + 1, dealId: state.dealId + 1,
         lastTransition: null, pendingPlayerDraftPickAnimation: null, suppressedHandCardIds: { player: [], opponent: [] },
@@ -755,6 +756,7 @@ export function sessionReducer(state, action) {
         ...action.patch,
       }
       nextSettings.opponentAi = normalizeOpponentAi(nextSettings.opponentAi)
+      nextSettings.tabletop = normalizeTabletopRules(nextSettings.tabletop)
 
       if (Object.keys(action.patch).every((key) => NON_RESETTING_SETTINGS.includes(key))) {
         return { ...state, settings: nextSettings }

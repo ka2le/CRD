@@ -4,17 +4,77 @@ export const TABLETOP_CLASSES = ['critter', 'robot', 'dragon']
 export const TABLETOP_SHIELD_COST = { critter: 2, robot: 1, dragon: 0 }
 const ULTIMATES = new Set(['murder_rabbit', 'robot_ulti', 'dragon_ulti', 'devour'])
 
+// Two tabletop rule sets share the single power calculation and shield penalty:
+//   threshold – one bonus per main faction: Critters 2+ → +1, Robots 8+ → +3, Dragons 14+ → +6.
+//   abilities – class abilities (Adapt, Perfect Balance, Overwhelming); no Shortcut or 2× cards in the deck.
+export const TABLETOP_RULES = ['threshold', 'abilities']
+const ABILITIES_EXCLUDED_IDS = new Set(['double_dmg', 'shortcut'])
+
+// Settings store `false` for the round-by-round battle; `true` is the legacy threshold toggle.
+export function normalizeTabletopRules(value) {
+  if (!value) return false
+  return value === 'abilities' ? 'abilities' : 'threshold'
+}
+
+export function isCardInTabletopRules(card, rules) {
+  return !(normalizeTabletopRules(rules) === 'abilities' && ABILITIES_EXCLUDED_IDS.has(card.id))
+}
+
+// Tabletop cards carry their rule set, so any hand knows how it is scored.
+export function getHandTabletopRules(hand = []) {
+  return normalizeTabletopRules(hand.find((card) => card?.tabletop)?.tabletop) || 'threshold'
+}
+
 // Derivatives belong to one game; the imported digital definitions stay intact.
-export function toTabletopCard(card) {
+export function toTabletopCard(card, rules = 'threshold') {
   const effect = { ...card.effect }
   if (effect.dmgType) effect.dmg = ULTIMATES.has(card.id) ? 4 : 2
   if (card.id === 'bite') effect.dmg = 2
   if (effect.shield) effect.shield = 1
-  return { ...card, tabletop: true, cd: 0, effect }
+  return { ...card, tabletop: normalizeTabletopRules(rules) || 'threshold', cd: 0, effect }
+}
+
+// ---------- abilities ----------
+export const ABILITY_RULES = { balanceBonus: 3, overwhelmingAt: 14 }
+
+// Adapt: a pure Critter stat card becomes an ordinary Critter attack (2 power per Critter stat).
+function isCritterStatCard(card) {
+  return card.type === 'stat' && card.stats?.length > 0 && card.stats.every((stat) => stat === 'critter')
+}
+
+function adaptCard(card) {
+  return { ...card, type: 'action', stats: [], effect: { dmg: 2, dmgType: 'critter' }, adaptedFrom: card.id }
+}
+
+function getAbilitiesPlan(hand, adaptedUid) {
+  const cards = adaptedUid ? hand.map((card) => (card.uid === adaptedUid ? adaptCard(card) : card)) : hand
+  let profile = computeProfile(cards)
+  const dragonBase = profile.contributions.dragon
+  // Overwhelming: Dragon base power 14+ gains one Dragon stat before final power.
+  const overwhelming = dragonBase >= ABILITY_RULES.overwhelmingAt
+  if (overwhelming) profile = computeProfile(cards, { dragon: 1 })
+  // Perfect Balance: as many Robot stats as Robot attack cards (at least one of each).
+  const robotAttacks = cards.filter((card) => card.effect?.dmgType === 'robot').length
+  const balanced = profile.stats.robot > 0 && profile.stats.robot === robotAttacks
+  return { ...profile, rules: 'abilities', adaptedUid: adaptedUid ?? null, dragonBase, overwhelming, balanced, robotAttacks }
+}
+
+// Adapt is optional; take the conversion that scores best before reveal (no conversion on ties).
+function getAbilitiesProfile(hand) {
+  const plans = [null, ...hand.filter(isCritterStatCard).map((card) => card.uid)].map((uid) => getAbilitiesPlan(hand, uid))
+  const value = (plan) => plan.base + (plan.balanced ? ABILITY_RULES.balanceBonus : 0)
+  return plans.reduce((best, plan) => (value(plan) > value(best) ? plan : best))
 }
 
 export function getTabletopProfile(hand = []) {
+  return getHandTabletopRules(hand) === 'abilities'
+    ? getAbilitiesProfile(hand)
+    : { ...computeProfile(hand), rules: 'threshold' }
+}
+
+function computeProfile(hand = [], extraStats = {}) {
   const stats = getHandStats(hand)
+  for (const [type, extra] of Object.entries(extraStats)) stats[type] += extra
   const shields = hand.reduce((sum, card) => sum + (card.effect?.shield > 0 ? 1 : 0), 0)
   const bonusMultiplier = 2 ** hand.filter((card) => card.id === 'double_dmg').length
   const shortcuts = hand.filter((card) => card.id === 'shortcut').length
@@ -47,15 +107,20 @@ export function getTabletopProfile(hand = []) {
   return { stats, shields, contributions, neutral, base, dominantTypes, types, attacks, bonusMultiplier, shortcuts, hasChameleon }
 }
 
-// Each Shortcut copy advances the earned faction bonus this many tiers.
+// Each Shortcut copy advances the earned faction bonus this many tiers (threshold rules only).
 export const SHORTCUT_TIER_STEPS = 2
 
+// Threshold rules: one threshold per main faction, checked after shields.
+export const TABLETOP_THRESHOLDS = {
+  critter: { at: 2, bonus: 1 },
+  robot: { at: 8, bonus: 3 },
+  dragon: { at: 14, bonus: 6 },
+}
+
 export function getTabletopBonus(type, power) {
-  if (power <= 0) return 0
-  if (type === 'critter') return 1
-  if (type === 'robot') return (power >= 7 ? 2 : 0) + (power >= 11 ? 1 : 0)
-  if (type === 'dragon') return (power >= 11 ? 4 : 0) + (power >= 14 ? 2 : 0)
-  return 0
+  const threshold = TABLETOP_THRESHOLDS[type]
+  if (!threshold || power <= 0) return 0
+  return power >= threshold.at ? threshold.bonus : 0
 }
 
 export function scoreTabletopHand(hand, enemyShields = 0, damageType = null) {
@@ -65,8 +130,14 @@ export function scoreTabletopHand(hand, enemyShields = 0, damageType = null) {
   const shieldPenalty = enemyShields * (TABLETOP_SHIELD_COST[type] ?? 0)
   const blocked = Math.min(profile.base, shieldPenalty)
   const power = profile.base - blocked
+  if (profile.rules === 'abilities') {
+    // Perfect Balance is added after shields, like a threshold bonus.
+    const bonus = profile.balanced ? ABILITY_RULES.balanceBonus : 0
+    return { ...profile, damageType: type, enemyShields, shieldPenalty, blocked, power,
+      naturalBonus: bonus, baseBonus: bonus, bonus, score: power + bonus }
+  }
   const naturalBonus = getTabletopBonus(type, power)
-  const tiers = { critter: [0, 1], robot: [0, 2, 3], dragon: [0, 4, 6] }[type] ?? [0]
+  const tiers = TABLETOP_THRESHOLDS[type] ? [0, TABLETOP_THRESHOLDS[type].bonus] : [0]
   const tierIndex = tiers.indexOf(naturalBonus)
   const baseBonus = power > 0 ? tiers[Math.min(tierIndex + (profile.shortcuts * SHORTCUT_TIER_STEPS), tiers.length - 1)] : 0
   const bonus = baseBonus * profile.bonusMultiplier

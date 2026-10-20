@@ -1,10 +1,20 @@
 # Tabletop battle mode
 
-Implemented 2026-10-19. Menu → **Tabletop battle** is a persisted toggle, off by default, independent of Draft / Discard and Normal / Wild Deck. Changing it deals a fresh game. Digital round combat remains available when off.
+Implemented 2026-10-19; since 2026-10-20 Menu → **Battle** picks **Battle** (digital rounds), **Threshold** or **Abilities**. The original **Tabletop battle** toggle was a persisted setting, off by default, independent of Draft / Discard and Normal / Wild Deck. Changing it deals a fresh game. Digital round combat remains available when off.
 
 The tabletop deck includes two exclusive cards, **Shortcut** and **Chameleon**, defined in `data/tabletop-cards.json`. Each has one normal copy / three Wild copies, bringing tabletop decks to 72 / 108 cards (29 definitions). Digital decks remain 70 / 102 (27 definitions). Their supplied originals are archived in `assets/originals/tabletop/`; optimized WebP art uses the normal manifest pipeline and base-aware renderer. Both are available in the tabletop collection, draft, discard, draw, copy and recycle pools.
 
-## Scoring
+## Rule sets (2026-10-20)
+
+`settings.tabletop` is `false`, `'threshold'` or `'abilities'` (legacy `true` → `'threshold'`). Tabletop card derivatives carry their rule set in `card.tabletop`, so scoring, AI and search infer the rules from any hand (`getHandTabletopRules` in `src/game/tabletop.js`). Steps 1–3 below (power, main type, shields) are shared.
+
+- **Threshold:** step 4 is replaced by one bonus for the main faction after shields — Critter 2+ → +1, Robot 8+ → +3, Dragon 14+ → +6 (`TABLETOP_THRESHOLDS`). Shortcut grants the bonus below its threshold (positive power required); 2× cards double it.
+- **Abilities:** no faction bonus. Deck drops Shortcut and 2× (Chameleon stays). Every hand checks all three abilities:
+  - *Adapt* — one pure Critter stat card (Critter, Two Critters) may become an ordinary Critter attack. Applied automatically to the conversion that scores most before reveal; none on ties.
+  - *Overwhelming* — Dragon base power (Dragon contributions) 14+ adds one Dragon stat, then power is recounted. Before shields.
+  - *Perfect Balance* — Robot stats equal Robot attack cards (at least one each): +3 after shields.
+  Score = power − shields + Perfect Balance. The result formula marks Adapt and Overwhelming with small icons.
+
 
 1. Add every attack's power. An ordinary class attack contributes **2 × matching stats**; multiple attacks each use the full stat total.
 2. The class contributing most power is the main damage type. Only positive class contributions count. When tied, the human must tap an eligible stat or attack card before battle. A multi-class card opens a choice between its eligible types. Chameleon permits any of the three factions: click it and choose a faction icon. All power, including neutral power, receives the chosen type's shield rule and bonus.

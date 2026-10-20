@@ -17,7 +17,7 @@ import { getLegalActions, stepHeadlessGame } from './headlessGame.js'
 import { chooseDiscardIds, pickBestCardForHand } from './cardEvaluator.js'
 import { pickPreparationAction } from './preBattle.js'
 import { applyPreparationAction, getPreparationActions } from './preparationState.js'
-import { resolveTabletopBattle, chooseTabletopType, toTabletopCard } from './tabletop.js'
+import { resolveTabletopBattle, chooseTabletopType, toTabletopCard, normalizeTabletopRules } from './tabletop.js'
 
 export const SEARCH_AI_VERSION = 'browser-root-rollout-v2-prep-lookahead'
 
@@ -253,8 +253,9 @@ export function preparationView(preparation, game, side = 'opponent') {
     ...preparation[`${side}Hand`], ...preparation[`${side}Discard`],
     ...(enemyPublicHand ?? []), ...enemyPublicPile,
   ].map((card) => card.uid))
-  const tabletop = [...preparation.playerHand, ...preparation.opponentHand, ...preparation.deck].some((card) => card.tabletop)
-  const definitions = new Map(getCoreCards({ tabletop }).map((card) => [card.id, tabletop ? toTabletopCard(card) : card]))
+  const tabletop = normalizeTabletopRules([...preparation.playerHand, ...preparation.opponentHand, ...preparation.deck]
+    .find((card) => card.tabletop)?.tabletop)
+  const definitions = new Map(getCoreCards({ tabletop }).map((card) => [card.id, tabletop ? toTabletopCard(card, tabletop) : card]))
   const unseen = new Map()
   for (const card of [...preparation.deck, ...preparation[`${enemy}Hand`], ...preparation[`${enemy}Discard`]]) {
     // A private copy turned a physical Copy card into another card: restore the physical card.

@@ -17,10 +17,18 @@ export default function HelpSheet({ open, onClose, tabletop = false }) {
           <div className="help__fact"><GameIcon name="damage" /><span>Each ordinary attack gives 2 power per matching stat. Add all attacks.</span></div>
           <div className="help__fact"><GameIcon name="star" /><span>Your largest class contribution is your main damage type. If tied, tap a highlighted card before battle. Neutral-only power uses Robot.</span></div>
           <div className="help__fact"><GameIcon name="shield" /><span>Each enemy shield removes 2 Critter power, 1 Robot power or 0 Dragon power. Power stops at zero.</span></div>
-          <div className="help__fact"><GameIcon name="critter" /><span>After shields: Critter +1 with positive power; Robot +2 at 7 and another +1 at 11; Dragon +4 at 11 and another +2 at 14.</span></div>
-          <div className="help__fact"><GameIcon name="damage" /><span>Base − shields + bonus = score. Higher wins; equal scores tie.</span></div>
-          <div className="help__fact"><GameIcon name="arrow" className="g-icon--up" /><span>Shortcut counts your bonus two tiers higher after shields, up to the highest tier, with positive power. Chameleon lets you choose any main faction: tap it, then a faction icon.</span></div>
-          <div className="help__fact"><GameIcon name="star" /><span>Ultimates, including Devour: 4 per matching stat. Bite: 2. The 2× card doubles your main faction bonus after shields; copies stack. Devour also offers a Dragon-type option. Hold a card for its full rule.</span></div>
+          {tabletop === 'abilities' ? <>
+            <div className="help__fact"><GameIcon name="critter" /><span>Adapt: one Critter stat card becomes a Critter attack card, used automatically when it scores more.</span></div>
+            <div className="help__fact"><GameIcon name="robot" /><span>Perfect Balance: as many Robot stats as Robot attacks (at least one each) adds +3 after shields.</span></div>
+            <div className="help__fact"><GameIcon name="dragon" /><span>Overwhelming: Dragon power of 14 or more gains one extra Dragon stat before shields.</span></div>
+            <div className="help__fact"><GameIcon name="damage" /><span>Power − shields + Perfect Balance = score. Higher wins; equal scores tie.</span></div>
+            <div className="help__fact"><GameIcon name="star" /><span>Chameleon lets you choose any main faction: tap it, then a faction icon. Ultimates, including Devour: 4 per matching stat. Bite: 2.</span></div>
+          </> : <>
+            <div className="help__fact"><GameIcon name="critter" /><span>After shields, your main faction earns one bonus: Critter +1 at 2 power, Robot +3 at 8, Dragon +6 at 14.</span></div>
+            <div className="help__fact"><GameIcon name="damage" /><span>Base − shields + bonus = score. Higher wins; equal scores tie.</span></div>
+            <div className="help__fact"><GameIcon name="arrow" className="g-icon--up" /><span>Shortcut grants your main faction bonus even below its threshold, with positive power. Chameleon lets you choose any main faction: tap it, then a faction icon.</span></div>
+            <div className="help__fact"><GameIcon name="star" /><span>Ultimates, including Devour: 4 per matching stat. Bite: 2. The 2× card doubles your main faction bonus after shields; copies stack. Devour also offers a Dragon-type option. Hold a card for its full rule.</span></div>
+          </>}
         </section> : <>
         <section className="help__block">
           <div className="help__timeline">
