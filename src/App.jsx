@@ -26,6 +26,7 @@ import useRoom from './hooks/useRoom'
 import RoomSheet from './components/overlay/RoomSheet'
 import RoomEntry from './components/overlay/RoomEntry'
 import PlayerIdentity from './components/hud/PlayerIdentity'
+import RoomButtons from './components/hud/RoomButtons'
 import { useElementSize } from './hooks/useFitLayout'
 import { SHUFFLE_LEAD_MS, getPackDealMs } from './hooks/dealTiming'
 import { getHandStats } from './game/engine'
@@ -54,6 +55,17 @@ function AppContent() {
   const room = useRoom()
   const session = useGameSession({ animateCardMove, getAnchorRect, maskSlot, unmaskSlot, room })
   const [roomOpen, setRoomOpen] = useState(false)
+  // A failed automatic copy (no clipboard permission) opens the room sheet so the link can be copied by hand.
+  const [copyFailureSeen, setCopyFailureSeen] = useState(0)
+  const roomSheetOpen = roomOpen || room.copyFailedAt > copyFailureSeen
+  function closeRoomSheet() {
+    setRoomOpen(false)
+    setCopyFailureSeen(room.copyFailedAt)
+  }
+  const roomRequest = room.presence?.pending?.[0]
+  const roomStatus = room.error
+    || (roomRequest ? `${roomRequest.name} wants to ${roomRequest.desired === 'viewer' ? 'watch' : 'play'} · tap to answer`
+      : room.record?.role === 'pending' ? 'Waiting for the host to let you in' : room.notice)
   const {
     settings,
     gameMode,
@@ -310,8 +322,8 @@ function AppContent() {
     >
       <ImagePreloader />
       {room.entry ? <RoomEntry key={room.entry.key} room={room} /> : null}
-      {room.error || room.notice || room.record?.role === 'pending' || room.presence?.pending?.length ? <button type="button" className="room-status" onClick={() => setRoomOpen(true)}>
-        {room.error || (room.presence?.pending?.length ? `${room.presence.pending[0].name} wants to ${room.presence.pending[0].desired === 'viewer' ? 'watch' : 'play'}` : room.record?.role === 'pending' ? 'Waiting for the host to let you in' : room.notice)}
+      {roomStatus && !roomSheetOpen ? <button type="button" className={`room-status${room.error ? ' room-status--error' : room.presence?.pending?.length ? ' room-status--request' : ''}`} onClick={() => setRoomOpen(true)}>
+        {roomStatus}
       </button> : null}
 
       <main ref={tableRef} className={['table', `table--${layout}`].join(' ')}>
@@ -331,12 +343,7 @@ function AppContent() {
         >
           {opponentThinking ? <ThinkingDots /> : null}
           {layout !== 'battle' ? phasePips : null}
-          <button type="button" className="ui-button online-action" aria-label={room.record ? 'Invite' : 'Create a room'}
-            disabled={Boolean(room.entry)} onClick={() => room.record ? room.client.copyInvite().then((copied) => { if (!copied) setRoomOpen(true) }) : room.client.requestEntry()}>
-            <GameIcon name="copy" /><span>{room.record ? 'Invite' : 'Create a room'}</span>
-          </button>
-          {room.record ? <button type="button" className={`ui-button ui-button--icon online-controls${room.presence?.pending?.length ? ' has-requests' : ''}`}
-            aria-label="Room controls" title="Room controls and players" onClick={() => setRoomOpen(true)}><SvgIcon name="online" />{room.presence?.pending?.length || null}</button> : null}
+          <RoomButtons room={room} onOpenRoom={() => setRoomOpen(true)} />
           <ScreenMenu
             onNewGame={handleNewGame}
             gameMode={gameMode}
@@ -348,6 +355,7 @@ function AppContent() {
             onCollection={() => setCollectionOpen(true)}
             onTestDeck={() => setTestDeckOpen(true)}
             onRoom={() => setRoomOpen(true)}
+            inRoom={Boolean(room.record)}
             canConfigure={!session.online || room.record?.role === 'host'}
             humanOpponent={session.online}
           />
@@ -479,7 +487,7 @@ function AppContent() {
       />
 
       <HelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} tabletop={settings.tabletop} />
-      <RoomSheet open={roomOpen} onClose={() => setRoomOpen(false)} room={room} />
+      <RoomSheet open={roomSheetOpen} onClose={closeRoomSheet} room={room} />
       <FactionPicker open={Boolean(isPreBattleReady && factionPickerCard)}
         types={factionPickerCard ? getCardTabletopTypes(factionPickerCard, tabletopChoice) : []}
         selectedType={tabletopChoice.selectedType}

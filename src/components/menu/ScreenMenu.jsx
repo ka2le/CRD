@@ -10,7 +10,7 @@ const BATTLE_RULES = [
   { value: 'abilities', label: 'Abilities' },
 ]
 
-export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, settings, onUpdateSettings, onHelp, onScoreCard, onCollection, onTestDeck, onRoom, canConfigure = true, humanOpponent = false }) {
+export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, settings, onUpdateSettings, onHelp, onScoreCard, onCollection, onTestDeck, onRoom, inRoom = false, canConfigure = true, humanOpponent = false }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
   const menuRef = useRef(null)
@@ -85,7 +85,7 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
             <span>New game</span>
           </button>
 
-          <button type="button" className="screen-menu__item" onClick={() => run(onRoom)}><GameIcon name="copy" /><span>Online room</span></button>
+          <button type="button" className="screen-menu__item" onClick={() => run(onRoom)}><SvgIcon name="online" /><span>{inRoom ? 'Room & players' : 'Play online'}</span></button>
           <fieldset className="screen-menu__game-controls" disabled={!canConfigure}>
           <div className="screen-menu__segmented" role="radiogroup" aria-label="Mode">
             <button

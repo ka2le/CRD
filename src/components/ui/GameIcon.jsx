@@ -24,6 +24,30 @@ const SVG_PATHS = {
       <path d="M3 12h18M5 6.5h14M5 17.5h14" />
     </g>
   ),
+  invite: (
+    <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="9.5" cy="8" r="3.6" />
+      <path d="M3 19.5c.8-3.4 3.4-5.2 6.5-5.2s5.7 1.8 6.5 5.2M18.5 8v6M15.5 11h6" />
+    </g>
+  ),
+  link: (
+    <g fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1" />
+      <path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1" />
+    </g>
+  ),
+  edit: (
+    <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 20h4L19 9l-4-4L4 16z" />
+      <path d="M13.5 6.5l4 4" />
+    </g>
+  ),
+  share: (
+    <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3v12M7.5 7.5L12 3l4.5 4.5" />
+      <path d="M5 12v7.5h14V12" />
+    </g>
+  ),
   menu: <path d="M4 7h16M4 12h16M4 17h16" strokeWidth="2.4" strokeLinecap="round" fill="none" stroke="currentColor" />,
   close: <path d="M6 6l12 12M18 6L6 18" strokeWidth="2.6" strokeLinecap="round" fill="none" stroke="currentColor" />,
   check: <path d="M5 12.5l4.5 4.5L19 7.5" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none" stroke="currentColor" />,

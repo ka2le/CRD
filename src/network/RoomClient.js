@@ -37,7 +37,7 @@ export default class RoomClient {
     this.heartbeat = null
     this.running = false
     this.backoff = 1000
-    this.cached = { connection: 'offline', presence: null, record: null, session: null, error: '', busy: false, blocked: false, entry: null, profile: this.profile, notice: '' }
+    this.cached = { connection: 'offline', presence: null, record: null, session: null, error: '', busy: false, blocked: false, entry: null, profile: this.profile, notice: '', copied: false, copyFailedAt: 0 }
     try {
       const record = JSON.parse(storage.getItem(ROOM_STORAGE_KEY))
       if ([1, ROOM_PROTOCOL].includes(record?.protocol) && ROOM_ID_PATTERN.test(record.id)) {
@@ -118,13 +118,21 @@ export default class RoomClient {
   invitation() {
     return this.record && typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}#${new URLSearchParams({ room: this.record.id, relay: this.record.endpoint })}` : ''
   }
+  // Copy feedback lives on the Invite button (`copied`); a failed copy (no clipboard
+  // permission, e.g. after an asynchronous bot check) asks the UI to show the link instead.
   async copyInvite() {
-    try { await navigator.clipboard.writeText(this.invitation()); this.emit({ notice: 'Invite copied' }) }
-    catch { this.emit({ notice: 'Copy the link from room controls.' }); return false }
+    const link = this.invitation()
+    if (!link) return false
+    try { await navigator.clipboard.writeText(link) }
+    catch { this.emit({ copied: false, copyFailedAt: Date.now() }); return false }
+    clearTimeout(this.copiedTimer)
+    this.emit({ copied: true })
+    this.copiedTimer = setTimeout(() => this.emit({ copied: false }), 2200)
     return true
   }
   stop() {
     this.running = false
+    clearTimeout(this.copiedTimer)
     clearTimeout(this.retry)
     clearInterval(this.heartbeat)
     this.heartbeat = null
@@ -158,9 +166,11 @@ export default class RoomClient {
       this.save({ protocol: ROOM_PROTOCOL, endpoint, id: id || result.id, token, name,
         role: result.role ?? (id ? 'pending' : 'host'), playerId: result.playerId,
         revision: 0, snapshot: null, seen: [], scores: {}, pendingAction: null })
-      this.emit({ error: '', presence: null, entry: null, notice: id ? '' : 'Room ready. Copy your invite to bring a friend.' })
+      this.emit({ error: '', presence: null, entry: null, notice: '' })
       if (typeof window !== 'undefined' && window.location.hash.includes('room=')) history.replaceState(null, '', window.location.pathname + window.location.search)
       if (this.running) this.connect()
+      // Rooms are only created to invite someone, so the link goes straight to the clipboard.
+      if (!id) this.copyInvite()
     } finally { this.entering = false }
   }
   connect() {
