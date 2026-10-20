@@ -17,6 +17,13 @@ export function GameIcon({ name, className = '', style, title }) {
 }
 
 const SVG_PATHS = {
+  online: (
+    <g fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <ellipse cx="12" cy="12" rx="4" ry="9" />
+      <path d="M3 12h18M5 6.5h14M5 17.5h14" />
+    </g>
+  ),
   menu: <path d="M4 7h16M4 12h16M4 17h16" strokeWidth="2.4" strokeLinecap="round" fill="none" stroke="currentColor" />,
   close: <path d="M6 6l12 12M18 6L6 18" strokeWidth="2.6" strokeLinecap="round" fill="none" stroke="currentColor" />,
   check: <path d="M5 12.5l4.5 4.5L19 7.5" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none" stroke="currentColor" />,

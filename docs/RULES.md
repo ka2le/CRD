@@ -15,7 +15,7 @@ Two players build five-card hands using either 5 Hand Discard or Draft. Optional
 3. Repeat once: there are exactly two discard/refill passes.
 4. Enter preparation after the second pass.
 
-Choosing zero still spends a pass. Currently the human refills first and the AI resolves one discard/refill pass afterward. No discard reshuffle occurs on exhaustion; draw helpers take the available deck prefix. Exhaustion/replacement edge cases need explicit rules before custom small decks become normal play.
+Choosing zero still spends a pass. In online play both players choose at the same time and lock their selections by submitting. Neither hand, discard pile nor deck changes until both have submitted, then both discards/refills resolve atomically; repeat for pass two. Submitted players wait and cannot edit their choices; refresh preserves the lock. Shared-deck allocation is deterministic (host then guest internally), independent of who submits first. Against AI, the human refills first and the AI resolves one discard/refill pass afterward. No discard reshuffle occurs on exhaustion; draw helpers take the available deck prefix. Exhaustion/replacement edge cases need explicit rules before custom small decks become normal play.
 
 ## Draft
 

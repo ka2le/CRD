@@ -808,7 +808,8 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
   const online = Boolean(room?.session)
   const session = room?.session ?? localSession
   const dispatch = online ? room.dispatch : localDispatch
-  const onlineBlocked = online && (room.record?.role === 'viewer' || room.busy || room.blocked || (room.record?.role !== 'host'
+  const onlineDiscardSubmitted = online && Boolean(session.discardReady?.[room.record?.role])
+  const onlineBlocked = online && (onlineDiscardSubmitted || room.record?.role === 'viewer' || room.busy || room.blocked || (room.record?.role !== 'host'
     && (room.connection !== 'connected' || !room.presence?.host?.connected)))
   const sequenceTimeoutsRef = useRef([])
 
@@ -1272,6 +1273,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     rawSession: session,
     online,
     onlineBlocked,
+    onlineDiscardSubmitted,
     opponentTabletopType: online ? getTabletopChoice({ ...preBattle, playerHand: preBattle.opponentHand,
       tabletopChoice: session.otherUi?.tabletopChoice }).selectedType : null,
     settings,

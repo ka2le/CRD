@@ -103,3 +103,5 @@ Creator replaced the Robot-attack doubling/+1-per-other-attack conversion with d
 ## Room flow update — 2026-10-20
 
 Creator requested immediate AI startup plus one-click room creation/link joining, open admission by default, private approval as an option, kicking and approved viewers. Names are generated and remembered per device, editable beside the hand; room wins persist across matches and results name the winner. Offline player two may be replaced using the invite, keeping the existing hand/state and revoking the prior token; host cross-device takeover remains outside scope. Two connected players automatically start a match; no separate start or name form.
+
+2026-10-20 correction: online Discard is simultaneous selection/commit, with both refills deferred until both players submit each pass. No inter-player discard turns. Room icon is a globe connection symbol and the share button reads Invite.

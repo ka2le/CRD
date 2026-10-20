@@ -66,4 +66,6 @@ Shortcut and Chameleon are tabletop-only collection/deck entries with the creato
 
 ## Online flow (2026-10-20)
 
-Normal startup remains immediate AI play. Create a room/Copy invite sits next to the menu; invitation links join automatically with a remembered random editable name. Open rooms auto-seat the first guest and start the match. Names, online dots and room wins sit beside the two hands. Room controls show members, requests, privacy, kick/seat-viewer and disconnect actions. Viewers need approval and cannot change gameplay. Results name the winner while retaining Victory/Defeat for the playing seats. See `MULTIPLAYER.md`.
+Normal startup remains immediate AI play. Create a room/Invite sits next to the menu; invitation links join automatically with a remembered random editable name. Open rooms auto-seat the first guest and start the match. Names, online dots and room wins sit beside the two hands. Room controls show members, requests, privacy, kick/seat-viewer and disconnect actions. Viewers need approval and cannot change gameplay. Results name the winner while retaining Victory/Defeat for the playing seats. See `MULTIPLAYER.md`.
+
+Room controls use a globe connection icon, and the share button is labeled Invite. Online Discard allows both seats to choose concurrently: submitting locks your choice and shows Waiting until both players have submitted; neither hand refills early.

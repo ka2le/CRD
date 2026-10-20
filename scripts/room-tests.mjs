@@ -50,7 +50,7 @@ test('both seats complete Draft and Discard with all three battle rules', () => 
     for (let seed = 0; seed < 8; seed += 1) {
       let state = gameApi.startRoomGame(initial(mode, tabletop, seed))
       while (state.game.phase !== 'battle-ready') {
-        const seat = state.game.phase === 'draft-player-pick' || state.game.phase.startsWith('player-discard') ? 'host' : 'guest'
+        const seat = mode === 'draft' ? (state.game.phase === 'draft-player-pick' ? 'host' : 'guest') : state.discardReady?.host ? 'guest' : 'host'
         const view = gameApi.seatView(state, seat)
         assert.equal(view.game.playerHand, seat === 'host' ? state.game.playerHand : state.game.opponentHand)
         assert.equal(view.game.phase, mode === 'draft' ? 'draft-player-pick' : state.game.phase.replace(/^opponent/, 'player'))
@@ -415,6 +415,10 @@ test('published saved matches gain player identities without redealing; incompat
   const reset = new Client({ storage, WebSocketImpl: class {}, fetchImpl: () => {} })
   assert.equal(reset.record.snapshot, null)
   assert.equal(reset.record.id, restored.record.id)
+  restored.save({ ...restored.record, snapshot: { ...state, gameVersion: gameApi.GAME_VERSION.split(':')[0] } })
+  const previousRoomFlow = new Client({ storage, WebSocketImpl: class {}, fetchImpl: () => {} })
+  assert.equal(previousRoomFlow.record.snapshot.gameVersion, gameApi.GAME_VERSION)
+  assert.deepEqual(previousRoomFlow.record.snapshot.game.deck, state.game.deck)
 })
 
 test('new invitations switch rooms while retaining the remembered name; malformed links keep the current room', () => {
@@ -428,4 +432,70 @@ test('new invitations switch rooms while retaining the remembered name; malforme
   assert.equal(instance.profile.name, 'AppleFireman')
   assert.equal(instance.cached.entry.id, 'b'.repeat(20))
   assert(sent.some((msg) => msg.type === 'leave'))
+})
+
+
+test('simultaneous discard locks either seat first, preserves both hands until ready, and resolves both passes atomically', () => {
+  for (const first of ['host', 'guest']) for (const count of [0, 2, 5]) {
+    let state = gameApi.startRoomGame(initial('five-hand-discard'))
+    for (let pass = 1; pass <= 2; pass++) {
+      const before = state.game
+      const second = first === 'host' ? 'guest' : 'host'
+      for (const seat of [first, second]) {
+        const view = gameApi.seatView(state, seat)
+        assert.equal(view.game.phase, `player-discard-${pass}`)
+        for (const card of view.game.playerHand.slice(0, count)) state = gameApi.applyRoomAction(state, seat, { type: 'TOGGLE_SELECTED', uid: card.uid })
+      }
+      state = gameApi.applyRoomAction(state, first, { type: 'SUBMIT_DISCARD' })
+      assert.equal(state.game, before)
+      assert.equal(state.discardReady[first], true)
+      assert.throws(() => gameApi.applyRoomAction(state, first, { type: 'SUBMIT_DISCARD' }), /already submitted/)
+      assert.throws(() => gameApi.applyRoomAction(state, first, { type: 'TOGGLE_SELECTED', uid: gameApi.seatView(state, first).game.playerHand[0].uid }), /already submitted/)
+      const { storage } = client('host', state)
+      const restored = new Client({ storage, WebSocketImpl: class {}, fetchImpl: () => {} })
+      assert.deepEqual(restored.record.snapshot.discardReady, state.discardReady)
+      assert.deepEqual(restored.record.snapshot.game.deck, before.deck)
+      state = gameApi.applyRoomAction(state, second, { type: 'SUBMIT_DISCARD' })
+      assert.equal(state.game.deck.length, before.deck.length - count * 2)
+      assert.equal(state.game.playerDiscardsUsed, pass)
+      assert.equal(state.game.opponentDiscardsUsed, pass)
+      assert.deepEqual(state.discardReady, {})
+      assert.equal(state.game.phase, pass === 2 ? 'battle-ready' : 'player-discard-2')
+    }
+  }
+})
+
+test('concurrent discard messages tolerate selection revisions, but cannot cross into another pass', () => {
+  const { instance: host, sent } = client('host', gameApi.startRoomGame(initial('five-hand-discard')))
+  const first = host.record.snapshot.game
+  const guestUid = first.opponentHand[0].uid
+  host.dispatch({ type: 'TOGGLE_SELECTED', uid: first.playerHand[0].uid })
+  host.receive({ type: 'action', id: randomToken(16), revision: 0, discardDeal: host.record.snapshot.dealId, discardPass: 1, action: { type: 'TOGGLE_SELECTED', uid: guestUid } })
+  assert.deepEqual(host.record.snapshot.otherSelectedIds, [guestUid])
+  host.receive({ type: 'action', id: randomToken(16), revision: 0, discardDeal: host.record.snapshot.dealId, discardPass: 1, action: { type: 'SUBMIT_DISCARD' } })
+  assert.equal(host.record.snapshot.game, first)
+  host.dispatch({ type: 'SUBMIT_DISCARD' })
+  assert.equal(host.record.snapshot.game.deck.length, first.deck.length - 2)
+  const next = host.record.snapshot
+  host.receive({ type: 'action', id: randomToken(16), revision: 0, discardDeal: host.record.snapshot.dealId, discardPass: 1, action: { type: 'SUBMIT_DISCARD' } })
+  assert.equal(host.record.snapshot, next)
+  assert(sent.some((msg) => msg.error?.includes('table changed')))
+  const oldDeal = host.record.snapshot.dealId
+  host.dispatch({ type: 'RESET_GAME' })
+  const fresh = host.record.snapshot
+  host.receive({ type: 'action', id: randomToken(16), revision: 0, discardDeal: oldDeal, discardPass: 1, action: { type: 'SUBMIT_DISCARD' } })
+  assert.equal(host.record.snapshot, fresh)
+})
+
+test('older saved mid-discard games finish the guest half without drawing the host twice', () => {
+  let state = gameApi.startRoomGame(initial('five-hand-discard'))
+  state.game = { ...state.game, phase: 'opponent-discard-1', playerDiscardsUsed: 1 }
+  delete state.discardReady
+  const before = state.game.deck
+  assert.throws(() => gameApi.applyRoomAction(state, 'host', { type: 'SUBMIT_DISCARD' }), /already submitted/)
+  state = gameApi.applyRoomAction(state, 'guest', { type: 'SUBMIT_DISCARD' })
+  assert.equal(state.game.deck, before)
+  assert.equal(state.game.playerDiscardsUsed, 1)
+  assert.equal(state.game.opponentDiscardsUsed, 1)
+  assert.equal(state.game.phase, 'player-discard-2')
 })

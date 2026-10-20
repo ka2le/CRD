@@ -232,7 +232,7 @@ function AppContent() {
       primaryAction = (
         <button type="button" className="ui-button ui-button--primary table__action" disabled={session.onlineBlocked} onClick={handlePrimaryAction}>
           {count > 0 ? <GameIcon name="redraw" /> : <SvgIcon name="check" />}
-          <span>{count > 0 ? `Redraw ${count}` : 'Keep'}</span>
+          <span>{session.onlineDiscardSubmitted ? 'Waiting' : count > 0 ? `Redraw ${count}` : 'Keep'}</span>
         </button>
       )
     } else {
@@ -331,12 +331,12 @@ function AppContent() {
         >
           {opponentThinking ? <ThinkingDots /> : null}
           {layout !== 'battle' ? phasePips : null}
-          <button type="button" className="ui-button online-action" aria-label={room.record ? 'Copy invite' : 'Create a room'}
+          <button type="button" className="ui-button online-action" aria-label={room.record ? 'Invite' : 'Create a room'}
             disabled={Boolean(room.entry)} onClick={() => room.record ? room.client.copyInvite().then((copied) => { if (!copied) setRoomOpen(true) }) : room.client.requestEntry()}>
-            <GameIcon name="copy" /><span>{room.record ? 'Copy invite' : 'Create a room'}</span>
+            <GameIcon name="copy" /><span>{room.record ? 'Invite' : 'Create a room'}</span>
           </button>
           {room.record ? <button type="button" className={`ui-button ui-button--icon online-controls${room.presence?.pending?.length ? ' has-requests' : ''}`}
-            aria-label="Room controls" title="Room controls and players" onClick={() => setRoomOpen(true)}><SvgIcon name="eye" />{room.presence?.pending?.length || null}</button> : null}
+            aria-label="Room controls" title="Room controls and players" onClick={() => setRoomOpen(true)}><SvgIcon name="online" />{room.presence?.pending?.length || null}</button> : null}
           <ScreenMenu
             onNewGame={handleNewGame}
             gameMode={gameMode}

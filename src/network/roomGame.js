@@ -1,12 +1,13 @@
 import { sessionReducer } from '../hooks/useGameSession.js'
-import { applyOpponentDiscardPhase } from '../game/fiveHandDiscard.js'
+import { applyDiscardPhase, applyOpponentDiscardPhase } from '../game/fiveHandDiscard.js'
 import { resolveOpponentDraftPick, commitDraftDiscard, revealNextDraftPack } from '../game/draftMode.js'
 import { createPreparationState } from '../game/preparationState.js'
 import { getTabletopChoice, resolveTabletopBattle } from '../game/tabletop.js'
 import { simulateBattle } from '../game/engine.js'
 import { validAction } from './protocol.js'
 
-export const GAME_VERSION = import.meta.env.CRD_GAME_VERSION
+// Room decision flow changes independently of the shared solo combat rules.
+export const GAME_VERSION = `${import.meta.env.CRD_GAME_VERSION}:rooms-2`
 
 // Only the host executes these transitions. The guest receives a mirrored view.
 const UI_KEYS = ['armedPlayerCopyUid', 'recycleSelection', 'infoOverlay', 'tabletopChoice', 'tabletopTypeCardUid']
@@ -30,6 +31,9 @@ export function seatView(state, seat) {
     .replace(/^TEMP-discard/, 'opponent-discard')
     .replace('draft-player-pick', 'TEMP-pick').replace('draft-opponent-thinking', 'draft-player-pick')
     .replace('TEMP-pick', 'draft-opponent-thinking')
+  if (game.mode === 'five-hand-discard' && /^(player|opponent)-discard/.test(game.phase)) {
+    game.phase = `player-discard-${Math.min(game.playerDiscardsUsed, game.opponentDiscardsUsed) + 1}`
+  }
   const preBattle = swapSides(state.preBattle)
   const ownUi = Object.fromEntries(UI_KEYS.map((key) => [key, state.preBattle[key] ?? null]))
   for (const key of UI_KEYS) preBattle[key] = state.otherUi?.[key] ?? null
@@ -53,7 +57,7 @@ export function settleSession(state) {
 
 export function startRoomGame(session, action = { type: 'RESET_GAME' }) {
   const next = sessionReducer({ ...session, settings: { ...session.settings, opponentAi: 'rules', testing: false } }, action)
-  return settleSession({ ...next, onlineHuman: true, gameVersion: GAME_VERSION, otherUi: {}, otherSelectedIds: [], roomResult: null })
+  return settleSession({ ...next, onlineHuman: true, gameVersion: GAME_VERSION, otherUi: {}, otherSelectedIds: [], discardReady: {}, roomResult: null })
 }
 
 export function scoreRoomGame(state) {
@@ -73,27 +77,35 @@ export function scoreRoomGame(state) {
 export function applyRoomAction(state, seat, action) {
   if (!['host', 'guest'].includes(seat)) throw new Error('Viewers cannot play')
   if (!validAction(action)) throw new Error('Invalid game action')
+  if (['TOGGLE_SELECTED', 'SUBMIT_DISCARD'].includes(action.type)) {
+    if (state.game.mode !== 'five-hand-discard' || !/^(player|opponent)-discard/.test(state.game.phase)) throw new Error('Discard is not available')
+    // Older saved games may already have refilled the host's half of this pass.
+    const ready = { host: state.game.phase.startsWith('opponent-discard'), ...state.discardReady }
+    if (ready[seat]) throw new Error('Your discard is already submitted')
+    const key = seat === 'host' ? 'selectedIds' : 'otherSelectedIds'
+    const hand = seat === 'host' ? state.game.playerHand : state.game.opponentHand
+    const selected = state[key] ?? []
+    if (action.type === 'TOGGLE_SELECTED') {
+      if (!hand.some((card) => card.uid === action.uid)) throw new Error('Choose a card from your hand')
+      return { ...state, [key]: selected.includes(action.uid) ? selected.filter((id) => id !== action.uid) : [...selected, action.uid] }
+    }
+    ready[seat] = true
+    if (!ready.host || !ready.guest) return { ...state, discardReady: ready }
+    // Resolve both locked choices in one persisted transition. Allocation from
+    // the shared deck stays deterministic regardless of submission order.
+    const afterHost = state.game.playerDiscardsUsed > state.game.opponentDiscardsUsed ? state.game
+      : applyDiscardPhase(state.game, state.selectedIds, { deferOpponent: true, includeRecentMoves: false })
+    const game = applyOpponentDiscardPhase(afterHost, state.otherSelectedIds ?? [], { includeRecentMoves: false })
+    return settleSession({ ...state, game, preBattle: createPreparationState(game), selectedIds: [], otherSelectedIds: [], discardReady: {} })
+  }
   let view = seatView(state, seat)
   const phase = view.game.phase
-  if (action.type === 'TOGGLE_SELECTED') {
-    if (!phase.startsWith('player-discard') || !view.game.playerHand.some((c) => c.uid === action.uid)) throw new Error('Not your discard turn')
-  } else if (action.type === 'SUBMIT_DISCARD') {
-    if (!phase.startsWith('player-discard')) throw new Error('Not your discard turn')
-  } else if (action.type === 'PLAYER_DRAFT_PICK') {
+  if (action.type === 'PLAYER_DRAFT_PICK') {
     if (phase !== 'draft-player-pick' || !view.game.draftRow.some((c) => c.uid === action.uid)) throw new Error('Not your draft turn')
   } else if (phase !== 'battle-ready' || view.battleStarted || view.preBattle.playerFinished) {
     throw new Error('Preparation is not available')
   }
-  if (action.type === 'SUBMIT_DISCARD') {
-    // Discard's shared-deck order stays host first, then guest, each pass.
-    if (seat === 'guest') {
-      const game = applyOpponentDiscardPhase(state.game, view.selectedIds, { includeRecentMoves: false })
-      return settleSession({ ...state, game, preBattle: createPreparationState(game), otherSelectedIds: [] })
-    }
-    // Existing browser reducer defers the second seat for Search AI.
-    view = sessionReducer({ ...view, settings: { ...view.settings, opponentAi: 'search' } }, action)
-    view.settings = state.settings
-  } else if (action.type === 'PLAYER_DRAFT_PICK' && seat === 'guest') {
+  if (action.type === 'PLAYER_DRAFT_PICK' && seat === 'guest') {
     const game = resolveOpponentDraftPick({ ...state.game, pendingOpponentPickUid: action.uid }, { includeRecentMoves: false })
     return settleSession({ ...state, game, preBattle: createPreparationState(game) })
   } else if (action.type === 'START_BATTLE') {

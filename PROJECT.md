@@ -16,7 +16,7 @@ Players assemble combinations of class stats, matching attacks and special effec
 
 ### Both modes are implemented
 
-- **5 Hand Discard:** deal five to each side; submit two discard/refill passes, selecting any number including zero. The AI resolves one pass after each human submission, using the same remaining deck.
+- **5 Hand Discard:** deal five to each side; submit two discard/refill passes, selecting any number including zero. The AI resolves one pass after each human submission, using the same remaining deck. In online play, both players choose independently and submit; neither hand is discarded/refilled until both submit, then both resolve together.
 - **Draft:** reveal five shared cards; each side chooses one; discard the other three; reveal a new pack and reverse first picker. Five packs produce five cards each. The intended first-pack starter also alternates between games; current initialization has an exception.
 
 Five cards is the hand-building target. Preparation can increase the eventual combat hand beyond five. Normal/Wild Deck is a copy-count option, not a third game mode.

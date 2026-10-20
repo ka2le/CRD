@@ -45,7 +45,8 @@ export default class RoomClient {
         record.protocol = ROOM_PROTOCOL
         record.scores ??= {}
         this.record = record
-        if (record.snapshot && !compatibleGameVersion(record.snapshot.gameVersion, GAME_VERSION)) {
+        if (record.snapshot && !compatibleGameVersion(record.snapshot.gameVersion, GAME_VERSION)
+          && record.snapshot.gameVersion !== import.meta.env.CRD_GAME_VERSION) {
           this.record = { ...record, snapshot: null, pendingAction: null, revision: 0 }
           this.cached.error = 'The game was updated. Your room is kept; the host can start a fresh match.'
         } else if (record.snapshot) {
@@ -247,7 +248,12 @@ export default class RoomClient {
       if (this.record.seen.includes(msg.id)) { this.send({ type: 'ack', id: msg.id }); return }
       try {
         if (msg.actorId && (msg.actorId !== this.cached.presence?.guest?.id || msg.seatEpoch !== this.cached.presence?.guest?.epoch)) throw new Error('Player two changed devices. Resync your game.')
-        if (!this.record.snapshot || msg.revision !== this.record.revision) throw new Error('The table changed. Please try that action again.')
+        const game = this.record.snapshot?.game
+        const discardAction = game?.mode === 'five-hand-discard' && ['TOGGLE_SELECTED', 'SUBMIT_DISCARD'].includes(msg.action?.type)
+        const sameDiscardPass = discardAction && msg.discardDeal === this.record.snapshot.dealId
+          && msg.discardPass === Math.min(game.playerDiscardsUsed, game.opponentDiscardsUsed) + 1
+        if (!this.record.snapshot || (msg.revision !== this.record.revision && !sameDiscardPass)
+          || (discardAction && msg.discardPass !== undefined && !sameDiscardPass)) throw new Error('The table changed. Please try that action again.')
         const snapshot = scoreRoomGame(applyRoomAction(this.record.snapshot, 'guest', msg.action))
         this.save({ ...this.record, snapshot, scores: snapshot.scores ?? {}, revision: this.record.revision + 1, seen: [...this.record.seen, msg.id].slice(-128) })
         // Ack before snapshot prevents immediate resubmission on ordinary updates.
@@ -286,7 +292,10 @@ export default class RoomClient {
         if (!validAction(action)) throw new Error('The host controls shared game settings and new games')
         if (this.record.pendingAction) return
         if (this.cached.connection !== 'connected' || !this.cached.presence?.host?.connected) throw new Error('Waiting for the host to reconnect')
-        const pendingAction = { type: 'action', id: randomToken(16), revision: this.record.revision, action }
+        const game = this.record.snapshot.game
+        const pendingAction = { type: 'action', id: randomToken(16), revision: this.record.revision, action,
+          ...(game.mode === 'five-hand-discard' && ['TOGGLE_SELECTED', 'SUBMIT_DISCARD'].includes(action.type)
+            ? { discardDeal: this.record.snapshot.dealId, discardPass: Math.min(game.playerDiscardsUsed, game.opponentDiscardsUsed) + 1 } : {}) }
         this.save({ ...this.record, pendingAction })
         this.send(pendingAction)
       }

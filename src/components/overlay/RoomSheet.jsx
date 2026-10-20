@@ -25,7 +25,7 @@ export default function RoomSheet({ open, onClose, room }) {
         onBlur={(event) => room.client.rename(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') event.currentTarget.blur() }} /></label>
       {record ? <>
         <p>{room.connection === 'connected' ? 'Connected' : 'Reconnecting…'} · {record.role === 'viewer' ? 'Watching' : record.role === 'pending' ? 'Waiting for approval' : host ? 'You are the host' : 'Player two'}</p>
-        <button className="ui-button ui-button--primary" onClick={() => room.client.copyInvite()}>Copy invite</button>
+        <button className="ui-button ui-button--primary" onClick={() => room.client.copyInvite()}>Invite</button>
         <label>Invitation<input readOnly value={room.client.invitation()} onFocus={(event) => event.target.select()} /></label>
         {host ? <label className="room-sheet__privacy"><input type="checkbox" checked={presence?.private ?? false}
           disabled={room.connection !== 'connected'} onChange={(event) => room.client.setPrivate(event.target.checked)} /> Private room · approve new arrivals</label> : null}
