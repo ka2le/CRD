@@ -65,7 +65,7 @@ Keep rules out of components and visibility separate from ownership. Shared prep
 
 ## AI boundary - 2026-10-19
 
-**2026-10-20 current layer:** `AI_FULL_GAME_V6.md` documents full-game v4 features (424 inputs), a configurable six-hidden-layer residual W/D/L net (200,734 parameters), both-mode collection/evaluation and `run_full_game_experiment.py` orchestration. Old v2/v3 features/checkpoints remain loadable; they explicitly return unsupported throughout discard mode and use non-neural search there. Both modes search preparation and all hand-building decisions; numeric inputs remain observation-only. Trainer streams initialization statistics/linear fitting, reports epochs and optimizer updates separately, and applies per-minibatch cosine decay over the optimization clock. Live run artifacts are under `.ai-runs/full-game-v6/`; browser search stays non-neural. Earlier milestone paragraphs below are historical.
+**2026-10-20 v6 data milestone:**18k families/30k games/83.15m outcomes collected. At creator request, training stopped at epoch14 (best10) after auto-starting; checkpoint preserved. No evaluation or strength claim. Do not relaunch unless asked. Browser search stays non-neural.
 
 V2 experiment adds `python/crd/value_net.py` (220 public features, two-hidden-layer W/D/L residual MLP), `collect_draft.py` (parallel resumable numeric shards), `train_value.py` (longer training/checkpoints/family splits), `evaluate_search.py` and `compare_search.py` (frozen-search paired evaluation). `AI_DRAFT_V2.md` describes this active layer. JS remains the rules/rollout authority; no future deck/order/seed reaches the model or root search. All Python parallelism is ordinary local simulation processes, not delegated AI agents.
 

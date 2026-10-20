@@ -25,6 +25,8 @@
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
   transform-origin: top right;
   animation: menu-pop 0.22s var(--ease-out);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .screen-menu__item {
@@ -226,4 +228,9 @@
   border-bottom: 2px solid var(--t1);
   transform: rotate(45deg);
   pointer-events: none;
+}
+
+/* Lift the rail that holds an open menu above the other rail (both sit at z-index 5). */
+.side-rail:has(.screen-menu__popover) {
+  z-index: 60;
 }

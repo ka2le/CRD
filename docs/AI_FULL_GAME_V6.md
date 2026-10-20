@@ -4,9 +4,9 @@ Requested 2026-10-20. This supersedes the draft-only learning scope. The creator
 
 ## Run and current status
 
-Active run: `.ai-runs/full-game-v6/`. At dispatch, data collection is running; **the new network has not finished training and has no strength result yet**. Read `status.json` for the live stage, `collection.log` for data progress, `model/progress.json` / `model/learning.jsonl` for training, and `summary.json` for final results. Do not confuse `full-game-v6-smoke` or `pilot-data` with strength evidence.
+**Data collection complete; long training stopped at creator request.** The corpus is saved; training auto-started before the stop request arrived and halted at epoch14 (best validation epoch10, 650 seconds). Checkpoint: `v6-best-at-user-stop.npz`, SHA-256 `ac42952b504a3937c803212da73133c428a1deda784769e23db7126171a33796`. One later-requested exploratory comparison versus frozen v5 used100fresh Draft deals/400games: **196 wins,11 draws,193 losses;50.4% score;95% deal-clustered interval45.8–54.9%**. Inconclusive; longer training and larger planned evaluations remain unrun. Read `model/learning.jsonl`, `model/progress.json`, and `vs-old-small.json`. Status=`stopped_after_collection`; monitor paused.
 
-`python/run_full_game_experiment.py` runs collection, training and the requested tournaments sequentially in a hidden local process. Logs and failure state are saved. Original v5 and all older artifacts are preserved. Completed stages can be reused by rerunning the same command; a partial training directory is preserved and deliberately refuses overwrite. The immutable `plan.json` records settings, teacher hash and source hashes; changing source requires a fresh run plan. No cloud upload, publishing or browser-opponent changes.
+The original pipeline automatically advanced from collection into training. Both processes were stopped. Do not rerun the orchestrator or start training/evaluations unless the creator asks. Original v5 and older artifacts remain intact; `plan.json` retains the original settings and hashes. No cloud upload, publishing or browser-opponent changes.
 
 ```powershell
 $env:OPENBLAS_NUM_THREADS='1'

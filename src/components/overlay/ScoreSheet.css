@@ -1,7 +1,12 @@
 /* ---------- sheet layout ---------- */
+.sheet__panel.score-sheet {
+  width: min(1280px, 100%);
+}
+
 .score-sheet .sheet__body {
-  padding: 8px 0 18px;
-  overflow: hidden;
+  padding: 4px 0 10px;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .score-sheet__track {
@@ -11,6 +16,8 @@
 }
 
 .score-sheet__track.is-side {
+  display: grid;
+  grid-template-columns: repeat(var(--sc-columns), auto);
   justify-content: center;
 }
 
@@ -88,227 +95,4 @@
 .sc-critter { color: var(--critter); }
 .sc-robot { color: var(--robot); }
 .sc-dragon { color: var(--dragon); }
-.sc-damage { color: var(--damage); }
-.sc-shield { color: var(--shield); }
-.sc-star { color: var(--brass); }
 
-.sc-op {
-  font-family: var(--display);
-  font-weight: 700;
-  color: var(--brass-lo);
-}
-
-/* ---------- A · ledger ---------- */
-.sc-ledger {
-  padding: 28px 24px 0;
-}
-
-.sc-ledger__eq {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  font-size: 24px;
-}
-
-.sc-ledger__eq .sc-op {
-  font-size: 20px;
-}
-
-.sc-ledger__power {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 12px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid rgba(214, 190, 140, 0.19);
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #8a95a8;
-}
-
-.sc-ledger__power .g-icon {
-  font-size: 13px;
-}
-
-.sc-ledger__power i {
-  font-style: normal;
-  color: var(--brass-lo);
-}
-
-.sc-tier {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  line-height: 1;
-}
-
-.sc-tier em {
-  font-style: normal;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.02em;
-  color: #8a95a8;
-  margin-bottom: 7px;
-}
-
-.sc-ledger__table {
-  display: grid;
-  grid-template-columns: 46px 52px 1fr;
-  grid-template-rows: 38px repeat(3, 86px);
-  margin-top: 4px;
-}
-
-.sc-ledger__row {
-  display: contents;
-}
-
-.sc-ledger__head {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 17px;
-}
-
-.sc-ledger__head--tiers {
-  justify-content: flex-end;
-  padding-right: 6px;
-}
-
-.sc-ledger__cell {
-  display: flex;
-  align-items: center;
-  border-top: 1px solid rgba(214, 190, 140, 0.19);
-}
-
-.sc-ledger__cls {
-  justify-content: center;
-  font-size: 32px;
-}
-
-.sc-ledger__sh {
-  justify-content: center;
-  font-family: var(--mono);
-  font-size: 19px;
-  color: var(--shield);
-}
-
-.sc-ledger__sh.is-zero {
-  color: rgba(156, 193, 212, 0.4);
-}
-
-.sc-ledger__tiers {
-  justify-content: flex-end;
-  gap: 22px;
-  padding-right: 6px;
-}
-
-.sc-ledger__tiers .sc-hearts {
-  font-size: 16px;
-}
-
-/* bonus as damage icons */
-.sc-hearts {
-  display: grid;
-  grid-template-columns: repeat(var(--cols), 1em);
-  gap: 0.22em;
-  color: var(--damage);
-  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.5));
-}
-
-/* ---------- B · hand of three ---------- */
-.sc-hand {
-  padding: 26px 18px 0;
-}
-
-.sc-hand__eq {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  font-size: 19px;
-}
-
-.sc-hand__eq .sc-op {
-  font-size: 16px;
-}
-
-.sc-hand__fan {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 28px;
-}
-
-.sc-hand__mini {
-  width: 84px;
-  height: 308px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px 6px 12px;
-  border-radius: 8px;
-  border: 1.5px solid var(--brass-lo);
-  box-shadow: 0 12px 22px -6px rgba(0, 0, 0, 0.8);
-  color: #ead9b0;
-}
-
-.sc-hand__mini--critter {
-  background: linear-gradient(180deg, #1d4634 0%, var(--critter-deep) 70%);
-  transform: rotate(-4deg) translateY(12px);
-}
-
-.sc-hand__mini--robot {
-  background: linear-gradient(180deg, #22375f 0%, var(--robot-deep) 70%);
-}
-
-.sc-hand__mini--dragon {
-  background: linear-gradient(180deg, #5a241c 0%, var(--dragon-deep) 70%);
-  transform: rotate(4deg) translateY(12px);
-}
-
-.sc-hand__icon {
-  font-size: 50px;
-  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.4));
-}
-
-.sc-hand__tiers {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 24px;
-}
-
-.sc-hand__tiers .sc-tier em {
-  color: rgba(255, 255, 255, 0.63);
-}
-
-.sc-hand__tiers .sc-hearts {
-  font-size: 17px;
-  color: #e0656c;
-}
-
-.sc-hand__sh {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(214, 190, 140, 0.25);
-  font-family: var(--mono);
-  font-size: 16px;
-  color: var(--shield);
-}
-
-.sc-hand__sh .g-icon {
-  font-size: 14px;
-}
-
-.sc-hand__sh.is-zero {
-  color: rgba(156, 193, 212, 0.44);
-}

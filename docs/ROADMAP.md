@@ -10,7 +10,7 @@ Both local human-versus-AI modes, four preparation effects, simultaneous combat,
 
 ## Latest AI planning - 2026-10-19
 
-**2026-10-20 active priority:** `AI_FULL_GAME_V6.md` supersedes older draft-only priorities below. V5 completed draft+preparation training. V6 adds discard learning and a six-hidden-layer200,734-parameter net:18,000 fresh self-play families,one-hour cosine0.001→0.00003 training, then only the old183k net and strongest non-neural search. Pipeline running locally; results pending in `.ai-runs/full-game-v6/summary.json`. Browser integration remains separate.
+**2026-10-20 paused v6:** the18,000-family/30,000-game/83.15m-outcome corpus is complete. The creator requested stopping after data; training had auto-started and was halted at epoch14 (best10). Checkpoint preserved. No strength comparisons. Resume only when asked. Browser integration remains separate.
 
 Newest completed step: large draft-only corpus, ~100k and four-hidden-layer/~150k W/D/L nets, two600-second training runs and neural-assisted search versus frozen base search (`AI_DRAFT_V2.md`). Both improve the tested base search; extra depth's strength advantage is inconclusive. All candidate evaluations contribute, with public unseen composition/relative-hand inputs and actual search-game returns. Next improve searched-opponent calibration/independent coverage, test learned cutoffs and browser integration. No arbitrary risk reward or actual future-pack access.
 

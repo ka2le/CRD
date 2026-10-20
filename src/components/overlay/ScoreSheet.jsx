@@ -2,108 +2,29 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import './ScoreSheet.css'
 import Sheet from './Sheet'
 import { GameIcon } from '../ui/GameIcon'
-
-// Reference for the optional tabletop battle mode.
-// Bonuses are drawn as damage icons: the total bonus from that power upward.
-// Robots and Dragons share the 11 threshold.
-const CLASSES = [
-  { key: 'critter', shield: '−2', tiers: [['1+', 1]] },
-  { key: 'robot', shield: '−1', tiers: [['7+', 2], ['11+', 3]] },
-  { key: 'dragon', shield: '0', tiers: [['11+', 4], ['14+', 6]] },
-]
+import { AbilityBandsCard, AbilityLedgerCard } from './AbilityCards'
+import { ThresholdBandsCard, ThresholdLedgerCard } from './ThresholdCards'
 
 const CARD_W = 315
 const CARD_H = 440
 const GAP = 20
 
-function ScoreEquation({ className }) {
-  return (
-    <div className={className}>
-      <GameIcon name="damage" className="sc-damage" />
-      <span className="sc-op">−</span>
-      <GameIcon name="shield" className="sc-shield" />
-      <span className="sc-op">+</span>
-      <GameIcon name="star" className="sc-star" />
-    </div>
-  )
-}
-
-// n damage icons, packed 1–3 per row (4 → 2×2, 6 → 3×2).
-function Hearts({ count, className = '' }) {
-  if (!count) return null
-  const cols = count <= 3 ? count : count === 4 ? 2 : 3
-  return (
-    <span className={['sc-hearts', className].filter(Boolean).join(' ')} style={{ '--cols': cols }} aria-label={`+${count}`}>
-      {Array.from({ length: count }, (_, index) => <GameIcon key={index} name="damage" />)}
-    </span>
-  )
-}
-
-function Tier({ at, bonus }) {
-  return (
-    <span className="sc-tier">
-      <em>{at}</em>
-      <Hearts count={bonus} />
-    </span>
-  )
-}
-
-function LedgerCard() {
-  return (
-    <div className="sc-card sc-ledger" aria-label="Score card: ledger">
-      <ScoreEquation className="sc-ledger__eq" />
-      <div className="sc-ledger__power">
-        <GameIcon name="damage" className="sc-damage" />
-        <span>stats</span><i>×</i><span>attacks</span><i>×</i><span>2</span>
-      </div>
-      <div className="sc-ledger__table">
-        <div />
-        <div className="sc-ledger__head sc-shield"><GameIcon name="shield" /></div>
-        <div className="sc-ledger__head sc-ledger__head--tiers sc-star"><GameIcon name="star" /></div>
-        {CLASSES.map((cls) => (
-          <div key={cls.key} className="sc-ledger__row">
-            <div className={`sc-ledger__cell sc-ledger__cls sc-${cls.key}`}><GameIcon name={cls.key} /></div>
-            <div className={['sc-ledger__cell', 'sc-ledger__sh', cls.shield === '0' ? 'is-zero' : ''].filter(Boolean).join(' ')}>{cls.shield}</div>
-            <div className="sc-ledger__cell sc-ledger__tiers">
-              {cls.tiers.map(([at, bonus]) => <Tier key={at} at={at} bonus={bonus} />)}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function HandCard() {
-  return (
-    <div className="sc-card sc-hand" aria-label="Score card: hand of three">
-      <ScoreEquation className="sc-hand__eq" />
-      <div className="sc-hand__fan">
-        {CLASSES.map((cls) => (
-          <div key={cls.key} className={`sc-hand__mini sc-hand__mini--${cls.key}`}>
-            <GameIcon name={cls.key} className="sc-hand__icon" />
-            <div className="sc-hand__tiers">
-              {cls.tiers.map(([at, bonus]) => <Tier key={at} at={at} bonus={bonus} />)}
-            </div>
-            <div className={['sc-hand__sh', cls.shield === '0' ? 'is-zero' : ''].filter(Boolean).join(' ')}>
-              <GameIcon name="shield" />{cls.shield}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 const CARDS = [
-  { key: 'ledger', Card: LedgerCard },
-  { key: 'hand', Card: HandCard },
+  { key: 'threshold-ledger', Card: ThresholdLedgerCard },
+  { key: 'threshold-bands', Card: ThresholdBandsCard },
+  { key: 'ability-ledger', Card: AbilityLedgerCard },
+  { key: 'ability-bands', Card: AbilityBandsCard },
 ]
 
 // Cards are authored at 315×440 and scaled to fit, like a printed card.
-function useCardScale(open) {
+// Pick the grid (1–4 columns) that shows every card at the largest size with no scrolling;
+// if that would make them too small (phones), fall back to a one-card swipe carousel.
+const MIN_GRID_SCALE = 0.7
+const CHROME_H = 96 // sheet header, body and track padding
+
+function useCardLayout(open) {
   const trackRef = useRef(null)
-  const [fit, setFit] = useState({ scale: 1, sideBySide: true })
+  const [fit, setFit] = useState({ scale: 1, columns: 2 })
 
   useLayoutEffect(() => {
     if (!open) return undefined
@@ -111,12 +32,24 @@ function useCardScale(open) {
     if (!track) return undefined
 
     function measure() {
-      const width = track.clientWidth
-      const maxHeight = Math.max(240, window.innerHeight * 0.82 - 120)
-      const byHeight = maxHeight / CARD_H
-      const sideBySide = width >= (CARD_W * 2 + GAP) * 0.9
-      const byWidth = sideBySide ? (width - GAP - 32) / 2 / CARD_W : (width * 0.86) / CARD_W
-      setFit({ scale: Math.min(1.3, byWidth, byHeight), sideBySide })
+      const width = track.clientWidth - 24
+      const height = window.innerHeight - CHROME_H
+      let best = { scale: 0, columns: 0 }
+      for (let columns = 2; columns <= CARDS.length; columns += 1) {
+        const rows = Math.ceil(CARDS.length / columns)
+        const scale = Math.min(
+          1.3,
+          (width - GAP * (columns - 1)) / columns / CARD_W,
+          (height - GAP * (rows - 1)) / rows / CARD_H,
+        )
+        if (scale > best.scale) best = { scale, columns }
+      }
+      if (best.scale >= MIN_GRID_SCALE) {
+        setFit(best)
+      } else {
+        const dotsH = 24
+        setFit({ scale: Math.min(1.3, (track.clientWidth * 0.86) / CARD_W, (height - dotsH) / CARD_H), columns: 0 })
+      }
     }
 
     measure()
@@ -133,12 +66,14 @@ function useCardScale(open) {
 }
 
 export default function ScoreSheet({ open, onClose }) {
-  const [trackRef, { scale, sideBySide }] = useCardScale(open)
+  const [trackRef, { scale, columns }] = useCardLayout(open)
+  const sideBySide = columns > 0
   const [active, setActive] = useState(0)
 
   function handleScroll(event) {
     const track = event.currentTarget
-    const index = Math.round(track.scrollLeft / Math.max(1, track.scrollWidth - track.clientWidth))
+    const progress = track.scrollLeft / Math.max(1, track.scrollWidth - track.clientWidth)
+    const index = Math.round(progress * (CARDS.length - 1))
     if (index !== active) setActive(index)
   }
 
@@ -148,11 +83,11 @@ export default function ScoreSheet({ open, onClose }) {
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title={<GameIcon name="star" />} className="score-sheet">
+    <Sheet open={open} onClose={onClose} title={<GameIcon name="star" />} className="score-sheet" placement="top">
       <div
         ref={trackRef}
         className={['score-sheet__track', sideBySide ? 'is-side' : 'is-carousel'].join(' ')}
-        style={{ '--sc-gap': `${GAP}px` }}
+        style={{ '--sc-gap': `${GAP}px`, '--sc-columns': columns || 1 }}
         onScroll={sideBySide ? undefined : handleScroll}
       >
         {CARDS.map(({ key, Card }) => (

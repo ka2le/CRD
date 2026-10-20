@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import './ScreenMenu.css'
 import { GameIcon, SvgIcon } from '../ui/GameIcon'
 import { OPPONENT_AI_OPTIONS } from '../../game/opponentAi'
@@ -7,6 +7,7 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
   const [menuOpen, setMenuOpen] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
   const menuRef = useRef(null)
+  const popoverRef = useRef(null)
 
   useEffect(() => {
     function handlePointerDown(event) {
@@ -26,6 +27,20 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
     handleFullscreenChange()
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
   }, [])
+
+  // Keep the popover inside the viewport; it scrolls when the screen is short (e.g. phone landscape).
+  useLayoutEffect(() => {
+    if (!menuOpen) return undefined
+    function fit() {
+      const popover = popoverRef.current
+      if (!popover) return
+      const top = popover.getBoundingClientRect().top
+      popover.style.maxHeight = `${Math.max(120, window.innerHeight - top - 10)}px`
+    }
+    fit()
+    window.addEventListener('resize', fit)
+    return () => window.removeEventListener('resize', fit)
+  }, [menuOpen])
 
   async function toggleFullscreen() {
     try {
@@ -57,7 +72,7 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
       </button>
 
       {menuOpen && (
-        <div className="screen-menu__popover ui-panel">
+        <div className="screen-menu__popover ui-panel" ref={popoverRef}>
           <button type="button" className="screen-menu__item screen-menu__item--primary" onClick={() => run(onNewGame)}>
             <SvgIcon name="replay" />
             <span>New game</span>

@@ -85,6 +85,30 @@
   }
 }
 
+.sheet--top {
+  align-items: flex-start;
+}
+
+.sheet--top .sheet__grip {
+  display: none;
+}
+
+.sheet--top .sheet__panel {
+  max-height: 100dvh;
+  border-radius: 0 0 12px 12px;
+  border-top-color: var(--b0);
+  border-bottom-color: color-mix(in srgb, var(--sheet-accent) 70%, transparent);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: 0;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  animation-name: sheet-down;
+}
+
+@keyframes sheet-down {
+  from { transform: translateY(-40%); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
 @keyframes sheet-fade {
   from { opacity: 0; }
   to { opacity: 1; }

@@ -2,8 +2,10 @@ import { useEffect } from 'react'
 import './Sheet.css'
 import { SvgIcon } from '../ui/GameIcon'
 
-// Bottom sheet used for browsing piles, picking a recycled card and help.
-export default function Sheet({ open, onClose, title = null, accent = null, children, className = '' }) {
+// Sheet used for browsing piles, picking a recycled card and help.
+// Every popup drops from the top edge (centred horizontally) and may use the
+// full height; placement="bottom" keeps the old bottom-sheet behaviour.
+export default function Sheet({ open, onClose, title = null, accent = null, children, className = '', placement = 'top' }) {
   useEffect(() => {
     if (!open || !onClose) return undefined
     function handleKey(event) {
@@ -16,7 +18,7 @@ export default function Sheet({ open, onClose, title = null, accent = null, chil
   if (!open) return null
 
   return (
-    <div className="sheet" onClick={onClose ?? undefined}>
+    <div className={['sheet', placement === 'top' ? 'sheet--top' : ''].filter(Boolean).join(' ')} onClick={onClose ?? undefined}>
       <div
         className={['sheet__panel', className].filter(Boolean).join(' ')}
         style={accent ? { '--sheet-accent': accent } : undefined}

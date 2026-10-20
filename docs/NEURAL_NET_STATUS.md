@@ -1,6 +1,6 @@
 # Neural net testing: current state
 
-Snapshot 2026-10-20. **V6 is collecting/training, not yet a measured stronger net.** Read `AI_FULL_GAME_V6.md` and `.ai-runs/full-game-v6/status.json`:18k fresh families across Draft and Discard,200,734 parameters/six hidden layers,one hour cosine-decay training, then only v5 and plain-search opponents. The complete tiny pipeline and23 Python/17 headless tests pass. Existing trained-network results below remain unchanged. Details are in `AI_DRAFT_EXPERIMENT.md` (v1), `AI_DRAFT_V2.md`, `AI_DRAFT_V3.md` (v3/v4) and `AI_PREP_V5.md` (v5).
+Snapshot 2026-10-20. **V6 data collection is complete; training and evaluation stopped before completion at the creator's request.** Training had already started automatically and halted at epoch14 (best10); its checkpoint is preserved. No v6 strength results. Read `AI_FULL_GAME_V6.md` and `.ai-runs/full-game-v6/status.json`:18k families,30k games,83.15m outcomes across both modes. Do not restart without a new request. Earlier results below are unchanged.
 
 ## How the AI is built
 
