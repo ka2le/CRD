@@ -4,7 +4,7 @@
 
 Tabletop-only definitions live in `data/tabletop-cards.json` and are included only through explicit tabletop deck/collection options. `FactionPicker.jsx` presents the session's validated main-faction choices (including unrestricted Chameleon choices); the scorer handles Shortcut tiers and chosen-faction rules. Imported local artwork is archived separately and resolved through the existing manifest, keeping originals out of the public build.
 
-Reviewed 2026-10-18. CRD is a static React 19/Vite frontend with reusable JavaScript game modules. Optional browser-hosted rooms and a Cloudflare relay were added locally on 2026-10-20; see `MULTIPLAYER.md` for the current transport/persistence/deployment contract.
+Reviewed 2026-10-18. CRD is a static React 19/Vite frontend with reusable JavaScript game modules. Optional browser-hosted rooms and a Cloudflare relay were added and deployed on 2026-10-20; see `MULTIPLAYER.md` for the current transport/persistence/deployment contract.
 
 ## Code map
 

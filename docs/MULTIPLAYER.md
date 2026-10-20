@@ -1,6 +1,6 @@
 # Online rooms
 
-Implemented 2026-10-20. Cloudflare relay is deployed with Turnstile configured; GitHub Pages frontend publishing is separate.
+Implemented 2026-10-20. Cloudflare relay and GitHub Pages frontend are deployed with Turnstile configured.
 
 ## Player flow
 
@@ -33,7 +33,7 @@ The production entry routes require server-verified Turnstile (action and hostna
 
 Current public relay address: `https://crimson-haze-8993.kalle-kindvall.workers.dev`. It is configured as the app default; `VITE_ROOM_RELAY_URL` can override at build time, and the room sheet has an advanced relay address field. Invitation links carry the chosen relay address.
 
-Setup update: owner completed Wrangler authorization and installed `TURNSTILE_SECRET_KEY`; the public site key is configured. The earlier automatic-review credit error cleared on a later approved deployment attempt. Relay deployed successfully as version `7064e546-ac0d-4516-99ac-e027a7d797c9`. Production `/config` returns200 with the expected public key and `localTesting:false`; an invalid Turnstile challenge returns403 without creating a room. A full production room test still requires a valid browser challenge. Frontend publishing remains the next rollout step.
+Setup update: owner completed Wrangler authorization and installed `TURNSTILE_SECRET_KEY`; the public site key is configured. The earlier automatic-review credit error cleared on a later approved deployment attempt. Relay deployed successfully as version `7064e546-ac0d-4516-99ac-e027a7d797c9`. Production `/config` returns200 with the expected public key and `localTesting:false`; an invalid Turnstile challenge returns403 without creating a room. Sanitized frontend code commit `ee186f9` was published and Pages run `39462048472` succeeded. A production browser completed the normal automatic Turnstile flow, created a room, connected, and restored the same room/AI state after refresh. The disposable production test room was closed.
 
 1. Sign up at <https://dash.cloudflare.com/sign-up> and keep the **Workers Free** plan. Worker `crimson-haze-8993` now runs the room relay. The deployment command updates its code and maintains its Durable Object binding and SQLite migration.
 2. In Cloudflare → Turnstile, add a **Managed** widget named CRD for hostname `ka2le.github.io`; add `localhost` for development if desired. Use hostnames without a scheme or path. The site key is public: set `TURNSTILE_SITE_KEY` in `relay/wrangler.jsonc`. Do not commit the secret.
@@ -50,4 +50,4 @@ Setup update: owner completed Wrangler authorization and installed `TURNSTILE_SE
 
 ## Verification recorded 2026-10-20
 
-9 room tests,18 tabletop,17 headless,10 opponent and4 test-deck tests pass, plus the original regression smoke, lint, GitHub Pages-base production build and Wrangler deployment dry-run. Browser checks used independent localhost/127.0.0.1 storage: create/approve, picks in both directions, refresh both seats without reapproval, guest discard/refill, host-only settings, and return to the preserved AI game. Disposable local test room closed. Compatible development dependency security updates were applied; npm audit reported zero vulnerabilities. Production account authentication/Turnstile setup and publishing remain pending.
+9 room tests,18 tabletop,17 headless,10 opponent and4 test-deck tests pass, plus the original regression smoke, lint, GitHub Pages-base production build and Wrangler deployment dry-run. Browser checks used independent localhost/127.0.0.1 storage: create/approve, picks in both directions, refresh both seats without reapproval, guest discard/refill, host-only settings, and return to the preserved AI game. Disposable local test room closed. Compatible development dependency security updates were applied; npm audit reported zero vulnerabilities. Production authentication, Turnstile setup and publishing subsequently completed; see the setup update above.
