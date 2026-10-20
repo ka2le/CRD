@@ -11,7 +11,7 @@ def compare(reference, challenger):
     for key in ("seed", "deals", "samples", "opponent_samples", "normal_deck", "planning_seed"):
         if reference["settings"][key] != challenger["settings"][key]:
             raise ValueError(f"Unpaired settings: {key}")
-    defaults = {"opponent_policy": "search", "opponent_prep_policy": "heuristic", "opponent_completion": "heuristic"}
+    defaults = {"opponent_policy": "search", "opponent_prep_policy": "heuristic", "opponent_completion": "heuristic", "mode": "draft"}
     for key in ("opponent_model", "prior", *defaults):
         if reference["settings"].get(key, defaults.get(key)) != challenger["settings"].get(key, defaults.get(key)):
             raise ValueError(f"Unpaired settings: {key}")
@@ -24,7 +24,8 @@ def compare(reference, challenger):
                 raise ValueError("Duplicate game identity")
             identities.add(identity)
             values.setdefault(game["family"], []).append((game["reward"] + 1) / 2)
-        if any(len(scores) != 4 for scores in values.values()):
+        expected = 4 if report["settings"].get("mode", "draft") == "draft" else 2
+        if any(len(scores) != expected for scores in values.values()):
             raise ValueError("Incomplete paired seat/starter set")
         return {key: np.mean(scores) for key, scores in values.items()}
     before, after = group(reference), group(challenger)

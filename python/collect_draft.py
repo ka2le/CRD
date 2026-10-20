@@ -14,7 +14,7 @@ import time
 
 import numpy as np
 
-from crd.value_net import PREP_FEATURE_VERSION, FEATURE_VERSION, ValueNet, model_features, signature
+from crd.value_net import FULL_FEATURE_VERSION, PREP_FEATURE_VERSION, FEATURE_VERSION, ValueNet, model_features, signature
 from crd.worker import HeadlessWorker
 from draft_experiment import family_id
 
@@ -44,16 +44,20 @@ def collect_chunk(config):
         model = ValueNet.load(config["model"])
     xx, yy, actual, roots, families, specials, preps = [], [], [], [], [], [], []
     v3 = bool(config.get("prep_search"))
-    version = PREP_FEATURE_VERSION if v3 else FEATURE_VERSION
+    full = bool(config.get("modes"))
+    version = FULL_FEATURE_VERSION if full else PREP_FEATURE_VERSION if v3 else FEATURE_VERSION
     completion = config.get("completion", "heuristic")
     teacher = f"observation-sampled-{completion}-completion-v1"
     sig = None
+    games_count = 0
     start = time.perf_counter()
     with HeadlessWorker(timeout=120) as worker:
         for deal in range(config["offset"], config["offset"] + config["deals"]):
-            for opening, first in enumerate(("player", "opponent")):
+            mode = config.get("modes", ["draft"])[deal % len(config.get("modes", ["draft"]))]
+            for opening, first in enumerate(("player", "opponent") if mode == "draft" else ("player",)):
+                games_count += 1
                 game = 2 * deal + opening
-                game_config = {"mode": "draft", "control": "both", "seed": config["seed"] + deal,
+                game_config = {"mode": mode, "control": "both", "seed": config["seed"] + deal,
                                "wildDeck": not (config["normal_every"] and deal % config["normal_every"] == 0),
                                "firstPicker": first, "revealOpponent": False}
                 response = worker.request("reset", config=game_config)
@@ -97,9 +101,9 @@ def collect_chunk(config):
                         xx.extend(x)
                         yy.extend([[c["wins"], c["draws"], c["losses"]] for c in report["candidates"]])
                         actual.extend([[0, 0, 0] for _ in actions])
-                        roots.extend([(game * 100 if v3 else game * 10) + turn] * len(actions))
+                        roots.extend([game * (1000 if full else 100 if v3 else 10) + turn] * len(actions))
                         families.extend([family] * len(actions))
-                        specials.extend([(a.get("cardId") if is_prep else a["card"]["id"]) == "draw_2_extra" for a in actions])
+                        specials.extend([(a.get("cardId") if is_prep else a.get("card", {}).get("id")) == "draw_2_extra" for a in actions])
                         preps.extend([is_prep] * len(actions))
                         action = actions[chosen]
                         turn += 1
@@ -108,7 +112,7 @@ def collect_chunk(config):
                     reward = response["rewards"][actor]
                     actual[index][0 if reward == 1 else 1 if reward == 0 else 2] = 1
     root_count = len(set(roots))
-    summary = {"offset": config["offset"], "deals": config["deals"], "games": 2 * config["deals"],
+    summary = {"offset": config["offset"], "deals": config["deals"], "games": games_count,
                "roots": root_count, "prep_roots": len({r for r, p in zip(roots, preps) if p}), "rows": len(xx),
                "continuations": len(xx) * config["samples"], "seconds": time.perf_counter() - start}
     temporary = path.with_suffix(".temporary.npz")
@@ -138,6 +142,8 @@ def main():
     parser.add_argument("--prior", type=float, default=2)
     parser.add_argument("--prep-search", action="store_true",
                         help="Search and record preparation decisions too (v3 draft+preparation features)")
+    parser.add_argument("--modes", type=lambda value: value.split(","),
+                        help="Full-game features; cycle these modes across deals (repeats set mixture weights)")
     parser.add_argument("--completion", choices=["heuristic", "prep-lookahead"], default="heuristic",
                         help="Rollout completion policy used by the search teacher")
     parser.add_argument("--only-offsets", type=str, default=None,
@@ -149,10 +155,14 @@ def main():
         parser.error("Seeds/normal-every must be nonnegative")
     if not 0 <= args.neural_fraction <= 1 or args.prior < 0:
         parser.error("Invalid neural mixture/prior")
+    if args.modes and (not args.prep_search or any(mode not in ("draft", "five-hand-discard") for mode in args.modes)):
+        parser.error("--modes requires --prep-search and valid modes")
     args.directory.mkdir(parents=True, exist_ok=True)
     settings = vars(args).copy()
     only = settings.pop("only_offsets")
     settings["directory"] = str(args.directory.resolve())
+    if not args.modes:
+        settings.pop("modes")
     if args.model:
         settings["model"] = str(args.model.resolve())
         settings["model_sha256"] = hashlib.sha256(args.model.read_bytes()).hexdigest()

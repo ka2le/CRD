@@ -29,10 +29,10 @@ The creator approved these conversions on 2026-10-19. Balance remains experiment
 | One of each | Critter stats × Robot stats × Dragon stats, neutral power |
 | Any of each | Sum of all class stats, neutral power |
 | Draw / redraw / copy / recycle | Existing preparation effects; no direct power |
-| Shortcut | With positive power remaining after shields, advance the chosen faction bonus by one tier, capped at its highest bonus; no added base power. Current default: each copy advances one tier. |
+| Shortcut | With positive power remaining after shields, count the chosen faction bonus two tiers higher, capped at its highest bonus; no added base power. Each copy advances two tiers (`SHORTCUT_TIER_STEPS`). Card shows two up arrows (rotated `arrow` icon), no star. |
 | Chameleon | Click before battle to choose any main faction (Critters / Robots / Dragons), regardless of contributions. That faction controls the whole hand's bonus and shield vulnerability. No added stats or power. |
 
-Shortcut uses bonus tiers Critter 0→1, Robot 0→2→3, Dragon 0→4→6. First earn the normal bonus from post-shield power, then advance once per Shortcut, then apply 2× cards. Examples: 6 Robot power + Shortcut earns +2; 8 Robot power + Shortcut earns +3; 2 Dragon power + Shortcut earns +4. Critters with positive power already have their highest tier. Fully blocked or zero-power hands gain no bonus. These are the implementation defaults for the requested "next bonus tier" effect.
+Shortcut uses bonus tiers Critter 0→1, Robot 0→2→3, Dragon 0→4→6. First earn the normal bonus from post-shield power, then advance two tiers per Shortcut, then apply 2× cards. Examples (2026-10-20, two-tier rule): 6 Robot power + Shortcut earns +3; 8 Robot power + Shortcut earns +3; 2 Dragon power + Shortcut earns +6. Critters with positive power already have their highest tier. Fully blocked or zero-power hands gain no bonus. These are the implementation defaults for the requested "next bonus tier" effect.
 
 Chameleon can be opened during preparation, including before other preparation effects are used. Its choice can be changed until Battle. Copy target selection takes precedence over opening Chameleon. Changing the hand invalidates the previous choice; removing Chameleon removes its unrestricted faction eligibility. Extra copies do not add stats or extra faction effects. AI chooses from all three factions using its own completed hand before reveal.
 

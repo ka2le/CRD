@@ -3,7 +3,7 @@ import './ScreenMenu.css'
 import { GameIcon, SvgIcon } from '../ui/GameIcon'
 import { OPPONENT_AI_OPTIONS } from '../../game/opponentAi'
 
-export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, settings, onUpdateSettings, onHelp, onScoreCard, onCollection }) {
+export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, settings, onUpdateSettings, onHelp, onScoreCard, onCollection, onTestDeck }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
   const menuRef = useRef(null)
@@ -129,6 +129,24 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
             <GameIcon name="star" />
             <span>Wild deck</span>
           </label>
+
+          <label className="screen-menu__toggle">
+            <input
+              type="checkbox"
+              checked={Boolean(settings.testing)}
+              onChange={(event) => onUpdateSettings({ testing: event.target.checked })}
+            />
+            <span className="screen-menu__switch" aria-hidden="true" />
+            <SvgIcon name="flask" />
+            <span>Testing</span>
+          </label>
+
+          {settings.testing ? (
+            <button type="button" className="screen-menu__item" onClick={() => run(onTestDeck)}>
+              <SvgIcon name="flask" />
+              <span>Test deck</span>
+            </button>
+          ) : null}
 
           <div className="screen-menu__row screen-menu__row--split">
             <button type="button" className="screen-menu__item" onClick={() => run(onCollection)}>

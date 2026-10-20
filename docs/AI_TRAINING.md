@@ -1,5 +1,7 @@
 # Search and neural evaluation plan
 
+**Current experiment (2026-10-20): `AI_FULL_GAME_V6.md` supersedes the older draft-only priorities below.** V5 trained preparation; v6 now adds discard-mode feature/data/evaluation support and launches18k fresh families, a200,734-parameter/six-hidden-layer model andone-hour higher cosine-decay training. Frozen v5-assisted search plays both draft seats; strongest plain search plays both discard seats. Actual full-game results and dense prep-lookahead rollout labels stay distinct. Only compare the new model against v5 and strongest plain search. Live/final artifacts: `.ai-runs/full-game-v6/status.json` and `summary.json`. No measured v6 strength yet at dispatch.
+
 Latest implementation/request: `AI_DRAFT_V2.md` supersedes the first small prototype as the active experiment. About 100k parameters, 4,000 grouped deals, per-candidate W/D/L rows, all simulated evaluations contributing through outcome counts, actual search-versus-search outcomes, ten-minute budgeted training and frozen-search tournaments. Preparation stays heuristic. Bigger data/model are hypotheses; promotion requires measured stronger search. The original v1 milestone and broader plans below remain context.
 
 ## Current milestone: draft-only prototype (2026-10-19)

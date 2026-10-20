@@ -1,8 +1,9 @@
 import './CardVisual.css'
-import { DISPLAY_ICONS, STAT_ICONS, getStatIcon } from './cardData'
+import { DISPLAY_ICONS, getStatIcon } from './cardData'
 import { getImageUrl } from './imageAssets'
 
 function IconToken({ src, alt, className = '' }) {
+  // className may carry modifiers such as --up (rotated arrow).
   return (
     <span className={['card-visual__icon-token', className].filter(Boolean).join(' ')}>
       <img src={getImageUrl(src)} alt={alt} className="card-visual__icon-image" />
@@ -20,7 +21,7 @@ function renderToken(token, index) {
   }
 
   if (token.type === 'icon') {
-    return <IconToken key={`${token.alt}-${index}`} src={token.value} alt={token.alt} />
+    return <IconToken key={`${token.alt}-${index}`} src={token.value} alt={token.alt} className={token.className} />
   }
 
   return <TextToken key={`${token.value}-${index}`} value={token.value} />
@@ -84,7 +85,9 @@ function CardEffectRow({ card }) {
     tokens = [{ type: 'icon', value: DISPLAY_ICONS.shield, alt: 'own shields' }, { type: 'text', value: '=' }, { type: 'icon', value: DISPLAY_ICONS.dmg, alt: 'power' }]
   }
   if (card.tabletop && card.id === 'shortcut') {
-    tokens = [{ type: 'icon', value: DISPLAY_ICONS.arrow, alt: 'next tier' }, { type: 'icon', value: DISPLAY_ICONS.star, alt: 'faction bonus' }]
+    // Two up arrows: count the bonus two tiers higher.
+    const up = { type: 'icon', value: DISPLAY_ICONS.arrow, alt: 'bonus tier up', className: 'card-visual__icon-token--up' }
+    tokens = [up, { ...up }]
   }
   if (card.tabletop && card.id === 'chameleon') {
     tokens = ['critter', 'robot', 'dragon'].flatMap((type, index) => [
@@ -134,14 +137,14 @@ function CardCooldown({ card, charge = null }) {
   )
 }
 
+// The printed card back (the "backside" card art in data/cards.json).
+const CARD_BACK_SOURCE = 'https://cdn.midjourney.com/210b3cd1-dec8-453e-8d1a-d967cea6e283/0_0.png'
+const CARD_BACK_URL = getImageUrl(CARD_BACK_SOURCE)
+
 export function CardBack() {
   return (
-    <div className="card-visual__back-face">
-      <div className="card-visual__back-ring">
-        <img src={STAT_ICONS.critter} alt="" className="card-visual__back-icon card-visual__back-icon--critter" />
-        <img src={STAT_ICONS.robot} alt="" className="card-visual__back-icon card-visual__back-icon--robot" />
-        <img src={STAT_ICONS.dragon} alt="" className="card-visual__back-icon card-visual__back-icon--dragon" />
-      </div>
+    <div className="card-visual__back">
+      <img src={CARD_BACK_URL} alt="" className="card-visual__back-image" draggable="false" />
     </div>
   )
 }

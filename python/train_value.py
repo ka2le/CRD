@@ -9,7 +9,7 @@ import time
 import numpy as np
 
 from crd.draft_model import split_family
-from crd.value_net import (FEATURE_VERSION, PREP_FEATURE_VERSION, ValueNet, initialize, adam_step,
+from crd.value_net import (FEATURE_VERSION, PREP_FEATURE_VERSION, FULL_FEATURE_VERSION, ValueNet, initialize, adam_step,
                            cross_entropy, prep_width)
 
 
@@ -113,6 +113,23 @@ def evaluate(model, data, outcome_weight, baseline_only=False):
               "teacher_value_mse": float(np.mean((pred - target_value) ** 2)),
               "teacher_regret": float(np.mean(regrets)), "teacher_top_choice_rate": float(np.mean(agreement))}
     prep = data["prep"]
+    if model.signature.get("features") == FULL_FEATURE_VERSION:
+        mode_column = len(model.mean) - 9
+        discard_root = data["x"][:, mode_column + 1] == 1
+        discard_mode = data["x"][:, mode_column] == 1
+        result["decision_types"] = {}
+        for name, mask in (("draft_pick", ~discard_mode & ~prep), ("discard", discard_root),
+                           ("draft_preparation", ~discard_mode & prep), ("discard_preparation", discard_mode & prep)):
+            if not mask.any():
+                continue
+            root_mask = mask[boundaries[:-1]]
+            result["decision_types"][name] = {
+                "rows": int(mask.sum()), "roots": int(root_mask.sum()),
+                "cross_entropy": cross_entropy(probabilities[mask], counts[mask]),
+                "actual_search_game_cross_entropy": cross_entropy(probabilities[mask], actual[mask]),
+                "teacher_value_mse": float(np.mean((pred[mask] - target_value[mask]) ** 2)),
+                "teacher_regret": float(np.mean(np.asarray(regrets)[root_mask])),
+                "teacher_top_choice_rate": float(np.mean(np.asarray(agreement)[root_mask]))}
     if prep.any():
         prep_roots = np.zeros(len(regrets), dtype=bool)
         for i, (start, end) in enumerate(zip(boundaries[:-1], boundaries[1:])):
@@ -146,6 +163,7 @@ def train_run(args):
     variances = [np.zeros_like(p) for p in model.parameters]
     rng = np.random.default_rng(args.seed)
     initial_validation = evaluate(model, parts["validation"], args.outcome_weight)
+    training_started = time.perf_counter()
     best = initial_validation["mixed_cross_entropy"]
     best_epoch = step = 0
     model.save(args.directory / "best.npz")
@@ -155,19 +173,25 @@ def train_run(args):
             tick = time.perf_counter()
             order = rng.permutation(len(counts))
             # Smooth decay across the requested training window; no test-based tuning.
-            fraction = min(1., (tick - started) / args.seconds)
-            rate = args.learning_rate * (.1 + .9 * (1 + np.cos(np.pi * fraction)) / 2)
+            loss_sum = outcome_sum = 0.
             for start in range(0, len(order), args.batch):
                 indices = order[start:start+args.batch]
                 step += 1
-                adam_step(model, training["x"][indices], counts[indices], moments, variances, step, rate,
-                          weight_decay=args.weight_decay)
+                fraction = min(1., (time.perf_counter() - training_started) / args.seconds)
+                floor = getattr(args, "min_lr_ratio", .1)
+                rate = args.learning_rate * (floor + (1 - floor) * (1 + np.cos(np.pi * fraction)) / 2)
+                batch_counts = counts[indices]
+                loss = adam_step(model, training["x"][indices], batch_counts, moments, variances, step, rate,
+                                 weight_decay=args.weight_decay)
+                outcome_sum += batch_counts.sum()
+                loss_sum += loss * batch_counts.sum()
             validation = evaluate(model, parts["validation"], args.outcome_weight)
             if validation["mixed_cross_entropy"] < best:
                 best, best_epoch = validation["mixed_cross_entropy"], epoch
                 model.save(args.directory / "best.npz")
             progress = {"epoch": epoch, "best_epoch": best_epoch, "seconds": round(time.perf_counter()-started, 1),
                         "epoch_seconds": round(time.perf_counter()-tick, 2), "learning_rate": rate,
+                        "optimizer_steps": step, "training_cross_entropy": float(loss_sum / outcome_sum),
                         "validation": validation}
             log.write(json.dumps(progress) + "\n")
             log.flush()
@@ -176,7 +200,7 @@ def train_run(args):
                 model.save(args.directory / f"epoch-{epoch:04d}.npz")
             if epoch == 1 or epoch % 5 == 0:
                 print(json.dumps(progress), flush=True)
-            if time.perf_counter()-started >= args.seconds:
+            if time.perf_counter()-training_started >= args.seconds:
                 break
     model.save(args.directory / "last.npz")
     chosen = ValueNet.load(args.directory / "best.npz")
@@ -184,6 +208,7 @@ def train_run(args):
     report = {"parameters": parameter_count, "shape": shape, "epochs": epoch, "selected_epoch": best_epoch,
               "seconds": time.perf_counter()-started, "seed": args.seed, "learning_rate": args.learning_rate,
               "weight_decay": args.weight_decay,
+              "lr_schedule": "cosine-by-training-time", "min_lr_ratio": getattr(args, "min_lr_ratio", .1),
               "datasets": [str(path.resolve()) for path in [args.dataset, *args.add_data]],
               "warm_start": None if args.warm_start is None else str(args.warm_start.resolve()),
               "warm_start_sha256": None if args.warm_start is None else hashlib.sha256(args.warm_start.read_bytes()).hexdigest(),
@@ -207,6 +232,7 @@ def main():
     parser.add_argument("--seconds", type=float, default=600)
     parser.add_argument("--batch", type=int, default=2048)
     parser.add_argument("--learning-rate", type=float, default=.0006)
+    parser.add_argument("--min-lr-ratio", type=float, default=.1)
     parser.add_argument("--outcome-weight", type=float, default=8)
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--weight-decay", type=float, default=1e-5, help="L2 coefficient added to every gradient")
@@ -216,6 +242,8 @@ def main():
     args = parser.parse_args()
     if min(args.epochs, args.seconds, args.batch, args.learning_rate) <= 0 or args.outcome_weight < 0:
         parser.error("Invalid training budget/settings")
+    if not 0 < args.min_lr_ratio <= 1 or args.weight_decay < 0:
+        parser.error("Invalid learning-rate floor/weight decay")
     if args.hidden is not None and (not args.hidden or min(args.hidden) < 1):
         parser.error("Hidden widths must be positive")
     if args.directory.exists() and any(args.directory.iterdir()):

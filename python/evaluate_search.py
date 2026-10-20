@@ -26,9 +26,10 @@ def evaluate_chunk(config):
     with HeadlessWorker(timeout=120) as worker:
         for deal in range(config["offset"], config["offset"] + config["deals"]):
             for seat_index, seat in enumerate(("player", "opponent")):
-                for first_index, first in enumerate(("player", "opponent")):
+                mode = config.get("mode", "draft")
+                for first_index, first in enumerate(("player", "opponent") if mode == "draft" else ("player",)):
                     game = deal * 4 + seat_index * 2 + first_index
-                    actual_config = {"mode": "draft", "control": "both", "seed": config["seed"] + deal,
+                    actual_config = {"mode": mode, "control": "both", "seed": config["seed"] + deal,
                                      "wildDeck": not config["normal_deck"], "firstPicker": first,
                                      "revealOpponent": False}
                     response = worker.request("reset", config=actual_config)
@@ -105,6 +106,7 @@ def main():
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--chunk", type=int, default=10)
     parser.add_argument("--normal-deck", action="store_true")
+    parser.add_argument("--mode", choices=["draft", "five-hand-discard"], default="draft")
     parser.add_argument("--opponent-model", type=Path, help="Frozen neural-prior search opponent (default: base search)")
     parser.add_argument("--prep-policy", choices=["heuristic", "search"], default="heuristic",
                         help="search = the candidate searches its own preparation decisions (order/targets/skip)")

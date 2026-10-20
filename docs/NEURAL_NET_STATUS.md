@@ -1,6 +1,6 @@
 # Neural net testing: current state
 
-Snapshot 2026-10-19. Short overview of every network trained so far, how each one was tested and what the results mean. Details are in `AI_DRAFT_EXPERIMENT.md` (v1), `AI_DRAFT_V2.md`, `AI_DRAFT_V3.md` (v3/v4) and `AI_PREP_V5.md` (v5).
+Snapshot 2026-10-20. **V6 is collecting/training, not yet a measured stronger net.** Read `AI_FULL_GAME_V6.md` and `.ai-runs/full-game-v6/status.json`:18k fresh families across Draft and Discard,200,734 parameters/six hidden layers,one hour cosine-decay training, then only v5 and plain-search opponents. The complete tiny pipeline and23 Python/17 headless tests pass. Existing trained-network results below remain unchanged. Details are in `AI_DRAFT_EXPERIMENT.md` (v1), `AI_DRAFT_V2.md`, `AI_DRAFT_V3.md` (v3/v4) and `AI_PREP_V5.md` (v5).
 
 ## How the AI is built
 
@@ -8,7 +8,7 @@ The networks never play alone. Each decision is made by **search**: for every le
 
 All networks are small NumPy MLPs that predict win/draw/loss for one (position, option) pair, trained on the search's own evaluations (every simulated outcome counts) plus the real game result of the chosen option.
 
-Scope: **Draft mode only, digital 21/50 rules.** No network exists for the five-hand discard mode or for tabletop scoring.
+Completed trained models: **Draft mode only, digital 21/50 rules.** V6 expands the pipeline to draft picks, discard passes and every preparation decision in both modes. No completed discard-mode network or tabletop model exists yet.
 
 ## Versions
 

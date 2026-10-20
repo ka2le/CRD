@@ -17,6 +17,7 @@ import HelpSheet from './components/overlay/HelpSheet'
 import ScoreSheet from './components/overlay/ScoreSheet'
 import CollectionSheet from './components/overlay/CollectionSheet'
 import FactionPicker from './components/overlay/FactionPicker'
+import TestDeckSheet from './components/overlay/TestDeckSheet'
 import SideRail, { Pips, ThinkingDots } from './components/hud/SideRail'
 import { GameIcon, SvgIcon } from './components/ui/GameIcon'
 import useBattlePlayback from './hooks/useBattlePlayback'
@@ -92,6 +93,10 @@ function AppContent() {
     cancelTabletopTypeChoice,
     tabletopTypeCardUid,
     tabletopSelectedCardUid,
+    testEditable,
+    testDeckZones,
+    swapTestDeckCards,
+    moveTestDeckCardToTop,
   } = session
 
   const {
@@ -119,6 +124,7 @@ function AppContent() {
   const [scoreOpen, setScoreOpen] = useState(false)
   const [collectionOpen, setCollectionOpen] = useState(false)
   const [pileOpen, setPileOpen] = useState(false)
+  const [testDeckOpen, setTestDeckOpen] = useState(false)
 
   const layout = battleStarted
     ? 'battle'
@@ -159,6 +165,7 @@ function AppContent() {
 
   function handleNewGame() {
     setPileOpen(false)
+    setTestDeckOpen(false)
     resetGame()
   }
 
@@ -169,6 +176,7 @@ function AppContent() {
         sections={DECK_SECTIONS}
         count={deckCount}
         pulse={game.phase === 'draft-pack-dealing'}
+        onOpen={settings.testing ? () => setTestDeckOpen(true) : null}
         label="Deck"
       />
       <Pile
@@ -300,6 +308,7 @@ function AppContent() {
             onHelp={() => setHelpOpen(true)}
             onScoreCard={() => setScoreOpen(true)}
             onCollection={() => setCollectionOpen(true)}
+            onTestDeck={() => setTestDeckOpen(true)}
           />
         </SideRail>
 
@@ -410,6 +419,16 @@ function AppContent() {
         cards={recycleSelectionCards}
         onPick={resolvePlayerRecyclePick}
         onClose={cancelPlayerRecyclePick}
+        contextHand={playerHand}
+      />
+
+      <TestDeckSheet
+        open={Boolean(settings.testing && testDeckOpen && !battleStarted)}
+        zones={testDeckZones}
+        editable={testEditable}
+        onSwap={swapTestDeckCards}
+        onToTop={moveTestDeckCardToTop}
+        onClose={() => setTestDeckOpen(false)}
         contextHand={playerHand}
       />
 

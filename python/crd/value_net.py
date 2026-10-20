@@ -9,7 +9,8 @@ from .draft_model import features as first_features
 
 FEATURE_VERSION = "draft-public-unseen-stats-wdl-v2"
 PREP_FEATURE_VERSION = "draft-prep-afterstate-wdl-v3"
-FEATURE_VERSIONS = (FEATURE_VERSION, PREP_FEATURE_VERSION)
+FULL_FEATURE_VERSION = "full-game-discard-prep-wdl-v4"
+FEATURE_VERSIONS = (FEATURE_VERSION, PREP_FEATURE_VERSION, FULL_FEATURE_VERSION)
 PREP_ACTION_TYPES = ("prepare", "skip-preparation", "finish-preparation")
 
 
@@ -23,7 +24,7 @@ def prep_width(card_count):
 
 def feature_width(spec_or_ids, version=PREP_FEATURE_VERSION):
     n = len(spec_or_ids["cardTypes"]) if isinstance(spec_or_ids, dict) else len(spec_or_ids)
-    return draft_width(n) + (prep_width(n) if version == PREP_FEATURE_VERSION else 0)
+    return draft_width(n) + (prep_width(n) if version in (PREP_FEATURE_VERSION, FULL_FEATURE_VERSION) else 0) + (n + 9 if version == FULL_FEATURE_VERSION else 0)
 
 
 def _cycle_stats(combat):
@@ -78,6 +79,11 @@ def preparation_features(observation, actions, spec, prep):
 
 def model_features(version, observation, actions, spec, prep=None):
     """Feature rows in the layout a given model version expects (None = unsupported decision)."""
+    if version == FULL_FEATURE_VERSION:
+        return full_game_features(observation, actions, spec, prep)
+    if observation["mode"] != "draft":
+        # Older nets have never learned this information distribution, including its prep.
+        return None
     if observation["phase"] == "preparation":
         if version != PREP_FEATURE_VERSION:
             return None
@@ -86,6 +92,55 @@ def model_features(version, observation, actions, spec, prep=None):
     if version == PREP_FEATURE_VERSION:
         x = np.c_[x, np.zeros((len(x), prep_width(len(spec["cardTypes"]))), dtype=np.float32)]
     return x
+
+
+def full_game_features(observation, actions, spec, prep=None):
+    """Both modes; discard candidates encode selected and retained card multisets.
+
+    Unknown replacements stay unresolved. Only permitted observations enter features;
+    physical UIDs are used for membership, never represented numerically.
+    """
+    n = len(spec["cardTypes"])
+    index = {card["id"]: i for i, card in enumerate(spec["cardTypes"])}
+
+    def counts(cards):
+        result = np.zeros(n, dtype=np.float32)
+        for card in cards:
+            result[index[card["id"]]] += .2
+        return result
+
+    is_discard = actions[0]["type"] == "discard"
+    if observation["phase"] == "preparation":
+        base = preparation_features(observation, actions, spec, prep)
+    elif not is_discard:
+        base = model_features(PREP_FEATURE_VERSION, observation, actions, spec)
+    else:
+        own, enemy, row, discarded = [counts(observation[key]) for key in
+                                     ("playerHand", "opponentHand", "draftRow", "discardPile")]
+        cycles = np.asarray([observation[key]["cycle"] for key in ("ownCombat", "knownOpponentCombat")],
+                            dtype=np.float32).ravel() / 21
+        stats = np.asarray([observation[key]["stats"][kind] for key in ("ownCombat", "knownOpponentCombat")
+                            for kind in ("critter", "robot", "dragon")], dtype=np.float32) / 5
+        # These are still in the unknown pool: hidden enemy cards and all unseen draws.
+        unseen = np.maximum(np.asarray(spec["poolCounts"], dtype=np.float32) / 5 - own - enemy - discarded, 0)
+        base = []
+        for action in actions:
+            selected = set(action["selectedIds"])
+            removed = counts(card for card in observation["playerHand"] if card["uid"] in selected)
+            base.append(np.r_[own, enemy, row, discarded, removed, cycles,
+                              [0, 0, 0, observation["wildDeck"]], unseen, stats,
+                              np.zeros(prep_width(n), dtype=np.float32)])
+        base = np.asarray(base, dtype=np.float32)
+    context = [observation["mode"] == "five-hand-discard", is_discard,
+               observation["playerDiscardsUsed"] / 2, observation["opponentDiscardsUsed"] / 2,
+               observation["opponentHandCount"] / 5, observation["opponentHandIsCurrent"],
+               observation["deckCountIsExact"], observation["deckCount"] / 50]
+    extra = []
+    for action in actions:
+        selected = set(action["selectedIds"]) if is_discard else set()
+        kept = counts(card for card in observation["playerHand"] if card["uid"] not in selected) if is_discard else np.zeros(n)
+        extra.append(np.r_[kept, context, len(selected) / 5])
+    return np.c_[base, np.asarray(extra, dtype=np.float32)].astype(np.float32)
 
 
 def features(observation, actions, spec):
@@ -197,12 +252,25 @@ def cross_entropy(probabilities, counts):
 
 def initialize(x, counts, sig, seed=7, hidden=(256, 160)):
     rng = np.random.default_rng(seed)
-    mean, scale = x.mean(axis=0), np.maximum(x.std(axis=0), .1)
-    z = np.clip((x - mean) / scale, -20, 20)
-    design = np.c_[z, np.ones(len(z), dtype=np.float32)]
-    targets = (counts + .5) / (counts.sum(axis=1, keepdims=True) + 1.5)
-    linear = np.linalg.solve(design.T @ design + 100 * np.eye(design.shape[1], dtype=np.float32),
-                             design.T @ np.log(targets)).astype(np.float32)
+    # Stream sufficient statistics rather than materialising several corpus-sized arrays.
+    total = np.zeros(x.shape[1], dtype=np.float64)
+    squares = total.copy()
+    for start in range(0, len(x), 8192):
+        block = x[start:start+8192].astype(np.float64)
+        total += block.sum(axis=0)
+        squares += np.square(block).sum(axis=0)
+    mean = (total / len(x)).astype(np.float32)
+    scale = np.maximum(np.sqrt(np.maximum(squares / len(x) - (total / len(x)) ** 2, 0)), .1).astype(np.float32)
+    gram = 100 * np.eye(x.shape[1] + 1, dtype=np.float64)
+    rhs = np.zeros((x.shape[1] + 1, 3), dtype=np.float64)
+    for start in range(0, len(x), 8192):
+        z = np.clip((x[start:start+8192] - mean) / scale, -20, 20)
+        design = np.c_[z, np.ones(len(z), dtype=np.float32)].astype(np.float64)
+        target = counts[start:start+8192]
+        targets = (target + .5) / (target.sum(axis=1, keepdims=True) + 1.5)
+        gram += design.T @ design
+        rhs += design.T @ np.log(targets)
+    linear = np.linalg.solve(gram, rhs).astype(np.float32)
     if len(hidden) != 2:
         sizes = [x.shape[1], *hidden, 3]
         weights = [rng.normal(0, 1 / np.sqrt(before), (before, after)).astype(np.float32)

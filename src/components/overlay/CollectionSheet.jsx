@@ -4,23 +4,12 @@ import Sheet from './Sheet'
 import CardButton from '../card/CardButton'
 import { useCardInspect } from './inspectContext'
 import { SvgIcon } from '../ui/GameIcon'
+import { CARD_GROUPS as GROUPS, getCardGroup as getGroup } from '../card/cardMeta'
 import { getCoreCards } from '../../game/cards'
 import { toTabletopCard } from '../../game/tabletop'
 import { useElementSize } from '../../hooks/useFitLayout'
 
 const CLASS_ORDER = ['critter', 'robot', 'dragon']
-
-const GROUPS = [
-  { key: 'stat', label: 'Stats' },
-  { key: 'attack', label: 'Attacks' },
-  { key: 'special', label: 'Specials' },
-]
-
-function getGroup(card) {
-  if (card.type === 'stat') return 'stat'
-  if (card.effect?.dmgType || ((card.cd ?? 0) > 0 && card.effect?.dmg)) return 'attack'
-  return 'special'
-}
 
 function classRank(card) {
   const classes = card.type === 'stat' ? (card.stats ?? []) : [card.effect?.dmgType].filter(Boolean)

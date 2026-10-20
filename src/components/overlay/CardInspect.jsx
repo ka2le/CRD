@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import './CardInspect.css'
 import CardVisual from '../card/CardVisual'
 import { getAccentStyle, getCardSummary, getDamageDelta, formatDelta } from '../card/cardMeta'
@@ -6,6 +6,11 @@ import { InspectContext } from './inspectContext'
 import { GameIcon } from '../ui/GameIcon'
 
 function CardInspectOverlay({ entry, onClose }) {
+  // A long press opens this overlay while the finger is still down, so the
+  // release (click / contextmenu) lands on the overlay itself. Only close on a
+  // gesture that started after the overlay appeared.
+  const armedRef = useRef(false)
+
   useEffect(() => {
     function handleKey(event) {
       if (event.key === 'Escape') onClose()
@@ -20,7 +25,12 @@ function CardInspectOverlay({ entry, onClose }) {
   const cd = typeof card.cd === 'number' ? card.cd : 0
 
   return (
-    <div className="card-inspect" onClick={onClose} onContextMenu={(event) => { event.preventDefault(); onClose() }}>
+    <div
+      className="card-inspect"
+      onPointerDown={() => { armedRef.current = true }}
+      onClick={() => { if (armedRef.current) onClose() }}
+      onContextMenu={(event) => { event.preventDefault(); if (armedRef.current) onClose() }}
+    >
       <div className="card-inspect__stage" style={getAccentStyle(card)}>
         <div className="card-inspect__card">
           <CardVisual card={card} />

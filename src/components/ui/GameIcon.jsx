@@ -68,6 +68,17 @@ const SVG_PATHS = {
       <rect x="13.5" y="13.5" width="7" height="7" rx="1.4" />
     </g>
   ),
+  flask: (
+    <g fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9.5 3.5h5M10.5 3.5v5.2L4.8 18.2a1.6 1.6 0 0 0 1.4 2.3h11.6a1.6 1.6 0 0 0 1.4-2.3L13.5 8.7V3.5" />
+      <path d="M7.6 14.5h8.8" />
+    </g>
+  ),
+  top: (
+    <g fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 4.5h14M12 20V9M7 13.5l5-5 5 5" />
+    </g>
+  ),
   fullscreen: (
     <g fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
       <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />

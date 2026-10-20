@@ -120,6 +120,10 @@ img {
   mask: var(--icon) center / contain no-repeat;
 }
 
+.g-icon--up {
+  transform: rotate(-90deg);
+}
+
 .svg-icon {
   width: 1em;
   height: 1em;

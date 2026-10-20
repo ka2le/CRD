@@ -54,7 +54,7 @@ const SPECIAL_TEXT = {
 }
 
 const TABLETOP_TEXT = {
-  shortcut: 'Advance your main faction bonus by one tier after shields, up to its highest tier. Requires positive power. Copies advance another tier. Adds no base power.',
+  shortcut: 'Count your main faction bonus two tiers higher than you earned after shields, up to its highest tier. Requires positive power. Adds no base power.',
   chameleon: 'Choose Critter, Robot or Dragon as your main faction before battle. Its bonus and shield vulnerability apply to your whole hand. Adds no stats or base power.',
   bite: 'Adds 2 power, no stats needed.',
   double_dmg: 'Doubles your main faction bonus after shields. Works with any faction. Copies stack: ×2, ×4, ×8.',
@@ -116,4 +116,17 @@ export function getCardCharge(card, round) {
   if (!round) return 0
   const phase = round % card.cd
   return phase === 0 ? card.cd : phase
+}
+
+// Card type groups shared by the collection and the test deck filters.
+export const CARD_GROUPS = [
+  { key: 'stat', label: 'Stats' },
+  { key: 'attack', label: 'Attacks' },
+  { key: 'special', label: 'Specials' },
+]
+
+export function getCardGroup(card) {
+  if (card.type === 'stat') return 'stat'
+  if (card.effect?.dmgType || ((card.cd ?? 0) > 0 && card.effect?.dmg)) return 'attack'
+  return 'special'
 }

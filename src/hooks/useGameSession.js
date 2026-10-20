@@ -21,6 +21,9 @@ import {
 } from '../game/opponentAi'
 import { getTabletopChoice, getTabletopHandKey, getCardTabletopTypes } from '../game/tabletop'
 import { createDevScenario, DEV_SCENARIO_NAMES } from '../game/devScenarios'
+import {
+  GAME_ZONE_KEYS, PREPARATION_ZONE_KEYS, getTestDeckZones, moveTestCardToTop, swapTestCards,
+} from '../game/testDeck'
 
 const STORAGE_KEY = 'crd-dev-settings-v1'
 
@@ -29,8 +32,12 @@ const DEFAULT_SETTINGS = {
   showOpponentCards: true,
   wildDeck: true,
   tabletop: false,
+  testing: false,
   opponentAi: DEFAULT_OPPONENT_AI,
 }
+
+// Settings that change tools/visibility only and must not deal a new game.
+const NON_RESETTING_SETTINGS = ['testing']
 
 // Minimum visible "thinking" time for a Search AI discard, so the player's own
 // discard animation finishes before the opponent's cards move.
@@ -218,8 +225,47 @@ function createInitialSessionState() {
   return initial
 }
 
+// Where test-deck edits apply right now, or null while the table is busy
+// (opponent turn, dealing, animations, battle).
+export function getTestEditTarget(state) {
+  if (!state.settings?.testing || state.battleStarted) return null
+  const { game, preBattle } = state
+  if (game.phase === 'battle-ready') {
+    if (preBattle.pendingResolution || preBattle.pendingAnimation || preBattle.opponentSearchKey
+      || preBattle.recycleSelection) return null
+    return 'preparation'
+  }
+  if (game.phase === 'draft-player-pick' || game.phase.startsWith('player-discard')) return 'game'
+  return null
+}
+
+function applyTestEdit(state, edit) {
+  const target = getTestEditTarget(state)
+  if (!target) return state
+  if (target === 'preparation') {
+    const preBattle = edit(state.preBattle, PREPARATION_ZONE_KEYS)
+    if (preBattle === state.preBattle) return state
+    return { ...state, preBattle: { ...preBattle, armedPlayerCopyUid: null } }
+  }
+  const game = edit(state.game, GAME_ZONE_KEYS)
+  if (game === state.game) return state
+  const handIds = new Set(game.playerHand.map((card) => card.uid))
+  return {
+    ...state,
+    game,
+    preBattle: createPreBattleState(game),
+    selectedIds: state.selectedIds.filter((uid) => handIds.has(uid)),
+  }
+}
+
 export function sessionReducer(state, action) {
   switch (action.type) {
+    case 'TEST_SWAP_CARDS':
+      return applyTestEdit(state, (container, keys) => swapTestCards(container, keys, action.uidA, action.uidB))
+
+    case 'TEST_CARD_TO_TOP':
+      return applyTestEdit(state, (container, keys) => moveTestCardToTop(container, keys, action.uid))
+
     case 'LOAD_DEV_SCENARIO': {
       if (!import.meta.env.DEV) return state
       const { game, result, playerType } = action.payload
@@ -710,6 +756,10 @@ export function sessionReducer(state, action) {
       }
       nextSettings.opponentAi = normalizeOpponentAi(nextSettings.opponentAi)
 
+      if (Object.keys(action.patch).every((key) => NON_RESETTING_SETTINGS.includes(key))) {
+        return { ...state, settings: nextSettings }
+      }
+
       const nextMode = nextSettings.gameMode ?? state.gameMode
       const nextGame = nextMode === 'draft'
         ? createDraftGameWithDealing(state.nextDraftStartingPicker, nextSettings)
@@ -886,6 +936,19 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
 
   const updateSettings = useCallback((patch) => {
     dispatch({ type: 'UPDATE_SETTINGS', patch })
+  }, [])
+
+  const testEditTarget = getTestEditTarget(session)
+  const testDeckZones = useMemo(() => (settings.testing
+    ? getTestDeckZones({ game, preBattle, usePreparation: game.phase === 'battle-ready' })
+    : []), [settings.testing, game, preBattle])
+
+  const swapTestDeckCards = useCallback((uidA, uidB) => {
+    dispatch({ type: 'TEST_SWAP_CARDS', uidA, uidB })
+  }, [])
+
+  const moveTestDeckCardToTop = useCallback((uid) => {
+    dispatch({ type: 'TEST_CARD_TO_TOP', uid })
   }, [])
 
   const toggleSelected = useCallback((uid) => {
@@ -1233,5 +1296,9 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
       : (game.mode === 'draft' ? game.draftDiscard : game.playerDiscards),
     resolvedPlayerHand,
     resolvedOpponentHand,
+    testEditable: Boolean(testEditTarget),
+    testDeckZones,
+    swapTestDeckCards,
+    moveTestDeckCardToTop,
   }
 }

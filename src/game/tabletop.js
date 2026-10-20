@@ -47,6 +47,9 @@ export function getTabletopProfile(hand = []) {
   return { stats, shields, contributions, neutral, base, dominantTypes, types, attacks, bonusMultiplier, shortcuts, hasChameleon }
 }
 
+// Each Shortcut copy advances the earned faction bonus this many tiers.
+export const SHORTCUT_TIER_STEPS = 2
+
 export function getTabletopBonus(type, power) {
   if (power <= 0) return 0
   if (type === 'critter') return 1
@@ -65,7 +68,7 @@ export function scoreTabletopHand(hand, enemyShields = 0, damageType = null) {
   const naturalBonus = getTabletopBonus(type, power)
   const tiers = { critter: [0, 1], robot: [0, 2, 3], dragon: [0, 4, 6] }[type] ?? [0]
   const tierIndex = tiers.indexOf(naturalBonus)
-  const baseBonus = power > 0 ? tiers[Math.min(tierIndex + profile.shortcuts, tiers.length - 1)] : 0
+  const baseBonus = power > 0 ? tiers[Math.min(tierIndex + (profile.shortcuts * SHORTCUT_TIER_STEPS), tiers.length - 1)] : 0
   const bonus = baseBonus * profile.bonusMultiplier
   return { ...profile, damageType: type, enemyShields, shieldPenalty, blocked, power, naturalBonus, baseBonus, bonus, score: power + bonus }
 }

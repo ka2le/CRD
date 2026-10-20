@@ -20,7 +20,9 @@ function preloadImage(src) {
 export default function ImagePreloader() {
   const imageUrls = useMemo(() => {
     const cards = getExpandedCoreDeck({ tabletop: true })
-    return Array.from(new Set(cards.flatMap((card) => card.images ?? []).map(getImageUrl).filter(Boolean)))
+    // Card back first: it is on screen before any face is revealed.
+    const backside = 'https://cdn.midjourney.com/210b3cd1-dec8-453e-8d1a-d967cea6e283/0_0.png'
+    return Array.from(new Set([backside, ...cards.flatMap((card) => card.images ?? [])].map(getImageUrl).filter(Boolean)))
   }, [])
 
   useEffect(() => {
