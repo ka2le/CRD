@@ -416,3 +416,16 @@ test('published saved matches gain player identities without redealing; incompat
   assert.equal(reset.record.snapshot, null)
   assert.equal(reset.record.id, restored.record.id)
 })
+
+test('new invitations switch rooms while retaining the remembered name; malformed links keep the current room', () => {
+  const { instance, sent } = client('guest', gameApi.startRoomGame(initial()))
+  instance.rename('AppleFireman')
+  const original = instance.record
+  instance.followInvite('#room=bad&relay=https%3A%2F%2Frooms.example.com')
+  assert.equal(instance.record, original)
+  instance.followInvite('#room=' + 'b'.repeat(20) + '&relay=https%3A%2F%2Frooms.example.com')
+  assert.equal(instance.record, null)
+  assert.equal(instance.profile.name, 'AppleFireman')
+  assert.equal(instance.cached.entry.id, 'b'.repeat(20))
+  assert(sent.some((msg) => msg.type === 'leave'))
+})

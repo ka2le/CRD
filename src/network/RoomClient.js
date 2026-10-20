@@ -71,11 +71,21 @@ export default class RoomClient {
   }
   start() {
     this.running = true
+    this.followInvite()
     if (this.record) this.connect()
-    else if (typeof window !== 'undefined') {
-      const invite = readRoomInvite()
-      if (invite.id) this.requestEntry(invite.id, invite.endpoint)
-    }
+  }
+  followInvite(value) {
+    if (value === undefined && typeof window === 'undefined') return
+    const invite = readRoomInvite(value)
+    if (!invite.id) return
+    if (!ROOM_ID_PATTERN.test(invite.id)) { this.emit({ error: 'This invitation is not valid' }); return }
+    let endpoint
+    try { endpoint = normalizeRelay(invite.endpoint || DEFAULT_RELAY_URL) }
+    catch (error) { this.emit({ error: error.message }); return }
+    if (this.record?.id === invite.id && this.record.endpoint === endpoint) return
+    if (this.record) this.leave()
+    this.cancelEntry()
+    this.requestEntry(invite.id, endpoint)
   }
   setLocalSession(session) {
     this.localSession = session
