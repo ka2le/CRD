@@ -4,7 +4,7 @@
 
 Tabletop-only definitions live in `data/tabletop-cards.json` and are included only through explicit tabletop deck/collection options. `FactionPicker.jsx` presents the session's validated main-faction choices (including unrestricted Chameleon choices); the scorer handles Shortcut tiers and chosen-faction rules. Imported local artwork is archived separately and resolved through the existing manifest, keeping originals out of the public build.
 
-Reviewed 2026-10-18. CRD is a static React 19/Vite frontend with reusable JavaScript game modules. No backend or multiplayer transport is implemented.
+Reviewed 2026-10-18. CRD is a static React 19/Vite frontend with reusable JavaScript game modules. Optional browser-hosted rooms and a Cloudflare relay were added locally on 2026-10-20; see `MULTIPLAYER.md` for the current transport/persistence/deployment contract.
 
 ## Code map
 
@@ -72,3 +72,7 @@ V2 experiment adds `python/crd/value_net.py` (220 public features, two-hidden-la
 Latest layer: `python/draft_experiment.py` orchestrates both-seat draft-only data/tournaments and calls worker `baseline` for existing heuristic preparation. `python/crd/draft_model.py` owns permitted-input features, grouped dataset loading, linear prior and NumPy residual MLP; `python/train_draft.py` fits/exports a local `.npz` checkpoint. `AI_DRAFT_EXPERIMENT.md` records commands and evidence. Browser inference and deeper learned cutoffs remain future work; the next paragraph describes the preceding teacher milestone.
 
 `AI_TRAINING.md` specifies the search-plus-residual-value direction. Shared decisions/Gymnasium and an initial root-rollout teacher now exist. The teacher pairs sampled futures across actions, reports uncertainty and baseline deltas, and can generate grouped targets/replays through Python. Next: broader corpus/held-out evaluation, residual evaluator, stronger beliefs and deeper/batched search. Real-state seeds/deck order stay outside decisions. Final combat remains exact; no neural evaluator yet.
+
+## Rooms (2026-10-20)
+
+Normal launches remain immediate AI play. Optional room membership and host-controlled human matches use `src/network/RoomClient.js`, `roomGame.js`, `useRoom.js` and `RoomSheet.jsx`. The host persists complete state/deck order before confirmation; the guest persists its token, snapshots and pending action. The existing session hook presents a seat-relative room view and suspends AI automation during human matches. The Cloudflare Worker/Durable Object relay stores only bounded membership/token hashes, validates message envelopes and expires rooms after 24 hours. Setup/deployment and tests: `MULTIPLAYER.md`.

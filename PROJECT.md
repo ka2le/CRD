@@ -6,7 +6,7 @@ Last full implementation review: **2026-10-18**. AI environment implemented **20
 
 ## Purpose and current stage
 
-Build the creator's two-player board game as a modular digital card battler in React. The current implementation is a local, single-browser human-versus-heuristic-AI prototype with both hand-building modes, pre-battle specials and automatic simultaneous combat. Online multiplayer is future work.
+Build the creator's two-player board game as a modular digital card battler in React. The current implementation is a local, single-browser human-versus-heuristic-AI prototype with both hand-building modes, pre-battle specials and automatic simultaneous combat. Optional trusted-player online rooms are implemented locally (2026-10-20), with a host browser and simple Cloudflare relay; the Cloudflare relay is deployed with Turnstile configured; sanitized frontend publishing is the remaining rollout step. Normal visits still start AI play immediately. See `docs/MULTIPLAYER.md`.
 
 For the complete implementation review, source pointers, known issues and verification, read `docs/CURRENT_STATE.md`. For a quick explanation, read `docs/GAME_OVERVIEW.md`.
 
@@ -61,7 +61,7 @@ These are documented findings, not newly approved rules:
 5. Fixed: Battle now completes AI preparation synchronously before combat. AI actions are not revealed during the human preparation window. Battle is disabled while an already-started human redraw is still resolving.
 6. Shared preparation/headless transitions are tested against the browser reducer. React retains presentation/animation orchestration. Observation-conditioned sampling and shallow rollout evaluation are implemented; belief refinement, broader datasets, neural learning and deeper search remain next.
 7. `extra_turn` and `no_stats_to_2` remain data-only/excluded. Extra and monster sets are not imported.
-8. No backend, rooms, second-human browser input, spectators or browser neural opponent exists yet. Offline supervised draft training is implemented.
+8. Optional two-player rooms and a minimal relay are implemented locally; Cloudflare/GitHub publishing remains pending. Spectators and browser neural inference remain future work. See `docs/MULTIPLAYER.md`.
 
 The AI preparation fix is complete. Follow-up asset work archives all 88 source images in `assets/originals/` and serves optimized local WebP files through `data/image-manifest.json`. Originals total 550.98 MiB; game images total 4.06 MiB (99.3% smaller). Preparation reruns reuse saved originals and unchanged derivatives; production builds check assets offline. See `docs/ASSETS.md`. Headless now supports full preparation decisions and the Gymnasium interface; deferred draft bookkeeping, starter alternation and recycle/pool behavior remain unchanged. `docs/ROADMAP.md` gives the proposed sequence.
 

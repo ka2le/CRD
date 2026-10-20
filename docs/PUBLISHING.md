@@ -73,6 +73,11 @@ foreach ($file in $files) {
   Copy-Item -Path $file -Destination $public
 }
 
+# Relay source only: never copy relay/.wrangler local state or .dev.vars secrets.
+$relayPublic = Join-Path $public 'relay'
+New-Item -ItemType Directory -Path $relayPublic -Force | Out-Null
+Copy-Item -LiteralPath 'relay/worker.js', 'relay/wrangler.jsonc' -Destination $relayPublic
+
 Remove-Item -Force -ErrorAction SilentlyContinue `
   (Join-Path $public 'docs\CODING_START.md'), `
   (Join-Path $public 'docs\SESSION_HANDOFF.md')

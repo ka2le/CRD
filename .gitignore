@@ -8,3 +8,6 @@ dist/
 __pycache__/
 *.pyc
 logs/
+.wrangler/
+.room-test/
+.dev.vars

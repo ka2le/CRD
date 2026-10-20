@@ -57,7 +57,7 @@ function createInitialPlayback(playerHand = null, opponentHand = null, activatio
   }
 }
 
-export default function useBattlePlayback({ battleStarted, battleInstance, playerHand, opponentHand, deck, tabletop = false, playerType = null, timing = {} }) {
+export default function useBattlePlayback({ battleStarted, battleInstance, playerHand, opponentHand, deck, tabletop = false, playerType = null, opponentType = null, timing = {} }) {
   const isActive = battleStarted
   const baseRoundIntervalMs = timing.baseRoundIntervalMs
   const damageFlashMs = timing.damageFlashMs
@@ -97,9 +97,9 @@ export default function useBattlePlayback({ battleStarted, battleInstance, playe
 
   const battleResult = useMemo(() => {
     if (!isActive) return null
-    if (tabletop) return resolveTabletopBattle(playerHand, opponentHand, { playerType })
+    if (tabletop) return resolveTabletopBattle(playerHand, opponentHand, { playerType, opponentType })
     return simulateBattle(playerHand, opponentHand, { deck })
-  }, [deck, isActive, opponentHand, playerHand, tabletop, playerType])
+  }, [deck, isActive, opponentHand, playerHand, tabletop, playerType, opponentType])
 
   useEffect(() => {
     if (!isActive || !battleResult || tabletop) return undefined

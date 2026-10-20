@@ -26,6 +26,7 @@ import {
 } from '../game/testDeck'
 
 const STORAGE_KEY = 'crd-dev-settings-v1'
+const SESSION_STORAGE_KEY = 'crd-local-game-v1'
 
 const DEFAULT_SETTINGS = {
   gameMode: 'draft',
@@ -193,6 +194,17 @@ function createDraftGameWithDealing(firstPicker = 'player', settings = DEFAULT_S
 }
 
 function createInitialSessionState() {
+  try {
+    const saved = JSON.parse(window.localStorage.getItem(SESSION_STORAGE_KEY))
+    const hasScenario = import.meta.env.DEV && new URLSearchParams(window.location.search).has('scenario')
+    if (!hasScenario && saved?.version === 1 && saved.rulesVersion === import.meta.env.CRD_GAME_VERSION && saved.state?.game?.deck && saved.state?.preBattle?.deck) {
+      let restored = saved.state
+      if (restored.preBattle.pendingResolution) restored = sessionReducer(restored, { type: 'RESOLVE_PRE_BATTLE_PENDING_DRAW_ALL_NEW_1' })
+      return { ...restored, lastTransition: null, pendingPlayerDraftPickAnimation: null,
+        suppressedHandCardIds: { player: [], opponent: [] },
+        preBattle: { ...restored.preBattle, pendingAnimation: null, pendingResolution: null } }
+    }
+  } catch { /* First visit, unavailable storage or an obsolete saved game. */ }
   const settings = loadStoredSettings()
   const game = createGameForMode(settings.gameMode, 'player', settings)
 
@@ -789,10 +801,20 @@ export function sessionReducer(state, action) {
   }
 }
 
-export default function useGameSession({ animateCardMove, getAnchorRect, maskSlot, unmaskSlot, timing = {} }) {
+export default function useGameSession({ animateCardMove, getAnchorRect, maskSlot, unmaskSlot, timing = {}, room = null }) {
   const sessionTiming = createSessionTiming(timing)
-  const [session, dispatch] = useReducer(sessionReducer, undefined, createInitialSessionState)
+  const [localSession, localDispatch] = useReducer(sessionReducer, undefined, createInitialSessionState)
+  const online = Boolean(room?.session)
+  const session = room?.session ?? localSession
+  const dispatch = online ? room.dispatch : localDispatch
+  const onlineBlocked = online && (room.busy || room.blocked || (room.record?.role !== 'host'
+    && (room.connection !== 'connected' || !room.presence?.host?.connected)))
   const sequenceTimeoutsRef = useRef([])
+
+  useEffect(() => {
+    try { window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ version: 1, rulesVersion: import.meta.env.CRD_GAME_VERSION, state: localSession })) }
+    catch { /* Room writes report storage errors separately; offline play remains available. */ }
+  }, [localSession])
 
   const {
     settings,
@@ -812,16 +834,16 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
 
   const discardPhase = game.mode === 'five-hand-discard' && game.phase.startsWith('player-discard')
   const opponentDiscarding = game.mode === 'five-hand-discard' && game.phase.startsWith('opponent-discard')
-  const searchOpponent = settings.opponentAi === 'search'
+  const searchOpponent = !online && settings.opponentAi === 'search'
   const dealId = session.dealId
   const awaitingSearchDraftPick = searchOpponent && game.mode === 'draft'
     && game.phase === 'draft-opponent-thinking' && !game.pendingOpponentPickUid
   const opponentDecisionKey = getOpponentDecisionKey(dealId, game)
-  const opponentPreparing = Boolean(preBattle.opponentSearchKey) && !battleStarted
-  const canStartBattle = !battleStarted && game.phase === 'battle-ready' && !preBattle.pendingResolution && !opponentPreparing
+  const opponentPreparing = (Boolean(preBattle.opponentSearchKey) || (online && preBattle.playerFinished)) && !battleStarted
+  const canStartBattle = !onlineBlocked && !battleStarted && game.phase === 'battle-ready' && !preBattle.pendingResolution && !opponentPreparing
   const pendingDraftPickUid = game.pendingOpponentPickUid ?? null
   const draftActivationTick = pendingDraftPickUid ? `${pendingDraftPickUid}-${game.phase}-${game.playerHand.length}-${game.opponentHand.length}` : 'draft-idle'
-  const canPickDraftCard = game.phase === 'draft-player-pick' && game.currentPicker === 'player'
+  const canPickDraftCard = !onlineBlocked && game.phase === 'draft-player-pick' && game.currentPicker === 'player'
 
   const playerPreBattleView = useMemo(() => getPlayerPreBattleView(preBattle), [preBattle])
   const tabletopChoice = useMemo(() => getTabletopChoice(preBattle), [preBattle])
@@ -870,10 +892,10 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
       ...settings,
       gameMode,
-    }))
+    })) } catch { /* Storage can be unavailable in private browsing. */ }
   }, [settings, gameMode])
 
   const clearSequenceTimeouts = useCallback(() => {
@@ -882,7 +904,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
   }, [])
 
   useEffect(() => {
-    if (!import.meta.env.DEV) return undefined
+    if (!import.meta.env.DEV || online) return undefined
     function jump(name, options, result) {
       const payload = createDevScenario({ ...options, name, result })
       clearSequenceTimeouts()
@@ -895,7 +917,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     }
     window.crdDev = helpers
     return () => { if (window.crdDev === helpers) delete window.crdDev }
-  }, [clearSequenceTimeouts])
+  }, [clearSequenceTimeouts, online, dispatch])
 
   const scheduleTimeout = useCallback((callback, delayMs) => {
     const timeoutId = window.setTimeout(() => {
@@ -909,36 +931,36 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
 
   const clearTransition = useCallback(() => {
     dispatch({ type: 'CLEAR_TRANSITION' })
-  }, [])
+  }, [dispatch])
 
   const clearPendingPlayerDraftPickAnimation = useCallback(() => {
     dispatch({ type: 'CLEAR_PENDING_PLAYER_DRAFT_PICK_ANIMATION' })
-  }, [])
+  }, [dispatch])
 
   const clearPreBattlePendingAnimation = useCallback(() => {
     dispatch({ type: 'CLEAR_PRE_BATTLE_PENDING_ANIMATION' })
-  }, [])
+  }, [dispatch])
 
   const resolvePreBattlePendingDrawAllNew = useCallback(() => {
     dispatch({ type: 'RESOLVE_PRE_BATTLE_PENDING_DRAW_ALL_NEW_1' })
-  }, [])
+  }, [dispatch])
 
   const revealHandCard = useCallback((side, uid) => {
     dispatch({ type: 'REVEAL_HAND_CARD', side, uid })
-  }, [])
+  }, [dispatch])
 
   const resetGame = useCallback((nextMode = gameMode) => {
     clearSequenceTimeouts()
     dispatch({ type: 'RESET_GAME', nextMode, nextDraftStartingPicker })
-  }, [clearSequenceTimeouts, gameMode, nextDraftStartingPicker])
+  }, [clearSequenceTimeouts, gameMode, nextDraftStartingPicker, dispatch])
 
   const handleGameModeChange = useCallback((nextMode) => {
     dispatch({ type: 'UPDATE_SETTINGS', patch: { gameMode: nextMode } })
-  }, [])
+  }, [dispatch])
 
   const updateSettings = useCallback((patch) => {
     dispatch({ type: 'UPDATE_SETTINGS', patch })
-  }, [])
+  }, [dispatch])
 
   const testEditTarget = getTestEditTarget(session)
   const testDeckZones = useMemo(() => (settings.testing
@@ -947,19 +969,19 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
 
   const swapTestDeckCards = useCallback((uidA, uidB) => {
     dispatch({ type: 'TEST_SWAP_CARDS', uidA, uidB })
-  }, [])
+  }, [dispatch])
 
   const moveTestDeckCardToTop = useCallback((uid) => {
     dispatch({ type: 'TEST_CARD_TO_TOP', uid })
-  }, [])
+  }, [dispatch])
 
   const toggleSelected = useCallback((uid) => {
-    if (!discardPhase) return
+    if (!discardPhase || onlineBlocked) return
     dispatch({ type: 'TOGGLE_SELECTED', uid })
-  }, [discardPhase])
+  }, [discardPhase, onlineBlocked, dispatch])
 
   const submitDiscard = useCallback(() => {
-    if (!discardPhase) return
+    if (!discardPhase || onlineBlocked) return
     // Cards leaving the hand unmount on commit, so capture where they sit now.
     const sourceRects = {}
     ;[['player-hand', game.playerHand], ['opponent-hand', game.opponentHand]].forEach(([section, cards]) => {
@@ -969,62 +991,62 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
       })
     })
     dispatch({ type: 'SUBMIT_DISCARD', sourceRects })
-  }, [discardPhase, game.playerHand, game.opponentHand, getAnchorRect])
+  }, [discardPhase, game.playerHand, game.opponentHand, getAnchorRect, onlineBlocked, dispatch])
 
   const handleDraftPick = useCallback((uid) => {
     if (!canPickDraftCard) return
     const sourceRect = serializeRect(getAnchorRect('draft-row', uid))
     dispatch({ type: 'PLAYER_DRAFT_PICK', uid, sourceRect })
-  }, [canPickDraftCard, getAnchorRect])
+  }, [canPickDraftCard, getAnchorRect, dispatch])
 
   const closeBattleOverlay = useCallback(() => {
     dispatch({ type: 'CLOSE_BATTLE_OVERLAY' })
-  }, [])
+  }, [dispatch])
 
   const startBattle = useCallback(() => {
     if (!canStartBattle) return
     dispatch({ type: 'START_BATTLE' })
-  }, [canStartBattle])
+  }, [canStartBattle, dispatch])
 
   const toggleBattleLog = useCallback(() => {
     dispatch({ type: 'TOGGLE_BATTLE_LOG' })
-  }, [])
+  }, [dispatch])
 
   const activatePlayerPreBattleCard = useCallback((uid) => {
     if (!isPreBattleReady) return
     dispatch({ type: 'ACTIVATE_PLAYER_PRE_BATTLE_CARD', uid })
-  }, [isPreBattleReady])
+  }, [isPreBattleReady, dispatch])
 
   const choosePlayerTabletopType = useCallback((uid, damageType) => {
     dispatch({ type: 'CHOOSE_TABLETOP_TYPE', uid, damageType })
-  }, [])
+  }, [dispatch])
 
-  const cancelTabletopTypeChoice = useCallback(() => dispatch({ type: 'CANCEL_TABLETOP_TYPE' }), [])
+  const cancelTabletopTypeChoice = useCallback(() => dispatch({ type: 'CANCEL_TABLETOP_TYPE' }), [dispatch])
 
   const resolvePlayerRecyclePick = useCallback((uid) => {
     if (!isRecyclePicking) return
     dispatch({ type: 'RESOLVE_PLAYER_RECYCLE_PICK', uid })
-  }, [isRecyclePicking])
+  }, [isRecyclePicking, dispatch])
 
   const cancelPlayerRecyclePick = useCallback(() => {
     dispatch({ type: 'CANCEL_PLAYER_RECYCLE_PICK' })
-  }, [])
+  }, [dispatch])
 
   const closePreBattleInfoOverlay = useCallback(() => {
     dispatch({ type: 'CLOSE_PRE_BATTLE_INFO_OVERLAY' })
-  }, [])
+  }, [dispatch])
 
   const resolveOpponentDraftPickAction = useCallback(() => {
     dispatch({ type: 'RESOLVE_OPPONENT_DRAFT_PICK' })
-  }, [])
+  }, [dispatch])
 
   const commitDraftDiscardAction = useCallback(() => {
     dispatch({ type: 'COMMIT_DRAFT_DISCARD' })
-  }, [])
+  }, [dispatch])
 
   const revealNextDraftPackAction = useCallback(() => {
     dispatch({ type: 'REVEAL_NEXT_DRAFT_PACK' })
-  }, [])
+  }, [dispatch])
 
   useEffect(() => {
     if (pendingPreBattleAnimation?.kind !== 'draw-all-new-1') return
@@ -1168,7 +1190,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
 
   // Search AI discard pass: runs after the player's pass, then animates like a normal discard.
   useEffect(() => {
-    if (!opponentDiscarding) return undefined
+    if (online || !opponentDiscarding) return undefined
     let cancelled = false
     let timeoutId = null
     const startedAt = performance.now()
@@ -1200,13 +1222,13 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     }
   // The decision key changes exactly when a new decision starts.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [opponentDiscarding, opponentDecisionKey])
+  }, [online, opponentDiscarding, opponentDecisionKey])
 
   // Search AI preparation: after the player starts the battle, the worker plays the opponent's
   // whole preparation (searched step by step), then the battle starts with that result.
   const opponentSearchKey = preBattle.opponentSearchKey ?? null
   useEffect(() => {
-    if (!opponentSearchKey || battleStarted) return undefined
+    if (online || !opponentSearchKey || battleStarted) return undefined
     let cancelled = false
     let timeoutId = null
     const startedAt = performance.now()
@@ -1223,10 +1245,10 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     }
   // The search key changes exactly when a new preparation search starts.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [opponentSearchKey])
+  }, [online, opponentSearchKey])
 
   useDraftFlowEffects({
-    game,
+    game: online ? { ...game, mode: 'network-managed' } : game,
     waitingForOpponentPick: awaitingSearchDraftPick,
     resolveOpponentDraftPick: resolveOpponentDraftPickAction,
     commitDraftDiscard: commitDraftDiscardAction,
@@ -1244,6 +1266,11 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
   useEffect(() => () => clearSequenceTimeouts(), [clearSequenceTimeouts])
 
   return {
+    rawSession: session,
+    online,
+    onlineBlocked,
+    opponentTabletopType: online ? getTabletopChoice({ ...preBattle, playerHand: preBattle.opponentHand,
+      tabletopChoice: session.otherUi?.tabletopChoice }).selectedType : null,
     settings,
     gameMode,
     game,

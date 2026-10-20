@@ -10,7 +10,7 @@ const BATTLE_RULES = [
   { value: 'abilities', label: 'Abilities' },
 ]
 
-export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, settings, onUpdateSettings, onHelp, onScoreCard, onCollection, onTestDeck }) {
+export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, settings, onUpdateSettings, onHelp, onScoreCard, onCollection, onTestDeck, onRoom, canConfigure = true, humanOpponent = false }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
   const menuRef = useRef(null)
@@ -80,11 +80,13 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
 
       {menuOpen && (
         <div className="screen-menu__popover ui-panel" ref={popoverRef}>
-          <button type="button" className="screen-menu__item screen-menu__item--primary" onClick={() => run(onNewGame)}>
+          <button type="button" disabled={!canConfigure} className="screen-menu__item screen-menu__item--primary" onClick={() => run(onNewGame)}>
             <SvgIcon name="replay" />
             <span>New game</span>
           </button>
 
+          <button type="button" className="screen-menu__item" onClick={() => run(onRoom)}><GameIcon name="copy" /><span>Online room</span></button>
+          <fieldset className="screen-menu__game-controls" disabled={!canConfigure}>
           <div className="screen-menu__segmented" role="radiogroup" aria-label="Mode">
             <button
               type="button"
@@ -129,10 +131,12 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
           <label className="screen-menu__select">
             <span className="screen-menu__select-label">Opponent</span>
             <select
-              value={settings.opponentAi}
+              value={humanOpponent ? 'human' : settings.opponentAi}
+              disabled={humanOpponent}
               onChange={(event) => run(() => onUpdateSettings({ opponentAi: event.target.value }))}
               aria-label="Opponent"
             >
+              {humanOpponent ? <option value="human">Player in room</option> : null}
               {OPPONENT_AI_OPTIONS.map((option) => (
                 <option key={option.id} value={option.id}>{option.label}</option>
               ))}
@@ -166,6 +170,7 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
             <input
               type="checkbox"
               checked={Boolean(settings.testing)}
+              disabled={humanOpponent}
               onChange={(event) => onUpdateSettings({ testing: event.target.checked })}
             />
             <span className="screen-menu__switch" aria-hidden="true" />
@@ -180,6 +185,7 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
             </button>
           ) : null}
 
+          </fieldset>
           <div className="screen-menu__row screen-menu__row--split">
             <button type="button" className="screen-menu__item" onClick={() => run(onCollection)}>
               <SvgIcon name="collection" />

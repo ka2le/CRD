@@ -22,6 +22,9 @@ import SideRail, { Pips, ThinkingDots } from './components/hud/SideRail'
 import { GameIcon, SvgIcon } from './components/ui/GameIcon'
 import useBattlePlayback from './hooks/useBattlePlayback'
 import useGameSession from './hooks/useGameSession'
+import useRoom from './hooks/useRoom'
+import RoomSheet from './components/overlay/RoomSheet'
+import { readRoomInvite } from './network/RoomClient'
 import { useElementSize } from './hooks/useFitLayout'
 import { SHUFFLE_LEAD_MS, getPackDealMs } from './hooks/dealTiming'
 import { getHandStats } from './game/engine'
@@ -47,7 +50,9 @@ function clamp(value, min, max) {
 
 function AppContent() {
   const { animateCardMove, getAnchorRect, maskSlot, unmaskSlot } = useCardMotion()
-  const session = useGameSession({ animateCardMove, getAnchorRect, maskSlot, unmaskSlot })
+  const room = useRoom()
+  const session = useGameSession({ animateCardMove, getAnchorRect, maskSlot, unmaskSlot, room })
+  const [roomOpen, setRoomOpen] = useState(() => Boolean(readRoomInvite().id))
   const {
     settings,
     gameMode,
@@ -116,6 +121,7 @@ function AppContent() {
     deck: battleDeck,
     tabletop: settings.tabletop,
     playerType: tabletopChoice.selectedType,
+    opponentType: session.opponentTabletopType,
   })
 
   const [tableRef, tableSize] = useElementSize()
@@ -164,6 +170,7 @@ function AppContent() {
   }
 
   function handleNewGame() {
+    if (session.online && room.record?.role !== 'host') { setRoomOpen(true); return }
     setPileOpen(false)
     setTestDeckOpen(false)
     resetGame()
@@ -245,7 +252,7 @@ function AppContent() {
     inspectContextHand: opponentHand,
   }
 
-  const playerInteractive = !battleStarted
+  const playerInteractive = !battleStarted && !session.onlineBlocked && !opponentPreparing
   const chameleonIds = settings.tabletop && isPreBattleReady && !opponentPreparing
     ? playerHand.filter((card) => card.id === 'chameleon').map((card) => card.uid) : []
   function handlePlayerCardClick(uid) {
@@ -282,6 +289,9 @@ function AppContent() {
       style={{ '--impact-ms': `${impactMs}ms`, '--burst-ms': `${Math.max(600, impactMs + 200)}ms` }}
     >
       <ImagePreloader />
+      {room.record ? <button type="button" className={`room-status${room.presence?.pending ? ' room-status--request' : ''}`} onClick={() => setRoomOpen(true)}>
+        {room.presence?.pending ? `${room.presence.pending.name} wants to join` : room.connection !== 'connected' ? 'Room reconnecting…' : room.error ? 'Room · connection notice' : room.session ? `${room.presence?.guest?.name ?? 'Player'} · ${room.presence?.host?.connected && room.presence?.guest?.connected ? 'online' : 'waiting for connection'}` : 'Room · playing AI'}
+      </button> : null}
 
       <main ref={tableRef} className={['table', `table--${layout}`].join(' ')}>
         <SideRail
@@ -309,6 +319,9 @@ function AppContent() {
             onScoreCard={() => setScoreOpen(true)}
             onCollection={() => setCollectionOpen(true)}
             onTestDeck={() => setTestDeckOpen(true)}
+            onRoom={() => setRoomOpen(true)}
+            canConfigure={!session.online || room.record?.role === 'host'}
+            humanOpponent={session.online}
           />
         </SideRail>
 
@@ -390,7 +403,7 @@ function AppContent() {
         >
           {layout !== 'battle' ? piles : null}
           {primaryAction}
-          {battleFinished ? (
+          {battleFinished && (!session.online || room.record?.role === 'host') ? (
             <button type="button" className="ui-button ui-button--primary table__action" onClick={handleNewGame}>
               <SvgIcon name="replay" />
               <span>Again</span>
@@ -433,6 +446,7 @@ function AppContent() {
       />
 
       <HelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} tabletop={settings.tabletop} />
+      <RoomSheet open={roomOpen} onClose={() => setRoomOpen(false)} room={room} session={session.rawSession} />
       <FactionPicker open={Boolean(isPreBattleReady && factionPickerCard)}
         types={factionPickerCard ? getCardTabletopTypes(factionPickerCard, tabletopChoice) : []}
         selectedType={tabletopChoice.selectedType}
