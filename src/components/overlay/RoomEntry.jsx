@@ -28,7 +28,7 @@ export default function RoomEntry({ room }) {
   }, [request.endpoint, enter])
   return <div className="room-entry ui-panel" role="status">
     <span>{error || (request.id ? 'Joining your friend…' : 'Creating your room…')}</span>
-    {config?.siteKey && !config.localTesting && !error ? <TurnstileGate siteKey={config.siteKey} onToken={enter} /> : null}
+    {config?.siteKey && !config.localTesting && !error ? <TurnstileGate siteKey={config.siteKey} onToken={enter} onError={setError} /> : null}
     {error ? <button className="ui-button" onClick={() => { room.client.cancelEntry(); room.client.requestEntry(request.id, request.endpoint) }}>Retry</button> : null}
     <button className="ui-button ui-button--icon" aria-label="Cancel room connection" onClick={() => room.client.cancelEntry()}>×</button>
   </div>

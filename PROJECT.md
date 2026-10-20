@@ -6,7 +6,7 @@ Last full implementation review: **2026-10-18**. AI environment implemented **20
 
 ## Purpose and current stage
 
-Build the creator's two-player board game as a modular digital card battler in React. The current implementation is a local, single-browser human-versus-heuristic-AI prototype with both hand-building modes, pre-battle specials and automatic simultaneous combat. Optional trusted-player online rooms are implemented locally (2026-10-20), with a host browser and simple Cloudflare relay; the Cloudflare relay and sanitized GitHub Pages frontend are deployed with Turnstile configured. Production room creation and automatic host restoration after refresh are verified. Normal visits still start AI play immediately. See `docs/MULTIPLAYER.md`.
+Build the creator's two-player board game as a modular digital card battler in React. The current implementation is a local, single-browser human-versus-heuristic-AI prototype with both hand-building modes, pre-battle specials and automatic simultaneous combat. Optional trusted-player online rooms are deployed (2026-10-20), with a host browser, simple Cloudflare relay and Turnstile entry protection. Production room creation and automatic host restoration after refresh are verified. Normal visits still start AI play immediately. See `docs/MULTIPLAYER.md`.
 
 For the complete implementation review, source pointers, known issues and verification, read `docs/CURRENT_STATE.md`. For a quick explanation, read `docs/GAME_OVERVIEW.md`.
 
