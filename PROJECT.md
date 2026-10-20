@@ -61,7 +61,7 @@ These are documented findings, not newly approved rules:
 5. Fixed: Battle now completes AI preparation synchronously before combat. AI actions are not revealed during the human preparation window. Battle is disabled while an already-started human redraw is still resolving.
 6. Shared preparation/headless transitions are tested against the browser reducer. React retains presentation/animation orchestration. Observation-conditioned sampling and shallow rollout evaluation are implemented; belief refinement, broader datasets, neural learning and deeper search remain next.
 7. `extra_turn` and `no_stats_to_2` remain data-only/excluded. Extra and monster sets are not imported.
-8. Optional two-player rooms and a minimal relay are implemented locally; Cloudflare/GitHub publishing remains pending. Spectators and browser neural inference remain future work. See `docs/MULTIPLAYER.md`.
+8. Optional rooms use one-click creation/link joining, automatic open-room admission and match startup, private approval, read-only viewers, kicking, remembered editable names and room win counts. Offline player two can continue on another device through the invite without resetting the match. Cloudflare/GitHub publishing is configured; see `docs/MULTIPLAYER.md` for verification. Host migration/accounts and browser neural inference remain future work.
 
 The AI preparation fix is complete. Follow-up asset work archives all 88 source images in `assets/originals/` and serves optimized local WebP files through `data/image-manifest.json`. Originals total 550.98 MiB; game images total 4.06 MiB (99.3% smaller). Preparation reruns reuse saved originals and unchanged derivatives; production builds check assets offline. See `docs/ASSETS.md`. Headless now supports full preparation decisions and the Gymnasium interface; deferred draft bookkeeping, starter alternation and recycle/pool behavior remain unchanged. `docs/ROADMAP.md` gives the proposed sequence.
 
@@ -99,7 +99,7 @@ The creator requested a Stockfish-inspired search-plus-neural-evaluation approac
 
 Verification: build/lint/original regressions, 14 JS tests (144 replay cases and 802 sampled roots), eight Python tests (checker coverage, 48 replays and teacher isolation/grouping) and 200 extra random episodes pass. Rollout pilots: 40 games, 230 decision states, 2,269 action targets and 36,304 completed continuations, sharing 20 deal families; not held-out strength proof. Gymnasium/NumPy and pilot files are ignored local outputs; no PyTorch/model training added.
 
-Continue using Git and publishing sanitized app snapshots to the public `CRD` repo. Follow `docs/PUBLISHING.md`; private workspace identity and memory files must stay excluded. Deployment targets GitHub Pages today; a future backend should support two browser users and P1/P2/Viewer rooms, initially with P2 defaulting to AI. This room/seat model is planned, not implemented.
+Continue using Git and publishing sanitized app snapshots to the public `CRD` repo. Follow `docs/PUBLISHING.md`; private workspace identity and memory files must stay excluded. Deployment targets GitHub Pages with the Cloudflare membership/message relay. P1/P2/Viewer rooms are implemented; normal startup and an unoccupied host room retain immediate AI play.
 
 ## Verification on 2026-10-18
 

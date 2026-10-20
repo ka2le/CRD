@@ -8,7 +8,7 @@ const RESULT_COPY = {
   tie: { title: 'Draw', tone: 'tie' },
 }
 
-export default function BattleOverlay({ battlePlayback, battleResult, onNewGame, onClose, visible }) {
+export default function BattleOverlay({ battlePlayback, battleResult, onNewGame, onClose, visible, playerName = 'You', opponentName = 'Opponent', spectating = false, newGameLabel = 'Play again' }) {
   if (!visible || !battlePlayback || !battleResult) return null
 
   const copy = RESULT_COPY[battleResult.winner] ?? RESULT_COPY.tie
@@ -16,17 +16,19 @@ export default function BattleOverlay({ battlePlayback, battleResult, onNewGame,
   const opponentDealt = battlePlayback.opponentTotalDamageDealt
   const maxDealt = Math.max(playerDealt, opponentDealt, 1)
   const tabletop = battleResult.mode === 'tabletop'
+  const winnerName = battleResult.winner === 'player' ? playerName : battleResult.winner === 'opponent' ? opponentName : null
 
   return (
     <div className={`battle-result battle-result--${copy.tone}`} onClick={onClose}>
       <div className="battle-result__panel" onClick={(event) => event.stopPropagation()}>
         <div className="battle-result__rays" aria-hidden="true" />
-        <h2 className="battle-result__title">{copy.title}</h2>
+        <h2 className="battle-result__title">{spectating && winnerName ? `${winnerName} wins` : copy.title}</h2>
+        {winnerName && !spectating ? <p className="battle-result__winner">{winnerName} wins</p> : null}
 
         {tabletop ? (
           <div className="tabletop-score__formulas">
-            <TabletopFormula score={battleResult.player} label="You" />
-            <TabletopFormula score={battleResult.opponent} label="Opponent" />
+            <TabletopFormula score={battleResult.player} label={playerName} />
+            <TabletopFormula score={battleResult.opponent} label={opponentName} />
           </div>
         ) : <>
         <div className="battle-result__meta">
@@ -60,7 +62,7 @@ export default function BattleOverlay({ battlePlayback, battleResult, onNewGame,
           </button>
           <button type="button" className="ui-button ui-button--primary battle-result__again" onClick={onNewGame}>
             <SvgIcon name="replay" />
-            Play again
+            {newGameLabel}
           </button>
         </div>
       </div>

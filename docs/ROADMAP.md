@@ -52,6 +52,6 @@ Continue layout/pacing polish with visual verification. Preserve ownership/visib
 
 ## 5. Multiplayer
 
-2026-10-20: optional trusted-player rooms, host-authoritative browser state, second-human input, local persistence/reconnect and simple Cloudflare relay implemented locally. Cloudflare deployment/Turnstile setup and sanitized GitHub Pages publishing are complete; production room creation and refresh recovery verified. Spectators, host migration and accounts are outside the first version. See `MULTIPLAYER.md`.
+2026-10-20: optional trusted-player rooms, host-authoritative browser state, second-human input, local persistence/reconnect and simple Cloudflare relay implemented locally. Cloudflare deployment/Turnstile setup and sanitized GitHub Pages publishing are complete; production room creation and refresh recovery verified. The subsequent flow update adds open/private rooms, automatic joining/start, viewers, kicking, names/wins and offline guest takeover. Host migration and accounts remain outside scope. See `MULTIPLAYER.md`.
 
 See `CURRENT_STATE.md` for findings/evidence. `PROJECT.md` remains the brief.

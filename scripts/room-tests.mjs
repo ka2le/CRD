@@ -9,12 +9,14 @@ import { getExpandedCoreDeck } from '../src/game/cards.js'
 import { createPreparationState, getPreparationActions } from '../src/game/preparationState.js'
 import { getTabletopChoice, getCardTabletopTypes, resolveTabletopBattle } from '../src/game/tabletop.js'
 import { MAX_MESSAGE_BYTES, ROOM_PROTOCOL, randomToken } from '../src/network/protocol.js'
+import { LEGACY_GAME_VERSION } from '../src/network/gameCompatibility.js'
 
-let vite, gameApi, Client, miniflare
+let vite, gameApi, Client, miniflare, RoomClass
 before(async () => {
   vite = await createServer({ server: { middlewareMode: true }, appType: 'custom' })
   gameApi = await vite.ssrLoadModule('/src/network/roomGame.js')
   Client = (await vite.ssrLoadModule('/src/network/RoomClient.js')).default
+  RoomClass = (await vite.ssrLoadModule('/relay/worker.js')).Room
   const protocol = (await readFile('src/network/protocol.js', 'utf8')).replace(/^export /gm, '')
   const worker = (await readFile('relay/worker.js', 'utf8')).replace(/^import .* from .*$/m, '')
   miniflare = new Miniflare(convertV4MiniflareOptions({ modules: true, script: `${protocol}\n${worker}`, compatibilityDate: '2026-10-20',
@@ -218,15 +220,14 @@ async function until(check) {
 
 test('real Durable Object: approval, relay permissions, refresh tokens, bounded messages and closure', async () => {
   const token = randomToken(), guestToken = randomToken()
-  const created = await post('/rooms', { token, name: 'Host' })
+  const created = await post('/rooms', { token, name: 'Host', private: true })
   assert.equal(created.status, 200)
   const { id } = await created.json()
   const host = await socket(id, token)
   assert(host.ws)
   assert.equal((await post(`/rooms/${id}/join`, { token: guestToken, name: 'Friend' })).status, 200)
-  assert.equal((await post(`/rooms/${id}/join`, { token: randomToken(), name: 'Intruder' })).status, 409)
   const guest = await socket(id, guestToken)
-  await until(() => host.messages.some((m) => m.pending?.name === 'Friend'))
+  await until(() => host.messages.some((m) => m.pending?.some((p) => p.name === 'Friend')))
   guest.ws.send(JSON.stringify({ type: 'sync' }))
   await until(() => guest.messages.some((m) => m.type === 'error'))
   host.ws.send(JSON.stringify({ type: 'approve' }))
@@ -257,4 +258,161 @@ test('relay rejects unknown origins and large HTTP bodies before storing members
   assert.equal(blocked.status, 403)
   const oversized = await post('/rooms', { name: 'X'.repeat(6000), token: randomToken() })
   assert.equal(oversized.status, 400)
+})
+
+
+test('open rooms auto-seat player two; a new device resumes the offline seat and revokes the old token', async () => {
+  const hostToken = randomToken(), firstToken = randomToken(), newToken = randomToken()
+  const { id } = await (await post('/rooms', { token: hostToken, name: 'Host' })).json()
+  const host = await socket(id, hostToken)
+  const first = await (await post(`/rooms/${id}/join`, { token: firstToken, name: 'AppleFireman' })).json()
+  assert.equal(first.role, 'guest')
+  const guest = await socket(id, firstToken)
+  guest.ws.send(JSON.stringify({ type: 'heartbeat' }))
+  await until(() => guest.messages.some((m) => m.type === 'pong'))
+  await until(() => host.messages.some((m) => m.guest?.connected))
+  const original = host.messages.filter((m) => m.guest?.connected).at(-1).guest
+  guest.ws.close(1000)
+  await until(() => host.messages.some((m) => m.guest?.id === original.id && !m.guest.connected))
+  const replacement = await (await post(`/rooms/${id}/join`, { token: newToken, name: 'AppleOnPhone' })).json()
+  assert.equal(replacement.role, 'guest')
+  assert.equal(replacement.playerId, first.playerId)
+  const phone = await socket(id, newToken)
+  await until(() => host.messages.some((m) => m.guest?.name === 'AppleOnPhone' && m.guest.connected))
+  const changed = host.messages.filter((m) => m.guest?.name === 'AppleOnPhone').at(-1).guest
+  assert.notEqual(changed.epoch, original.epoch)
+  assert.equal((await socket(id, firstToken)).status, 401)
+  assert.equal((await post(`/rooms/${id}/resume`, { token: firstToken })).status, 401)
+  assert.equal((await post(`/rooms/${id}/resume`, { token: newToken })).status, 200)
+  const snapshot = { type: 'snapshot', protocol: ROOM_PROTOCOL, revision: 14, state: gameApi.startRoomGame(initial()) }
+  host.ws.send(JSON.stringify(snapshot))
+  await until(() => phone.messages.some((m) => m.type === 'snapshot' && m.revision === 14))
+  host.ws.send(JSON.stringify({ type: 'close' }))
+  await until(() => host.messages.some((m) => m.type === 'closed'))
+})
+
+test('viewers require admission, receive snapshots, cannot act; host can rename, set privacy, kick and promote', async () => {
+  const hostToken = randomToken(), guestToken = randomToken(), viewerToken = randomToken()
+  const { id } = await (await post('/rooms', { token: hostToken, name: 'Host' })).json()
+  const host = await socket(id, hostToken)
+  const admitted = await (await post(`/rooms/${id}/join`, { token: guestToken, name: 'Player' })).json()
+  const guest = await socket(id, guestToken)
+  await until(() => host.messages.some((m) => m.guest?.connected))
+  const watching = await (await post(`/rooms/${id}/join`, { token: viewerToken, name: 'Viewer' })).json()
+  assert.equal(watching.role, 'pending')
+  const viewer = await socket(id, viewerToken)
+  await until(() => host.messages.some((m) => m.pending?.some((p) => p.id === watching.playerId && p.desired === 'viewer')))
+  host.ws.send(JSON.stringify({ type: 'approve', id: watching.playerId }))
+  await until(() => viewer.messages.some((m) => m.role === 'viewer'))
+  viewer.ws.send(JSON.stringify({ type: 'action', id: randomToken(16), revision: 0, action: { type: 'START_BATTLE' } }))
+  await until(() => viewer.messages.some((m) => m.error === 'Not allowed'))
+  host.ws.send(JSON.stringify({ type: 'snapshot', protocol: ROOM_PROTOCOL, revision: 7, state: gameApi.startRoomGame(initial()) }))
+  await until(() => viewer.messages.some((m) => m.type === 'snapshot' && m.revision === 7))
+  viewer.ws.send(JSON.stringify({ type: 'rename', name: 'PeachWizard' }))
+  await until(() => host.messages.some((m) => m.viewers?.some((v) => v.name === 'PeachWizard')))
+  host.ws.send(JSON.stringify({ type: 'privacy', private: true }))
+  await until(() => viewer.messages.some((m) => m.private === true))
+  host.ws.send(JSON.stringify({ type: 'kick', id: admitted.playerId }))
+  await until(() => guest.messages.some((m) => m.type === 'removed'))
+  assert.equal((await socket(id, guestToken)).status, 401)
+  assert.equal((await post(`/rooms/${id}/join`, { token: guestToken, name: 'Kicked' })).status, 403)
+  host.ws.send(JSON.stringify({ type: 'promote', id: watching.playerId }))
+  await until(() => viewer.messages.some((m) => m.role === 'guest'))
+  const privateToken = randomToken()
+  const request = await (await post(`/rooms/${id}/join`, { token: privateToken, name: 'Private viewer' })).json()
+  assert.equal(request.role, 'pending')
+  host.ws.send(JSON.stringify({ type: 'close' }))
+  await until(() => host.messages.some((m) => m.type === 'closed'))
+})
+
+test('names persist beyond rooms; public auto-start happens once and reconnects preserve the same match', () => {
+  const storage = memoryStorage()
+  const { instance: host } = client('host', null, storage)
+  assert.match(host.profile.name, /^[A-Z][a-z]+[A-Z][a-z]+$/)
+  host.rename('AppleFireman')
+  host.record.scores = { host: 2 }
+  host.setLocalSession(initial())
+  const presence = { type: 'presence', protocol: ROOM_PROTOCOL, role: 'host', selfId: 'host', private: false,
+    host: { id: 'host', name: 'AppleFireman', connected: true }, guest: { id: 'guest', name: 'MintPilot', connected: true, epoch: 'device-1' }, viewers: [], pending: [] }
+  host.receive(presence)
+  assert(host.record.snapshot?.onlineHuman)
+  const snapshot = host.record.snapshot
+  host.receive({ ...presence, guest: { ...presence.guest, name: 'ChangedName' } })
+  assert.equal(host.record.snapshot, snapshot)
+  host.receive({ ...presence, guest: { ...presence.guest, connected: false } })
+  assert.equal(host.record.snapshot, snapshot)
+  host.receive({ ...presence, guest: { ...presence.guest, epoch: 'device-2' } })
+  assert.equal(host.record.snapshot, snapshot)
+  host.leave()
+  const restored = new Client({ storage, WebSocketImpl: class {}, fetchImpl: () => {} })
+  assert.equal(restored.profile.name, 'AppleFireman')
+  assert.equal(restored.record, null)
+})
+
+test('wins count once, survive refresh and rematches, and viewers have a read-only host perspective', () => {
+  const state = initial('five-hand-discard', 'threshold')
+  const pool = getExpandedCoreDeck({ tabletop: 'threshold', wildDeck: true })
+  const ownHand = ['robot1', 'robot_attack'].map((id) => pool.find((c) => c.id === id))
+  state.game = { ...state.game, phase: 'battle-ready', playerHand: ownHand, opponentHand: [] }
+  state.preBattle = { ...createPreparationState(state.game), opponentFinished: true }
+  let online = { ...gameApi.settleSession(state), onlineHuman: true, gameVersion: gameApi.GAME_VERSION,
+    roomPlayers: { host: 'host', guest: 'guest' }, scores: { host: 2, guest: 1 }, otherUi: {}, otherSelectedIds: [] }
+  online = gameApi.applyRoomAction(online, 'host', { type: 'START_BATTLE' })
+  online = gameApi.scoreRoomGame(online)
+  assert.equal(online.roomResult.winnerId, 'host')
+  assert.equal(online.scores.host, 3)
+  assert.equal(gameApi.scoreRoomGame(online), online)
+  const { storage } = client('host', online)
+  const restored = new Client({ storage, WebSocketImpl: class {}, fetchImpl: () => {} })
+  assert.equal(restored.record.snapshot.scores.host, 3)
+  const next = gameApi.startRoomGame(online)
+  assert.equal(next.roomResult, null)
+  assert.equal(next.scores.host, 3)
+  const { instance: viewer } = client('viewer', online)
+  assert.equal(viewer.cached.session.game.playerHand, online.game.playerHand)
+  viewer.dispatch({ type: 'START_BATTLE' })
+  assert.equal(viewer.record.pendingAction, null)
+  assert.match(viewer.cached.error, /watching/)
+  assert.throws(() => gameApi.applyRoomAction(online, 'viewer', { type: 'START_BATTLE' }), /Viewers/)
+})
+
+
+test('existing rooms migrate without losing tokens, and silent sockets eventually release player two', async () => {
+  const legacy = { host: { hash: 'host-token', name: 'Host' }, guest: { hash: 'guest-token', name: 'Guest' },
+    pending: { hash: 'pending-token', name: 'Pending', until: Date.now() + 10000 }, expires: Date.now() + 50000 }
+  let meta = { hash: 'guest-token', seenAt: Date.now() - 70000 }
+  const stale = { readyState: 1, deserializeAttachment: () => meta, serializeAttachment: (next) => { meta = next } }
+  const saved = []
+  const ctx = { getWebSockets: () => [stale], blockConcurrencyWhile: (callback) => callback(),
+    storage: { get: async () => legacy, put: async (_, value) => saved.push(value) } }
+  const room = new RoomClass(ctx, {})
+  await room.ready
+  assert.equal(room.members.host.hash, 'host-token')
+  assert.equal(room.members.guest.hash, 'guest-token')
+  assert.equal(room.members.private, false)
+  assert.equal(room.members.pending.length, 1)
+  assert.equal(room.members.pending[0].desired, 'guest')
+  assert.match(room.members.host.id, /^[a-f0-9]{16}$/)
+  assert.equal(room.connected(room.members.guest), false)
+  assert.equal(room.guestAvailable(), true)
+  assert.equal(saved.length, 1)
+})
+
+test('published saved matches gain player identities without redealing; incompatible rules still reset', () => {
+  const state = gameApi.startRoomGame(initial())
+  state.gameVersion = LEGACY_GAME_VERSION
+  const { storage } = client('host', state)
+  const restored = new Client({ storage, WebSocketImpl: class {}, fetchImpl: () => {} })
+  restored.send = () => true
+  restored.setLocalSession(initial())
+  restored.receive({ type: 'presence', protocol: ROOM_PROTOCOL, role: 'host', selfId: 'host',
+    host: { id: 'host', connected: true }, guest: { id: 'guest', connected: true }, viewers: [] })
+  assert.deepEqual(restored.record.snapshot.game.deck, state.game.deck)
+  assert.deepEqual(restored.record.snapshot.game.draftRow, state.game.draftRow)
+  assert.deepEqual(restored.record.snapshot.roomPlayers, { host: 'host', guest: 'guest' })
+  assert.equal(restored.record.snapshot.gameVersion, gameApi.GAME_VERSION)
+  restored.save({ ...restored.record, snapshot: { ...state, gameVersion: 'incompatible' } })
+  const reset = new Client({ storage, WebSocketImpl: class {}, fetchImpl: () => {} })
+  assert.equal(reset.record.snapshot, null)
+  assert.equal(reset.record.id, restored.record.id)
 })

@@ -1,4 +1,4 @@
-export const ROOM_PROTOCOL = 1
+export const ROOM_PROTOCOL = 2
 export const MAX_MESSAGE_BYTES = 192 * 1024
 export const MAX_ACTION_BYTES = 4096
 export const ROOM_TTL_MS = 24 * 60 * 60 * 1000

@@ -2,7 +2,8 @@ import { sessionReducer } from '../hooks/useGameSession.js'
 import { applyOpponentDiscardPhase } from '../game/fiveHandDiscard.js'
 import { resolveOpponentDraftPick, commitDraftDiscard, revealNextDraftPack } from '../game/draftMode.js'
 import { createPreparationState } from '../game/preparationState.js'
-import { getTabletopChoice } from '../game/tabletop.js'
+import { getTabletopChoice, resolveTabletopBattle } from '../game/tabletop.js'
+import { simulateBattle } from '../game/engine.js'
 import { validAction } from './protocol.js'
 
 export const GAME_VERSION = import.meta.env.CRD_GAME_VERSION
@@ -21,7 +22,7 @@ function swapSides(value) {
 }
 
 export function seatView(state, seat) {
-  if (seat === 'host') return state
+  if (seat !== 'guest') return state
   const game = swapSides(state.game)
   game.currentPicker = game.currentPicker === 'player' ? 'opponent' : game.currentPicker === 'opponent' ? 'player' : null
   game.firstPicker = game.firstPicker === 'player' ? 'opponent' : 'player'
@@ -52,10 +53,25 @@ export function settleSession(state) {
 
 export function startRoomGame(session, action = { type: 'RESET_GAME' }) {
   const next = sessionReducer({ ...session, settings: { ...session.settings, opponentAi: 'rules', testing: false } }, action)
-  return settleSession({ ...next, onlineHuman: true, gameVersion: GAME_VERSION, otherUi: {}, otherSelectedIds: [] })
+  return settleSession({ ...next, onlineHuman: true, gameVersion: GAME_VERSION, otherUi: {}, otherSelectedIds: [], roomResult: null })
+}
+
+export function scoreRoomGame(state) {
+  if (!state.battleStarted || state.roomResult || !state.roomPlayers) return state
+  const prep = state.preBattle
+  const result = state.settings.tabletop
+    ? resolveTabletopBattle(prep.playerHand, prep.opponentHand, { playerType: getTabletopChoice(prep).selectedType, opponentType: opponentRoomType(state) })
+    : simulateBattle(prep.playerHand, prep.opponentHand, { deck: prep.deck })
+  const winnerId = result.winner === 'tie' ? null : state.roomPlayers[result.winner === 'player' ? 'host' : 'guest']
+  const scores = { ...state.scores }
+  if (winnerId) scores[winnerId] = (scores[winnerId] ?? 0) + 1
+  const bounded = Object.fromEntries(Object.entries(scores).slice(-62))
+  for (const id of Object.values(state.roomPlayers)) bounded[id] = scores[id] ?? 0
+  return { ...state, scores: bounded, roomResult: { winnerId, tie: result.winner === 'tie' } }
 }
 
 export function applyRoomAction(state, seat, action) {
+  if (!['host', 'guest'].includes(seat)) throw new Error('Viewers cannot play')
   if (!validAction(action)) throw new Error('Invalid game action')
   let view = seatView(state, seat)
   const phase = view.game.phase

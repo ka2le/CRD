@@ -10,7 +10,7 @@
     { "name": "CONNECT_LIMIT", "namespace_id": "1002", "simple": { "limit": 30, "period": 60 } }
   ],
   "vars": {
-    "ALLOWED_ORIGINS": "https://ka2le.github.io,http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173",
+    "ALLOWED_ORIGINS": "https://ka2le.github.io,http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://viewer.localhost:5173,http://phone.localhost:5173",
     "TURNSTILE_SITE_KEY": "0x4AAAAAAFd-Ri5di8RT0UJg",
     "MAX_ROOMS_PER_DAY": "1000"
   }

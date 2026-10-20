@@ -10,3 +10,33 @@
 .room-status { position: fixed; z-index: 55; top: 6px; left: 50%; transform: translateX(-50%); max-width: 70vw; padding: 5px 12px; font-size: .72rem; border-radius: 20px; background: #142331ee; color: var(--t0); border: 1px solid var(--b0); cursor: pointer; }
 .room-status--request { border-color: var(--special); }
 .screen-menu__game-controls { display: contents; }
+.room-entry { position: fixed; z-index: 110; top: 12px; left: 50%; transform: translateX(-50%); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; padding: 12px 18px; max-width: calc(100vw - 24px); }
+.room-entry > span { font-size: .85rem; }
+.room-sheet__privacy { display: flex !important; align-items: center; gap: 10px !important; }
+.room-sheet__privacy input { width: 18px; height: 18px; }
+.room-member { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 8px 0; }
+.room-member > span { min-width: 0; display: grid; gap: 3px; overflow-wrap: anywhere; }
+.room-member small { color: var(--t1); font-size: .72rem; }
+.room-member .ui-button { padding: 7px 10px; font-size: .72rem; }
+.online-action { padding: 6px 10px; font-size: .7rem; min-height: 32px; white-space: nowrap; }
+.online-action .g-icon { font-size: 1rem; }
+.online-controls { position: relative; font-size: .8rem; }
+.online-controls.has-requests { border-color: var(--special); color: var(--special); }
+.side-rail--named { height: calc(var(--rail-h) + 23px); padding-top: 23px; }
+.table > .side-rail--player.side-rail--named { height: calc(var(--dock-h) + 23px); }
+.side-rail__identity { position: absolute; top: 3px; left: 12px; right: 10px; height: 19px; }
+.player-identity { display: flex; align-items: center; gap: 7px; height: 100%; font-size: .76rem; }
+.player-identity input { font: inherit; color: var(--t0); border: 0; border-bottom: 1px dashed var(--b0); background: transparent; width: 150px; max-width: 50vw; padding: 0 2px; height: 20px; outline-offset: 2px; }
+.player-identity strong { max-width: 50vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.player-identity__dot { width: 6px; height: 6px; flex-shrink: 0; border-radius: 50%; background: var(--t1); }
+.player-identity__dot.is-online { background: #8cce9a; }
+.player-identity__wins { font-size: .68rem; color: var(--t1); }
+.battle-result__winner { text-align: center; color: var(--t0); margin: -8px 0 16px; }
+@media (max-width: 600px) {
+  .side-rail--opponent .pips, .side-rail--opponent .avg-chip { display: none; }
+  .side-rail--opponent { gap: 6px; }
+  .side-rail--opponent .stat-chips { gap: 6px; }
+  .online-action { font-size: .62rem; padding: 5px 7px; }
+  .online-action .g-icon { display: none; }
+  .room-status { top: auto; bottom: 84px; max-width: 90vw; }
+}

@@ -61,7 +61,7 @@ The GitHub Pages workflow builds on `master` using Node 22 and deploys `dist`; `
 
 Build/smokes pass; lint is clean since the 2026-10-18 UI redesign. `CURRENT_STATE.md` records verification, the completed preparation fix, and deferred draft/starter/recycle findings.
 
-Keep rules out of components and visibility separate from ownership. Shared preparation and either-seat headless decisions are implemented; future P1/P2/Viewer browser rooms/network sync remain plans.
+Keep rules out of components and visibility separate from ownership. Shared preparation and either-seat headless decisions are implemented; P1/P2/Viewer browser rooms use the optional relay described below.
 
 ## AI boundary - 2026-10-19
 
@@ -75,4 +75,6 @@ Latest layer: `python/draft_experiment.py` orchestrates both-seat draft-only dat
 
 ## Rooms (2026-10-20)
 
-Normal launches remain immediate AI play. Optional room membership and host-controlled human matches use `src/network/RoomClient.js`, `roomGame.js`, `useRoom.js` and `RoomSheet.jsx`. The host persists complete state/deck order before confirmation; the guest persists its token, snapshots and pending action. The existing session hook presents a seat-relative room view and suspends AI automation during human matches. The Cloudflare Worker/Durable Object relay stores only bounded membership/token hashes, validates message envelopes and expires rooms after 24 hours. Setup/deployment and tests: `MULTIPLAYER.md`.
+Normal launches remain immediate AI play. One-click room membership, remembered profiles and automatically started host-controlled human matches use `src/network/RoomClient.js`, `roomGame.js`, `useRoom.js` and `RoomSheet.jsx`. The host persists complete state/deck order before confirmation; the guest persists its token, snapshots and pending action. The existing session hook presents a seat-relative room view and suspends AI automation during human matches. The Cloudflare Worker/Durable Object relay stores only bounded membership/token hashes, validates message envelopes and expires rooms after 24 hours. Setup/deployment and tests: `MULTIPLAYER.md`.
+
+Room protocol v2 adds open/private admission, bounded viewers, stable player identities and replaceable offline guest credentials/seat epochs. Host state and scores stay browser-owned; relay migration preserves v1 membership tokens. Heartbeats detect silent drops without polling game state. Game compatibility hashes normalize line endings and exclude UI/network code; the prior published fingerprint is migrated without redealing.

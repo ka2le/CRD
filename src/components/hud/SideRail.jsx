@@ -94,6 +94,7 @@ export default function SideRail({
   turn = false,
   winner = null,
   crowded = false,
+  identity = null,
   children,
 }) {
   const inBattle = health !== null
@@ -107,8 +108,10 @@ export default function SideRail({
         inBattle ? 'side-rail--battle' : '',
         winner === side ? 'side-rail--winner' : '',
         crowded ? 'side-rail--crowded' : '',
+        identity ? 'side-rail--named' : '',
       ].filter(Boolean).join(' ')}
     >
+      {identity ? <div className="side-rail__identity">{identity}</div> : null}
       <span className="side-rail__marker" aria-hidden="true" />
       <StatChips stats={stats} compact={inBattle} />
       {inBattle ? (

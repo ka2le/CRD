@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react'
+import { compatibleGameVersion } from '../network/gameCompatibility.js'
 import { createFiveHandDiscardGame, applyDiscardPhase, applyOpponentDiscardPhase } from '../game/fiveHandDiscard'
 import {
   createDraftGame,
@@ -197,7 +198,7 @@ function createInitialSessionState() {
   try {
     const saved = JSON.parse(window.localStorage.getItem(SESSION_STORAGE_KEY))
     const hasScenario = import.meta.env.DEV && new URLSearchParams(window.location.search).has('scenario')
-    if (!hasScenario && saved?.version === 1 && saved.rulesVersion === import.meta.env.CRD_GAME_VERSION && saved.state?.game?.deck && saved.state?.preBattle?.deck) {
+    if (!hasScenario && saved?.version === 1 && compatibleGameVersion(saved.rulesVersion) && saved.state?.game?.deck && saved.state?.preBattle?.deck) {
       let restored = saved.state
       if (restored.preBattle.pendingResolution) restored = sessionReducer(restored, { type: 'RESOLVE_PRE_BATTLE_PENDING_DRAW_ALL_NEW_1' })
       return { ...restored, lastTransition: null, pendingPlayerDraftPickAnimation: null,
@@ -807,7 +808,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
   const online = Boolean(room?.session)
   const session = room?.session ?? localSession
   const dispatch = online ? room.dispatch : localDispatch
-  const onlineBlocked = online && (room.busy || room.blocked || (room.record?.role !== 'host'
+  const onlineBlocked = online && (room.record?.role === 'viewer' || room.busy || room.blocked || (room.record?.role !== 'host'
     && (room.connection !== 'connected' || !room.presence?.host?.connected)))
   const sequenceTimeoutsRef = useRef([])
 
@@ -815,6 +816,8 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     try { window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ version: 1, rulesVersion: import.meta.env.CRD_GAME_VERSION, state: localSession })) }
     catch { /* Room writes report storage errors separately; offline play remains available. */ }
   }, [localSession])
+
+  useEffect(() => { room?.client.setLocalSession(localSession) }, [localSession, room?.client])
 
   const {
     settings,

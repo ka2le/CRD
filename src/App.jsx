@@ -24,7 +24,8 @@ import useBattlePlayback from './hooks/useBattlePlayback'
 import useGameSession from './hooks/useGameSession'
 import useRoom from './hooks/useRoom'
 import RoomSheet from './components/overlay/RoomSheet'
-import { readRoomInvite } from './network/RoomClient'
+import RoomEntry from './components/overlay/RoomEntry'
+import PlayerIdentity from './components/hud/PlayerIdentity'
 import { useElementSize } from './hooks/useFitLayout'
 import { SHUFFLE_LEAD_MS, getPackDealMs } from './hooks/dealTiming'
 import { getHandStats } from './game/engine'
@@ -52,7 +53,7 @@ function AppContent() {
   const { animateCardMove, getAnchorRect, maskSlot, unmaskSlot } = useCardMotion()
   const room = useRoom()
   const session = useGameSession({ animateCardMove, getAnchorRect, maskSlot, unmaskSlot, room })
-  const [roomOpen, setRoomOpen] = useState(() => Boolean(readRoomInvite().id))
+  const [roomOpen, setRoomOpen] = useState(false)
   const {
     settings,
     gameMode,
@@ -146,10 +147,29 @@ function AppContent() {
   const opponentHidden = game.mode === 'five-hand-discard' && !settings.showOpponentCards && !battleStarted
   const opponentThinking = (game.mode === 'draft' && game.phase === 'draft-opponent-thinking') || opponentDiscarding
     || opponentPreparing
-  const playerTurn = layout === 'draft' ? canPickDraftCard : layout === 'focus'
+  const playerTurn = !session.onlineBlocked && (layout === 'draft' ? canPickDraftCard : layout === 'focus')
   const battleFinished = battleStarted && showBattleResult
   const resultDismissed = dismissedResultKey === battleKey
   const winner = battleFinished ? battleResult?.winner : null
+  const roster = room.presence ?? room.record?.roster
+  const spectating = session.online && room.record?.role === 'viewer'
+  const guestSeat = room.record?.role === 'guest'
+  const ownMember = session.online ? (guestSeat ? roster?.guest : roster?.host) : null
+  const rivalMember = session.online ? (guestSeat ? roster?.host : roster?.guest) : null
+  const playerName = ownMember?.name ?? room.profile.name
+  const opponentName = rivalMember?.name ?? (session.online ? 'Player two' : settings.opponentAi === 'search' ? 'Search AI' : 'Rules AI')
+  const winnerName = winner === 'player' ? playerName : winner === 'opponent' ? opponentName : ''
+  const resultLabel = winner === 'tie' ? 'Draw' : winnerName ? `${spectating ? '' : `${RESULT_LABELS[winner]} · `}${winnerName} wins` : ''
+  function winsFor(member) {
+    if (!member) return null
+    const score = room.record?.scores?.[member.id] ?? 0
+    return score - (battleStarted && !showBattleResult && session.rawSession.roomResult?.winnerId === member.id ? 1 : 0)
+  }
+  const bottomIdentity = <PlayerIdentity name={playerName} wins={winsFor(ownMember)}
+    connected={!session.online || (room.connection === 'connected' && Boolean(ownMember?.connected))}
+    editable={!spectating} onRename={(name) => room.client.rename(name)} />
+  const topIdentity = <PlayerIdentity name={opponentName} wins={winsFor(rivalMember)}
+    connected={!session.online || (room.connection === 'connected' && Boolean(rivalMember?.connected))} />
   const dealLeadMs = game.mode === 'draft' ? (game.packNumber === 1 ? SHUFFLE_LEAD_MS : 0) : SHUFFLE_LEAD_MS
 
   // Row hands are capped relative to the table so the centre keeps the space.
@@ -210,7 +230,7 @@ function AppContent() {
     } else if (discardPhase) {
       const count = selectedIds.length
       primaryAction = (
-        <button type="button" className="ui-button ui-button--primary table__action" onClick={handlePrimaryAction}>
+        <button type="button" className="ui-button ui-button--primary table__action" disabled={session.onlineBlocked} onClick={handlePrimaryAction}>
           {count > 0 ? <GameIcon name="redraw" /> : <SvgIcon name="check" />}
           <span>{count > 0 ? `Redraw ${count}` : 'Keep'}</span>
         </button>
@@ -289,13 +309,15 @@ function AppContent() {
       style={{ '--impact-ms': `${impactMs}ms`, '--burst-ms': `${Math.max(600, impactMs + 200)}ms` }}
     >
       <ImagePreloader />
-      {room.record ? <button type="button" className={`room-status${room.presence?.pending ? ' room-status--request' : ''}`} onClick={() => setRoomOpen(true)}>
-        {room.presence?.pending ? `${room.presence.pending.name} wants to join` : room.connection !== 'connected' ? 'Room reconnecting…' : room.error ? 'Room · connection notice' : room.session ? `${room.presence?.guest?.name ?? 'Player'} · ${room.presence?.host?.connected && room.presence?.guest?.connected ? 'online' : 'waiting for connection'}` : 'Room · playing AI'}
+      {room.entry ? <RoomEntry key={room.entry.key} room={room} /> : null}
+      {room.error || room.notice || room.record?.role === 'pending' || room.presence?.pending?.length ? <button type="button" className="room-status" onClick={() => setRoomOpen(true)}>
+        {room.error || (room.presence?.pending?.length ? `${room.presence.pending[0].name} wants to ${room.presence.pending[0].desired === 'viewer' ? 'watch' : 'play'}` : room.record?.role === 'pending' ? 'Waiting for the host to let you in' : room.notice)}
       </button> : null}
 
       <main ref={tableRef} className={['table', `table--${layout}`].join(' ')}>
         <SideRail
           side="opponent"
+          identity={topIdentity}
           stats={opponentHidden ? {} : opponentStats}
           average={layout === 'battle' || opponentHidden ? null : opponentAverage}
           tabletop={settings.tabletop}
@@ -309,6 +331,12 @@ function AppContent() {
         >
           {opponentThinking ? <ThinkingDots /> : null}
           {layout !== 'battle' ? phasePips : null}
+          <button type="button" className="ui-button online-action" aria-label={room.record ? 'Copy invite' : 'Create a room'}
+            disabled={Boolean(room.entry)} onClick={() => room.record ? room.client.copyInvite().then((copied) => { if (!copied) setRoomOpen(true) }) : room.client.requestEntry()}>
+            <GameIcon name="copy" /><span>{room.record ? 'Copy invite' : 'Create a room'}</span>
+          </button>
+          {room.record ? <button type="button" className={`ui-button ui-button--icon online-controls${room.presence?.pending?.length ? ' has-requests' : ''}`}
+            aria-label="Room controls" title="Room controls and players" onClick={() => setRoomOpen(true)}><SvgIcon name="eye" />{room.presence?.pending?.length || null}</button> : null}
           <ScreenMenu
             onNewGame={handleNewGame}
             gameMode={gameMode}
@@ -359,7 +387,7 @@ function AppContent() {
             </div>
           ) : null}
           {layout === 'battle' && settings.tabletop ? (
-            <TabletopScore result={battleResult} resultLabel={RESULT_LABELS[winner] ?? ''} onShowResult={() => setDismissedResultKey(null)} />
+            <TabletopScore result={battleResult} resultLabel={resultLabel} onShowResult={() => setDismissedResultKey(null)} />
           ) : null}
           {layout === 'battle' && !settings.tabletop ? (
             <BattleArena
@@ -369,7 +397,7 @@ function AppContent() {
               onToggleSpeed={() => setSpeed(speed > 1 ? 1 : 2.5)}
               onSkip={skipToEnd}
               finished={battleFinished}
-              resultLabel={RESULT_LABELS[winner] ?? ''}
+              resultLabel={resultLabel}
               onShowResult={() => setDismissedResultKey(null)}
             />
           ) : null}
@@ -389,6 +417,7 @@ function AppContent() {
 
         <SideRail
           side="player"
+          identity={bottomIdentity}
           stats={playerStats}
           average={layout === 'battle' ? null : playerAverage}
           tabletop={settings.tabletop}
@@ -416,6 +445,10 @@ function AppContent() {
         visible={battleFinished && !resultDismissed}
         battlePlayback={battlePlayback}
         battleResult={battleResult}
+        playerName={playerName}
+        opponentName={opponentName}
+        spectating={spectating}
+        newGameLabel={session.online && room.record?.role !== 'host' ? 'Room controls' : 'Play again'}
         onNewGame={handleNewGame}
         onClose={() => setDismissedResultKey(battleKey)}
       />
@@ -446,7 +479,7 @@ function AppContent() {
       />
 
       <HelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} tabletop={settings.tabletop} />
-      <RoomSheet open={roomOpen} onClose={() => setRoomOpen(false)} room={room} session={session.rawSession} />
+      <RoomSheet open={roomOpen} onClose={() => setRoomOpen(false)} room={room} />
       <FactionPicker open={Boolean(isPreBattleReady && factionPickerCard)}
         types={factionPickerCard ? getCardTabletopTypes(factionPickerCard, tabletopChoice) : []}
         selectedType={tabletopChoice.selectedType}

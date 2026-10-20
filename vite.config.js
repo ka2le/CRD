@@ -5,8 +5,8 @@ import { createHash } from 'node:crypto'
 import { readFileSync, readdirSync } from 'node:fs'
 
 const rulesFiles = [...readdirSync('src/game').filter((name) => name.endsWith('.js')).sort().map((name) => `src/game/${name}`),
-  'src/hooks/useGameSession.js', 'src/network/roomGame.js', 'src/network/protocol.js', 'data/cards.json', 'data/tabletop-cards.json']
-const gameVersion = createHash('sha256').update(rulesFiles.map((path) => readFileSync(path, 'utf8')).join('\n')).digest('hex').slice(0, 16)
+  'data/cards.json', 'data/tabletop-cards.json']
+const gameVersion = createHash('sha256').update(rulesFiles.map((path) => readFileSync(path, 'utf8').replace(/\r\n/g, '\n')).join('\n')).digest('hex').slice(0, 16)
 
 // https://vite.dev/config/
 export default defineConfig({
