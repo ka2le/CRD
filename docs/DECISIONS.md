@@ -1,5 +1,13 @@
 # DECISIONS.md
 
+## Creator accepted clarified v2 for publication — 2026-10-21
+
+Draft balance is the creator's priority. The clarified Robot-main pip/Ultimate version is the preferred result so far: Draft C/R/D53.4/45.9/50.8%; Discard45.0/51.4/53.6%. Accept the differing Critter outcomes across modes and retain this version; commit and publish it. Further balance tuning is not requested. This is a design preference informed by conditional simulation results, not proof of equal faction strength.
+
+## Robot-main pip and partial-Ultimate clarification — 2026-10-21
+
+**New local v2 clarification (2026-10-21; not published):** adopt the tested Robot-main pip rule. Any Robot stat pip, including double/mixed cards, trades for one Robot attack unit; only ordinary Robot attacks and Robot Ultimate units trade back. Ultimate has2 units; one may remain as an attack while the other becomes a stat. Other faction pips stay; no hybrid attack can transform. Converted power is available only with Robot as the resulting selectable main faction (it may become Robot through conversion); other faction choices use the unchanged hand. Dragon6 extra stat and all reference-card artwork unchanged. 1,000 new matched Normal search games (500 per mode,16 samples): C/R/D Draft **53.4/45.9/50.8%**, Discard **45.0/51.4/53.6%**; draws5.0/6.6%. Published baseline48.7/43.5/55.8% and54.0/44.7/50.7%; draws7.4/5.8%. Mean absolute deviation from50% improves3.93→3.05pp; worst6.45→5.00pp, modest conditional evidence rather than proof. Adopted locally under creator authorization to keep it if balance improved. Live site remains `6bc1c20`. All1,000 new games replayed,4 search roots exact; published baseline1,000 games/4 roots also reproduced. Evidence `.ai-runs/v2-robot-pips-2026-10-21/`; `abilitiesv2-robot-pips` equals current default; headless v2 rules versionv4.
+
 ## Adopted Abilities v2 revision — 2026-10-21
 
 Creator adopted Dragon contribution6+ → one extra Dragon stat (all formulas recomputed once), and clarified that Robot Reconfigure is unrestricted in number of exchanges but restricted to base `robot1` and `robot_attack` cards, including copies. Double/mixed stats, ultimates and hybrids cannot be converted. Automatically maximize unshielded power after abilities; no conversion on ties, otherwise fewest conversions. Reference card: keep large6+, replace hearts with v1 extra-stat card; Robot artwork unchanged. Headless v2 rules version becomesv3. Historical study variants explicitly retain their old Robot interpretation. Normal-deck search verification runs under the adopted rules; no publishing requested.

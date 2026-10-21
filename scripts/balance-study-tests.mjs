@@ -9,7 +9,7 @@ const definitions = new Map(getCoreCards().map((c) => [c.id, c]))
 const hand = (ids) => ids.map((id, i) => ({ ...definitions.get(id), uid: `${id}-${i}` }))
 
 test('Adopted v2 balance configuration equals the playable rules', () => {
-  assert.deepEqual(BALANCE_VARIANTS['abilitiesv2-base-unlimited'].flexible, FLEXIBLE_RULES)
+  assert.deepEqual(BALANCE_VARIANTS['abilitiesv2-robot-pips'].flexible, FLEXIBLE_RULES)
 })
 test('Battle faction labels use the full CD cycle, preserve mixed ties and neutral damage', () => {
   assert.equal(battleAnalysisProfile(hand(['critter1', 'swarm', 'dragon1', 'dragons_breath'])).damageType, 'mixed')

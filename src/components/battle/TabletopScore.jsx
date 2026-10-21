@@ -16,7 +16,7 @@ export function TabletopFormula({ score, label }) {
       <span className="tabletop-formula__label">{label}</span>
       {score.damageType ? <GameIcon name={score.damageType} title={`${score.damageType} damage type`} style={{ color: `var(--${score.damageType})` }} /> : <span />}
       <span className="tabletop-formula__equation">
-        {flexible && score.reconfigured ? <span className="tabletop-formula__ability" title={`Reconfigure: ${score.reconfigured.count ?? 1} Robot ${score.reconfigured.direction === 'stat-to-attack' ? 'stat card(s) became attacks' : 'attack card(s) became stats'}`}><GameIcon name="robot" />⇄</span> : null}
+        {flexible && score.reconfigured ? <span className="tabletop-formula__ability" title={`Reconfigure: ${score.reconfigured.count ?? 1} Robot ${score.reconfigured.direction === 'stat-to-attack' ? 'stat pip(s) became attack units' : 'attack unit(s) became stats'}`}><GameIcon name="robot" />⇄</span> : null}
         {flexible && score.winsTies ? <span className="tabletop-formula__ability" title="Critters win equal scores against other factions">=★</span> : null}
         {abilities && score.adaptedUid ? (
           <span className="tabletop-formula__ability" title="Adapt: a Critter stat card became a Critter attack">

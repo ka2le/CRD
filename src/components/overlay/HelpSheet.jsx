@@ -20,7 +20,7 @@ export default function HelpSheet({ open, onClose, tabletop = false }) {
           <div className="help__fact"><GameIcon name="shield" /><span>Each enemy shield removes 2 Critter power, 1 Robot power or 0 Dragon power. Power stops at zero.</span></div>
           {tabletop === 'abilitiesv2' ? <>
             <div className="help__fact"><GameIcon name="critter" /><span>Critter main faction wins equal scores against other factions. Two Critter hands still tie.</span></div>
-            <div className="help__fact"><GameIcon name="robot" /><span>Reconfigure: exchange any number of base single Robot stat cards and ordinary Robot attack cards to maximize power. Double stats, mixed stats, ultimates and special attacks cannot be exchanged.</span></div>
+            <div className="help__fact"><GameIcon name="robot" /><span>Reconfigure: if Robots can become your main faction, exchange any number of Robot stat pips and Robot attack units to maximize power. Other stats on mixed cards stay. A Robot Ultimate has 2 attack units; exchange one or both. Hybrid attacks cannot be exchanged. Choosing another main faction uses the unchanged hand.</span></div>
             <div className="help__fact"><GameIcon name="dragon" /><span>Overwhelming: {FLEXIBLE_RULES.overwhelmingAt}+ Dragon power before shields adds one Dragon stat. Recalculate all attacks once.</span></div>
             <div className="help__fact"><GameIcon name="damage" /><span>Power after abilities − shields = score. Ultimates: 2 per matching stat. Bite: 1. Chameleon changes main faction, including who wins ties.</span></div>
           </> : tabletop === 'abilities' ? <>

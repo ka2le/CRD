@@ -1,5 +1,9 @@
 # Architecture
 
+Current local v2 clarification: `getRobotPipPlans` enumerates net Robot unit trades, preserving non-Robot pips; `tabletopAttackUnits` overrides printed coefficients only on scoring-plan derivatives so partial Ultimates retain exactly one unit. `getRobotPipProfile` filters converted plans by resulting Robot eligibility, retaining per-type profiles: Robot gets the optimized plan and other mains get the original hand. `scoreTabletopHand` resolves the selected profile before shields; converted power cannot leak to Critter tiebreak or Dragon main. Default `robotPipReconfigure=true`; historical variants explicitly freeze it false. Headless v2 rules versionv4. Score-card artwork unchanged.
+
+Earlier implementation, retained for historical studies:
+
 2026-10-21 adopted v2 revision: `getBaseFlexiblePlans` evaluates all reachable base Robot stat/attack counts in linear many plans, avoiding exponential subsets. Only `robot1`/`robot_attack` IDs qualify, including copies; fixed mixed/double stats and specials still contribute to scoring. Each plan applies Dragon6+ extra stat once before selecting maximum unshielded power. Legacy one-pip behavior is explicitly process-configured for historical studies. WeakMap profiles still require configuring trials before scoring. Headless abilitiesv2 rules versionv3. See `TABLETOP_MODE.md`.
 
 2026-10-21: three tabletop modes use the confirmed smaller damage scale; see `TABLETOP_MODE.md`. `scripts/tabletop-balance.mjs` collects actual browser-search self-play, including preparation, with real mode-specific decks, fixed budgets, durable decision records and independent decision probes. `TABLETOP_BALANCE_RESULTS.md` records the completed comparison. Earlier balance numbers below concern superseded rules/decks. Digital AI training remains separate and paused.
