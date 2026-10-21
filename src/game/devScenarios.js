@@ -2,6 +2,10 @@ import { getExpandedCoreDeck } from './cards.js'
 import { chooseTabletopType, getTabletopProfile } from './tabletop.js'
 
 const SCENARIOS = {
+  reconfigure: {
+    player: ['robot2', 'robot2', 'robot_attack', 'shield2', 'critter1'],
+    opponent: ['dragon2', 'dragon2', 'dragon_ulti', 'shield2', 'critter1'],
+  },
   plain: {
     player: ['dragon2', 'dragons_breath', 'robot1', 'critter1', 'recycle_card'],
     opponent: ['robot2', 'robot_attack', 'dragon1', 'critter1', 'copy_card_in_hand'],
@@ -40,12 +44,12 @@ export const DEV_SCENARIO_NAMES = Object.keys(SCENARIOS)
 
 // Deterministic real card instances, using the actual deck and normal reducer.
 export function createDevScenario({ name = 'bonuses', mode = 'draft', result = false, playerType = null,
-  playerCards, opponentCards } = {}) {
+  playerCards, opponentCards, rules = 'threshold' } = {}) {
   const preset = SCENARIOS[name]
   if (!preset) throw new Error(`Unknown scenario: ${name}. Choose ${DEV_SCENARIO_NAMES.join(', ')}`)
   const gameMode = mode === 'discard' ? 'five-hand-discard' : mode
   if (!['draft', 'five-hand-discard'].includes(gameMode)) throw new Error(`Unknown game mode: ${mode}`)
-  const deck = getExpandedCoreDeck({ wildDeck: true, tabletop: true })
+  const deck = getExpandedCoreDeck({ wildDeck: true, tabletop: rules })
   function take(id) {
     const index = deck.findIndex((card) => card.id === id)
     if (index < 0) throw new Error(`Card unavailable in scenario deck: ${id}`)

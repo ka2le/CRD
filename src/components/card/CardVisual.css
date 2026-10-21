@@ -51,6 +51,39 @@
   pointer-events: none;
 }
 
+/* Copy glitch bands: copy art shows strongly through misfed scan bands. */
+.card-visual__copy-band {
+  opacity: 0.82;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+.card-visual__copy-band--right {
+  transform: translateX(2.4%);
+}
+
+.card-visual__copy-band--left {
+  transform: translateX(-1.8%);
+}
+
+.card-visual__copy-rim {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  filter: drop-shadow(-1.5px 0 0 rgba(255, 60, 200, 0.65));
+}
+
+.card-visual__copy-rim rect {
+  fill: none;
+  stroke: rgba(80, 240, 255, 0.7);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
 /* Card back: the printed backside art, filling the card. */
 .card-visual__back {
   position: absolute;

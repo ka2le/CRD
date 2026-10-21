@@ -1,11 +1,12 @@
 import './AbilityCards.css'
 import { GameIcon } from '../ui/GameIcon'
+import { ABILITY_RULES, FLEXIBLE_RULES } from '../../game/tabletop'
 
 // Prototype reference cards for the alternative "class abilities" tabletop rule.
 // View only: nothing here affects digital combat.
 //   Critters – Adapt: during preparation, may turn 1 Critter stat card into a Critter attack card.
 //   Robots – Perfect Balance: +3 power when Robot stats = Robot attacks (at least 1 each).
-//   Dragons – Overwhelming: Dragon base power 14+ gains +1 Dragon stat before final power.
+//   Dragons – Overwhelming: Dragon base power 7+ gains +1 Dragon stat before final power.
 
 const CLASS_CLASS = { critter: 'c', robot: 'r', dragon: 'd' }
 
@@ -26,7 +27,6 @@ function AttackCard({ cls }) {
       <span className="ab-pc__corner">
         <GameIcon name={cls} className="ab-pc__atk" />
         <span className="ab-pc__x">×</span>
-        <GameIcon name="damage" className="ab-pc__heart" />
         <GameIcon name="damage" className="ab-pc__heart" />
       </span>
     </span>
@@ -69,13 +69,13 @@ const ABILITIES = [
       </>
     ),
     arrow: <Arrow />,
-    right: <span className="ab-plus4"><b>+3</b><GameIcon name="damage" /></span>,
+    right: <span className="ab-plus4"><b>+{ABILITY_RULES.balanceBonus}</b><GameIcon name="damage" /></span>,
   },
   {
     cls: 'dragon',
     name: 'Overwhelming',
     shield: '0',
-    left: <span className="ab-thr"><GameIcon name="damage" />14+</span>,
+    left: <span className="ab-thr"><GameIcon name="damage" />{ABILITY_RULES.overwhelmingAt}+</span>,
     arrow: <Arrow />,
     right: (
       <>
@@ -135,6 +135,24 @@ export function AbilityBandsCard() {
           </div>
           <Rule {...ability} />
           <ShieldTab value={ability.shield} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function FlexibleRobotsCard() {
+  return (
+    <div className="sc-card ab-ledger" aria-label="Abilities v2: Flexible Robots">
+      {[
+        { cls: 'critter', name: 'Win ties', text: 'Equal score → Critters win', shield: '−2' },
+        { cls: 'robot', name: 'Reconfigure', text: '1 stat ⇄ 1 ordinary attack', shield: '−1' },
+        { cls: 'dragon', name: 'Overwhelming', text: `${FLEXIBLE_RULES.overwhelmingAt}+ Dragon power → +${FLEXIBLE_RULES.overwhelmingBonus}`, shield: '0' },
+      ].map(({ cls, name, text, shield }) => (
+        <div key={cls} className="ab-ledger__row">
+          <div className="ab-name"><GameIcon name={cls} className={`sc-${cls}`} />{name}</div>
+          <div className="ab-rule">{text}</div>
+          <ShieldTab value={shield} />
         </div>
       ))}
     </div>

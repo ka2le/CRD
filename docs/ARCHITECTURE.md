@@ -1,5 +1,7 @@
 # Architecture
 
+2026-10-21: three tabletop modes use the confirmed smaller damage scale; see `TABLETOP_MODE.md`. `scripts/tabletop-balance.mjs` collects actual browser-search self-play, including preparation, with real mode-specific decks, fixed budgets, durable decision records and independent decision probes. `TABLETOP_BALANCE_RESULTS.md` records the completed comparison. Earlier balance numbers below concern superseded rules/decks. Digital AI training remains separate and paused.
+
 2026-10-19 addition: the persisted `tabletop` setting applies independently of Draft/Discard. `cards.js` derives marked cards through `tabletop.js`; `tabletopAi.js` supplies integer-mode heuristics. Session preparation validates main-type commitment. Playback calls the pure tabletop scorer immediately; `TabletopScore.jsx` renders both formulas. Browser Search AI re-scores completed sampled hands with tabletop rules; offline digital training remains unchanged. See `TABLETOP_MODE.md`.
 
 Tabletop-only definitions live in `data/tabletop-cards.json` and are included only through explicit tabletop deck/collection options. `FactionPicker.jsx` presents the session's validated main-faction choices (including unrestricted Chameleon choices); the scorer handles Shortcut tiers and chosen-faction rules. Imported local artwork is archived separately and resolved through the existing manifest, keeping originals out of the public build.

@@ -117,6 +117,10 @@ function sameAction(a, b) {
 }
 
 function outcomeFor(terminal, side) {
+  if (terminal.battleResult.mode === 'tabletop') {
+    const winner = terminal.battleResult.winner
+    return winner === 'tie' ? 0 : winner === side ? 1 : -1
+  }
   const tabletop = terminal.battleResult.playerHand.some((card) => card.tabletop)
     || terminal.battleResult.opponentHand.some((card) => card.tabletop)
   const { winner } = tabletop
@@ -210,12 +214,19 @@ export function searchDecision(game, side = 'opponent', options = {}) {
 // Common random numbers: every candidate is played out in the same sampled world.
 function runSearch({ firstWorld, sampleWorld, actions, baselineIndex, side, minSamples, maxSamples, timeBudgetMs, started, rollout, margin = 0 }) {
   const totals = new Array(actions.length).fill(0)
+  const counts = actions.map(() => ({ wins: 0, draws: 0, losses: 0 }))
+  const outcomes = []
   let samples = 0
   let world = firstWorld
   while (samples < maxSamples) {
+    const row = []
     for (let index = 0; index < actions.length; index += 1) {
-      totals[index] += playOut(stepHeadlessGame(world, actions[index]), side, rollout)
+      const value = playOut(stepHeadlessGame(world, actions[index]), side, rollout)
+      totals[index] += value
+      counts[index][value > 0 ? 'wins' : value < 0 ? 'losses' : 'draws'] += 1
+      row.push(value)
     }
+    outcomes.push(row)
     samples += 1
     if (samples >= minSamples && now() - started >= timeBudgetMs) break
     world = sampleWorld()
@@ -229,6 +240,10 @@ function runSearch({ firstWorld, sampleWorld, actions, baselineIndex, side, minS
   // `margin` (mean result, -1..1): a shallow search only leaves the Rules AI's choice
   // when the alternative is clearly better in its few samples.
   if (margin > 0 && (totals[chosenIndex] - totals[baselineIndex]) / samples < margin) chosenIndex = baselineIndex
+  const differences = outcomes.map((row) => row[chosenIndex] - row[baselineIndex])
+  const delta = (totals[chosenIndex] - totals[baselineIndex]) / samples
+  const pairedBaselineStdErr = samples > 1
+    ? Math.sqrt(differences.reduce((sum, difference) => sum + (difference - delta) ** 2, 0) / (samples * (samples - 1))) : null
 
   return {
     action: actions[chosenIndex],
@@ -236,6 +251,9 @@ function runSearch({ firstWorld, sampleWorld, actions, baselineIndex, side, minS
     baselineIndex,
     samples,
     values: totals.map((total) => total / samples),
+    counts,
+    simulations: samples * actions.length,
+    pairedBaselineStdErr,
     elapsedMs: now() - started,
     version: SEARCH_AI_VERSION,
   }

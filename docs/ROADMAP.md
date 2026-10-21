@@ -1,5 +1,9 @@
 # Roadmap
 
+**2026-10-21 completed:** three-mode implementation and3,400-game tabletop search study. V2draws3.0%Draft/2.8%Discard. `TABLETOP_BALANCE_RESULTS.md` records conditional faction/strategy outcomes and limitations; next is human playtesting and NormalDeck/policy robustness, not automatic equalization of faction win counts.
+
+2026-10-21: three tabletop modes use the confirmed smaller damage scale; see `TABLETOP_MODE.md`. `scripts/tabletop-balance.mjs` collects actual browser-search self-play, including preparation, with real mode-specific decks, fixed budgets, durable decision records and independent decision probes. `TABLETOP_BALANCE_RESULTS.md` records the completed comparison. Earlier balance numbers below concern superseded rules/decks. Digital AI training remains separate and paused.
+
 Source-reviewed baseline: 2026-10-18. Proposed work order; unresolved rules still require design decisions.
 
 ## Implemented

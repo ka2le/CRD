@@ -1,6 +1,6 @@
 # Gameplay rules
 
-The menu's optional **Tabletop battle** setting applies to both Draft and Discard: one power calculation, main-type commitment, class-specific shield reduction and cumulative bonuses replace the digital round combat described below. `TABLETOP_MODE.md` is the authoritative reference for that mode and its approved integer specials.
+Menu → Battle offers digital rounds and three tabletop resolvers: Threshold, Abilities and Abilities v2 (Flexible Robots). Tabletop attacks use 1 power/stat (ultimates 2), with current scaled thresholds, abilities and shields documented in `TABLETOP_MODE.md`. The sections below describe the original round combat unless stated otherwise.
 
 Reviewed 2026-10-18. These rules describe the shared game model and supported effects. Known implementation exceptions are identified explicitly; they do not silently redefine design intent. See `CURRENT_STATE.md` for the source review.
 

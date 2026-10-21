@@ -137,6 +137,64 @@ function CardCooldown({ card, charge = null }) {
   )
 }
 
+// Copy card "photocopy glitch": the copy source's art bleeds through in a few
+// misfed scan bands (each nudged sideways) on top of the faint full overlay.
+// Bands are in card units (635 x 888). The tall band at y=262 sits over the
+// sheep's eyes so it reads clearly as the Copy card underneath.
+const COPY_GLITCH_W = 635
+const COPY_GLITCH_H = 888
+const COPY_GLITCH_BANDS = [
+  [0, 118, 635, 9],
+  [140, 196, 500, 30],
+  [0, 226, 635, 4],
+  [40, 262, 595, 66],
+  [0, 470, 280, 6],
+  [0, 560, 635, 18],
+  [330, 588, 305, 5],
+  [0, 700, 520, 34],
+  [120, 812, 515, 8],
+]
+
+function copyGlitchMask(bands) {
+  const rects = bands.map(([x, y, w, h]) => `<rect x='${x}' y='${y}' width='${w}' height='${h}' fill='white'/>`).join('')
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${COPY_GLITCH_W} ${COPY_GLITCH_H}' preserveAspectRatio='none'>${rects}</svg>`
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`
+}
+
+// Alternate bands shift right / left, like a misfeeding scanner.
+const COPY_GLITCH_MASKS = [
+  copyGlitchMask(COPY_GLITCH_BANDS.filter((_, index) => index % 2 === 0)),
+  copyGlitchMask(COPY_GLITCH_BANDS.filter((_, index) => index % 2 === 1)),
+]
+
+function CopyGlitch({ src }) {
+  return (
+    <>
+      <img src={src} alt="" className="card-visual__copy-overlay" draggable="false" />
+      {COPY_GLITCH_MASKS.map((mask, index) => (
+        <img
+          key={`copy-band-${index}`}
+          src={src}
+          alt=""
+          draggable="false"
+          className={`card-visual__copy-overlay card-visual__copy-band card-visual__copy-band--${index % 2 === 0 ? 'right' : 'left'}`}
+          style={{ WebkitMaskImage: mask, maskImage: mask }}
+        />
+      ))}
+      <svg
+        className="card-visual__copy-rim"
+        viewBox={`0 0 ${COPY_GLITCH_W} ${COPY_GLITCH_H}`}
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        {COPY_GLITCH_BANDS.map(([x, y, w, h], index) => (
+          <rect key={`rim-${index}`} x={x} y={y} width={w} height={h} />
+        ))}
+      </svg>
+    </>
+  )
+}
+
 // The printed card back (the "backside" card art in data/cards.json).
 const CARD_BACK_SOURCE = 'https://cdn.midjourney.com/210b3cd1-dec8-453e-8d1a-d967cea6e283/0_0.png'
 const CARD_BACK_URL = getImageUrl(CARD_BACK_SOURCE)
@@ -170,7 +228,7 @@ export default function CardVisual({ card, hidden = false, charge = null }) {
           </>
         ) : <div className="card-visual__placeholder" />}
         {card.copyOverlayImage ? (
-          <img src={getImageUrl(card.copyOverlayImage)} alt="" className="card-visual__copy-overlay" draggable="false" />
+          <CopyGlitch src={getImageUrl(card.copyOverlayImage)} />
         ) : null}
         <div className="card-visual__shade" />
         {card.type === 'stat' ? <CardStatColumn card={card} /> : null}

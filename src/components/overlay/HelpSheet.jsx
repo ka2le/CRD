@@ -14,20 +14,25 @@ export default function HelpSheet({ open, onClose, tabletop = false }) {
     <Sheet open={open} onClose={onClose} title={<SvgIcon name="help" />}>
       <div className="help">
         {tabletop ? <section className="help__block help__facts">
-          <div className="help__fact"><GameIcon name="damage" /><span>Each ordinary attack gives 2 power per matching stat. Add all attacks.</span></div>
+          <div className="help__fact"><GameIcon name="damage" /><span>Each ordinary attack gives 1 power per matching stat. Add all attacks.</span></div>
           <div className="help__fact"><GameIcon name="star" /><span>Your largest class contribution is your main damage type. If tied, tap a highlighted card before battle. Neutral-only power uses Robot.</span></div>
           <div className="help__fact"><GameIcon name="shield" /><span>Each enemy shield removes 2 Critter power, 1 Robot power or 0 Dragon power. Power stops at zero.</span></div>
-          {tabletop === 'abilities' ? <>
+          {tabletop === 'abilitiesv2' ? <>
+            <div className="help__fact"><GameIcon name="critter" /><span>Critter main faction wins equal scores against other factions. Two Critter hands still tie.</span></div>
+            <div className="help__fact"><GameIcon name="robot" /><span>Reconfigure: automatically swap one Robot stat for an ordinary Robot attack, or one ordinary attack for a stat, when it increases power. Other stats stay; ultimates and special attacks cannot become stats.</span></div>
+            <div className="help__fact"><GameIcon name="dragon" /><span>Overwhelming: 7+ Dragon power before shields earns +4 power.</span></div>
+            <div className="help__fact"><GameIcon name="damage" /><span>Power − shields + Overwhelming = score. Ultimates: 2 per matching stat. Bite: 1. Chameleon changes main faction, including who wins ties.</span></div>
+          </> : tabletop === 'abilities' ? <>
             <div className="help__fact"><GameIcon name="critter" /><span>Adapt: the Critter stat on one stat card becomes a Critter attack, used automatically when it scores more. Other stats on that card stay.</span></div>
             <div className="help__fact"><GameIcon name="robot" /><span>Perfect Balance: with Robots as main faction, as many Robot stats as Robot attacks (at least one each) adds +3 after shields. Robot Ultimate counts as two attacks; Critter × Robot × Dragon counts as one Robot attack.</span></div>
-            <div className="help__fact"><GameIcon name="dragon" /><span>Overwhelming: Dragon power of 14 or more gains one extra Dragon stat before shields.</span></div>
+            <div className="help__fact"><GameIcon name="dragon" /><span>Overwhelming: Dragon power of 7 or more gains one extra Dragon stat before shields.</span></div>
             <div className="help__fact"><GameIcon name="damage" /><span>Power − shields + Perfect Balance = score. Higher wins; equal scores tie.</span></div>
-            <div className="help__fact"><GameIcon name="star" /><span>Chameleon lets you choose any main faction: tap it, then a faction icon. Ultimates, including Devour: 4 per matching stat. Bite: 2.</span></div>
+            <div className="help__fact"><GameIcon name="star" /><span>Chameleon lets you choose any main faction: tap it, then a faction icon. Ultimates, including Devour: 2 per matching stat. Bite: 1.</span></div>
           </> : <>
-            <div className="help__fact"><GameIcon name="critter" /><span>After shields, your main faction earns one bonus: Critter +1 at 2 power, Robot +3 at 8, Dragon +6 at 14.</span></div>
+            <div className="help__fact"><GameIcon name="critter" /><span>After shields, your main faction earns one bonus: Critter +1 at 1 power, Robot +2 at 4, Dragon +4 at 7.</span></div>
             <div className="help__fact"><GameIcon name="damage" /><span>Base − shields + bonus = score. Higher wins; equal scores tie.</span></div>
             <div className="help__fact"><GameIcon name="arrow" className="g-icon--up" /><span>Shortcut grants your main faction bonus even below its threshold, with positive power. Chameleon lets you choose any main faction: tap it, then a faction icon.</span></div>
-            <div className="help__fact"><GameIcon name="star" /><span>Ultimates, including Devour: 4 per matching stat. Bite: 2. The 2× card doubles your main faction bonus after shields; copies stack. Devour also offers a Dragon-type option. Hold a card for its full rule.</span></div>
+            <div className="help__fact"><GameIcon name="star" /><span>Ultimates, including Devour: 2 per matching stat. Bite: 1. The 2× card doubles your main faction bonus after shields; copies stack. Devour also offers a Dragon-type option. Hold a card for its full rule.</span></div>
           </>}
         </section> : <>
         <section className="help__block">

@@ -233,6 +233,7 @@ function createInitialSessionState() {
     if (DEV_SCENARIO_NAMES.includes(query.get('scenario'))) {
       return sessionReducer(initial, { type: 'LOAD_DEV_SCENARIO', payload: createDevScenario({
         name: query.get('scenario'), mode: query.get('mode') ?? 'draft', result: query.get('at') === 'result',
+        rules: normalizeTabletopRules(query.get('rules')) || 'threshold',
       }) })
     }
   }
@@ -290,7 +291,7 @@ export function sessionReducer(state, action) {
       if (result) preBattle = { ...preBattle, playerFinished: true, opponentFinished: true }
       const next = {
         ...state, game, preBattle, gameMode: game.mode,
-        settings: { ...state.settings, gameMode: game.mode, tabletop: 'threshold', wildDeck: true },
+        settings: { ...state.settings, gameMode: game.mode, tabletop: game.playerHand[0]?.tabletop || 'threshold', wildDeck: true },
         selectedIds: [], battleStarted: false, battleLogOpen: false,
         battleInstance: state.battleInstance + 1, gameSessionKey: state.gameSessionKey + 1, dealId: state.dealId + 1,
         lastTransition: null, pendingPlayerDraftPickAnimation: null, suppressedHandCardIds: { player: [], opponent: [] },

@@ -1,6 +1,6 @@
 # Combat implementation
 
-The sections below describe digital round combat. The optional **Tabletop battle** menu toggle instead uses `src/game/tabletop.js` and immediate base − shields + bonus scoring in both hand-building modes; see `TABLETOP_MODE.md` for its rules and integer special conversions.
+Menu → Battle offers digital rounds and three tabletop resolvers: Threshold, Abilities and Abilities v2 (Flexible Robots). Tabletop attacks use 1 power/stat (ultimates 2), with current scaled thresholds, abilities and shields documented in `TABLETOP_MODE.md`. The sections below describe the original round combat unless stated otherwise.
 
 Reviewed 2026-10-18 against `src/game/engine.js` and `src/hooks/useBattlePlayback.js`. Shared match rules are in `RULES.md`.
 

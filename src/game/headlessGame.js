@@ -7,9 +7,11 @@ import { getHandStats, simulateBattle } from './engine.js'
 import { chooseDiscardIds, pickBestCardForHand } from './cardEvaluator.js'
 import { pickPreparationAction } from './preBattle.js'
 import { applyPreparationAction, createPreparationState, getPreparationActions } from './preparationState.js'
+import { resolveTabletopBattle, chooseTabletopType, toTabletopCard, normalizeTabletopRules } from './tabletop.js'
 
 export const HEADLESS_PROTOCOL_VERSION = 2
 export const HEADLESS_RULES_VERSION = 'digital-21-50-preparation-v1'
+const rulesVersion = (config) => config.tabletop ? `tabletop-single-score-v2-${normalizeTabletopRules(config.tabletop)}` : HEADLESS_RULES_VERSION
 const SIDES = ['player', 'opponent']
 const otherSide = (side) => side === 'player' ? 'opponent' : 'player'
 
@@ -17,13 +19,14 @@ function summarizeCard(card) {
   return {
     uid: card.uid, id: card.id, name: card.name, type: card.type,
     stats: [...(card.stats ?? [])], effect: { ...(card.effect ?? {}) }, cd: card.cd ?? null,
+    ...(card.tabletop ? { tabletop: card.tabletop } : {}),
   }
 }
 
 function configuredDeck(config) {
   if (config.deck === undefined) return null
   if (!Array.isArray(config.deck)) throw new Error('deck must be an array')
-  const definitions = new Map(getCoreCards().map((card) => [card.id, card]))
+  const definitions = new Map(getCoreCards({ tabletop: config.tabletop }).map((card) => [card.id, card]))
   const seen = new Set()
   return config.deck.map((entry) => {
     if (!entry || typeof entry.uid !== 'string' || !entry.uid || seen.has(entry.uid)) {
@@ -32,24 +35,25 @@ function configuredDeck(config) {
     const definition = definitions.get(entry.id)
     if (!definition) throw new Error(`Unsupported injected card ${entry.id}`)
     seen.add(entry.uid)
-    return { ...definition, uid: entry.uid, imageIndex: 0 }
+    return { ...(config.tabletop ? toTabletopCard(definition, config.tabletop) : definition), uid: entry.uid, imageIndex: 0 }
   })
 }
 
 export function getHeadlessSpec(config = {}) {
-  const pool = configuredDeck(config) ?? getExpandedCoreDeck({ wildDeck: config.wildDeck ?? true })
+  const pool = configuredDeck(config) ?? getExpandedCoreDeck({ wildDeck: config.wildDeck ?? true, tabletop: config.tabletop })
+  const definitions = getCoreCards({ tabletop: config.tabletop }).map((card) => config.tabletop ? toTabletopCard(card, config.tabletop) : card)
   // A recycle adds one card; at most every original recycle and copy source can do so.
   const maxHandCards = pool.length + pool.filter((card) => (
     card.id === 'recycle_card' || card.id === 'copy_card_in_hand'
   )).length
   return {
     protocolVersion: HEADLESS_PROTOCOL_VERSION,
-    rulesVersion: HEADLESS_RULES_VERSION,
-    cardTypes: getCoreCards().map((card) => ({
+    rulesVersion: rulesVersion(config),
+    cardTypes: definitions.map((card) => ({
       id: card.id, type: card.type, stats: [...(card.stats ?? [])], effect: { ...(card.effect ?? {}) },
       cd: card.cd ?? null, copies: card.copies,
     })),
-    poolCounts: getCoreCards().map((definition) => pool.filter((card) => card.id === definition.id).length),
+    poolCounts: definitions.map((definition) => pool.filter((card) => card.id === definition.id).length),
     // Public physical-card catalog, deliberately sorted rather than in deal/shuffle order.
     poolCards: pool.map((card) => ({ id: card.id, uid: card.uid }))
       .sort((a, b) => a.uid < b.uid ? -1 : (a.uid > b.uid ? 1 : 0)),
@@ -136,7 +140,10 @@ function settle(state) {
   if (!preparation && game.phase === 'battle-ready') preparation = createPreparationState(game)
   if (preparation) {
     if (preparation.playerFinished && preparation.opponentFinished) {
-      const battleResult = simulateBattle(preparation.playerHand, preparation.opponentHand, {
+      const tabletop = [...preparation.playerHand, ...preparation.opponentHand].some((card) => card.tabletop)
+      const battleResult = tabletop ? resolveTabletopBattle(preparation.playerHand, preparation.opponentHand, {
+        playerType: chooseTabletopType(preparation.playerHand),
+      }) : simulateBattle(preparation.playerHand, preparation.opponentHand, {
         ...(state.config.battleEvaluation ?? {}), deck: preparation.deck,
       })
       return { ...state, game, history, preparation, actor: null, terminal: true, battleResult }
@@ -303,8 +310,8 @@ export function encodeObservation(state, side = state.config.control === 'both' 
     terminal: state.terminal,
     battle: battleResult ? {
       rounds: battleResult.rounds.length,
-      playerTotalDamageDealt: battleResult[`${side}TotalDamageDealt`],
-      opponentTotalDamageDealt: battleResult[`${enemy}TotalDamageDealt`],
+      playerTotalDamageDealt: battleResult[`${side}TotalDamageDealt`] ?? battleResult[side]?.score,
+      opponentTotalDamageDealt: battleResult[`${enemy}TotalDamageDealt`] ?? battleResult[enemy]?.score,
       winner: battleResult.winner === 'tie' ? 'tie' : (battleResult.winner === side ? 'player' : 'opponent'),
       reason: battleResult.reason,
     } : null,
@@ -316,7 +323,7 @@ export function createStepResponse(state, side) {
   const playerReward = !state.terminal || state.battleResult.winner === 'tie' ? 0
     : (state.battleResult.winner === 'player' ? 1 : -1)
   return {
-    protocolVersion: HEADLESS_PROTOCOL_VERSION, rulesVersion: HEADLESS_RULES_VERSION,
+    protocolVersion: HEADLESS_PROTOCOL_VERSION, rulesVersion: rulesVersion(state.config),
     observation,
     legalActions: state.actor === observation.side ? getLegalActions(state) : [],
     actor: state.actor, terminal: state.terminal,

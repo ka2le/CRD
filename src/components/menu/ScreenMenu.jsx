@@ -3,11 +3,12 @@ import './ScreenMenu.css'
 import { GameIcon, SvgIcon } from '../ui/GameIcon'
 import { OPPONENT_AI_OPTIONS } from '../../game/opponentAi'
 
-// Round-by-round battle, or one of the two tabletop scoring rule sets.
+// Round-by-round battle, or one of the three tabletop scoring rule sets.
 const BATTLE_RULES = [
   { value: false, label: 'Battle' },
   { value: 'threshold', label: 'Threshold' },
   { value: 'abilities', label: 'Abilities' },
+  { value: 'abilitiesv2', label: 'Abilities v2' },
 ]
 
 export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, settings, onUpdateSettings, onHelp, onScoreCard, onCollection, onTestDeck, onRoom, inRoom = false, canConfigure = true, humanOpponent = false }) {
@@ -112,7 +113,7 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
 
           <div className="screen-menu__group">
             <span className="screen-menu__select-label">Battle</span>
-            <div className="screen-menu__segmented screen-menu__segmented--three" role="radiogroup" aria-label="Battle rules">
+            <div className="screen-menu__segmented" role="radiogroup" aria-label="Battle rules">
               {BATTLE_RULES.map(({ value, label }) => (
                 <button
                   key={label}

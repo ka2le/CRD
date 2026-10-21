@@ -1,5 +1,7 @@
 # Opponent selection (browser)
 
+2026-10-21: three tabletop modes use the confirmed smaller damage scale; see `TABLETOP_MODE.md`. `scripts/tabletop-balance.mjs` collects actual browser-search self-play, including preparation, with real mode-specific decks, fixed budgets, durable decision records and independent decision probes. `TABLETOP_BALANCE_RESULTS.md` records the completed comparison. Earlier balance numbers below concern superseded rules/decks. Digital AI training remains separate and paused.
+
 Added 2026-10-19. The menu has an **Opponent** dropdown (saved in `crd-dev-settings-v1` as `opponentAi`). Changing it starts a new game, like the other settings.
 
 | Option | id | Draft picks | Discard passes | Preparation |

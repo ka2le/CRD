@@ -4,7 +4,6 @@
 //   INGA_SAMPLES / INGA_MARGIN override IngaBot's budget for calibration runs.
 import { createHeadlessGame, stepHeadlessGame, chooseHeadlessBaselineAction } from '../src/game/headlessGame.js'
 import { searchDecision, searchPreparationDecision } from '../src/game/searchAi.js'
-import { toTabletopCard, resolveTabletopBattle, chooseTabletopType } from '../src/game/tabletop.js'
 import { BOT_SEARCH_PROFILES, getDecisionOptions } from '../src/game/opponentAi.js'
 
 const [botA = 'inga', botB = 'rolf', mode = 'draft', gamesArg = '100', rules = 'abilities', seedArg = '700000'] = process.argv.slice(2)
@@ -19,23 +18,13 @@ const profile = (bot) => {
   return { ...base, decision: { ...decision, minSamples: override, maxSamples: override, ...(process.env.INGA_MARGIN ? { margin: Number(process.env.INGA_MARGIN) } : {}) } }
 }
 
-function toTabletop(game) {
-  if (rules === 'digital') return game
-  const map = (cards) => cards?.map((card) => toTabletopCard(card, rules))
-  const next = { ...game }
-  for (const key of ['deck', 'draftRow', 'draftDiscard', 'playerHand', 'opponentHand', 'playerDiscards', 'opponentDiscards']) {
-    if (Array.isArray(game[key])) next[key] = map(game[key])
-  }
-  return next
-}
-
 let scoreA = 0
 let decisions = 0
 for (let game = 0; game < games; game += 1) {
   // Swap seats every other game so seat/first-picker effects cancel.
   const aSeat = game % 2 ? 'player' : 'opponent'
-  let state = createHeadlessGame({ mode, control: 'both', seed: firstSeed + Math.floor(game / 2), firstPicker: Math.floor(game / 2) % 2 ? 'opponent' : 'player' })
-  state = { ...state, game: toTabletop(state.game) }
+  let state = createHeadlessGame({ mode, control: 'both', tabletop: rules === 'digital' ? false : rules,
+    seed: firstSeed + Math.floor(game / 2), firstPicker: Math.floor(game / 2) % 2 ? 'opponent' : 'player' })
   while (!state.terminal) {
     const bot = state.actor === aSeat ? botA : botB
     const config = profile(bot)
@@ -48,9 +37,7 @@ for (let game = 0; game < games; game += 1) {
     }
     state = stepHeadlessGame(state, action)
   }
-  const { playerHand, opponentHand } = state.battleResult
-  const winner = rules === 'digital' ? state.battleResult.winner
-    : resolveTabletopBattle(playerHand, opponentHand, { playerType: chooseTabletopType(playerHand) }).winner
+  const { winner } = state.battleResult
   scoreA += winner === 'tie' ? 0.5 : (winner === aSeat ? 1 : 0)
 }
 const score = scoreA / games

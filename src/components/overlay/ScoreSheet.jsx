@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import './ScoreSheet.css'
 import Sheet from './Sheet'
 import { GameIcon } from '../ui/GameIcon'
-import { AbilityBandsCard, AbilityLedgerCard } from './AbilityCards'
+import { AbilityBandsCard, AbilityLedgerCard, FlexibleRobotsCard } from './AbilityCards'
 import { ThresholdBandsCard, ThresholdLedgerCard } from './ThresholdCards'
 
 const CARD_W = 315
@@ -14,10 +14,11 @@ const CARDS = [
   { key: 'threshold-bands', Card: ThresholdBandsCard },
   { key: 'ability-ledger', Card: AbilityLedgerCard },
   { key: 'ability-bands', Card: AbilityBandsCard },
+  { key: 'flexible-robots', Card: FlexibleRobotsCard },
 ]
 
 // Cards are authored at 315×440 and scaled to fit, like a printed card.
-// Pick the grid (1–4 columns) that shows every card at the largest size with no scrolling;
+// Pick the grid that shows every card at the largest size with no scrolling;
 // if that would make them too small (phones), fall back to a one-card swipe carousel.
 const MIN_GRID_SCALE = 0.7
 const CHROME_H = 96 // sheet header, body and track padding
