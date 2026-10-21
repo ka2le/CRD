@@ -1,6 +1,6 @@
 // Study-only process configuration. Never imported by the browser.
 // Apply exactly once before constructing/scoring hands (profiles are cached).
-import { TABLETOP_THRESHOLDS, FLEXIBLE_RULES } from '../src/game/tabletop.js'
+import { TABLETOP_THRESHOLDS, FLEXIBLE_RULES, TABLETOP_V2_SHIELD_COST as TABLETOP_SHIELD_COST } from '../src/game/tabletop.js'
 import { simulateBattle } from '../src/game/engine.js'
 
 export const BALANCE_VARIANTS = {
@@ -19,7 +19,12 @@ export const BALANCE_VARIANTS = {
   'abilitiesv2-extra-stat6': { rules: 'abilitiesv2', title: 'V2: 6+ → +1 Dragon stat', flexible: { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false } },
   'abilitiesv2-tuned': { rules: 'abilitiesv2', title: 'V2: 8+ → +3', flexible: { overwhelmingAt: 8, overwhelmingBonus: 3, overwhelmingExtraStat: false, unlimitedBaseReconfigure: false, robotPipReconfigure: false } },
   'abilitiesv2-base-unlimited': { rules: 'abilitiesv2', title: 'V2: Dragon 6+ extra stat, unlimited base Robot conversions', flexible: { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: true, robotPipReconfigure: false } },
-  'abilitiesv2-robot-pips': { rules: 'abilitiesv2', title: 'V2: Robot-main pip/ultimate Reconfigure', flexible: { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: true } },
+  'abilitiesv2-robot-pips': { rules: 'abilitiesv2', title: 'V2: Robot-main pip/ultimate Reconfigure', flexible: { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: true, overwhelmingAfterShields: false, perfectBalance: false } },
+  'abilitiesv2-perfect-balance': { rules: 'abilitiesv2', title: 'V2: Perfect Balance replaces Reconfigure', shieldCosts: { critter: 2, robot: 1, dragon: 0 }, flexible: { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true } },
+  'abilitiesv2-perfect-balance-shields220': { rules: 'abilitiesv2', title: 'V2: Perfect Balance; shields 2/2/0', shieldCosts: { critter: 2, robot: 2, dragon: 0 }, flexible: { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true } },
+  'abilitiesv2-perfect-balance-shields221': { rules: 'abilitiesv2', title: 'V2: Perfect Balance; shields 2/2/1', shieldCosts: { critter: 2, robot: 2, dragon: 1 }, flexible: { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true } },
+  'abilitiesv2-robot-immune': { rules: 'abilitiesv2', title: 'V2: Robot shield immunity; Dragon 6+ extra stat', shieldCosts: { critter: 2, robot: 0, dragon: 0 }, flexible: { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: true, overwhelmingAfterShields: false } },
+  'abilitiesv2-dragon-shield': { rules: 'abilitiesv2', title: 'V2: Robot immunity; Dragon -1/shield then 7+ gives +4', shieldCosts: { critter: 2, robot: 0, dragon: 1 }, flexible: { overwhelmingAt: 7, overwhelmingBonus: 4, overwhelmingExtraStat: false, unlimitedBaseReconfigure: false, robotPipReconfigure: true, overwhelmingAfterShields: true } },
   abilities: { rules: 'abilities', title: 'Abilities v1 (not in current study)' },
 }
 let configured = false
@@ -29,7 +34,8 @@ export function configureBalanceVariant(name) {
   if (!variant) throw new Error(`Unknown balance variant: ${name}`)
   configured = true
   if (variant.thresholds) for (const [faction, values] of Object.entries(variant.thresholds)) Object.assign(TABLETOP_THRESHOLDS[faction], values)
-  if (variant.flexible) Object.assign(FLEXIBLE_RULES, variant.flexible)
+  if (variant.flexible) Object.assign(FLEXIBLE_RULES, { overwhelmingAfterShields: false, perfectBalance: false }, variant.flexible)
+  Object.assign(TABLETOP_SHIELD_COST, { critter: 2, robot: 1, dragon: 0 }, variant.shieldCosts)
   return { ...variant, name }
 }
 

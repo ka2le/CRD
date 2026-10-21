@@ -17,12 +17,12 @@ export default function HelpSheet({ open, onClose, tabletop = false }) {
         {tabletop ? <section className="help__block help__facts">
           <div className="help__fact"><GameIcon name="damage" /><span>Each ordinary attack gives 1 power per matching stat. Add all attacks.</span></div>
           <div className="help__fact"><GameIcon name="star" /><span>Your largest class contribution is your main damage type. If tied, tap a highlighted card before battle. Neutral-only power uses Robot.</span></div>
-          <div className="help__fact"><GameIcon name="shield" /><span>Each enemy shield removes 2 Critter power, 1 Robot power or 0 Dragon power. Power stops at zero.</span></div>
+          <div className="help__fact"><GameIcon name="shield" /><span>Each enemy shield removes 2 Critter power, {tabletop === 'abilitiesv2' ? '2 Robot power or 1 Dragon power' : '1 Robot power or 0 Dragon power'}. Power stops at zero.</span></div>
           {tabletop === 'abilitiesv2' ? <>
             <div className="help__fact"><GameIcon name="critter" /><span>Critter main faction wins equal scores against other factions. Two Critter hands still tie.</span></div>
-            <div className="help__fact"><GameIcon name="robot" /><span>Reconfigure: if Robots can become your main faction, exchange any number of Robot stat pips and Robot attack units to maximize power. Other stats on mixed cards stay. A Robot Ultimate has 2 attack units; exchange one or both. Hybrid attacks cannot be exchanged. Choosing another main faction uses the unchanged hand.</span></div>
+            <div className="help__fact"><GameIcon name="robot" /><span>Perfect Balance: with Robots as main faction, as many Robot stats as Robot attack units (at least one each) adds +3 after shields. Robot Ultimate counts as two attacks; Critter * Robot * Dragon counts as one Robot attack. Critter + Robot + Dragon does not count. Cards stay unchanged.</span></div>
             <div className="help__fact"><GameIcon name="dragon" /><span>Overwhelming: {FLEXIBLE_RULES.overwhelmingAt}+ Dragon power before shields adds one Dragon stat. Recalculate all attacks once.</span></div>
-            <div className="help__fact"><GameIcon name="damage" /><span>Power after abilities − shields = score. Ultimates: 2 per matching stat. Bite: 1. Chameleon changes main faction, including who wins ties.</span></div>
+            <div className="help__fact"><GameIcon name="damage" /><span>Power − shields + Perfect Balance = score. Ultimates: 2 per matching stat. Bite: 1. Chameleon changes main faction, including who wins ties.</span></div>
           </> : tabletop === 'abilities' ? <>
             <div className="help__fact"><GameIcon name="critter" /><span>Adapt: the Critter stat on one stat card becomes a Critter attack, used automatically when it scores more. Other stats on that card stay.</span></div>
             <div className="help__fact"><GameIcon name="robot" /><span>Perfect Balance: with Robots as main faction, as many Robot stats as Robot attacks (at least one each) adds +3 after shields. Robot Ultimate counts as two attacks; Critter * Robot * Dragon counts as one Robot attack.</span></div>

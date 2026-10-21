@@ -2,6 +2,10 @@ import { getExpandedCoreDeck } from './cards.js'
 import { chooseTabletopType, getTabletopProfile } from './tabletop.js'
 
 const SCENARIOS = {
+  'perfect-balance': {
+    player: ['robot2', 'robot_ulti', 'robot1', 'robot_attack', 'shield2'],
+    opponent: ['dragon2', 'dragon1', 'dragon_ulti', 'shield2', 'critter1'],
+  },
   reconfigure: {
     player: ['robot1', 'robot1', 'robot1', 'robot1', 'robot1'],
     opponent: ['dragon2', 'dragon1', 'dragon_ulti', 'shield2', 'critter1'],

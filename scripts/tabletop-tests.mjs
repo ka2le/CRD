@@ -125,27 +125,19 @@ test('Abilities Overwhelming tests Dragon contribution before shields and adds a
   assert.deepEqual([scoreTabletopHand(above).dragonBase, scoreTabletopHand(above).base], [8, 10])
 })
 
-test('Reconfigure balances Robot units, preserves other stats and never converts hybrid attacks', () => {
-  const original = flexHand(...Array(5).fill('robot1'))
-  const saved = structuredClone(original)
-  const forward = getTabletopProfile(original)
-  assert.deepEqual([forward.stats.robot, forward.base, forward.reconfigured.direction, forward.reconfigured.count], [3, 6, 'stat-to-attack', 2])
-  assert.deepEqual(original, saved)
-  const reverse = getTabletopProfile(flexHand(...Array(5).fill('robot_attack')))
-  assert.deepEqual([reverse.stats.robot, reverse.base, reverse.reconfigured.direction, reverse.reconfigured.count], [2, 6, 'attack-to-stat', 2])
-  const mixed = getTabletopProfile(flexHand('joker', 'robot1', 'robot1', 'dragons_breath'))
-  assert.equal(mixed.stats.dragon, 1)
-  assert.equal(mixed.stats.critter, 1)
-  assert(mixed.types.includes('robot'))
-  assert.equal(getTabletopProfile(flexHand('robot1', 'robot_attack')).reconfigured, null)
-  assert.equal(getTabletopProfile(flexHand('robot2', 'robot2', 'robot_attack')).base, 6)
-  assert.equal(getTabletopProfile(flexHand('robot2', 'robot2')).base, 4)
-  const hybrid = getTabletopProfile(flexHand('joker', 'robot_critter', 'robot_dragon', 'one_off_each', 'robot_ulti'))
-  assert(hybrid.reconfigured.uids.every((uid) => !uid.startsWith('one_off_each-')))
-  assert.equal(getTabletopProfile(flexHand('robot_ulti', 'robot_ulti')).base, 4)
-  assert.equal(getTabletopProfile(flexHand('robot2', 'robot_ulti')).base, 4)
-  const copied = flexHand(...Array(5).fill('robot1')).map((c) => ({ ...c, isCopiedCard: true }))
-  assert.equal(getTabletopProfile(copied).base, 6)
+test('Adopted v2 uses Perfect Balance with shields 2/2/1 and never swaps cards', () => {
+  const hand = flexHand('robot2', 'robot_ulti', 'chameleon')
+  const saved = structuredClone(hand)
+  const robot = scoreTabletopHand(hand, 1, 'robot')
+  assert.deepEqual([robot.base, robot.power, robot.bonus, robot.score], [4, 2, 3, 5])
+  assert.equal(robot.reconfigured, null)
+  assert.equal(scoreTabletopHand(hand, 20, 'robot').score, 3)
+  assert.equal(scoreTabletopHand(hand, 1, 'critter').bonus, 0)
+  assert.equal(scoreTabletopHand(hand, 1, 'dragon').shieldPenalty, 1)
+  assert.deepEqual(hand, saved)
+  assert.equal(getTabletopProfile(flexHand('robot2', 'robot2')).base, 0)
+  const dragon = scoreTabletopHand(flexHand('dragon2', 'dragon1', 'dragon_ulti'), 1)
+  assert.deepEqual([dragon.dragonBase, dragon.stats.dragon, dragon.score], [6, 4, 7])
 })
 
 test('Flexible Dragon uses contribution 6+, adds one stat once, and recomputes hybrids', () => {
@@ -159,25 +151,6 @@ test('Flexible Dragon uses contribution 6+, adds one stat once, and recomputes h
   const hybrid = scoreTabletopHand(flexHand('joker', 'dragon2', 'dragon_ulti', 'one_off_each', 'any_off_each'))
   assert.deepEqual([hybrid.dragonBase, hybrid.stats.dragon, hybrid.contributions.robot, hybrid.neutral, hybrid.score], [6, 4, 4, 6, 18])
   assert.equal(scoreTabletopHand(abilityHand('dragon2', 'dragon2', 'dragon2', 'dragon1', 'dragons_breath')).score, 8)
-})
-
-test('Unlimited base Robot units match exhaustive assignments when Robots can become main', () => {
-  for (const extras of [[], ['any_off_each']]) {
-    for (let stats = 0; stats <= 6; stats++) for (let attacks = 0; attacks + stats <= 6; attacks++) {
-      const hand = flexHand(...Array(stats).fill('robot1'), ...Array(attacks).fill('robot_attack'), ...extras)
-      const total = stats + attacks
-      let best = 0
-      for (let mask = 0; mask < 2 ** total; mask++) {
-        const assigned = hand.map((card, i) => i >= total ? card : {
-          ...card, tabletop: 'threshold', id: `fixed-base-${i}`, type: mask & (1 << i) ? 'stat' : 'action',
-          stats: mask & (1 << i) ? ['robot'] : [],
-          effect: mask & (1 << i) ? {} : { dmg: 1, dmgType: 'robot' },
-        })
-        best = Math.max(best, getTabletopProfile(assigned.map((card) => ({ ...card, tabletop: 'threshold' }))).base)
-      }
-      assert.equal(getTabletopProfile(hand).base, best, JSON.stringify({ stats, attacks, extras }))
-    }
-  }
 })
 
 test('Flexible Critter tiebreak is symmetric; same-faction and untyped zero draws remain', () => {

@@ -1,6 +1,6 @@
 # Tabletop resolve modes
 
-Current rules confirmed **2026-10-21**. Menu → Battle offers Battle (digital rounds), Threshold, Abilities, and **Abilities v2** (Flexible Robots). `settings.tabletop` is false / `threshold` / `abilities` / `abilitiesv2`; legacy true maps to Threshold. These settings work with Draft and Discard, and Normal or Wild Deck. Changing rules starts a new game.
+Current rules confirmed **2026-10-21**. Menu → Battle offers Battle (digital rounds), Threshold, Abilities, and **Abilities v2** (Win Ties / Perfect Balance / Overwhelming). `settings.tabletop` is false / `threshold` / `abilities` / `abilitiesv2`; legacy true maps to Threshold. These settings work with Draft and Discard, and Normal or Wild Deck. Changing rules starts a new game.
 
 ## Shared scoring
 
@@ -8,7 +8,7 @@ Ordinary attacks give **1 power per matching stat**. Ultimates (Murder Rabbit, R
 
 The largest class contribution determines main faction. Ties allow a player choice before reveal. Neutral-only hands use Robot; a powerless hand has no main type unless Chameleon provides one. Devour offers a Dragon override. Chameleon offers any main faction, including Critter's v2 tiebreak, without changing underlying stats or attack contributions.
 
-Each opposing shield removes Critter **2**, Robot **1**, Dragon **0** power from the whole hand, floored at zero. These shield costs retain their existing values. Shield cards count as one shield. Shield Is Damage remains 1 power per shield; One Of Each remains Critter × Robot × Dragon stats (Robot damage and one Robot attack); Any Of Each remains the sum of all stats (neutral). These unit-valued special formulas stay whole-number effects rather than introducing fractions.
+Each opposing shield removes Critter **2**, Robot **2**, Dragon **1** power in Abilities v2. Threshold and v1 retain **2/1/0**. Subtract from the whole hand, floored at zero, before earned bonuses. Shield cards count as one shield. Shield Is Damage remains 1 power per shield; One Of Each remains Critter × Robot × Dragon stats (Robot damage and one Robot attack); Any Of Each remains the sum of all stats (neutral). These unit-valued special formulas stay whole-number effects rather than introducing fractions.
 
 ## Threshold
 
@@ -34,9 +34,25 @@ No Shortcut or 2× cards; Chameleon remains.
 
 Score = recomputed power − shields + Perfect Balance. Equal scores draw. Adapt's automatic choice uses the hand before reveal and does not inspect enemy shields.
 
-## Abilities v2 — Flexible Robots
+## Abilities v2 — current adopted rules
 
-**Current local clarification (2026-10-21):** Dragon6 extra stat remains; Robot Reconfigure now exchanges individual stat/attack units and requires Robot as the resulting chosen main faction. The prior base-card-only rule remains live in public6bc1c20 until publication is requested. The clarified rule was adopted locally after the comparison below. Robot reference-card artwork stays unchanged; the Dragon card keeps its large cutoff and now shows the v1 extra-stat card.
+The creator adopted the tested Perfect Balance / shields **2/2/1** configuration on 2026-10-21 and requested publication.
+
+- **Critter — Win Ties:** chosen Critter main wins equal scores against other main factions. Two Critter hands draw.
+- **Robot — Perfect Balance:** chosen Robot main earns **+3 after shields** when positive Robot stat pips equal Robot attack units. Mixed/double stats count all Robot pips. Robot Ultimate counts two attack units; One Of Each product counts one; Any Of Each sum counts none. No card swapping or Adapt. Chameleon may select Robot to qualify. Other chosen mains never earn the bonus.
+- **Dragon — Overwhelming:** Dragon contribution **6+ before shields** adds exactly one Dragon stat and recomputes all attacks once. Then the actual chosen main's shield penalty applies; shielding does not revoke the extra stat.
+
+Score = max(0, recomputed power - shields) + Perfect Balance. Both v2 reference-card layouts use the v1 Perfect Balance row, shield tabs **−2/−2/−1**, and the large **6+** Dragon requirement with an extra-stat reward. Help and result formulas follow the same rules. Headless rules version is `v5-abilitiesv2`; browser worker, offline play and online rooms share the scorer.
+
+Adoption evidence: 500 fresh Normal Deck search games per mode,16 samples/action, matching prior starting deals. Cross-faction wins+half draws excluding mirrors: Draft C/R/D **46.4/50.9/52.3%**, Discard **48.2/57.8/43.6%**; draws6.0/5.4%. The playable defaults replay all1,000 saved games and4 sampled search roots exactly. These are conditional estimates, not proof of equal faction strength.
+
+### Preserved experiment — Robot Reconfigure (superseded)
+
+The implementation remains behind `FLEXIBLE_RULES.robotPipReconfigure`, disabled in the playable rules. Configure `abilitiesv2-robot-pips` in a separate study process before constructing hands to reproduce the previous pip/Ultimate optimizer and shields2/1/0. `scripts/robot-pip-trial-tests.mjs` retains its eligibility, main-faction restrictions and exhaustive optimizer checks. Restoring this experiment requires disabling Perfect Balance as well; it is not combined with the adopted Robot ability.
+
+## Historical Abilities v2 — Flexible Robots
+
+**Current clarified rules (2026-10-21):** Dragon6 extra stat remains; Robot Reconfigure now exchanges individual stat/attack units and requires Robot as the resulting chosen main faction. The clarified rule is published in7aa1956 after creator acceptance; the prior base-card-only rule is historical. Robot reference-card artwork stays unchanged; the Dragon card keeps its large cutoff and now shows the v1 extra-stat card.
 
 Earlier Dragon-only experiments are historical: `V2_DRAGON_STAT_RESULTS.md` compares +4 with the extra-stat effect at7. The later extra-stat-at6 study, still using the old one-pip Robot convention, gave C/R/D52.3/44.8/52.0%Draft and51.3/44.8/54.1%Discard. Evidence `.ai-runs/v2-dragon-stat6-2026-10-21/`. Their frozen variants remain available for replay; they are not the current Robot rule.
 
@@ -50,7 +66,15 @@ Score = power after abilities − shields, then the Critter tiebreak. Reconfigur
 
 **Historical base-card optimizer follow-up audit:** checked all4,000 saved final hands from the prior Dragon6 experiment and adopted run: the earlier base-card conversion never reduces unshielded power compared with leaving those same cards unchanged. Both Any of Each (C+R+D) and One of Each (C×R×D) recompute from converted stats. This revision also removed the historical ability to convert a pip on double/mixed stat cards; unlimited exchanges alone are not the whole comparison. On the prior2,000 final hands,18 improve,176 lose power versus that historical ability,1,806 tie. Example: two double Robot stat cards plus an ordinary Robot attack scored6 under the former pip conversion and now score4 because neither double stat is eligible. Diagnostic: `.ai-runs/v2-adopted-2026-10-21/inspect-robots.mjs`. Conditional faction scores also change when search picks different hands/main factions.
 
-Clarified-rule test:1,000 fresh search games on the same Normal deals (500 per mode,16 samples), all replayed and4 search roots recomputed. C/R/D Draft53.4/45.9/50.8%, Discard45.0/51.4/53.6%; draws5.0/6.6%. Published baseline48.7/43.5/55.8%,54.0/44.7/50.7%; draws7.4/5.8%. Mean absolute distance from50% improves3.93→3.05pp and worst6.45→5.00pp. Modest overall improvement, Discard Critters now45%; differences uncertain. Adopted locally, not published. Raw `.ai-runs/v2-robot-pips-2026-10-21/`, variant `abilitiesv2-robot-pips`; this combines unit eligibility and Robot-main restriction, not an isolated restriction-only test.
+Clarified-rule test:1,000 fresh search games on the same Normal deals (500 per mode,16 samples), all replayed and4 search roots recomputed. C/R/D Draft53.4/45.9/50.8%, Discard45.0/51.4/53.6%; draws5.0/6.6%. Published baseline48.7/43.5/55.8%,54.0/44.7/50.7%; draws7.4/5.8%. Mean absolute distance from50% improves3.93→3.05pp and worst6.45→5.00pp. Modest overall improvement, Discard Critters now45%; differences uncertain. Adopted and published in7aa1956. Raw `.ai-runs/v2-robot-pips-2026-10-21/`, variant `abilitiesv2-robot-pips`; this combines unit eligibility and Robot-main restriction, not an isolated restriction-only test.
+
+### Shield experiments (not adopted)
+
+Robot immunity's lower self-play percentage is not a fixed-hand nerf. Holding baseline hands and committed types fixed, Robot cross-scores increase45.9→46.7%Draft and51.4→53.2%Discard; every Robot score stays equal or improves. Fresh search changes hand/faction selection. See study `immune-fixed-hands.json`.
+
+**Completed shield experiments (2026-10-21; test only):** 2,000 new Normal search games, 500 per variant/mode at16 samples, matched to the published1,000-game baseline. Published: Draft 53.4/45.9/50.8%, Discard 45.0/51.4/53.6%; draws5.0/6.6%; Robot immunity: Draft 53.3/43.4/53.8%, Discard 50.2/45.4/55.9%; draws4.4/7.4%; Robot immunity plus Dragon7 flat4/shield1: Draft 52.2/46.4/51.6%, Discard 51.6/51.5/45.7%; draws5.8/7.6%. All2,000 replayed,8 search roots exact; baseline1,000/4 also reproduced. Reconfigure stays Robot-main pip/Ultimate. Variant2 uses Dragon contribution minus the actual chosen-main shield penalty for7+ eligibility, then adds4; no extra stat. Each variant uses its own rules in search; shield/stat assertions verified every saved final hand. Default/live7aa1956 unchanged; no adoption or publishing requested. Evidence `.ai-runs/v2-shields-2026-10-21/summary.json`.
+
+Exact test conventions: variant1 changes only Robot shield cost1→0. Variant2 keeps Robot0, sets Dragon1, replaces Dragon6+ extra stat with contribution7+ → flat4. Shields reduce whole-hand power once; the same actual main-faction penalty is subtracted from Dragon contribution before eligibility. Thus Dragon-main8 vs1 shield is7+4=11, while7 vs1 shield is6 with no bonus. Robot-main remains immune, including mixed Dragon engines; Critter-main retains2 per shield. Ordinary/ultimate attack and stat-pip eligibility and all deck contents remain as published. Main choice remains before reveal. These compare the specified combined variants, not isolated causal effects.
 
 ## Decks and preparation
 
@@ -71,3 +95,9 @@ Balance studies use **Normal Deck only**, per creator correction 2026-10-21. Wil
 Useful development preview: `/?scenario=reconfigure&rules=abilitiesv2&at=result`. Helpers also accept `crdDev.result('reconfigure', { rules: 'abilitiesv2' })`. All fixtures are development-only. `npm run tabletop:test` covers all three modes, thresholds, shields, mixed-card conversion, ultimate exclusions, ties, deck exclusions, browser session flow and hidden-deck-independent search.
 
 Balance remains experimental. Digital Battle is a reference, not an exact parity target. The objective is distinct faction strategies, worthwhile Dragon engines, useful fallback Critters and fewer draws. Conditional faction win rates alone cannot establish equal strength or fun. Previous 2/4-damage studies and older tier charts are historical and do not evaluate these rules.
+
+
+**Perfect Balance experiment (2026-10-21; test only):** replaced Reconfigure entirely with v1 Robot-main Perfect Balance (+3 after shields for equal positive Robot stats and Robot attack units; Ultimate counts2, product hybrid1, sum hybrid0). Retained published v2 Critter tiebreak, Dragon6+ extra stat and shields C2/R1/D0; did not combine with the shield trials. 1,000 fresh Normal search games, 500 per mode,16 samples/action, matched baseline deals. C/R/D Draft published53.4/45.9/50.8% versus Perfect Balance46.0/49.3/53.9%; Discard45.0/51.4/53.6% versus46.6/55.8/47.1%. Draws5.0/6.6% versus5.8/6.2%. Cross-faction wins+half draws, mirrors excluded; conditional sample estimates. Perfect Balance earned177/281 Robot-main hands in Draft,210/381 in Discard. All1,000 games replayed (10,142 roots/1,518,416 completions),4 search roots recomputed exactly; baseline1,000/4 reproduced. Every final hand checked for correct bonus, no conversions, shield costs and Dragon extra stat.35 targeted tests,lint/build pass. Variant `abilitiesv2-perfect-balance`; evidence `.ai-runs/v2-perfect-balance-2026-10-21/summary.json`. Published/default7aa1956 unchanged; no adoption or publishing requested.
+
+
+**Perfect Balance shield follow-up (2026-10-21; test only):** 2,000 fresh Normal search games,500 per variant/mode,16 samples/action, same starting deals as Perfect Balance baseline. All variants replace Reconfigure with v1 Robot-main Perfect Balance +3 after shields; C wins ties, D contribution6+ adds one D stat before shields. C/R/D shield costs2/1/0 baseline: Draft46.0/49.3/53.9%, Discard46.6/55.8/47.1%; costs2/2/0: Draft47.7/47.7/53.8%, Discard44.0/61.6/43.6%; costs2/2/1: Draft46.4/50.9/52.3%, Discard48.2/57.8/43.6%. Draws baseline5.8/6.2%,220=5.8/6.2%,221=6.0/5.4%. Cross-faction wins+half draws, mirrors excluded.221 is closest to50% in Draft among these samples; Discard remains Robot-led. Higher conditional Robot score with a larger shield penalty reflects changed search-built hands/matchups and sample uncertainty; holding a baseline Robot hand fixed never increases its score. All2,000 games replayed,20,234 roots/3,027,760 completions verified,8 exact root audits; previous Perfect Balance1,000 games/4 roots also reproduced. All final hands checked for exact shield costs, unchanged printed Robot/Critter stats, no conversion, correct +3 and pre-shield Dragon6 extra stat.16 targeted tests and lint pass. Evidence `.ai-runs/v2-perfect-shields-2026-10-21/summary.json`; variants `abilitiesv2-perfect-balance-shields220` and `abilitiesv2-perfect-balance-shields221`. Defaults/live7aa1956 unchanged; no adoption or publishing requested.

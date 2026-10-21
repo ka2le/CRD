@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto'
 import assert from 'node:assert/strict'
 import { createHeadlessGame, stepHeadlessGame, getLegalActions } from '../src/game/headlessGame.js'
 import { searchDecision, searchPreparationDecision, SEARCH_AI_VERSION } from '../src/game/searchAi.js'
-import { TABLETOP_THRESHOLDS, ABILITY_RULES, FLEXIBLE_RULES } from '../src/game/tabletop.js'
+import { TABLETOP_THRESHOLDS, ABILITY_RULES, FLEXIBLE_RULES, TABLETOP_V2_SHIELD_COST as TABLETOP_SHIELD_COST } from '../src/game/tabletop.js'
 import { getCoreCards, getExpandedCoreDeck } from '../src/game/cards.js'
 import { simulateBattle } from '../src/game/engine.js'
 import { configureBalanceVariant, battleAnalysisProfile } from './balance-variants.mjs'
@@ -34,7 +34,7 @@ const poolCounts = Object.fromEntries(getCoreCards({ tabletop: rules }).map((c) 
 assert.ok(getCoreCards({ tabletop: rules }).every((c) => poolCounts[c.id] === c.copies))
 const manifest = { variant: variantName, title: variant.title, rules, mode, games, samples, seed, deck, label, searchVersion: SEARCH_AI_VERSION, sourceHash, sourceHashes,
   poolSize: pool.length, poolCounts,
-  thresholds: TABLETOP_THRESHOLDS, abilities: ABILITY_RULES, flexible: FLEXIBLE_RULES,
+  thresholds: TABLETOP_THRESHOLDS, abilities: ABILITY_RULES, flexible: FLEXIBLE_RULES, shieldCosts: TABLETOP_SHIELD_COST,
   policy: 'both seats: browser search, prep-lookahead, fixed samples; baseline tie preference',
   startedAt: new Date().toISOString() }
 fs.writeFileSync(path.join(dir, 'manifest.json'), JSON.stringify(manifest, null, 2))

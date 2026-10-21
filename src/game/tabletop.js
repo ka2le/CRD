@@ -2,6 +2,7 @@ import { getHandStats } from './engine.js'
 
 export const TABLETOP_CLASSES = ['critter', 'robot', 'dragon']
 export const TABLETOP_SHIELD_COST = { critter: 2, robot: 1, dragon: 0 }
+export const TABLETOP_V2_SHIELD_COST = { critter: 2, robot: 2, dragon: 1 }
 const ULTIMATES = new Set(['murder_rabbit', 'robot_ulti', 'dragon_ulti', 'devour'])
 
 // Three tabletop rule sets share the single power calculation and shield penalty:
@@ -37,7 +38,7 @@ export function toTabletopCard(card, rules = 'threshold') {
 
 // ---------- abilities ----------
 export const ABILITY_RULES = { balanceBonus: 3, overwhelmingAt: 7 }
-export const FLEXIBLE_RULES = { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: true }
+export const FLEXIBLE_RULES = { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true }
 
 // Adapt: one stat card with a Critter stat turns its Critter stat(s) into an ordinary Critter attack
 // (1 power per Critter stat). Any other faction stats on that card stay (Joker keeps Robot + Dragon).
@@ -205,6 +206,13 @@ function getRobotPipProfile(hand) {
 }
 
 function getFlexibleProfile(hand) {
+  // Adopted v2: Perfect Balance replaces Reconfigure. No Adapt or conversion.
+  // The conversion branches below remain available to isolated study variants.
+  if (FLEXIBLE_RULES.perfectBalance) {
+    const profile = getFlexiblePlanProfile({ cards: hand, reconfigured: null })
+    const robotAttacks = countRobotAttacks(hand)
+    return { ...profile, robotAttacks, balanced: profile.stats.robot > 0 && profile.stats.robot === robotAttacks }
+  }
   if (FLEXIBLE_RULES.robotPipReconfigure) return getRobotPipProfile(hand)
   const plans = FLEXIBLE_RULES.unlimitedBaseReconfigure ? getBaseFlexiblePlans(hand) : getLegacyFlexiblePlans(hand)
   const profiles = plans.map(getFlexiblePlanProfile)
@@ -268,12 +276,21 @@ export function scoreTabletopHand(hand, enemyShields = 0, damageType = null) {
   if (damageType && !profile.types.includes(damageType)) throw new Error('Invalid tabletop damage type')
   const type = damageType ?? profile.types[0] ?? null
   if (profile.typeProfiles) profile = profile.typeProfiles[type]
-  const shieldPenalty = enemyShields * (TABLETOP_SHIELD_COST[type] ?? 0)
+  const shieldCosts = profile.rules === 'abilitiesv2' ? TABLETOP_V2_SHIELD_COST : TABLETOP_SHIELD_COST
+  const shieldPenalty = enemyShields * (shieldCosts[type] ?? 0)
   const blocked = Math.min(profile.base, shieldPenalty)
   const power = profile.base - blocked
   if (profile.rules === 'abilitiesv2') {
-    const bonus = profile.overwhelming && !FLEXIBLE_RULES.overwhelmingExtraStat ? FLEXIBLE_RULES.overwhelmingBonus : 0
-    return { ...profile, damageType: type, enemyShields, shieldPenalty, blocked, power,
+    // Study-only flat-bonus variant: subtract this hand's actual main-faction
+    // shield penalty from Dragon contribution before testing the cutoff.
+    const dragonThresholdPower = Math.max(0, profile.dragonBase - shieldPenalty)
+    const overwhelming = FLEXIBLE_RULES.overwhelmingAfterShields
+      ? dragonThresholdPower >= FLEXIBLE_RULES.overwhelmingAt : profile.overwhelming
+    const dragonBonus = overwhelming && !FLEXIBLE_RULES.overwhelmingExtraStat ? FLEXIBLE_RULES.overwhelmingBonus : 0
+    const balanceBonus = FLEXIBLE_RULES.perfectBalance && profile.balanced && type === 'robot' ? ABILITY_RULES.balanceBonus : 0
+    const bonus = dragonBonus + balanceBonus
+    return { ...profile, overwhelming, ...(FLEXIBLE_RULES.overwhelmingAfterShields ? { dragonThresholdPower } : {}),
+      damageType: type, enemyShields, shieldPenalty, blocked, power,
       naturalBonus: bonus, baseBonus: bonus, bonus, score: power + bonus,
       winsTies: type === 'critter' }
   }
@@ -294,9 +311,10 @@ export function scoreTabletopHand(hand, enemyShields = 0, damageType = null) {
 // AI commits from its own hand, before reveal, without consulting enemy shields.
 export function chooseTabletopType(hand) {
   const { types } = getTabletopProfile(hand)
+  const shieldCosts = getHandTabletopRules(hand) === 'abilitiesv2' ? TABLETOP_V2_SHIELD_COST : TABLETOP_SHIELD_COST
   return [...types].sort((a, b) => scoreTabletopHand(hand, 0, b).score - scoreTabletopHand(hand, 0, a).score
     || (getHandTabletopRules(hand) === 'abilitiesv2' ? Number(b === 'critter') - Number(a === 'critter') : 0)
-    || TABLETOP_SHIELD_COST[a] - TABLETOP_SHIELD_COST[b])[0] ?? null
+    || shieldCosts[a] - shieldCosts[b])[0] ?? null
 }
 
 export function resolveTabletopBattle(playerHand, opponentHand, options = {}) {

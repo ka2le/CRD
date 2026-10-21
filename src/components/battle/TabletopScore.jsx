@@ -6,8 +6,7 @@ export function TabletopFormula({ score, label }) {
   const hasCalculation = score.blocked > 0 || score.bonus > 0
   const abilities = score.rules === 'abilities'
   const flexible = score.rules === 'abilitiesv2'
-  const bonusTitle = flexible ? 'Overwhelming'
-    : abilities
+  const bonusTitle = abilities || (flexible && FLEXIBLE_RULES.perfectBalance)
     ? `Perfect Balance: +${score.bonus} after shields`
     : `${score.baseBonus} faction bonus${score.shortcuts > 0 ? ` (Shortcut: ${score.naturalBonus} → ${score.baseBonus})` : ''}${score.bonusMultiplier > 1 ? ` * ${score.bonusMultiplier}` : ''} after shields`
   const description = `${label}: ${score.base} base${score.blocked > 0 ? ` minus ${score.blocked} shields` : ''}${score.bonus > 0 ? ` plus ${score.bonus} bonus` : ''} equals ${score.score} damage`

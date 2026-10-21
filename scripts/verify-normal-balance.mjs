@@ -3,12 +3,13 @@ import path from 'node:path'
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
-import { configureBalanceVariant, battleAnalysisProfile } from './balance-variants.mjs'
+import { configureBalanceVariant, battleAnalysisProfile, BALANCE_VARIANTS } from './balance-variants.mjs'
 import { createHeadlessGame, stepHeadlessGame } from '../src/game/headlessGame.js'
 import { getCoreCards } from '../src/game/cards.js'
 import { searchDecision, searchPreparationDecision } from '../src/game/searchAi.js'
+import { TABLETOP_V2_SHIELD_COST as TABLETOP_SHIELD_COST, FLEXIBLE_RULES } from '../src/game/tabletop.js'
 
-const [root = '.ai-runs/normal-balance-2026-10-21', arm] = process.argv.slice(2)
+const [root = '.ai-runs/normal-balance-2026-10-21', arm, useDefaults] = process.argv.slice(2)
 const read = (p) => JSON.parse(fs.readFileSync(p, 'utf8'))
 const lines = (p) => fs.readFileSync(p, 'utf8').trim().split(/\r?\n/).map(JSON.parse)
 const compact = (cards) => cards.map(({ id, uid }) => ({ id, uid }))
@@ -31,8 +32,10 @@ if (!arm) {
   const dir = path.join(root, arm), manifest = read(path.join(dir, 'complete.json'))
   assert.equal(manifest.deck, 'normal')
   assert.equal(manifest.samples, 16)
-  const variant = configureBalanceVariant(manifest.variant)
+  const variant = useDefaults === 'playable-defaults' ? BALANCE_VARIANTS[manifest.variant] : configureBalanceVariant(manifest.variant)
+  if (useDefaults === 'playable-defaults') assert.deepEqual(variant.flexible, FLEXIBLE_RULES)
   assert.equal(variant.rules, manifest.rules)
+  if (manifest.shieldCosts) assert.deepEqual(manifest.shieldCosts, TABLETOP_SHIELD_COST)
   for (const card of getCoreCards({ tabletop: variant.rules })) assert.equal(manifest.poolCounts[card.id], card.copies)
   for (const [file, expected] of Object.entries(manifest.sourceHashes)) {
     assert.equal(createHash('sha256').update(fs.readFileSync(path.join(root, 'source', file))).digest('hex'), expected)

@@ -1,6 +1,6 @@
 import './AbilityCards.css'
 import { GameIcon } from '../ui/GameIcon'
-import { ABILITY_RULES, FLEXIBLE_RULES } from '../../game/tabletop'
+import { ABILITY_RULES, FLEXIBLE_RULES, TABLETOP_V2_SHIELD_COST } from '../../game/tabletop'
 
 // Prototype reference cards for the alternative "class abilities" tabletop rule.
 // View only: nothing here affects digital combat.
@@ -141,9 +141,9 @@ export function AbilityBandsCard() {
   )
 }
 
-// ---------- Abilities v2 (Flexible Robots) ----------
+// ---------- Abilities v2 ----------
 //   Critters – Win Ties: a Critter main faction wins equal scores against Robots or Dragons.
-//   Robots – Reconfigure: freely exchange base single-stat / ordinary attack cards.
+//   Robots – Perfect Balance: v1's matching Robot stats / attack units, +3 after shields.
 //   Dragons – Overwhelming: 6+ Dragon power → +1 Dragon stat.
 
 // Crown for the Critter tie win (drawn after the crown_b board-game icon).
@@ -161,18 +161,6 @@ function Crown({ className = '' }) {
       <circle cx="3" cy="5.6" r="1.9" fill="currentColor" />
       <circle cx="12" cy="2.6" r="2.1" fill="currentColor" />
       <circle cx="21" cy="5.6" r="1.9" fill="currentColor" />
-    </svg>
-  )
-}
-
-// Two opposed arrows: one stat ⇄ one attack.
-function SwapArrows() {
-  return (
-    <svg className="ab-swap" viewBox="0 0 28 24" aria-hidden="true">
-      <g fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 8h18M17 3.5 22 8l-5 4.5" />
-        <path d="M24 16H6M11 11.5 6 16l5 4.5" />
-      </g>
     </svg>
   )
 }
@@ -201,15 +189,8 @@ const FLEXIBLE = [
   },
   {
     cls: 'robot',
-    name: 'Reconfigure',
-    shield: '−1',
-    rule: (
-      <div className="ab-rule">
-        <StatCard cls="robot" />
-        <SwapArrows />
-        <AttackCard cls="robot" />
-      </div>
-    ),
+    name: ABILITIES[1].name,
+    rule: <Rule {...ABILITIES[1]} />,
   },
   {
     cls: 'dragon',
@@ -230,11 +211,11 @@ const FLEXIBLE = [
 export function FlexibleLedgerCard() {
   return (
     <div className="sc-card ab-ledger ab-flex" aria-label="Abilities v2: ledger">
-      {FLEXIBLE.map(({ cls, name, shield, rule }) => (
+      {FLEXIBLE.map(({ cls, name, rule }) => (
         <div key={cls} className="ab-ledger__row">
           <div className="ab-name"><GameIcon name={cls} className={`sc-${cls}`} />{name}</div>
           {rule}
-          <ShieldTab value={shield} />
+          <ShieldTab value={TABLETOP_V2_SHIELD_COST[cls] ? `−${TABLETOP_V2_SHIELD_COST[cls]}` : '0'} />
         </div>
       ))}
     </div>
@@ -244,7 +225,7 @@ export function FlexibleLedgerCard() {
 export function FlexibleBandsCard() {
   return (
     <div className="sc-card ab-bands ab-flex" aria-label="Abilities v2: bands">
-      {FLEXIBLE.map(({ cls, name, shield, rule }) => (
+      {FLEXIBLE.map(({ cls, name, rule }) => (
         <div key={cls} className={`ab-band ab-band--${CLASS_CLASS[cls]}`}>
           <GameIcon name={cls} className="ab-band__mark" />
           <div className="ab-band__top">
@@ -252,7 +233,7 @@ export function FlexibleBandsCard() {
             <span className="ab-band__name">{name}</span>
           </div>
           {rule}
-          <ShieldTab value={shield} />
+          <ShieldTab value={TABLETOP_V2_SHIELD_COST[cls] ? `−${TABLETOP_V2_SHIELD_COST[cls]}` : '0'} />
         </div>
       ))}
     </div>
