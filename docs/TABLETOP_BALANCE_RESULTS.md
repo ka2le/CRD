@@ -1,8 +1,12 @@
 # Tabletop balance study — 2026-10-21
 
+> ARCHIVAL WILD-DECK STUDY. The creator clarified that Wild is intentionally unbalanced and must not be used as the balance baseline. The Normal Deck comparison supersedes this study for tuning decisions.
+
 Search self-play using the actual browser search and mode-specific decks. This is an initial observational balance study, not proof of optimal play or a measurement of fun.
 
 Confirmed rules: ordinary attacks 1/stat; ultimates 2/stat; Bite 1. Threshold: 1/4/7 power → +1/+2/+4 after shields. Abilities: Adapt, Robot-main Perfect Balance +3, Dragon power 7+ → +1 stat. Abilities v2: Critter-main wins ties, Robot Reconfigure, Dragon power 7+ → +4. Shield costs remain 2/1/0; unit-valued hybrid/shield attacks retain their whole-number formulas.
+
+Card-level follow-up: [faction wins, card presence and preparation analysis](TABLETOP_CARD_ANALYSIS.md).
 
 ## Main findings
 

@@ -76,20 +76,20 @@ test('power, neutral specials, shields, zero scores and choice validation', () =
 })
 
 test('threshold boundaries, post-shield checks, Shortcut and multiplier stacking', () => {
-  for (const [type, at, bonus] of [['critter', 1, 1], ['robot', 4, 2], ['dragon', 7, 4]]) {
+  for (const [type, at, bonus] of [['critter', 1, 2], ['robot', 4, 3], ['dragon', 8, 4]]) {
     assert.equal(getTabletopBonus(type, 0), 0)
     assert.equal(getTabletopBonus(type, at - 1), 0)
     assert.equal(getTabletopBonus(type, at), bonus)
   }
   const robots = hand('robot2', 'robot_attack', 'robot_attack')
-  assert.equal(scoreTabletopHand(robots).score, 6)
+  assert.equal(scoreTabletopHand(robots).score, 7)
   assert.equal(scoreTabletopHand(robots, 1).score, 3)
-  assert.equal(scoreTabletopHand([...robots, ...hand('double_dmg', 'double_dmg')]).score, 12)
-  assert.equal(scoreTabletopHand(hand('robot1', 'robot_attack', 'shortcut', 'double_dmg')).score, 5)
+  assert.equal(scoreTabletopHand([...robots, ...hand('double_dmg', 'double_dmg')]).score, 16)
+  assert.equal(scoreTabletopHand(hand('robot1', 'robot_attack', 'shortcut', 'double_dmg')).score, 7)
   assert.equal(scoreTabletopHand(hand('robot1', 'robot_attack', 'shortcut'), 1).score, 0)
   assert.equal(scoreTabletopHand(hand('shortcut', 'double_dmg')).score, 0)
   const chameleon = hand('rabbit2', 'swarm', 'shortcut', 'chameleon')
-  assert.deepEqual(['critter', 'robot', 'dragon'].map((type) => scoreTabletopHand(chameleon, 1, type).score), [0, 3, 6])
+  assert.deepEqual(['critter', 'robot', 'dragon'].map((type) => scoreTabletopHand(chameleon, 1, type).score), [0, 4, 6])
   assert.equal(chooseTabletopType(chameleon), 'dragon')
   const devour = hand('rabbit2', 'swarm', 'dragon1', 'devour')
   assert.deepEqual(getTabletopProfile(devour).types, ['critter', 'dragon'])

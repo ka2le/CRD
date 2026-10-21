@@ -5,7 +5,7 @@ import { TABLETOP_THRESHOLDS, TABLETOP_SHIELD_COST } from '../../game/tabletop'
 
 // Threshold score cards for the tabletop battle mode (view only).
 // One threshold per class, read as two columns: power requirement | bonus.
-//   Critters 1+ → +1, Robots 4+ → +2, Dragons 7+ → +4. Shield penalty per enemy shield: −2 / −1 / 0.
+// Values come from the shared scorer. Shield penalty per enemy shield: −2 / −1 / 0.
 const THRESHOLDS = Object.entries(TABLETOP_THRESHOLDS).map(([cls, { at, bonus }]) => ({
   cls, short: cls[0], at: `${at}+`, bonus,
   shield: TABLETOP_SHIELD_COST[cls] ? `−${TABLETOP_SHIELD_COST[cls]}` : '0',

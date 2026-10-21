@@ -96,8 +96,10 @@ for (const name of fs.readdirSync(root).sort()) {
 }
 fs.writeFileSync(path.join(root, 'summary.json'), JSON.stringify(reports, null, 2))
 const lines = ['# Tabletop balance study — 2026-10-21', '',
+  '> ARCHIVAL WILD-DECK STUDY. The creator clarified that Wild is intentionally unbalanced and must not be used as the balance baseline. The Normal Deck comparison supersedes this study for tuning decisions.', '',
   'Search self-play using the actual browser search and mode-specific decks. This is an initial observational balance study, not proof of optimal play or a measurement of fun.', '',
   'Confirmed rules: ordinary attacks 1/stat; ultimates 2/stat; Bite 1. Threshold: 1/4/7 power → +1/+2/+4 after shields. Abilities: Adapt, Robot-main Perfect Balance +3, Dragon power 7+ → +1 stat. Abilities v2: Critter-main wins ties, Robot Reconfigure, Dragon power 7+ → +4. Shield costs remain 2/1/0; unit-valued hybrid/shield attacks retain their whole-number formulas.', '',
+  'Card-level follow-up: [faction wins, card presence and preparation analysis](TABLETOP_CARD_ANALYSIS.md).', '',
   '## Method', '',
   '- Both seats use browser search, including preparation, with fixed samples per candidate and prep-lookahead completions. No neural training. Actual decks include Chameleon; only Threshold includes Shortcut and 2×.',
   '- Distinct deal seeds per game; Draft first picker alternates. The same seed ranges are reused across rules, but different decks can produce different deals. Discard follows the existing sequential browser AI flow with hidden rival hands, not the simultaneous online submission flow.',

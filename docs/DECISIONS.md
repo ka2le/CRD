@@ -105,3 +105,7 @@ Creator replaced the Robot-attack doubling/+1-per-other-attack conversion with d
 Creator requested immediate AI startup plus one-click room creation/link joining, open admission by default, private approval as an option, kicking and approved viewers. Names are generated and remembered per device, editable beside the hand; room wins persist across matches and results name the winner. Offline player two may be replaced using the invite, keeping the existing hand/state and revoking the prior token; host cross-device takeover remains outside scope. Two connected players automatically start a match; no separate start or name form.
 
 2026-10-20 correction: online Discard is simultaneous selection/commit, with both refills deferred until both players submit each pass. No inter-player discard turns. Room icon is a globe connection symbol and the share button reads Invite.
+
+## Threshold values settled for now — 2026-10-21
+
+Creator selected Critter +2 at1, Robot +3 at4, Dragon +4 at8 after the Normal Deck comparison. Check total power after shields; Dragons still lose zero to shields. Keep distinct rewards, no Critter upper bound, and leave Abilities v2 unchanged. End this tuning pass; no further simulations requested. Shared scorer drives browser combat, search, help and reference cards. Headless Threshold rules version advances to v3.

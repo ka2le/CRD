@@ -218,3 +218,30 @@
 .ab-band .ab-tab { right: 14px; background: rgba(10, 18, 34, 0.8); border-color: rgba(214, 190, 140, 0.25); }
 .ab-band .ab-rule { gap: 7px; }
 .ab-band .ab-pc { font-size: 19px; box-shadow: 0 0 0 1px rgba(214, 190, 140, 0.33), 0 0.1em 0.3em rgba(0, 0, 0, 0.8); }
+
+/* ---------- Abilities v2 (Flexible Robots) ---------- */
+.ab-swap { flex: none; width: 26px; height: 22px; color: var(--brass); }
+
+.ab-flex .ab-vs { gap: 8px; }
+.ab-flex .ab-vs .ab-op { font-size: 22px; }
+.ab-vs .ab-vs__c { font-size: 30px; }
+.ab-vs__others { display: inline-flex; align-items: center; gap: 2px; font-size: 24px; opacity: 0.8; }
+.ab-vs__bar { width: 2px; height: 20px; margin: 0 3px; border-radius: 1px; background: var(--brass); opacity: 0.8; }
+.ab-crowned { display: inline-flex; flex-direction: column; align-items: center; line-height: 0; }
+.ab-crowned__crown { width: 24px; height: 20px; margin-bottom: -2px; color: #e8c766; filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.6)); }
+.ab-crowned .ab-crowned__who { font-size: 36px; }
+
+/* classic: class colours */
+.ab-ledger .ab-vs__c, .ab-ledger .ab-crowned__who { color: var(--critter); }
+.ab-ledger .ab-vs__r { color: var(--robot); }
+.ab-ledger .ab-vs__d { color: var(--dragon); }
+/* bands: bone on the coloured band */
+.ab-bands .ab-vs .g-icon:not(.ab-arrow) { color: #f2e8d2; }
+
+/* Overwhelming in the threshold-card columns: 7+ | + 2×2 hearts */
+.ab-cols { position: relative; display: grid; grid-template-columns: 78px 1fr; align-items: center; margin-top: 12px; }
+.ab-cols__req { font-family: var(--display); font-size: 30px; font-weight: 700; line-height: 1; color: var(--brass-hi); }
+.ab-cols__res { display: flex; align-items: center; gap: 6px; }
+.ab-cols__plus { font-family: var(--display); font-size: 24px; font-weight: 700; line-height: 1; color: var(--brass); }
+.ab-hearts { display: inline-grid; grid-template-columns: repeat(2, 1em); gap: 0.18em; font-size: 22px; color: #e0656c; filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.5)); }
+.ab-ledger.ab-flex .ab-name { margin-bottom: 8px; }

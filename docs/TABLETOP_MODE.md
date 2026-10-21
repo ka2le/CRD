@@ -12,15 +12,17 @@ Each opposing shield removes Critter **2**, Robot **1**, Dragon **0** power from
 
 ## Threshold
 
+Latest tuning is reported in `THRESHOLD_DISTINCT_RESULTS.md`: +2/+3/+4 with Dragon cutoff8 or9 and Robot cutoff4 or5. The creator adopted **+2/+3/+4 at1/4/8** for now and closed this tuning pass; this is a design choice, not a claim of proven balance. Equal Critter/Robot bonuses were rejected because they flatten faction identity. The playable rules below reflect that adoption. Shields apply before eligibility; Dragons have zero shield reduction.
+
 After shields, the main faction earns one bonus:
 
 | Main faction | Required power | Bonus |
 | --- | ---: | ---: |
-| Critter | 1 | +1 |
-| Robot | 4 | +2 |
-| Dragon | 7 | +4 |
+| Critter | 1 | +2 |
+| Robot | 4 | +3 |
+| Dragon | 8 | +4 |
 
-The creator explicitly selected +1/+2/+4 after confirming that the damage reduction also rescales the thresholds. Shortcut grants the faction's bonus below its cutoff, but only with positive remaining power. There is one tier per faction; additional Shortcuts do not increase it. Each 2× card doubles the earned bonus; copies stack. Score = remaining power + bonus. Equal scores draw.
+The creator selected +2/+3/+4 at1/4/8 after the Normal Deck comparison, retaining distinct faction rewards. Shortcut grants the faction's bonus below its cutoff, but only with positive remaining power. There is one tier per faction; additional Shortcuts do not increase it. Each 2× card doubles the earned bonus; copies stack. Score = remaining power + bonus. Equal scores draw.
 
 ## Abilities (v1)
 
@@ -49,6 +51,8 @@ Digital: 70 Normal / 102 Wild, 27 definitions. Threshold: 72 / 108, 29 definitio
 Preparation remains optional and private. Existing draw/redraw/copy/recycle decisions are shared by browser and search. Human main-type ties require an explicit choice before Battle. A changed hand invalidates the choice. Abilities use the existing automatic-before-reveal scoring convention.
 
 ## Implementation and verification
+
+Balance studies use **Normal Deck only**, per creator correction 2026-10-21. Wild is deliberately an unbalanced fun variant. Earlier Wild results are archival, not normal-game balance evidence. Current study compares Battle, Threshold, Threshold trial (same cutoffs, +2/+3/+4), v2, and v2 trial (Dragon8+ → +3), in both hand-building modes. V1 is not part of this iteration. Study-only process configuration leaves the playable defaults above unchanged until a variant is adopted. Reports should include faction bars, draw rates and card presence, with explicit sample sizes/metric definitions.
 
 - `src/game/tabletop.js`: mode normalization, derived cards, immutable scoring profiles, automatic conversion plans, scoring and symmetric tiebreak.
 - `src/game/tabletopAi.js`: heuristic completion policy. `src/game/searchAi.js`: the in-game sampled-world search, now also reporting candidate W/D/L counts and paired baseline Monte Carlo uncertainty.

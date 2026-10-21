@@ -141,17 +141,119 @@ export function AbilityBandsCard() {
   )
 }
 
-export function FlexibleRobotsCard() {
+// ---------- Abilities v2 (Flexible Robots) ----------
+//   Critters – Win Ties: a Critter main faction wins equal scores against Robots or Dragons.
+//   Robots – Reconfigure: swap 1 Robot stat ⇄ 1 ordinary Robot attack.
+//   Dragons – Overwhelming: 7+ Dragon power → +4.
+
+// Crown for the Critter tie win (drawn after the crown_b board-game icon).
+function Crown({ className = '' }) {
   return (
-    <div className="sc-card ab-ledger" aria-label="Abilities v2: Flexible Robots">
-      {[
-        { cls: 'critter', name: 'Win ties', text: 'Equal score → Critters win', shield: '−2' },
-        { cls: 'robot', name: 'Reconfigure', text: '1 stat ⇄ 1 ordinary attack', shield: '−1' },
-        { cls: 'dragon', name: 'Overwhelming', text: `${FLEXIBLE_RULES.overwhelmingAt}+ Dragon power → +${FLEXIBLE_RULES.overwhelmingBonus}`, shield: '0' },
-      ].map(({ cls, name, text, shield }) => (
+    <svg className={className} viewBox="0 0 24 20" aria-hidden="true">
+      <path
+        fill="currentColor"
+        fillRule="evenodd"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+        d="M3.2 7.4 7.6 11.2 12 4.6l4.4 6.6 4.4-3.8-1.6 10H4.8zM12 10.8l-2 2.2 2 2.2 2-2.2z"
+      />
+      <circle cx="3" cy="5.6" r="1.9" fill="currentColor" />
+      <circle cx="12" cy="2.6" r="2.1" fill="currentColor" />
+      <circle cx="21" cy="5.6" r="1.9" fill="currentColor" />
+    </svg>
+  )
+}
+
+// Two opposed arrows: one stat ⇄ one attack.
+function SwapArrows() {
+  return (
+    <svg className="ab-swap" viewBox="0 0 28 24" aria-hidden="true">
+      <g fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 8h18M17 3.5 22 8l-5 4.5" />
+        <path d="M24 16H6M11 11.5 6 16l5 4.5" />
+      </g>
+    </svg>
+  )
+}
+
+const FLEXIBLE = [
+  {
+    cls: 'critter',
+    name: 'Win Ties',
+    shield: '−2',
+    rule: (
+      <div className="ab-rule ab-vs">
+        <GameIcon name="critter" className="ab-vs__c" />
+        <span className="ab-op">=</span>
+        <span className="ab-vs__others">
+          <GameIcon name="robot" className="ab-vs__r" />
+          <span className="ab-vs__bar" />
+          <GameIcon name="dragon" className="ab-vs__d" />
+        </span>
+        <Arrow />
+        <span className="ab-crowned">
+          <Crown className="ab-crowned__crown" />
+          <GameIcon name="critter" className="ab-crowned__who" />
+        </span>
+      </div>
+    ),
+  },
+  {
+    cls: 'robot',
+    name: 'Reconfigure',
+    shield: '−1',
+    rule: (
+      <div className="ab-rule">
+        <StatCard cls="robot" />
+        <SwapArrows />
+        <AttackCard cls="robot" />
+      </div>
+    ),
+  },
+  {
+    cls: 'dragon',
+    name: 'Overwhelming',
+    shield: '0',
+    rule: (
+      <div className="ab-cols">
+        <span className="ab-cols__req">{FLEXIBLE_RULES.overwhelmingAt}+</span>
+        <span className="ab-cols__res">
+          <span className="ab-cols__plus">+</span>
+          <span className="ab-hearts" aria-label={`+${FLEXIBLE_RULES.overwhelmingBonus}`}>
+            {Array.from({ length: FLEXIBLE_RULES.overwhelmingBonus }, (_, index) => <GameIcon key={index} name="damage" />)}
+          </span>
+        </span>
+      </div>
+    ),
+  },
+]
+
+export function FlexibleLedgerCard() {
+  return (
+    <div className="sc-card ab-ledger ab-flex" aria-label="Abilities v2: ledger">
+      {FLEXIBLE.map(({ cls, name, shield, rule }) => (
         <div key={cls} className="ab-ledger__row">
           <div className="ab-name"><GameIcon name={cls} className={`sc-${cls}`} />{name}</div>
-          <div className="ab-rule">{text}</div>
+          {rule}
+          <ShieldTab value={shield} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function FlexibleBandsCard() {
+  return (
+    <div className="sc-card ab-bands ab-flex" aria-label="Abilities v2: bands">
+      {FLEXIBLE.map(({ cls, name, shield, rule }) => (
+        <div key={cls} className={`ab-band ab-band--${CLASS_CLASS[cls]}`}>
+          <GameIcon name={cls} className="ab-band__mark" />
+          <div className="ab-band__top">
+            <GameIcon name={cls} />
+            <span className="ab-band__name">{name}</span>
+          </div>
+          {rule}
           <ShieldTab value={shield} />
         </div>
       ))}

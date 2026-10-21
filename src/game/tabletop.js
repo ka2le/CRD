@@ -5,7 +5,7 @@ export const TABLETOP_SHIELD_COST = { critter: 2, robot: 1, dragon: 0 }
 const ULTIMATES = new Set(['murder_rabbit', 'robot_ulti', 'dragon_ulti', 'devour'])
 
 // Three tabletop rule sets share the single power calculation and shield penalty:
-//   threshold – one bonus per main faction: Critters 1+ → +1, Robots 4+ → +2, Dragons 7+ → +4.
+//   threshold – one bonus per main faction: Critters 1+ → +2, Robots 4+ → +3, Dragons 8+ → +4.
 //   abilities – class abilities (Adapt, Perfect Balance, Overwhelming); no Shortcut or 2× cards in the deck.
 export const TABLETOP_RULES = ['threshold', 'abilities', 'abilitiesv2']
 const ABILITIES_EXCLUDED_IDS = new Set(['double_dmg', 'shortcut'])
@@ -164,9 +164,9 @@ export const SHORTCUT_TIER_STEPS = 2
 
 // Threshold rules: one threshold per main faction, checked after shields.
 export const TABLETOP_THRESHOLDS = {
-  critter: { at: 1, bonus: 1 },
-  robot: { at: 4, bonus: 2 },
-  dragon: { at: 7, bonus: 4 },
+  critter: { at: 1, bonus: 2 },
+  robot: { at: 4, bonus: 3 },
+  dragon: { at: 8, bonus: 4 },
 }
 
 export function getTabletopBonus(type, power) {

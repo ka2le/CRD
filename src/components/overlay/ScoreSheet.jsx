@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import './ScoreSheet.css'
 import Sheet from './Sheet'
 import { GameIcon } from '../ui/GameIcon'
-import { AbilityBandsCard, AbilityLedgerCard, FlexibleRobotsCard } from './AbilityCards'
+import { AbilityBandsCard, AbilityLedgerCard, FlexibleBandsCard, FlexibleLedgerCard } from './AbilityCards'
 import { ThresholdBandsCard, ThresholdLedgerCard } from './ThresholdCards'
 
 const CARD_W = 315
@@ -14,7 +14,8 @@ const CARDS = [
   { key: 'threshold-bands', Card: ThresholdBandsCard },
   { key: 'ability-ledger', Card: AbilityLedgerCard },
   { key: 'ability-bands', Card: AbilityBandsCard },
-  { key: 'flexible-robots', Card: FlexibleRobotsCard },
+  { key: 'flexible-ledger', Card: FlexibleLedgerCard },
+  { key: 'flexible-bands', Card: FlexibleBandsCard },
 ]
 
 // Cards are authored at 315×440 and scaled to fit, like a printed card.

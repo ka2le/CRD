@@ -11,7 +11,10 @@ import { resolveTabletopBattle, chooseTabletopType, toTabletopCard, normalizeTab
 
 export const HEADLESS_PROTOCOL_VERSION = 2
 export const HEADLESS_RULES_VERSION = 'digital-21-50-preparation-v1'
-const rulesVersion = (config) => config.tabletop ? `tabletop-single-score-v2-${normalizeTabletopRules(config.tabletop)}` : HEADLESS_RULES_VERSION
+const rulesVersion = (config) => {
+  const rules = normalizeTabletopRules(config.tabletop)
+  return rules ? `tabletop-single-score-${rules === 'threshold' ? 'v3' : 'v2'}-${rules}` : HEADLESS_RULES_VERSION
+}
 const SIDES = ['player', 'opponent']
 const otherSide = (side) => side === 'player' ? 'opponent' : 'player'
 

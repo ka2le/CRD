@@ -1,6 +1,7 @@
 import './HelpSheet.css'
 import Sheet from './Sheet'
 import { GameIcon, SvgIcon } from '../ui/GameIcon'
+import { TABLETOP_THRESHOLDS } from '../../game/tabletop'
 
 const ROUNDS = [1, 2, 3, 4, 5, 6]
 const LANES = [
@@ -29,7 +30,7 @@ export default function HelpSheet({ open, onClose, tabletop = false }) {
             <div className="help__fact"><GameIcon name="damage" /><span>Power − shields + Perfect Balance = score. Higher wins; equal scores tie.</span></div>
             <div className="help__fact"><GameIcon name="star" /><span>Chameleon lets you choose any main faction: tap it, then a faction icon. Ultimates, including Devour: 2 per matching stat. Bite: 1.</span></div>
           </> : <>
-            <div className="help__fact"><GameIcon name="critter" /><span>After shields, your main faction earns one bonus: Critter +1 at 1 power, Robot +2 at 4, Dragon +4 at 7.</span></div>
+            <div className="help__fact"><GameIcon name="critter" /><span>After shields, your main faction earns one bonus: Critter +{TABLETOP_THRESHOLDS.critter.bonus} at {TABLETOP_THRESHOLDS.critter.at} power, Robot +{TABLETOP_THRESHOLDS.robot.bonus} at {TABLETOP_THRESHOLDS.robot.at}, Dragon +{TABLETOP_THRESHOLDS.dragon.bonus} at {TABLETOP_THRESHOLDS.dragon.at}.</span></div>
             <div className="help__fact"><GameIcon name="damage" /><span>Base − shields + bonus = score. Higher wins; equal scores tie.</span></div>
             <div className="help__fact"><GameIcon name="arrow" className="g-icon--up" /><span>Shortcut grants your main faction bonus even below its threshold, with positive power. Chameleon lets you choose any main faction: tap it, then a faction icon.</span></div>
             <div className="help__fact"><GameIcon name="star" /><span>Ultimates, including Devour: 2 per matching stat. Bite: 1. The 2× card doubles your main faction bonus after shields; copies stack. Devour also offers a Dragon-type option. Hold a card for its full rule.</span></div>
