@@ -5,7 +5,7 @@ import { getCoreCards } from '../src/game/cards.js'
 import { getTabletopProfile, scoreTabletopHand, toTabletopCard, chooseTabletopType } from '../src/game/tabletop.js'
 
 configureBalanceVariant('abilitiesv2-perfect-balance')
-const defs = new Map(getCoreCards({ tabletop: 'abilitiesv2' }).map((c) => [c.id, c]))
+const defs = new Map(getCoreCards({ tabletop: 'threshold' }).map((c) => [c.id, c]))
 const hand = (...ids) => ids.map((id, i) => {
   assert(defs.has(id), `Unknown card ${id}`)
   return toTabletopCard({ ...defs.get(id), uid: `${id}-${i}` }, 'abilitiesv2')

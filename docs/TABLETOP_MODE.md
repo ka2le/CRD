@@ -36,10 +36,10 @@ Score = recomputed power − shields + Perfect Balance. Equal scores draw. Adapt
 
 ## Abilities v2 — current adopted rules
 
-The creator adopted the tested Perfect Balance / shields **2/2/1** configuration on 2026-10-21 and requested publication.
+The creator adopted the tested Perfect Balance / shields **2/2/1** configuration on 2026-10-21 and requested publication. Follow-up: **Chameleon is excluded from the v2 deck and collection**, in both Normal and Wild; its definition, art and behavior remain available in v1 and Threshold. Headless v2 pool version is now `v6-abilitiesv2`. The balance figures below predate this card-pool change; no new balance run was requested.
 
 - **Critter — Win Ties:** chosen Critter main wins equal scores against other main factions. Two Critter hands draw.
-- **Robot — Perfect Balance:** chosen Robot main earns **+3 after shields** when positive Robot stat pips equal Robot attack units. Mixed/double stats count all Robot pips. Robot Ultimate counts two attack units; One Of Each product counts one; Any Of Each sum counts none. No card swapping or Adapt. Chameleon may select Robot to qualify. Other chosen mains never earn the bonus.
+- **Robot — Perfect Balance:** chosen Robot main earns **+3 after shields** when positive Robot stat pips equal Robot attack units. Mixed/double stats count all Robot pips. Robot Ultimate counts two attack units; One Of Each product counts one; Any Of Each sum counts none. No card swapping or Adapt. Other chosen mains never earn the bonus.
 - **Dragon — Overwhelming:** Dragon contribution **6+ before shields** adds exactly one Dragon stat and recomputes all attacks once. Then the actual chosen main's shield penalty applies; shielding does not revoke the extra stat.
 
 Score = max(0, recomputed power - shields) + Perfect Balance. Both v2 reference-card layouts use the v1 Perfect Balance row, shield tabs **−2/−2/−1**, and the large **6+** Dragon requirement with an extra-stat reward. Help and result formulas follow the same rules. Headless rules version is `v5-abilitiesv2`; browser worker, offline play and online rooms share the scorer.

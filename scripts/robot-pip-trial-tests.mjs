@@ -6,7 +6,7 @@ import { getTabletopProfile, scoreTabletopHand, toTabletopCard, chooseTabletopTy
 import { applyCopySelection } from '../src/game/copyCard.js'
 
 configureBalanceVariant('abilitiesv2-robot-pips')
-const defs = new Map(getCoreCards({ tabletop: 'abilitiesv2' }).map((c) => [c.id, c]))
+const defs = new Map(getCoreCards({ tabletop: 'threshold' }).map((c) => [c.id, c]))
 const hand = (...ids) => ids.map((id, i) => toTabletopCard({ ...defs.get(id), uid: `${id}-${i}` }, 'abilitiesv2'))
 const score = (cards, type = chooseTabletopType(cards)) => scoreTabletopHand(cards, 0, type)
 

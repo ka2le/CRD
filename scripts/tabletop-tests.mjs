@@ -24,7 +24,7 @@ test('headless deals real tabletop pools, advertises a distinct rules version an
   for (const tabletop of ['threshold', 'abilities', 'abilitiesv2']) {
     const spec = getHeadlessSpec({ tabletop })
     assert(spec.rulesVersion.includes(tabletop))
-    assert.equal(spec.poolCards.length, tabletop === 'threshold' ? 108 : 102)
+    assert.equal(spec.poolCards.length, tabletop === 'threshold' ? 108 : tabletop === 'abilitiesv2' ? 99 : 102)
     assert.equal(spec.cardTypes.find((c) => c.id === 'robot_attack').effect.dmg, 1)
     for (const mode of ['draft', 'five-hand-discard']) {
       let state = createHeadlessGame({ tabletop, mode, control: 'both', seed: 131 })
@@ -49,7 +49,7 @@ test('all three tabletop decks use 1/2 damage and correct card pools; digital st
       assert(deck.every((c) => c.tabletop === rules && c.cd === 0))
       assert.equal(deck.some((c) => c.id === 'shortcut'), rules === 'threshold')
       assert.equal(deck.some((c) => c.id === 'double_dmg'), rules === 'threshold')
-      assert(deck.some((c) => c.id === 'chameleon'))
+      assert.equal(deck.some((c) => c.id === 'chameleon'), rules !== 'abilitiesv2')
       for (const id of ['swarm', 'robot_attack', 'dragons_breath', 'bite']) assert.equal(deck.find((c) => c.id === id).effect.dmg, 1)
       for (const id of ['murder_rabbit', 'robot_ulti', 'dragon_ulti', 'devour']) assert.equal(deck.find((c) => c.id === id).effect.dmg, 2)
     }

@@ -19,6 +19,7 @@ export function normalizeTabletopRules(value) {
 
 export function isCardInTabletopRules(card, rules) {
   const normalized = normalizeTabletopRules(rules)
+  if (normalized === 'abilitiesv2' && card.id === 'chameleon') return false
   return !(['abilities', 'abilitiesv2'].includes(normalized) && ABILITIES_EXCLUDED_IDS.has(card.id))
 }
 

@@ -7,7 +7,7 @@ function check(variant, assertions) {
     import { getCoreCards } from './src/game/cards.js';
     import { toTabletopCard, scoreTabletopHand, chooseTabletopType, resolveTabletopBattle, FLEXIBLE_RULES, TABLETOP_V2_SHIELD_COST as TABLETOP_SHIELD_COST } from './src/game/tabletop.js';
     configureBalanceVariant(${JSON.stringify(variant)});
-    const defs=new Map(getCoreCards({tabletop:'abilitiesv2'}).map(c=>[c.id,c]));
+    const defs=new Map(getCoreCards({tabletop:'threshold'}).map(c=>[c.id,c]));
     const hand=(...ids)=>ids.map((id,i)=>toTabletopCard({...defs.get(id),uid:id+i},'abilitiesv2'));
     const score=(cards,shields=0,type=chooseTabletopType(cards))=>scoreTabletopHand(cards,shields,type);
     ${assertions}`
