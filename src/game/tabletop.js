@@ -37,13 +37,28 @@ export function toTabletopCard(card, rules = 'threshold') {
 // ---------- abilities ----------
 export const ABILITY_RULES = { balanceBonus: 3, overwhelmingAt: 14 }
 
-// Adapt: a pure Critter stat card becomes an ordinary Critter attack (2 power per Critter stat).
-function isCritterStatCard(card) {
-  return card.type === 'stat' && card.stats?.length > 0 && card.stats.every((stat) => stat === 'critter')
+// Adapt: one stat card with a Critter stat turns its Critter stat(s) into an ordinary Critter attack
+// (2 power per Critter stat). Any other faction stats on that card stay (Joker keeps Robot + Dragon).
+function isAdaptableCard(card) {
+  return card.type === 'stat' && card.stats?.includes('critter')
 }
 
 function adaptCard(card) {
-  return { ...card, type: 'action', stats: [], effect: { dmg: 2, dmgType: 'critter' }, adaptedFrom: card.id }
+  const remaining = card.stats.filter((stat) => stat !== 'critter')
+  return { ...card, type: remaining.length ? 'stat' : 'action', stats: remaining,
+    effect: { dmg: 2, dmgType: 'critter' }, adaptedFrom: card.id }
+}
+
+// Perfect Balance counts Robot attack cards. A Robot Ultimate counts as this many attacks
+// (it hits like two ordinary attacks); Critter × Robot × Dragon counts as one Robot attack.
+export const ROBOT_ULTI_ATTACK_COUNT = 2
+
+export function countRobotAttacks(cards) {
+  return cards.reduce((sum, card) => {
+    if (card.id === 'robot_ulti') return sum + ROBOT_ULTI_ATTACK_COUNT
+    if (card.effect?.dmgType === 'robot' || card.id === 'one_off_each') return sum + 1
+    return sum
+  }, 0)
 }
 
 function getAbilitiesPlan(hand, adaptedUid) {
@@ -53,16 +68,16 @@ function getAbilitiesPlan(hand, adaptedUid) {
   // Overwhelming: Dragon base power 14+ gains one Dragon stat before final power.
   const overwhelming = dragonBase >= ABILITY_RULES.overwhelmingAt
   if (overwhelming) profile = computeProfile(cards, { dragon: 1 })
-  // Perfect Balance: as many Robot stats as Robot attack cards (at least one of each).
-  const robotAttacks = cards.filter((card) => card.effect?.dmgType === 'robot').length
+  // Perfect Balance: as many Robot stats as Robot attacks (at least one of each); Robot main faction only.
+  const robotAttacks = countRobotAttacks(cards)
   const balanced = profile.stats.robot > 0 && profile.stats.robot === robotAttacks
   return { ...profile, rules: 'abilities', adaptedUid: adaptedUid ?? null, dragonBase, overwhelming, balanced, robotAttacks }
 }
 
 // Adapt is optional; take the conversion that scores best before reveal (no conversion on ties).
 function getAbilitiesProfile(hand) {
-  const plans = [null, ...hand.filter(isCritterStatCard).map((card) => card.uid)].map((uid) => getAbilitiesPlan(hand, uid))
-  const value = (plan) => plan.base + (plan.balanced ? ABILITY_RULES.balanceBonus : 0)
+  const plans = [null, ...hand.filter(isAdaptableCard).map((card) => card.uid)].map((uid) => getAbilitiesPlan(hand, uid))
+  const value = (plan) => plan.base + (plan.balanced && plan.types.includes('robot') ? ABILITY_RULES.balanceBonus : 0)
   return plans.reduce((best, plan) => (value(plan) > value(best) ? plan : best))
 }
 
@@ -84,8 +99,9 @@ function computeProfile(hand = [], extraStats = {}) {
   const attacks = []
   for (const card of hand) {
     let power = 0
-    const type = card.effect?.dmgType
-    if (type) power = (ULTIMATES.has(card.id) ? 4 : 2) * stats[type]
+    // Critter × Robot × Dragon counts as Robot damage in tabletop scoring.
+    const type = card.effect?.dmgType ?? (card.id === 'one_off_each' ? 'robot' : undefined)
+    if (card.effect?.dmgType) power = (ULTIMATES.has(card.id) ? 4 : 2) * stats[type]
     else if (card.id === 'bite') power = 2
     else if (card.id === 'shield_is_dmg') power = shields
     else if (card.id === 'one_off_each') power = stats.critter * stats.robot * stats.dragon
@@ -131,8 +147,8 @@ export function scoreTabletopHand(hand, enemyShields = 0, damageType = null) {
   const blocked = Math.min(profile.base, shieldPenalty)
   const power = profile.base - blocked
   if (profile.rules === 'abilities') {
-    // Perfect Balance is added after shields, like a threshold bonus.
-    const bonus = profile.balanced ? ABILITY_RULES.balanceBonus : 0
+    // Perfect Balance is a Robot ability: only a Robot main faction earns it, after shields.
+    const bonus = profile.balanced && type === 'robot' ? ABILITY_RULES.balanceBonus : 0
     return { ...profile, damageType: type, enemyShields, shieldPenalty, blocked, power,
       naturalBonus: bonus, baseBonus: bonus, bonus, score: power + bonus }
   }
@@ -172,6 +188,7 @@ export function getCardTabletopTypes(card, profile) {
   if (card.id === 'chameleon') return [...TABLETOP_CLASSES]
   const neutralOnly = Object.values(profile.contributions).every((power) => power === 0)
   return profile.types.filter((type) => card.stats?.includes(type) || card.effect?.dmgType === type
+    || (type === 'robot' && card.id === 'one_off_each')
     || (type === 'robot' && neutralOnly && profile.attacks.some((attack) => attack.uid === card.uid && !attack.type)))
 }
 

@@ -8,6 +8,7 @@ import { CARD_GROUPS as GROUPS, getCardGroup as getGroup } from '../card/cardMet
 import { getCoreCards } from '../../game/cards'
 import { toTabletopCard } from '../../game/tabletop'
 import { useElementSize } from '../../hooks/useFitLayout'
+import DeckViewTabs from './DeckViewTabs'
 
 const CLASS_ORDER = ['critter', 'robot', 'dragon']
 
@@ -25,7 +26,7 @@ function getCopies(card, wildDeck) {
 }
 
 // Every unique card in the core deck, grouped; tap one to read about it.
-export default function CollectionSheet({ open, onClose, tabletop = false, wildDeck = false }) {
+export default function CollectionSheet({ open, onClose, onSwitch = null, tabletop = false, wildDeck = false }) {
   const inspect = useCardInspect()
   const [measureRef, size] = useElementSize()
   const [filter, setFilter] = useState('all')
@@ -64,7 +65,7 @@ export default function CollectionSheet({ open, onClose, tabletop = false, wildD
       open={open}
       onClose={onClose}
       className="collection-sheet"
-      title={(
+      title={onSwitch ? <DeckViewTabs active="collection" count={total} onSwitch={onSwitch} /> : (
         <>
           <SvgIcon name="collection" />
           <span>Collection</span>

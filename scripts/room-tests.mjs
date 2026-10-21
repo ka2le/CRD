@@ -499,3 +499,33 @@ test('older saved mid-discard games finish the guest half without drawing the ho
   assert.equal(state.game.opponentDiscardsUsed, 1)
   assert.equal(state.game.phase, 'player-discard-2')
 })
+
+test('emotes ride on sync: host re-broadcasts guest emotes, echoes and junk are ignored, sends are throttled', () => {
+  const state = gameApi.startRoomGame(initial())
+  const host = client('host', state)
+  const guest = client('guest', state)
+  const viewer = client('viewer', state)
+  for (const side of [host, guest, viewer]) side.instance.emit({ connection: 'connected' })
+  assert.equal(viewer.instance.sendEmote('hi'), false)
+  assert.equal(guest.instance.sendEmote('nope'), false)
+  assert.equal(guest.instance.sendEmote('gg'), true)
+  assert.equal(guest.instance.sendEmote('fire'), false, 'cooldown')
+  const message = guest.sent.at(-1)
+  assert.deepEqual([message.type, message.emote.id, message.emote.seat], ['sync', 'gg', 'guest'])
+  assert.equal(guest.instance.getSnapshot().emote.id, 'gg')
+  const published = host.sent.length
+  host.instance.receive(message)
+  assert.equal(host.instance.getSnapshot().emote.id, 'gg')
+  assert.equal(host.sent.length, published + 1)
+  assert.deepEqual(host.sent.at(-1), { type: 'sync', emote: message.emote }, 'forwarded, not a snapshot')
+  // Guest ignores its own echo; the viewer shows it.
+  const before = guest.instance.getSnapshot().emote
+  guest.instance.receive(host.sent.at(-1))
+  assert.equal(guest.instance.getSnapshot().emote, before)
+  viewer.instance.receive(host.sent.at(-1))
+  assert.deepEqual([viewer.instance.getSnapshot().emote.id, viewer.instance.getSnapshot().emote.seat], ['gg', 'guest'])
+  // Malformed emotes never reach the UI.
+  viewer.instance.lastReceivedEmoteAt = 0
+  viewer.instance.receive({ type: 'sync', emote: { id: '<b>', seat: 'host', key: 'abcdef0123' } })
+  assert.equal(viewer.instance.getSnapshot().emote.id, 'gg')
+})

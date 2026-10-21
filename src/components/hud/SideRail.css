@@ -1,29 +1,42 @@
 .side-rail {
   --side: var(--player);
+  /* Edge-to-edge bar: square ends, one border towards the table, safe-area aware. */
+  --rail-pad-l: calc(var(--inset-l, 6px) + 12px);
+  --rail-pad-r: calc(var(--inset-r, 6px) + 8px);
+  --rail-top: 0px;
+  --rail-bottom: 0px;
   position: relative;
   z-index: 5;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 10px;
-  height: var(--rail-h);
-  padding: 0 8px 0 12px;
-  border-radius: 10px;
-  background: linear-gradient(180deg, rgba(18, 29, 49, 0.9), rgba(9, 15, 27, 0.9));
-  border: 1px solid var(--b0);
+  height: calc(var(--rail-h) + var(--rail-top) + var(--rail-bottom));
+  padding: var(--rail-top) var(--rail-pad-r) var(--rail-bottom) var(--rail-pad-l);
+  background: linear-gradient(180deg, rgba(18, 29, 49, 0.94), rgba(9, 15, 27, 0.94));
+  border: 0 solid var(--b0);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .side-rail--opponent {
   --side: var(--opponent);
+  --rail-top: env(safe-area-inset-top, 0px);
+  border-bottom-width: 1px;
 }
 
-/* Side colour tab on the left edge identifies who this is without a label. */
+.side-rail--player {
+  --rail-bottom: max(env(safe-area-inset-bottom, 0px), 4px);
+  border-top-width: 1px;
+  box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.4);
+}
+
+/* Side colour tab on the left identifies who this is without a label. */
 .side-rail__marker {
   position: absolute;
-  left: 4px;
-  top: 22%;
-  bottom: 22%;
+  left: calc(var(--rail-pad-l) - 8px);
+  top: calc(var(--rail-top) + 22%);
+  bottom: calc(var(--rail-bottom) + 22%);
   width: 2px;
   border-radius: 1px;
   background: var(--side);
@@ -337,7 +350,8 @@
 @media (max-width: 420px) {
   .side-rail {
     gap: 8px;
-    padding: 0 6px 0 11px;
+    --rail-pad-l: calc(var(--inset-l, 6px) + 11px);
+    --rail-pad-r: calc(var(--inset-r, 6px) + 6px);
   }
 
   .stat-chips {

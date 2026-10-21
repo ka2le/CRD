@@ -6,10 +6,11 @@ import CardButton from '../card/CardButton'
 import { SvgIcon } from '../ui/GameIcon'
 import { CARD_GROUPS, getCardGroup } from '../card/cardMeta'
 import { useElementSize } from '../../hooks/useFitLayout'
+import DeckViewTabs from './DeckViewTabs'
 
 // Testing: every card in the game, grouped by where it is. Tap a card, then
 // tap another to swap them, or send it to the top of the deck.
-export default function TestDeckSheet({ open, zones = [], editable = false, onSwap, onToTop, onClose, contextHand = [] }) {
+export default function TestDeckSheet({ open, zones = [], editable = false, onSwap, onToTop, onClose, onSwitch = null, contextHand = [] }) {
   const [selectedUid, setSelectedUid] = useState(null)
   const [filter, setFilter] = useState('all')
   const [measureRef, size] = useElementSize()
@@ -47,7 +48,7 @@ export default function TestDeckSheet({ open, zones = [], editable = false, onSw
       onClose={handleClose}
       className="test-deck"
       accent="var(--special)"
-      title={(
+      title={onSwitch ? <DeckViewTabs active="test" count={total} onSwitch={(view) => { setSelectedUid(null); onSwitch(view) }} /> : (
         <>
           <SvgIcon name="flask" />
           <span>Test deck</span>

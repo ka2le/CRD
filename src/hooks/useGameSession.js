@@ -18,7 +18,7 @@ import {
 import { applyPreparationAction, createPreparationState } from '../game/preparationState'
 import { chooseDiscardIds } from '../game/cardEvaluator'
 import {
-  DEFAULT_OPPONENT_AI, normalizeOpponentAi, requestOpponentPreparation, requestOpponentSearchAction,
+  DEFAULT_OPPONENT_AI, isSearchOpponentAi, normalizeOpponentAi, requestOpponentPreparation, requestOpponentSearchAction,
 } from '../game/opponentAi'
 import { getTabletopChoice, getTabletopHandKey, getCardTabletopTypes, normalizeTabletopRules } from '../game/tabletop'
 import { createDevScenario, DEV_SCENARIO_NAMES } from '../game/devScenarios'
@@ -79,7 +79,7 @@ function loadStoredSettings() {
 }
 
 function usesSearchOpponent(settings) {
-  return settings?.opponentAi === 'search'
+  return isSearchOpponentAi(settings?.opponentAi)
 }
 
 // The Search AI decides asynchronously (in a worker). Clear the Rules AI's instant
@@ -746,7 +746,10 @@ export function sessionReducer(state, action) {
       })
     }
 
+    // Testing: back to the start of preparation with the same hands and deck order.
     case 'CLOSE_BATTLE_OVERLAY':
+    case 'REPLAY_PREPARATION':
+      if (action.type === 'REPLAY_PREPARATION' && (!state.settings?.testing || !state.battleStarted)) return state
       return createTransitionResult(state, {
         battleStarted: false,
         battleLogOpen: false,
@@ -838,7 +841,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
 
   const discardPhase = game.mode === 'five-hand-discard' && game.phase.startsWith('player-discard')
   const opponentDiscarding = game.mode === 'five-hand-discard' && game.phase.startsWith('opponent-discard')
-  const searchOpponent = !online && settings.opponentAi === 'search'
+  const searchOpponent = !online && usesSearchOpponent(settings)
   const dealId = session.dealId
   const awaitingSearchDraftPick = searchOpponent && game.mode === 'draft'
     && game.phase === 'draft-opponent-thinking' && !game.pendingOpponentPickUid
@@ -1005,6 +1008,10 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
 
   const closeBattleOverlay = useCallback(() => {
     dispatch({ type: 'CLOSE_BATTLE_OVERLAY' })
+  }, [dispatch])
+
+  const replayPreparation = useCallback(() => {
+    dispatch({ type: 'REPLAY_PREPARATION' })
   }, [dispatch])
 
   const startBattle = useCallback(() => {
@@ -1183,7 +1190,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
   useEffect(() => {
     if (!awaitingSearchDraftPick) return undefined
     let cancelled = false
-    requestOpponentSearchAction(game).then((choice) => {
+    requestOpponentSearchAction(game, settings.opponentAi).then((choice) => {
       if (cancelled || !choice?.uid) return
       dispatch({ type: 'SET_OPPONENT_DRAFT_PICK', uid: choice.uid, decisionKey: opponentDecisionKey })
     })
@@ -1199,7 +1206,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     let timeoutId = null
     const startedAt = performance.now()
     const decide = searchOpponent
-      ? requestOpponentSearchAction(game)
+      ? requestOpponentSearchAction(game, settings.opponentAi)
       : Promise.resolve(null)
     decide.then((choice) => {
       if (cancelled) return
@@ -1236,7 +1243,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     let cancelled = false
     let timeoutId = null
     const startedAt = performance.now()
-    requestOpponentPreparation(preBattle, game).then((opponentPreparation) => {
+    requestOpponentPreparation(preBattle, game, settings.opponentAi).then((opponentPreparation) => {
       if (cancelled) return
       const remainingMs = Math.max(0, SEARCH_PREPARATION_MIN_THINK_MS - (performance.now() - startedAt))
       timeoutId = window.setTimeout(() => {
@@ -1310,6 +1317,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     submitDiscard,
     handleDraftPick,
     closeBattleOverlay,
+    replayPreparation: settings.testing && !online ? replayPreparation : null,
     startBattle,
     isWaitingForPlayerChoice,
     highlightedPreBattleIds,

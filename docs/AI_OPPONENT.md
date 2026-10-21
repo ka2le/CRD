@@ -31,4 +31,4 @@ The environment and initial observation-conditioned root-rollout teacher now wor
 
 ## Browser opponent selection (2026-10-19)
 
-The menu now has an Opponent dropdown: **Rules AI (Easy)**, the heuristic above, and **Search AI (Medium)**, a browser root-rollout search for draft picks and discard passes run in a Web Worker. Preparation stays on the Rules AI. In cloud benchmarks it scored about 86% (draft) and 66% (discard) against the Rules AI. See `OPPONENT_SELECTION.md`. The neural model is not wired in yet.
+2026-10-21: the options are now **RolfBot (Easy)** (Rules AI), **IngaBot (Medium)** (shallow search) and **SvenBot (Hard)** (Search AI); see `OPPONENT_SELECTION.md`. Historical note: the menu had an Opponent dropdown: **Rules AI (Easy)**, the heuristic above, and **Search AI (Medium)**, a browser root-rollout search for draft picks and discard passes run in a Web Worker. Preparation stays on the Rules AI. In cloud benchmarks it scored about 86% (draft) and 66% (discard) against the Rules AI. See `OPPONENT_SELECTION.md`. The neural model is not wired in yet.

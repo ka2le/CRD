@@ -14,6 +14,8 @@ The tabletop deck includes two exclusive cards, **Shortcut** and **Chameleon**, 
   - *Overwhelming* — Dragon base power (Dragon contributions) 14+ adds one Dragon stat, then power is recounted. Before shields.
   - *Perfect Balance* — Robot stats equal Robot attack cards (at least one each): +3 after shields.
   Score = power − shields + Perfect Balance. The result formula marks Adapt and Overwhelming with small icons.
+  - Clarifications (2026-10-21): Perfect Balance is a Robot ability — only a hand whose chosen main faction is Robots earns the +3 (Chameleon choosing Robots counts). Robot Ultimate counts as **two** Robot attacks (it hits like two ordinary attacks; `ROBOT_ULTI_ATTACK_COUNT`, open design question — set it to 1 to make the Ultimate balance with a single stat). Critter × Robot × Dragon counts as one Robot attack. Adapt may convert any stat card with a Critter stat: its Critter stat(s) become the attack and any other faction stats on the card stay (Joker keeps Robot + Dragon; Two Critters becomes one attack).
+- **Both rule sets (2026-10-21):** Critter × Robot × Dragon (`one_off_each`) is Robot damage — its power counts as a Robot contribution for the main type, and clicking it can commit Robot on ties.
 
 
 1. Add every attack's power. An ordinary class attack contributes **2 × matching stats**; multiple attacks each use the full stat total.

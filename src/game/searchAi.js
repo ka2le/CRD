@@ -161,7 +161,9 @@ function rolloutAction(state) {
   return best
 }
 
-function playOut(state, side, maxDecisions = 400) {
+// rollout: 'prep-lookahead' (SvenBot) or 'rules' (shallow: Rules AI plays every rollout step).
+function playOut(state, side, rollout = 'prep-lookahead', maxDecisions = 400) {
+  if (rollout === 'rules') return outcomeFor(finishWithRules(state, maxDecisions), side)
   let current = state
   let guard = 0
   while (!current.terminal) {
@@ -186,7 +188,7 @@ export function isSearchDecision(game, side = 'opponent') {
  * `game` uses the browser/headless game shape. Returns the chosen action plus diagnostics.
  */
 export function searchDecision(game, side = 'opponent', options = {}) {
-  const { minSamples, maxSamples, timeBudgetMs, seed } = { ...DEFAULT_OPTIONS, ...options }
+  const { minSamples, maxSamples, timeBudgetMs, seed, rollout, margin } = { ...DEFAULT_OPTIONS, ...options }
   if (!isSearchDecision(game, side)) throw new Error('Search AI called outside a draft/discard decision')
   const sampleWorld = game.mode === 'draft' ? sampleDraftWorld : sampleDiscardWorld
   const rng = createSeededRng(Number.isSafeInteger(seed) ? seed : Math.floor(Math.random() * 0x7fffffff))
@@ -202,17 +204,17 @@ export function searchDecision(game, side = 'opponent', options = {}) {
   }
 
   return runSearch({ firstWorld, sampleWorld: () => sampleWorld(game, side, rng), actions, baselineIndex, side,
-    minSamples, maxSamples, timeBudgetMs, started })
+    minSamples, maxSamples, timeBudgetMs, started, rollout, margin })
 }
 
 // Common random numbers: every candidate is played out in the same sampled world.
-function runSearch({ firstWorld, sampleWorld, actions, baselineIndex, side, minSamples, maxSamples, timeBudgetMs, started }) {
+function runSearch({ firstWorld, sampleWorld, actions, baselineIndex, side, minSamples, maxSamples, timeBudgetMs, started, rollout, margin = 0 }) {
   const totals = new Array(actions.length).fill(0)
   let samples = 0
   let world = firstWorld
   while (samples < maxSamples) {
     for (let index = 0; index < actions.length; index += 1) {
-      totals[index] += playOut(stepHeadlessGame(world, actions[index]), side)
+      totals[index] += playOut(stepHeadlessGame(world, actions[index]), side, rollout)
     }
     samples += 1
     if (samples >= minSamples && now() - started >= timeBudgetMs) break
@@ -224,6 +226,9 @@ function runSearch({ firstWorld, sampleWorld, actions, baselineIndex, side, minS
   totals.forEach((total, index) => {
     if (total > totals[chosenIndex]) chosenIndex = index
   })
+  // `margin` (mean result, -1..1): a shallow search only leaves the Rules AI's choice
+  // when the alternative is clearly better in its few samples.
+  if (margin > 0 && (totals[chosenIndex] - totals[baselineIndex]) / samples < margin) chosenIndex = baselineIndex
 
   return {
     action: actions[chosenIndex],
@@ -303,7 +308,7 @@ function samplePreparationWorld(view, rng) {
 
 /** One searched preparation step for `side` (activate which special / target, skip, or finish). */
 export function searchPreparationDecision(preparation, game, side = 'opponent', options = {}) {
-  const { minSamples, maxSamples, timeBudgetMs, seed } = { ...PREPARATION_OPTIONS, ...options }
+  const { minSamples, maxSamples, timeBudgetMs, seed, rollout } = { ...PREPARATION_OPTIONS, ...options }
   const actions = getPreparationActions(preparation, side)
   const baseline = pickPreparationAction(preparation, side)
   const baselineIndex = Math.max(0, actions.findIndex((action) => sameAction(action, baseline)))
@@ -314,7 +319,7 @@ export function searchPreparationDecision(preparation, game, side = 'opponent', 
   const rng = createSeededRng(Number.isSafeInteger(seed) ? seed : Math.floor(Math.random() * 0x7fffffff))
   const started = now()
   return runSearch({ firstWorld: samplePreparationWorld(view, rng), sampleWorld: () => samplePreparationWorld(view, rng),
-    actions, baselineIndex, side, minSamples, maxSamples, timeBudgetMs, started })
+    actions, baselineIndex, side, minSamples, maxSamples, timeBudgetMs, started, rollout })
 }
 
 /**

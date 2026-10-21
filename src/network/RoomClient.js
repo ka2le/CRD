@@ -1,6 +1,7 @@
 import { ROOM_PROTOCOL, MAX_MESSAGE_BYTES, ROOM_ID_PATTERN, randomToken, cleanName, validAction } from './protocol.js'
 import { loadProfile, PROFILE_KEY } from './profile.js'
 import { compatibleGameVersion } from './gameCompatibility.js'
+import { EMOTE_COOLDOWN_MS, EMOTE_IDS, validEmote } from './emotes.js'
 import { applyRoomAction, seatView, startRoomGame, scoreRoomGame, GAME_VERSION } from './roomGame.js'
 
 export const ROOM_STORAGE_KEY = 'crd-room-v1'
@@ -37,7 +38,7 @@ export default class RoomClient {
     this.heartbeat = null
     this.running = false
     this.backoff = 1000
-    this.cached = { connection: 'offline', presence: null, record: null, session: null, error: '', busy: false, blocked: false, entry: null, profile: this.profile, notice: '', copied: false, copyFailedAt: 0 }
+    this.cached = { connection: 'offline', presence: null, record: null, session: null, error: '', busy: false, blocked: false, entry: null, profile: this.profile, notice: '', copied: false, copyFailedAt: 0, emote: null }
     try {
       const record = JSON.parse(storage.getItem(ROOM_STORAGE_KEY))
       if ([1, ROOM_PROTOCOL].includes(record?.protocol) && ROOM_ID_PATTERN.test(record.id)) {
@@ -129,6 +130,34 @@ export default class RoomClient {
     this.emit({ copied: true })
     this.copiedTimer = setTimeout(() => this.emit({ copied: false }), 2200)
     return true
+  }
+  // Emotes ride on `sync` messages, which the relay already forwards (guest → host,
+  // host → guest and viewers), so no relay change is needed. The host re-broadcasts
+  // the guest's emotes so viewers see both players.
+  sendEmote(id) {
+    const seat = this.record?.role
+    if (!EMOTE_IDS.has(id) || !['host', 'guest'].includes(seat) || this.cached.connection !== 'connected') return false
+    const now = Date.now()
+    if (now - (this.lastEmoteAt ?? 0) < EMOTE_COOLDOWN_MS) return false
+    this.lastEmoteAt = now
+    const emote = { id, seat, key: randomToken(8) }
+    this.sentEmoteKeys = [...(this.sentEmoteKeys ?? []), emote.key].slice(-8)
+    this.send({ type: 'sync', emote })
+    this.emit({ emote: { ...emote, at: now } })
+    return true
+  }
+  receiveEmote(emote) {
+    if (!validEmote(emote) || this.sentEmoteKeys?.includes(emote.key) || this.cached.emote?.key === emote.key) return
+    // Throttle bursts from the other side as well.
+    const now = Date.now()
+    if (now - (this.lastReceivedEmoteAt ?? 0) < EMOTE_COOLDOWN_MS / 2) return
+    this.lastReceivedEmoteAt = now
+    const clean = { id: emote.id, seat: emote.seat, key: emote.key }
+    if (this.record?.role === 'host') {
+      if (clean.seat !== 'guest') return
+      this.send({ type: 'sync', emote: clean })
+    }
+    this.emit({ emote: { ...clean, at: now } })
   }
   stop() {
     this.running = false
@@ -247,6 +276,8 @@ export default class RoomClient {
         if (msg.guest?.connected || msg.viewers?.some((viewer) => viewer.connected)) this.publish()
       }
       if (['guest', 'viewer'].includes(msg.role) && msg.host?.connected) this.send({ type: 'sync' })
+    } else if (msg.type === 'sync' && msg.emote) {
+      this.receiveEmote(msg.emote)
     } else if (msg.type === 'sync' && this.record.role === 'host') {
       this.publish()
     } else if (msg.type === 'snapshot' && ['guest', 'viewer'].includes(this.record.role)) {

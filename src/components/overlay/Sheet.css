@@ -118,3 +118,51 @@
   from { transform: translateY(40%); opacity: 0; }
   to { transform: none; opacity: 1; }
 }
+
+/* Collection ⇄ Test deck switch (testing only). */
+.deck-tabs {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--surface-hi) 92%, black);
+  border: 1px solid var(--b0);
+}
+
+.deck-tabs__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--t1);
+  font: inherit;
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.deck-tabs__tab svg { width: 15px; height: 15px; }
+
+.deck-tabs__tab.is-on {
+  background: rgba(214, 190, 140, 0.1);
+  color: var(--t0);
+  box-shadow: inset 0 0 0 1px var(--b1);
+}
+
+.deck-tabs__count {
+  font-family: var(--mono, monospace);
+  font-size: 0.7rem;
+  letter-spacing: 0;
+  color: var(--t1);
+}
+
+@media (max-width: 440px) {
+  .deck-tabs__tab { gap: 5px; padding: 0 8px; font-size: 0.68rem; letter-spacing: 0.05em; }
+  .deck-tabs__count { display: none; }
+}

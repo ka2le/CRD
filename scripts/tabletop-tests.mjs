@@ -286,9 +286,14 @@ test('Adapt turns one pure Critter stat card into an attack only when it scores 
   const adapted = scoreTabletopHand(twoStat)
   assert.equal(adapted.base, 6)
   assert.equal(twoStat.find((entry) => entry.uid === adapted.adaptedUid).id, 'critter1')
-  // Multi-class stat cards are not Critter stat cards.
-  const mixed = abilityHand('robot_critter', 'critter1')
-  assert.equal(getTabletopProfile(mixed).adaptedUid, mixed[1].uid)
+  // Multi-class stat cards adapt their Critter stat and keep their other stats.
+  const mixed = abilityHand('robot_critter', 'critter1', 'robot_attack')
+  const mixedScore = getTabletopProfile(mixed)
+  assert.equal(mixedScore.adaptedUid, mixed[0].uid)
+  // Robot stat stays: Critter attack 2×1 + Robot attack 2×1, balanced Robot.
+  assert.deepEqual([mixedScore.stats.robot, mixedScore.stats.critter, mixedScore.base], [1, 1, 4])
+  const joker = getTabletopProfile(abilityHand('joker', 'critter1', 'dragons_breath'))
+  assert.deepEqual([joker.stats.critter, joker.stats.robot, joker.stats.dragon], [1, 1, 1])
   assert.equal(getTabletopProfile(abilityHand('robot_critter')).adaptedUid, null)
 })
 
@@ -299,7 +304,18 @@ test('Perfect Balance adds +3 after shields when Robot stats equal Robot attacks
   assert.deepEqual([shielded.power, shielded.score], [6, 9])
   const uneven = scoreTabletopHand(abilityHand('robot1', 'robot_attack', 'robot_attack'))
   assert.deepEqual([uneven.base, uneven.balanced, uneven.score], [4, false, 4])
-  assert.equal(scoreTabletopHand(abilityHand('robot1', 'robot_ulti')).score, 4 + 3)
+  // Robot Ultimate counts as two Robot attacks.
+  assert.equal(scoreTabletopHand(abilityHand('robot1', 'robot_ulti')).score, 4)
+  assert.equal(scoreTabletopHand(abilityHand('robot2', 'robot_ulti')).score, 8 + 3)
+  // Critter × Robot × Dragon is Robot damage and counts as one Robot attack.
+  const triple = scoreTabletopHand(abilityHand('joker', 'one_off_each'))
+  assert.deepEqual([triple.contributions.robot, triple.damageType, triple.balanced, triple.score], [1, 'robot', true, 4])
+  // Only a Robot main faction earns Perfect Balance.
+  const critterMain = abilityHand('robot1', 'robot_attack', 'rabbit2', 'swarm', 'swarm')
+  assert.equal(scoreTabletopHand(critterMain).damageType, 'critter')
+  assert.equal(scoreTabletopHand(critterMain).bonus, 0)
+  const chameleon = abilityHand('robot1', 'robot_attack', 'rabbit2', 'swarm', 'chameleon')
+  assert.deepEqual([scoreTabletopHand(chameleon, 0, 'critter').bonus, scoreTabletopHand(chameleon, 0, 'robot').bonus], [0, 3])
 })
 
 test('Overwhelming adds a Dragon stat when Dragon base power reaches 14', () => {

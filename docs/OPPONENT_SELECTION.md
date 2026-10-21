@@ -4,8 +4,21 @@ Added 2026-10-19. The menu has an **Opponent** dropdown (saved in `crd-dev-setti
 
 | Option | id | Draft picks | Discard passes | Preparation |
 | --- | --- | --- | --- | --- |
-| Rules AI (Easy) | `rules` | `cardEvaluator` heuristic (unchanged) | `chooseDiscardIds` heuristic (unchanged) | `completeOpponentPreBattle` |
-| Search AI (Medium) | `search` | root rollout search | root rollout search | searched step by step (order, targets, skip/finish) |
+| RolfBot (Easy) | `rules` | `cardEvaluator` heuristic (unchanged) | `chooseDiscardIds` heuristic (unchanged) | `completeOpponentPreBattle` |
+| IngaBot (Medium) | `shallow` | shallow search: 4 samples, Rules AI rollouts | 8 samples, Rules AI rollouts, keeps the Rules choice unless beaten by ≥0.25 mean | `completeOpponentPreBattle` |
+| SvenBot (Hard) | `search` | root rollout search | root rollout search | searched step by step (order, targets, skip/finish) |
+
+2026-10-21: the bots got names (RolfBot = rules, SvenBot = search) and IngaBot was added in between. Ids stay `rules`/`search`, so saved settings keep working. Budgets live in `BOT_SEARCH_PROFILES` (`src/game/opponentAi.js`); `searchAi.js` gained `rollout: 'rules'` (plain Rules AI rollouts instead of the preparation lookahead) and `margin` options. Calibrate with `node scripts/bot-ladder.mjs <botA> <botB> [mode] [games] [rules] [seed]` (seats swap every game; tabletop deals are converted to the chosen rules).
+
+Abilities-rule ladder (2026-10-21, cloud, scores for the first bot; draws = ½):
+
+| Match | Draft | Discard |
+| --- | --- | --- |
+| IngaBot vs RolfBot | 69.2% (300 games) | ~53% (300 games, 8 samples + margin) |
+| SvenBot vs RolfBot | ~74% (60–100 games) | ~52% (60–100 games) |
+| SvenBot vs IngaBot | 65% (100 games) | 56–59% (100 games) |
+
+Discard is weakly separating for every bot under Abilities scoring; draft gives the clear Rolf < Inga < Sven order. A 3-sample Inga fell *below* RolfBot in discard (44.5%), which is why discard keeps a larger sample and a margin.
 
 The neural model from the training runs is **not** wired in. It can become a third option later by adding an entry to `OPPONENT_AI_OPTIONS` and a matching branch in the request client.
 

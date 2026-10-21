@@ -4,7 +4,7 @@ import { createHeadlessGame, stepHeadlessGame, chooseHeadlessBaselineAction } fr
 import { searchDecision, searchPreparationDecision, searchSidePreparation, preparationView } from '../src/game/searchAi.js'
 import { getPreparationActions } from '../src/game/preparationState.js'
 import { getActivatablePreBattleCards } from '../src/game/preBattleEffects.js'
-import { normalizeOpponentAi, OPPONENT_AI_OPTIONS } from '../src/game/opponentAi.js'
+import { normalizeOpponentAi, OPPONENT_AI_OPTIONS, BOT_SEARCH_PROFILES, getDecisionOptions, getOpponentAiName, isSearchOpponentAi } from '../src/game/opponentAi.js'
 
 const FIXED = { minSamples: 12, maxSamples: 12, timeBudgetMs: 1e9, seed: 4242 }
 
@@ -14,10 +14,28 @@ function advanceToOpponentDecision(mode, seed, firstPicker = 'player') {
   return state
 }
 
-test('opponent options list Rules and Search AI', () => {
-  assert.deepEqual(OPPONENT_AI_OPTIONS.map((option) => option.label), ['Rules AI (Easy)', 'Search AI (Medium)'])
+test('opponent options list RolfBot, IngaBot and SvenBot', () => {
+  assert.deepEqual(OPPONENT_AI_OPTIONS.map((option) => option.label), ['RolfBot (Easy)', 'IngaBot (Medium)', 'SvenBot (Hard)'])
+  assert.deepEqual(OPPONENT_AI_OPTIONS.map((option) => option.id), ['rules', 'shallow', 'search'])
   assert.equal(normalizeOpponentAi('search'), 'search')
+  assert.equal(normalizeOpponentAi('shallow'), 'shallow')
   assert.equal(normalizeOpponentAi('neural'), 'rules')
+  assert.deepEqual(['rules', 'shallow', 'search'].map(getOpponentAiName), ['RolfBot', 'IngaBot', 'SvenBot'])
+  assert.deepEqual(['rules', 'shallow', 'search'].map(isSearchOpponentAi), [false, true, true])
+})
+
+test('IngaBot shallow search: few samples, Rules AI rollouts, keeps the Rules choice unless clearly beaten', () => {
+  const { draft, discard } = BOT_SEARCH_PROFILES.shallow.decision
+  for (const [mode, options] of [['draft', draft], ['five-hand-discard', discard]]) {
+    const { game } = advanceToOpponentDecision(mode, 37)
+    const result = searchDecision(game, 'opponent', { ...options, seed: 5 })
+    assert.equal(result.samples, options.maxSamples)
+    assert.equal(getDecisionOptions(BOT_SEARCH_PROFILES.shallow.decision, mode), options)
+  }
+  const { game } = advanceToOpponentDecision('five-hand-discard', 41)
+  // An impossible margin always returns the Rules AI's own choice.
+  const strict = searchDecision(game, 'opponent', { ...discard, margin: 3, seed: 9 })
+  assert.equal(strict.chosenIndex, strict.baselineIndex)
 })
 
 test('draft search picks a legal card and ignores the secret deck order', () => {

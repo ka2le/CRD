@@ -18,8 +18,8 @@ export default function HelpSheet({ open, onClose, tabletop = false }) {
           <div className="help__fact"><GameIcon name="star" /><span>Your largest class contribution is your main damage type. If tied, tap a highlighted card before battle. Neutral-only power uses Robot.</span></div>
           <div className="help__fact"><GameIcon name="shield" /><span>Each enemy shield removes 2 Critter power, 1 Robot power or 0 Dragon power. Power stops at zero.</span></div>
           {tabletop === 'abilities' ? <>
-            <div className="help__fact"><GameIcon name="critter" /><span>Adapt: one Critter stat card becomes a Critter attack card, used automatically when it scores more.</span></div>
-            <div className="help__fact"><GameIcon name="robot" /><span>Perfect Balance: as many Robot stats as Robot attacks (at least one each) adds +3 after shields.</span></div>
+            <div className="help__fact"><GameIcon name="critter" /><span>Adapt: the Critter stat on one stat card becomes a Critter attack, used automatically when it scores more. Other stats on that card stay.</span></div>
+            <div className="help__fact"><GameIcon name="robot" /><span>Perfect Balance: with Robots as main faction, as many Robot stats as Robot attacks (at least one each) adds +3 after shields. Robot Ultimate counts as two attacks; Critter × Robot × Dragon counts as one Robot attack.</span></div>
             <div className="help__fact"><GameIcon name="dragon" /><span>Overwhelming: Dragon power of 14 or more gains one extra Dragon stat before shields.</span></div>
             <div className="help__fact"><GameIcon name="damage" /><span>Power − shields + Perfect Balance = score. Higher wins; equal scores tie.</span></div>
             <div className="help__fact"><GameIcon name="star" /><span>Chameleon lets you choose any main faction: tap it, then a faction icon. Ultimates, including Devour: 4 per matching stat. Bite: 2.</span></div>

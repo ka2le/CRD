@@ -8,7 +8,7 @@ const RESULT_COPY = {
   tie: { title: 'Draw', tone: 'tie' },
 }
 
-export default function BattleOverlay({ battlePlayback, battleResult, onNewGame, onClose, visible, playerName = 'You', opponentName = 'Opponent', spectating = false, newGameLabel = 'Play again' }) {
+export default function BattleOverlay({ battlePlayback, battleResult, onNewGame, onReplayPreparation = null, onClose, visible, playerName = 'You', opponentName = 'Opponent', spectating = false, newGameLabel = 'Play again' }) {
   if (!visible || !battlePlayback || !battleResult) return null
 
   const copy = RESULT_COPY[battleResult.winner] ?? RESULT_COPY.tie
@@ -60,6 +60,12 @@ export default function BattleOverlay({ battlePlayback, battleResult, onNewGame,
           <button type="button" className="ui-button ui-button--icon battle-result__view" onClick={onClose} aria-label="View the table">
             <SvgIcon name="eye" />
           </button>
+          {onReplayPreparation ? (
+            <button type="button" className="ui-button ui-button--icon battle-result__view" onClick={onReplayPreparation}
+              aria-label="Replay from preparation" title="Replay from preparation (testing)">
+              <SvgIcon name="rewind" />
+            </button>
+          ) : null}
           <button type="button" className="ui-button ui-button--primary battle-result__again" onClick={onNewGame}>
             <SvgIcon name="replay" />
             {newGameLabel}

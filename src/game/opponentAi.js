@@ -3,9 +3,11 @@ import { searchDecision, searchSidePreparation } from './searchAi.js'
 import { chooseDiscardIds, pickBestCardForHand } from './cardEvaluator.js'
 import { completeOpponentPreBattle } from './preBattle.js'
 
+// Ids stay 'rules' / 'search' so saved settings keep working; the names are what players see.
 export const OPPONENT_AI_OPTIONS = [
-  { id: 'rules', label: 'Rules AI (Easy)' },
-  { id: 'search', label: 'Search AI (Medium)' },
+  { id: 'rules', name: 'RolfBot', label: 'RolfBot (Easy)' },
+  { id: 'shallow', name: 'IngaBot', label: 'IngaBot (Medium)' },
+  { id: 'search', name: 'SvenBot', label: 'SvenBot (Hard)' },
 ]
 
 export const DEFAULT_OPPONENT_AI = 'rules'
@@ -14,13 +16,42 @@ export function normalizeOpponentAi(value) {
   return OPPONENT_AI_OPTIONS.some((option) => option.id === value) ? value : DEFAULT_OPPONENT_AI
 }
 
-// Worker budget: enough samples to clearly beat the Rules AI on desktop and phones.
-const WORKER_OPTIONS = { minSamples: 16, maxSamples: 128, timeBudgetMs: 600 }
-// Main-thread fallback (no worker support / offline before the worker was cached): keep it short.
-const INLINE_OPTIONS = { minSamples: 8, maxSamples: 24, timeBudgetMs: 200 }
-// Preparation: one search per step (activate which special / target, skip, finish).
-const WORKER_PREPARATION_OPTIONS = { minSamples: 16, maxSamples: 96, timeBudgetMs: 250 }
-const INLINE_PREPARATION_OPTIONS = { minSamples: 8, maxSamples: 16, timeBudgetMs: 80 }
+export function getOpponentAiName(id) {
+  return (OPPONENT_AI_OPTIONS.find((option) => option.id === id) ?? OPPONENT_AI_OPTIONS[0]).name
+}
+
+// Bots that search (everything except RolfBot, which plays the Rules AI directly).
+export function isSearchOpponentAi(id) {
+  return Boolean(BOT_SEARCH_PROFILES[id])
+}
+
+// Search budgets per bot. `decision` covers draft picks / discard passes, `preparation` each
+// pre-battle step (null = Rules AI preparation). `inline` is the short main-thread fallback.
+//   SvenBot: many samples, rollouts look one preparation step ahead.
+//   IngaBot: a shallow search - a handful of samples, Rules AI plays every rollout, Rules AI
+//            preparation; discard passes keep the Rules AI choice unless clearly beaten.
+//            Sits between RolfBot and SvenBot (measure with scripts/bot-ladder.mjs).
+// `decision` may be split per mode: { draft, discard }.
+export const BOT_SEARCH_PROFILES = {
+  search: {
+    decision: { minSamples: 16, maxSamples: 128, timeBudgetMs: 600 },
+    inline: { minSamples: 8, maxSamples: 24, timeBudgetMs: 200 },
+    preparation: { minSamples: 16, maxSamples: 96, timeBudgetMs: 250 },
+    inlinePreparation: { minSamples: 8, maxSamples: 16, timeBudgetMs: 80 },
+  },
+  shallow: {
+    decision: {
+      draft: { minSamples: 4, maxSamples: 4, timeBudgetMs: 0, rollout: 'rules' },
+      discard: { minSamples: 8, maxSamples: 8, timeBudgetMs: 0, rollout: 'rules', margin: 0.25 },
+    },
+    inline: {
+      draft: { minSamples: 4, maxSamples: 4, timeBudgetMs: 0, rollout: 'rules' },
+      discard: { minSamples: 8, maxSamples: 8, timeBudgetMs: 0, rollout: 'rules', margin: 0.25 },
+    },
+    preparation: null,
+    inlinePreparation: null,
+  },
+}
 const PREPARATION_KEYS = ['playerHand', 'opponentHand', 'deck', 'playerDiscard', 'opponentDiscard',
   'playerActivated', 'opponentActivated', 'playerFinished', 'opponentFinished', 'playerDrawnCount', 'opponentDrawnCount']
 const WORKER_TIMEOUT_MS = 5000
@@ -77,15 +108,21 @@ function rulesFallback(game) {
   return { type: 'discard', selectedIds: chooseDiscardIds(game.opponentHand, { discardCount: 2 }) }
 }
 
-function inlineSearch(game) {
+// Search options for this decision: a profile entry is either one option set or { draft, discard }.
+export function getDecisionOptions(options, mode) {
+  if (!options?.draft && !options?.discard) return options
+  return mode === 'draft' ? options.draft : options.discard
+}
+
+function inlineSearch(game, profile) {
   try {
-    return searchDecision(game, 'opponent', INLINE_OPTIONS).action
+    return searchDecision(game, 'opponent', getDecisionOptions(profile.inline, game.mode)).action
   } catch {
     return rulesFallback(game)
   }
 }
 
-function requestFromWorker(game, message = { game: snapshotGame(game), side: 'opponent', options: WORKER_OPTIONS }) {
+function requestFromWorker(game, message) {
   const instance = getWorker()
   if (!instance) return Promise.reject(new Error('No search worker'))
   const id = nextRequestId++
@@ -107,10 +144,12 @@ function requestFromWorker(game, message = { game: snapshotGame(game), side: 'op
  * Ask the Search AI for the opponent's draft pick or discard selection.
  * Always resolves: worker → short main-thread search → Rules AI choice.
  */
-export function requestOpponentSearchAction(game) {
-  return requestFromWorker(game).catch(() => new Promise((resolve) => {
+export function requestOpponentSearchAction(game, bot = 'search') {
+  const profile = BOT_SEARCH_PROFILES[bot] ?? BOT_SEARCH_PROFILES.search
+  const message = { game: snapshotGame(game), side: 'opponent', options: getDecisionOptions(profile.decision, game.mode) }
+  return requestFromWorker(game, message).catch(() => new Promise((resolve) => {
     // Yield first so a pending animation frame can paint before the inline search.
-    setTimeout(() => resolve(inlineSearch(game)), 0)
+    setTimeout(() => resolve(inlineSearch(game, profile)), 0)
   }))
 }
 
@@ -130,9 +169,10 @@ function opponentPreparationPatch(preparation) {
   }
 }
 
-function inlinePreparation(preparation, game) {
+function inlinePreparation(preparation, game, profile) {
+  if (!profile.inlinePreparation) return completeOpponentPreBattle(preparation)
   try {
-    return searchSidePreparation(preparation, game, 'opponent', INLINE_PREPARATION_OPTIONS).preparation
+    return searchSidePreparation(preparation, game, 'opponent', profile.inlinePreparation).preparation
   } catch {
     return completeOpponentPreBattle(preparation)
   }
@@ -143,13 +183,18 @@ function inlinePreparation(preparation, game) {
  * skip/finish), searched step by step. Resolves with the opponent's preparation fields.
  * Always resolves: worker → short main-thread search → Rules AI preparation.
  */
-export function requestOpponentPreparation(preBattle, game) {
+export function requestOpponentPreparation(preBattle, game, bot = 'search') {
+  const profile = BOT_SEARCH_PROFILES[bot] ?? BOT_SEARCH_PROFILES.search
   const preparation = snapshotPreparation(preBattle)
+  if (!profile.preparation) {
+    // Rules AI preparation (IngaBot): instant, but still async like the searching bots.
+    return Promise.resolve(opponentPreparationPatch(completeOpponentPreBattle(preparation)))
+  }
   const message = { kind: 'preparation', preparation, game: snapshotGame(game), side: 'opponent',
-    options: WORKER_PREPARATION_OPTIONS }
+    options: profile.preparation }
   return requestFromWorker(game, message)
     .catch(() => new Promise((resolve) => {
-      setTimeout(() => resolve(inlinePreparation(preparation, game)), 0)
+      setTimeout(() => resolve(inlinePreparation(preparation, game, profile)), 0)
     }))
     .then(opponentPreparationPatch)
 }

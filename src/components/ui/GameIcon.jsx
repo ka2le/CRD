@@ -59,6 +59,13 @@ const SVG_PATHS = {
     </g>
   ),
   play: <path d="M7 5v14l12-7z" fill="currentColor" />,
+  rewind: (
+    <g fill="currentColor">
+      <rect x="2" y="5.5" width="2.4" height="13" rx="1" />
+      <path d="M12 5.5v13L3.5 12z" />
+      <path d="M20.5 5.5v13L12 12z" />
+    </g>
+  ),
   replay: (
     <g fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
       <path d="M4.5 12a7.5 7.5 0 1 0 2.3-5.4" />

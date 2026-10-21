@@ -1,12 +1,11 @@
 .app-shell {
+  /* Edge insets: the rails run edge to edge, so only the play zones are inset. */
+  --inset-l: max(var(--pad), env(safe-area-inset-left));
+  --inset-r: max(var(--pad), env(safe-area-inset-right));
   height: 100dvh;
   width: 100%;
   display: grid;
-  padding:
-    max(var(--pad), env(safe-area-inset-top))
-    max(var(--pad), env(safe-area-inset-right))
-    max(var(--pad), env(safe-area-inset-bottom))
-    max(var(--pad), env(safe-area-inset-left));
+  padding: 0;
   overflow: hidden;
 }
 
@@ -15,8 +14,6 @@
   min-height: 0;
   height: 100%;
   width: 100%;
-  max-width: 1500px;
-  margin-inline: auto;
   display: grid;
   gap: var(--gap);
   overflow: hidden;
@@ -39,7 +36,12 @@
 
 .table__zone {
   position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: calc(1500px + var(--inset-l) + var(--inset-r));
+  justify-self: center;
   min-height: 0;
+  padding-inline: var(--inset-l) var(--inset-r);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -93,7 +95,7 @@
 
 /* Bottom rail is the dock: taller and touch friendly. */
 .table > .side-rail--player {
-  height: var(--dock-h);
+  height: calc(var(--dock-h) + var(--rail-bottom));
 }
 
 @media (min-width: 900px) {

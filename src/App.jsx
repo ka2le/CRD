@@ -27,11 +27,13 @@ import RoomSheet from './components/overlay/RoomSheet'
 import RoomEntry from './components/overlay/RoomEntry'
 import PlayerIdentity from './components/hud/PlayerIdentity'
 import RoomButtons from './components/hud/RoomButtons'
+import { EmoteBubble, EmotePicker } from './components/hud/Emotes'
 import { useElementSize } from './hooks/useFitLayout'
 import { SHUFFLE_LEAD_MS, getPackDealMs } from './hooks/dealTiming'
 import { getHandStats } from './game/engine'
 import { getHandAverageDamage } from './game/cardEvaluator'
 import { getCardTabletopTypes } from './game/tabletop'
+import { getOpponentAiName } from './game/opponentAi'
 
 const BATTLE_HEALTH = 21
 const RESULT_LABELS = { player: 'Victory', opponent: 'Defeat', tie: 'Draw' }
@@ -141,9 +143,11 @@ function AppContent() {
   const [dismissedResultKey, setDismissedResultKey] = useState(null)
   const [helpOpen, setHelpOpen] = useState(false)
   const [scoreOpen, setScoreOpen] = useState(false)
-  const [collectionOpen, setCollectionOpen] = useState(false)
   const [pileOpen, setPileOpen] = useState(false)
-  const [testDeckOpen, setTestDeckOpen] = useState(false)
+  // Deck browser: 'collection' (every card in the game) or 'test' (testing: the live deck/zones).
+  const [deckView, setDeckView] = useState(null)
+
+  const testDeckAvailable = Boolean(settings.testing && !battleStarted)
 
   const layout = battleStarted
     ? 'battle'
@@ -169,7 +173,7 @@ function AppContent() {
   const ownMember = session.online ? (guestSeat ? roster?.guest : roster?.host) : null
   const rivalMember = session.online ? (guestSeat ? roster?.host : roster?.guest) : null
   const playerName = ownMember?.name ?? room.profile.name
-  const opponentName = rivalMember?.name ?? (session.online ? 'Player two' : settings.opponentAi === 'search' ? 'Search AI' : 'Rules AI')
+  const opponentName = rivalMember?.name ?? (session.online ? 'Player two' : getOpponentAiName(settings.opponentAi))
   const winnerName = winner === 'player' ? playerName : winner === 'opponent' ? opponentName : ''
   const resultLabel = winner === 'tie' ? 'Draw' : winnerName ? `${spectating ? '' : `${RESULT_LABELS[winner]} · `}${winnerName} wins` : ''
   function winsFor(member) {
@@ -177,9 +181,17 @@ function AppContent() {
     const score = room.record?.scores?.[member.id] ?? 0
     return score - (battleStarted && !showBattleResult && session.rawSession.roomResult?.winnerId === member.id ? 1 : 0)
   }
-  const bottomIdentity = <PlayerIdentity name={playerName} wins={winsFor(ownMember)}
-    connected={!session.online || (room.connection === 'connected' && Boolean(ownMember?.connected))}
-    editable={!spectating} onRename={(name) => room.client.rename(name)} />
+  // Emotes: online players only. Viewers see the host at the bottom, like the host does.
+  const seated = session.online && ['host', 'guest'].includes(room.record?.role)
+  const bottomSeat = guestSeat ? 'guest' : 'host'
+  const emote = session.online ? room.emote : null
+  const emoteSide = emote ? (emote.seat === bottomSeat ? 'player' : 'opponent') : null
+  const bottomIdentity = <>
+    <PlayerIdentity name={playerName} wins={winsFor(ownMember)}
+      connected={!session.online || (room.connection === 'connected' && Boolean(ownMember?.connected))}
+      editable={!spectating} onRename={(name) => room.client.rename(name)} />
+    {seated ? <EmotePicker onSend={(id) => room.client.sendEmote(id)} disabled={room.connection !== 'connected'} /> : null}
+  </>
   const topIdentity = <PlayerIdentity name={opponentName} wins={winsFor(rivalMember)}
     connected={!session.online || (room.connection === 'connected' && Boolean(rivalMember?.connected))} />
   const dealLeadMs = game.mode === 'draft' ? (game.packNumber === 1 ? SHUFFLE_LEAD_MS : 0) : SHUFFLE_LEAD_MS
@@ -204,7 +216,7 @@ function AppContent() {
   function handleNewGame() {
     if (session.online && room.record?.role !== 'host') { setRoomOpen(true); return }
     setPileOpen(false)
-    setTestDeckOpen(false)
+    if (deckView === 'test') setDeckView(null)
     resetGame()
   }
 
@@ -215,7 +227,7 @@ function AppContent() {
         sections={DECK_SECTIONS}
         count={deckCount}
         pulse={game.phase === 'draft-pack-dealing'}
-        onOpen={settings.testing ? () => setTestDeckOpen(true) : null}
+        onOpen={() => setDeckView(testDeckAvailable ? 'test' : 'collection')}
         label="Deck"
       />
       <Pile
@@ -276,7 +288,7 @@ function AppContent() {
     activationKey: battleStarted ? (battlePlayback?.activationTick ?? 0) : 0,
     battleValuesById: opponentBattleValues,
     battleRound,
-    defeated: winner === 'player',
+    defeated: winner === 'player' && !resultDismissed,
     cardsDisabled: true,
     animateOnMount: !game.devScenario,
     enterFromSection: game.devScenario ? null : 'draw-deck',
@@ -309,7 +321,7 @@ function AppContent() {
     activationKey: battleStarted ? (battlePlayback?.activationTick ?? 0) : 0,
     battleValuesById: playerBattleValues,
     battleRound,
-    defeated: winner === 'opponent',
+    defeated: winner === 'opponent' && !resultDismissed,
     animateOnMount: !game.devScenario,
     enterFromSection: game.devScenario ? null : 'draw-deck',
     enterBaseDelayMs: dealLeadMs,
@@ -341,6 +353,7 @@ function AppContent() {
           turn={opponentThinking}
           winner={winner}
         >
+          <EmoteBubble emote={emoteSide === 'opponent' ? emote : null} side="opponent" />
           {opponentThinking ? <ThinkingDots /> : null}
           {layout !== 'battle' ? phasePips : null}
           <RoomButtons room={room} onOpenRoom={() => setRoomOpen(true)} />
@@ -352,8 +365,8 @@ function AppContent() {
             onUpdateSettings={updateSettings}
             onHelp={() => setHelpOpen(true)}
             onScoreCard={() => setScoreOpen(true)}
-            onCollection={() => setCollectionOpen(true)}
-            onTestDeck={() => setTestDeckOpen(true)}
+            onCollection={() => setDeckView('collection')}
+            onTestDeck={() => setDeckView('test')}
             onRoom={() => setRoomOpen(true)}
             inRoom={Boolean(room.record)}
             canConfigure={!session.online || room.record?.role === 'host'}
@@ -438,8 +451,15 @@ function AppContent() {
           winner={winner}
           crowded={Boolean(primaryAction)}
         >
+          <EmoteBubble emote={emoteSide === 'player' ? emote : null} side="player" />
           {layout !== 'battle' ? piles : null}
           {primaryAction}
+          {battleFinished && session.replayPreparation ? (
+            <button type="button" className="ui-button ui-button--icon table__action" onClick={session.replayPreparation}
+              aria-label="Replay from preparation" title="Replay from preparation (testing)">
+              <SvgIcon name="rewind" />
+            </button>
+          ) : null}
           {battleFinished && (!session.online || room.record?.role === 'host') ? (
             <button type="button" className="ui-button ui-button--primary table__action" onClick={handleNewGame}>
               <SvgIcon name="replay" />
@@ -458,6 +478,7 @@ function AppContent() {
         spectating={spectating}
         newGameLabel={session.online && room.record?.role !== 'host' ? 'Room controls' : 'Play again'}
         onNewGame={handleNewGame}
+        onReplayPreparation={session.replayPreparation}
         onClose={() => setDismissedResultKey(battleKey)}
       />
 
@@ -477,12 +498,13 @@ function AppContent() {
       />
 
       <TestDeckSheet
-        open={Boolean(settings.testing && testDeckOpen && !battleStarted)}
+        open={testDeckAvailable && deckView === 'test'}
         zones={testDeckZones}
         editable={testEditable}
         onSwap={swapTestDeckCards}
         onToTop={moveTestDeckCardToTop}
-        onClose={() => setTestDeckOpen(false)}
+        onClose={() => setDeckView(null)}
+        onSwitch={setDeckView}
         contextHand={playerHand}
       />
 
@@ -495,8 +517,9 @@ function AppContent() {
         onClose={cancelTabletopTypeChoice} />
       <ScoreSheet open={scoreOpen} onClose={() => setScoreOpen(false)} />
       <CollectionSheet
-        open={collectionOpen}
-        onClose={() => setCollectionOpen(false)}
+        open={deckView === 'collection'}
+        onClose={() => setDeckView(null)}
+        onSwitch={testDeckAvailable ? setDeckView : null}
         tabletop={settings.tabletop}
         wildDeck={Boolean(settings.wildDeck)}
       />
