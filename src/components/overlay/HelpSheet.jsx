@@ -1,7 +1,7 @@
 import './HelpSheet.css'
 import Sheet from './Sheet'
 import { GameIcon, SvgIcon } from '../ui/GameIcon'
-import { TABLETOP_THRESHOLDS } from '../../game/tabletop'
+import { TABLETOP_THRESHOLDS, FLEXIBLE_RULES } from '../../game/tabletop'
 
 const ROUNDS = [1, 2, 3, 4, 5, 6]
 const LANES = [
@@ -20,9 +20,9 @@ export default function HelpSheet({ open, onClose, tabletop = false }) {
           <div className="help__fact"><GameIcon name="shield" /><span>Each enemy shield removes 2 Critter power, 1 Robot power or 0 Dragon power. Power stops at zero.</span></div>
           {tabletop === 'abilitiesv2' ? <>
             <div className="help__fact"><GameIcon name="critter" /><span>Critter main faction wins equal scores against other factions. Two Critter hands still tie.</span></div>
-            <div className="help__fact"><GameIcon name="robot" /><span>Reconfigure: automatically swap one Robot stat for an ordinary Robot attack, or one ordinary attack for a stat, when it increases power. Other stats stay; ultimates and special attacks cannot become stats.</span></div>
-            <div className="help__fact"><GameIcon name="dragon" /><span>Overwhelming: 7+ Dragon power before shields earns +4 power.</span></div>
-            <div className="help__fact"><GameIcon name="damage" /><span>Power − shields + Overwhelming = score. Ultimates: 2 per matching stat. Bite: 1. Chameleon changes main faction, including who wins ties.</span></div>
+            <div className="help__fact"><GameIcon name="robot" /><span>Reconfigure: exchange any number of base single Robot stat cards and ordinary Robot attack cards to maximize power. Double stats, mixed stats, ultimates and special attacks cannot be exchanged.</span></div>
+            <div className="help__fact"><GameIcon name="dragon" /><span>Overwhelming: {FLEXIBLE_RULES.overwhelmingAt}+ Dragon power before shields adds one Dragon stat. Recalculate all attacks once.</span></div>
+            <div className="help__fact"><GameIcon name="damage" /><span>Power after abilities − shields = score. Ultimates: 2 per matching stat. Bite: 1. Chameleon changes main faction, including who wins ties.</span></div>
           </> : tabletop === 'abilities' ? <>
             <div className="help__fact"><GameIcon name="critter" /><span>Adapt: the Critter stat on one stat card becomes a Critter attack, used automatically when it scores more. Other stats on that card stay.</span></div>
             <div className="help__fact"><GameIcon name="robot" /><span>Perfect Balance: with Robots as main faction, as many Robot stats as Robot attacks (at least one each) adds +3 after shields. Robot Ultimate counts as two attacks; Critter * Robot * Dragon counts as one Robot attack.</span></div>

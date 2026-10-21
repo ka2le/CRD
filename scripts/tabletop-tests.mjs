@@ -125,26 +125,58 @@ test('Abilities Overwhelming tests Dragon contribution before shields and adds a
   assert.deepEqual([scoreTabletopHand(above).dragonBase, scoreTabletopHand(above).base], [8, 10])
 })
 
-test('Reconfigure works both ways, keeps mixed/double stats and leaves ultimates intact', () => {
-  const forward = getTabletopProfile(flexHand('robot2', 'robot2', 'robot_attack'))
-  assert.deepEqual([forward.stats.robot, forward.base, forward.reconfigured.direction], [3, 6, 'stat-to-attack'])
-  const reverse = getTabletopProfile(flexHand('robot1', 'robot_attack', 'robot_attack', 'robot_attack', 'robot_attack'))
-  assert.deepEqual([reverse.stats.robot, reverse.base, reverse.reconfigured.direction], [2, 6, 'attack-to-stat'])
+test('Reconfigure exchanges any number of base cards, excluding mixed/double stats and special attacks', () => {
+  const original = flexHand(...Array(5).fill('robot1'))
+  const saved = structuredClone(original)
+  const forward = getTabletopProfile(original)
+  assert.deepEqual([forward.stats.robot, forward.base, forward.reconfigured.direction, forward.reconfigured.count], [3, 6, 'stat-to-attack', 2])
+  assert.deepEqual(original, saved)
+  const reverse = getTabletopProfile(flexHand(...Array(5).fill('robot_attack')))
+  assert.deepEqual([reverse.stats.robot, reverse.base, reverse.reconfigured.direction, reverse.reconfigured.count], [2, 6, 'attack-to-stat', 2])
   const mixed = getTabletopProfile(flexHand('joker', 'robot1', 'robot1', 'dragons_breath'))
   assert.equal(mixed.stats.dragon, 1)
   assert.equal(mixed.stats.critter, 1)
+  assert(mixed.reconfigured.uids.every((uid) => uid.startsWith('robot1-')))
   assert.equal(getTabletopProfile(flexHand('robot1', 'robot_attack')).reconfigured, null)
+  assert.equal(getTabletopProfile(flexHand('robot2', 'robot2', 'robot_attack')).base, 4)
+  assert.equal(getTabletopProfile(flexHand('robot2', 'robot2')).reconfigured, null)
+  assert.equal(getTabletopProfile(flexHand('joker', 'robot_critter', 'robot_dragon', 'one_off_each', 'robot_ulti')).reconfigured, null)
   assert.equal(getTabletopProfile(flexHand('robot_ulti', 'robot_ulti')).base, 0)
   assert.equal(getTabletopProfile(flexHand('robot2', 'robot_ulti')).base, 4)
+  const copied = flexHand(...Array(5).fill('robot1')).map((c) => ({ ...c, isCopiedCard: true }))
+  assert.equal(getTabletopProfile(copied).base, 6)
 })
 
-test('Flexible Dragon bonus uses Dragon power 7+, once, and other power cannot trigger it', () => {
-  assert.equal(scoreTabletopHand(flexHand('dragon2', 'dragon1', 'dragon_ulti')).bonus, 0)
+test('Flexible Dragon uses contribution 6+, adds one stat once, and recomputes hybrids', () => {
+  const six = scoreTabletopHand(flexHand('dragon2', 'dragon1', 'dragon_ulti'))
+  assert.deepEqual([six.dragonBase, six.stats.dragon, six.base, six.bonus], [6, 4, 8, 0])
+  assert.equal(scoreTabletopHand(flexHand('dragon2', 'dragon1', 'dragons_breath', 'bite')).overwhelming, false)
   const dragon = scoreTabletopHand(flexHand('dragon2', 'dragon2', 'dragon_ulti'))
-  assert.deepEqual([dragon.base, dragon.bonus, dragon.score], [8, 4, 12])
-  assert.equal(scoreTabletopHand(flexHand('dragon1', 'dragons_breath', 'rabbit2', 'swarm', 'swarm')).bonus, 0)
-  assert.equal(scoreTabletopHand(flexHand('dragon2', 'dragon2', 'dragon2', 'dragon1', 'dragons_breath')).score, 11)
+  assert.deepEqual([dragon.base, dragon.bonus, dragon.score], [10, 0, 10])
+  assert.equal(scoreTabletopHand(flexHand('dragon1', 'dragons_breath', 'rabbit2', 'swarm', 'swarm')).overwhelming, false)
+  assert.equal(scoreTabletopHand(flexHand('dragon2', 'dragon2', 'dragon2', 'dragon1', 'dragons_breath')).score, 8)
+  const hybrid = scoreTabletopHand(flexHand('joker', 'dragon2', 'dragon_ulti', 'one_off_each', 'any_off_each'))
+  assert.deepEqual([hybrid.dragonBase, hybrid.stats.dragon, hybrid.contributions.robot, hybrid.neutral, hybrid.score], [6, 4, 4, 6, 18])
   assert.equal(scoreTabletopHand(abilityHand('dragon2', 'dragon2', 'dragon2', 'dragon1', 'dragons_breath')).score, 8)
+})
+
+test('Unlimited base Reconfigure matches exhaustive card-by-card assignments, including special formulas', () => {
+  for (const extras of [[], ['robot2', 'robot_ulti'], ['joker', 'one_off_each'], ['dragon2', 'dragon1', 'dragon_ulti', 'any_off_each']]) {
+    for (let stats = 0; stats <= 6; stats++) for (let attacks = 0; attacks + stats <= 6; attacks++) {
+      const hand = flexHand(...Array(stats).fill('robot1'), ...Array(attacks).fill('robot_attack'), ...extras)
+      const total = stats + attacks
+      let best = 0
+      for (let mask = 0; mask < 2 ** total; mask++) {
+        const assigned = hand.map((card, i) => i >= total ? card : {
+          ...card, id: `fixed-base-${i}`, type: mask & (1 << i) ? 'stat' : 'action',
+          stats: mask & (1 << i) ? ['robot'] : [],
+          effect: mask & (1 << i) ? {} : { dmg: 1, dmgType: 'robot' },
+        })
+        best = Math.max(best, getTabletopProfile(assigned).base)
+      }
+      assert.equal(getTabletopProfile(hand).base, best, JSON.stringify({ stats, attacks, extras }))
+    }
+  }
 })
 
 test('Flexible Critter tiebreak is symmetric; same-faction and untyped zero draws remain', () => {

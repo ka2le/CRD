@@ -143,8 +143,8 @@ export function AbilityBandsCard() {
 
 // ---------- Abilities v2 (Flexible Robots) ----------
 //   Critters – Win Ties: a Critter main faction wins equal scores against Robots or Dragons.
-//   Robots – Reconfigure: swap 1 Robot stat ⇄ 1 ordinary Robot attack.
-//   Dragons – Overwhelming: 7+ Dragon power → +4.
+//   Robots – Reconfigure: freely exchange base single-stat / ordinary attack cards.
+//   Dragons – Overwhelming: 6+ Dragon power → +1 Dragon stat.
 
 // Crown for the Critter tie win (drawn after the crown_b board-game icon).
 function Crown({ className = '' }) {
@@ -220,9 +220,7 @@ const FLEXIBLE = [
         <span className="ab-cols__req">{FLEXIBLE_RULES.overwhelmingAt}+</span>
         <span className="ab-cols__res">
           <span className="ab-cols__plus">+</span>
-          <span className="ab-hearts" aria-label={`+${FLEXIBLE_RULES.overwhelmingBonus}`}>
-            {Array.from({ length: FLEXIBLE_RULES.overwhelmingBonus }, (_, index) => <GameIcon key={index} name="damage" />)}
-          </span>
+          <StatCard cls="dragon" />
         </span>
       </div>
     ),

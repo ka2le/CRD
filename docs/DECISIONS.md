@@ -1,5 +1,9 @@
 # DECISIONS.md
 
+## Adopted Abilities v2 revision — 2026-10-21
+
+Creator adopted Dragon contribution6+ → one extra Dragon stat (all formulas recomputed once), and clarified that Robot Reconfigure is unrestricted in number of exchanges but restricted to base `robot1` and `robot_attack` cards, including copies. Double/mixed stats, ultimates and hybrids cannot be converted. Automatically maximize unshielded power after abilities; no conversion on ties, otherwise fewest conversions. Reference card: keep large6+, replace hearts with v1 extra-stat card; Robot artwork unchanged. Headless v2 rules version becomesv3. Historical study variants explicitly retain their old Robot interpretation. Normal-deck search verification runs under the adopted rules; no publishing requested.
+
 ## Larger net, search opponents and unknown future packs — 2026-10-19
 
 Creator requested much more training data, about 100k parameters and each evaluation contributing a training example. Implemented 220→256→160→3 W/D/L residual evaluator (98,842 fitted parameters); store one numeric row per candidate, with all individual rollout outcomes represented exactly by W/D/L counts in cross-entropy. Add actual search-play returns for chosen actions; keep their correlated/weighted nature explicit. Actual collection/opponents use frozen base search, with limited exploration on one side. Main strength criterion is neural-assisted search against base search at equal budgets, not beating heuristic or reducing prediction error alone. Preparation remains heuristic. Search samples possible unknown packs independently of the real deck; added explicit draft future-deck/seed isolation regression. `AI_DRAFT_V2.md` records the current large run and commands. No arbitrary reward for safe/risky play; maximize expected actual match score given relative hands and chance.

@@ -1,11 +1,16 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
-import { battleAnalysisProfile } from './balance-variants.mjs'
+import { battleAnalysisProfile, BALANCE_VARIANTS } from './balance-variants.mjs'
+import { FLEXIBLE_RULES } from '../src/game/tabletop.js'
 import { getCoreCards, getExpandedCoreDeck } from '../src/game/cards.js'
 
 const definitions = new Map(getCoreCards().map((c) => [c.id, c]))
 const hand = (ids) => ids.map((id, i) => ({ ...definitions.get(id), uid: `${id}-${i}` }))
+
+test('Adopted v2 balance configuration equals the playable rules', () => {
+  assert.deepEqual(BALANCE_VARIANTS['abilitiesv2-base-unlimited'].flexible, FLEXIBLE_RULES)
+})
 test('Battle faction labels use the full CD cycle, preserve mixed ties and neutral damage', () => {
   assert.equal(battleAnalysisProfile(hand(['critter1', 'swarm', 'dragon1', 'dragons_breath'])).damageType, 'mixed')
   assert.equal(battleAnalysisProfile(hand(['bite'])).damageType, 'neutral')
@@ -27,7 +32,7 @@ test('Isolated trial parameters affect real shared scoring at both sides of cuto
     ['threshold-distinct8', [3, 7, 12]], ['threshold-distinct9', [3, 7, 8]],
     ['threshold-later8', [3, 4, 12]], ['threshold-later9', [3, 4, 8]],
     ['threshold-balanced', [3, 6, 11]], ['threshold-balanced-robot3', [3, 6, 11]], ['threshold-balanced-dragon8', [3, 6, 12]],
-    ['abilitiesv2', [11, 12]], ['abilitiesv2-tuned', [7, 11]], ['abilitiesv2-extra-stat', [8, 10]],
+    ['abilitiesv2', [11, 12]], ['abilitiesv2-tuned', [7, 11]], ['abilitiesv2-extra-stat', [8, 10]], ['abilitiesv2-extra-stat6', [8, 10]], ['abilitiesv2-base-unlimited', [8, 10]],
   ]) {
     const code = `import { configureBalanceVariant } from './scripts/balance-variants.mjs';
       import { getCoreCards } from './src/game/cards.js';
@@ -41,6 +46,11 @@ test('Isolated trial parameters affect real shared scoring at both sides of cuto
       }
       const defs=new Map(getCoreCards({tabletop:rules}).map(c=>[c.id,c]));
       const score=ids=>{const h=ids.map((id,i)=>toTabletopCard({...defs.get(id),uid:id+i},rules));return scoreTabletopHand(h,0,chooseTabletopType(h)).score};
+      if (${JSON.stringify(variant)} === 'abilitiesv2-extra-stat6') {
+        assert.equal(score(['dragon2','dragon1','dragon_ulti']),8);
+        assert.equal(score([...Array(5).fill('dragon1'),'dragons_breath']),5);
+        assert.equal(score([...Array(6).fill('dragon1'),'dragons_breath']),7);
+      }
       const ids=rules==='threshold'?[['critter1','swarm'],['robot2','robot_ulti'],['dragon2','dragon2','dragon_ulti']]:[ [...Array(7).fill('dragon1'),'dragons_breath'],['dragon2','dragon2','dragon_ulti'] ];
       console.log(JSON.stringify(ids.map(score)));`
     assert.deepEqual(JSON.parse(execFileSync(process.execPath, ['--input-type=module', '-e', code], { encoding: 'utf8' })), expected)

@@ -14,9 +14,11 @@ export const BALANCE_VARIANTS = {
   'threshold-balanced': { rules: 'threshold', title: 'Threshold 2/2/3 at 1/4/7', thresholds: { critter: { at: 1, bonus: 2 }, robot: { at: 4, bonus: 2 }, dragon: { at: 7, bonus: 3 } } },
   'threshold-balanced-robot3': { rules: 'threshold', title: 'Threshold 2/2/3 at 1/3/7', thresholds: { critter: { at: 1, bonus: 2 }, robot: { at: 3, bonus: 2 }, dragon: { at: 7, bonus: 3 } } },
   'threshold-balanced-dragon8': { rules: 'threshold', title: 'Threshold 2/2/4 at 1/4/8', thresholds: { critter: { at: 1, bonus: 2 }, robot: { at: 4, bonus: 2 }, dragon: { at: 8, bonus: 4 } } },
-  abilitiesv2: { rules: 'abilitiesv2', title: 'V2: 7+ → +4', flexible: { overwhelmingAt: 7, overwhelmingBonus: 4, overwhelmingExtraStat: false } },
-  'abilitiesv2-extra-stat': { rules: 'abilitiesv2', title: 'V2: 7+ → +1 Dragon stat', flexible: { overwhelmingAt: 7, overwhelmingBonus: 0, overwhelmingExtraStat: true } },
-  'abilitiesv2-tuned': { rules: 'abilitiesv2', title: 'V2: 8+ → +3', flexible: { overwhelmingAt: 8, overwhelmingBonus: 3 } },
+  abilitiesv2: { rules: 'abilitiesv2', title: 'V2: 7+ → +4', flexible: { overwhelmingAt: 7, overwhelmingBonus: 4, overwhelmingExtraStat: false, unlimitedBaseReconfigure: false } },
+  'abilitiesv2-extra-stat': { rules: 'abilitiesv2', title: 'V2: 7+ → +1 Dragon stat', flexible: { overwhelmingAt: 7, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false } },
+  'abilitiesv2-extra-stat6': { rules: 'abilitiesv2', title: 'V2: 6+ → +1 Dragon stat', flexible: { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false } },
+  'abilitiesv2-tuned': { rules: 'abilitiesv2', title: 'V2: 8+ → +3', flexible: { overwhelmingAt: 8, overwhelmingBonus: 3, overwhelmingExtraStat: false, unlimitedBaseReconfigure: false } },
+  'abilitiesv2-base-unlimited': { rules: 'abilitiesv2', title: 'V2: Dragon 6+ extra stat, unlimited base Robot conversions', flexible: { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: true } },
   abilities: { rules: 'abilities', title: 'Abilities v1 (not in current study)' },
 }
 let configured = false

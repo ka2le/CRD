@@ -3,8 +3,8 @@ import { chooseTabletopType, getTabletopProfile } from './tabletop.js'
 
 const SCENARIOS = {
   reconfigure: {
-    player: ['robot2', 'robot2', 'robot_attack', 'shield2', 'critter1'],
-    opponent: ['dragon2', 'dragon2', 'dragon_ulti', 'shield2', 'critter1'],
+    player: ['robot1', 'robot1', 'robot1', 'robot1', 'robot1'],
+    opponent: ['dragon2', 'dragon1', 'dragon_ulti', 'shield2', 'critter1'],
   },
   plain: {
     player: ['dragon2', 'dragons_breath', 'robot1', 'critter1', 'recycle_card'],

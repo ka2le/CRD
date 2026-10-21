@@ -1,11 +1,12 @@
 import { GameIcon } from '../ui/GameIcon'
 import './TabletopScore.css'
+import { ABILITY_RULES, FLEXIBLE_RULES } from '../../game/tabletop'
 
 export function TabletopFormula({ score, label }) {
   const hasCalculation = score.blocked > 0 || score.bonus > 0
   const abilities = score.rules === 'abilities'
   const flexible = score.rules === 'abilitiesv2'
-  const bonusTitle = flexible ? 'Overwhelming: 7+ Dragon power earns +4'
+  const bonusTitle = flexible ? 'Overwhelming'
     : abilities
     ? `Perfect Balance: +${score.bonus} after shields`
     : `${score.baseBonus} faction bonus${score.shortcuts > 0 ? ` (Shortcut: ${score.naturalBonus} → ${score.baseBonus})` : ''}${score.bonusMultiplier > 1 ? ` * ${score.bonusMultiplier}` : ''} after shields`
@@ -15,15 +16,15 @@ export function TabletopFormula({ score, label }) {
       <span className="tabletop-formula__label">{label}</span>
       {score.damageType ? <GameIcon name={score.damageType} title={`${score.damageType} damage type`} style={{ color: `var(--${score.damageType})` }} /> : <span />}
       <span className="tabletop-formula__equation">
-        {flexible && score.reconfigured ? <span className="tabletop-formula__ability" title={score.reconfigured.direction === 'stat-to-attack' ? 'Reconfigure: one Robot stat became an attack' : 'Reconfigure: one Robot attack became a stat'}><GameIcon name="robot" />⇄</span> : null}
+        {flexible && score.reconfigured ? <span className="tabletop-formula__ability" title={`Reconfigure: ${score.reconfigured.count ?? 1} Robot ${score.reconfigured.direction === 'stat-to-attack' ? 'stat card(s) became attacks' : 'attack card(s) became stats'}`}><GameIcon name="robot" />⇄</span> : null}
         {flexible && score.winsTies ? <span className="tabletop-formula__ability" title="Critters win equal scores against other factions">=★</span> : null}
         {abilities && score.adaptedUid ? (
           <span className="tabletop-formula__ability" title="Adapt: a Critter stat card became a Critter attack">
             <GameIcon name="critter" style={{ color: 'var(--critter)' }} />⇒
           </span>
         ) : null}
-        {abilities && score.overwhelming ? (
-          <span className="tabletop-formula__ability" title="Overwhelming: Dragon power 7+ gained one Dragon stat">
+        {(abilities || flexible) && score.overwhelming ? (
+          <span className="tabletop-formula__ability" title={`Overwhelming: Dragon power ${flexible ? FLEXIBLE_RULES.overwhelmingAt : ABILITY_RULES.overwhelmingAt}+ gained one Dragon stat`}>
             <GameIcon name="dragon" style={{ color: 'var(--dragon)' }} />+1
           </span>
         ) : null}

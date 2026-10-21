@@ -1,5 +1,7 @@
 # Architecture
 
+2026-10-21 adopted v2 revision: `getBaseFlexiblePlans` evaluates all reachable base Robot stat/attack counts in linear many plans, avoiding exponential subsets. Only `robot1`/`robot_attack` IDs qualify, including copies; fixed mixed/double stats and specials still contribute to scoring. Each plan applies Dragon6+ extra stat once before selecting maximum unshielded power. Legacy one-pip behavior is explicitly process-configured for historical studies. WeakMap profiles still require configuring trials before scoring. Headless abilitiesv2 rules versionv3. See `TABLETOP_MODE.md`.
+
 2026-10-21: three tabletop modes use the confirmed smaller damage scale; see `TABLETOP_MODE.md`. `scripts/tabletop-balance.mjs` collects actual browser-search self-play, including preparation, with real mode-specific decks, fixed budgets, durable decision records and independent decision probes. `TABLETOP_BALANCE_RESULTS.md` records the completed comparison. Earlier balance numbers below concern superseded rules/decks. Digital AI training remains separate and paused.
 
 2026-10-19 addition: the persisted `tabletop` setting applies independently of Draft/Discard. `cards.js` derives marked cards through `tabletop.js`; `tabletopAi.js` supplies integer-mode heuristics. Session preparation validates main-type commitment. Playback calls the pure tabletop scorer immediately; `TabletopScore.jsx` renders both formulas. Browser Search AI re-scores completed sampled hands with tabletop rules; offline digital training remains unchanged. See `TABLETOP_MODE.md`.

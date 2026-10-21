@@ -238,7 +238,7 @@
 /* bands: bone on the coloured band */
 .ab-bands .ab-vs .g-icon:not(.ab-arrow) { color: #f2e8d2; }
 
-/* Overwhelming in the threshold-card columns: 7+ | + 2×2 hearts */
+/* Overwhelming keeps the large cutoff, with the v1 Dragon stat card reward. */
 .ab-cols { position: relative; display: grid; grid-template-columns: 78px 1fr; align-items: center; margin-top: 12px; }
 .ab-cols__req { font-family: var(--display); font-size: 30px; font-weight: 700; line-height: 1; color: var(--brass-hi); }
 .ab-cols__res { display: flex; align-items: center; gap: 6px; }

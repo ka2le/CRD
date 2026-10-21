@@ -37,7 +37,7 @@ export function toTabletopCard(card, rules = 'threshold') {
 
 // ---------- abilities ----------
 export const ABILITY_RULES = { balanceBonus: 3, overwhelmingAt: 7 }
-export const FLEXIBLE_RULES = { overwhelmingAt: 7, overwhelmingBonus: 4, overwhelmingExtraStat: false }
+export const FLEXIBLE_RULES = { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: true }
 
 // Adapt: one stat card with a Critter stat turns its Critter stat(s) into an ordinary Critter attack
 // (1 power per Critter stat). Any other faction stats on that card stay (Joker keeps Robot + Dragon).
@@ -95,10 +95,8 @@ export function getTabletopProfile(hand = []) {
   return profile
 }
 
-// Reconfigure exchanges one stat pip and one ordinary attack, once per hand.
-// Mixed/double stat cards retain their other stats. Ultimates and hybrid specials
-// keep their printed effects and are not ordinary attacks available for conversion.
-function getFlexibleProfile(hand) {
+// Historical single-pip interpretation, retained only for archived study replays.
+function getLegacyFlexiblePlans(hand) {
   const plans = [{ cards: hand, reconfigured: null }]
   for (const card of hand) {
     if (card.type === 'stat' && card.stats?.includes('robot')) {
@@ -113,12 +111,41 @@ function getFlexibleProfile(hand) {
         reconfigured: { uid: card.uid, direction: 'attack-to-stat' } })
     }
   }
+  return plans
+}
+
+// Only the base single-stat / ordinary-attack cards can change (copies included).
+// For each possible stat/attack split, use the fewest conversions. Exchanging a
+// stat and an attack simultaneously would cancel out, so subsets need no search.
+function getBaseFlexiblePlans(hand) {
+  const stats = hand.filter((card) => card.id === 'robot1')
+  const attacks = hand.filter((card) => card.id === 'robot_attack')
+  const plans = [{ cards: hand, reconfigured: null }]
+  function addPlan(sources, count, direction) {
+    const uids = sources.slice(0, count).map((card) => card.uid)
+    const selected = new Set(uids)
+    const toAttack = direction === 'stat-to-attack'
+    const cards = hand.map((card) => selected.has(card.uid) ? {
+      ...card, type: toAttack ? 'action' : 'stat', stats: toAttack ? [] : ['robot'],
+      effect: toAttack ? { dmg: 1, dmgType: 'robot' } : {},
+    } : card)
+    plans.push({ cards, reconfigured: { direction, uids, count } })
+  }
+  // No conversion wins equal values; among improvements, fewer changes win ties.
+  for (let count = 1; count <= Math.max(stats.length, attacks.length); count++) {
+    if (count <= stats.length) addPlan(stats, count, 'stat-to-attack')
+    if (count <= attacks.length) addPlan(attacks, count, 'attack-to-stat')
+  }
+  return plans
+}
+
+function getFlexibleProfile(hand) {
+  const plans = FLEXIBLE_RULES.unlimitedBaseReconfigure ? getBaseFlexiblePlans(hand) : getLegacyFlexiblePlans(hand)
   const profiles = plans.map(({ cards, reconfigured }) => {
     let profile = computeProfile(cards)
     const dragonBase = profile.contributions.dragon
     const overwhelming = dragonBase >= FLEXIBLE_RULES.overwhelmingAt
-    // Study-only alternative: apply v1's extra stat once to each v2 conversion
-    // plan, including hybrid formulas, before choosing the strongest plan.
+    // Apply the extra stat once to all formulas before choosing the best plan.
     if (overwhelming && FLEXIBLE_RULES.overwhelmingExtraStat) profile = computeProfile(cards, { dragon: 1 })
     return { ...profile, rules: 'abilitiesv2', reconfigured, dragonBase,
       overwhelming }
