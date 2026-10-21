@@ -27,7 +27,7 @@ test('Isolated trial parameters affect real shared scoring at both sides of cuto
     ['threshold-distinct8', [3, 7, 12]], ['threshold-distinct9', [3, 7, 8]],
     ['threshold-later8', [3, 4, 12]], ['threshold-later9', [3, 4, 8]],
     ['threshold-balanced', [3, 6, 11]], ['threshold-balanced-robot3', [3, 6, 11]], ['threshold-balanced-dragon8', [3, 6, 12]],
-    ['abilitiesv2', [11, 12]], ['abilitiesv2-tuned', [7, 11]],
+    ['abilitiesv2', [11, 12]], ['abilitiesv2-tuned', [7, 11]], ['abilitiesv2-extra-stat', [8, 10]],
   ]) {
     const code = `import { configureBalanceVariant } from './scripts/balance-variants.mjs';
       import { getCoreCards } from './src/game/cards.js';
@@ -48,4 +48,30 @@ test('Isolated trial parameters affect real shared scoring at both sides of cuto
 })
 test('Study runner rejects Wild before creating a run', () => {
   assert.throws(() => execFileSync(process.execPath, ['scripts/tabletop-balance.mjs', 'abilitiesv2', 'draft', '1', '1', '1', 'wild'], { stdio: 'pipe' }), /Normal Deck/)
+})
+
+test('V2 extra-stat trial uses pre-bonus Dragon contribution once, rescales hybrids and retains other v2 abilities', () => {
+  const code = `import assert from 'node:assert/strict';
+    import { configureBalanceVariant } from './scripts/balance-variants.mjs';
+    import { getCoreCards } from './src/game/cards.js';
+    import { toTabletopCard, scoreTabletopHand, chooseTabletopType, resolveTabletopBattle } from './src/game/tabletop.js';
+    configureBalanceVariant('abilitiesv2-extra-stat');
+    const defs=new Map(getCoreCards({tabletop:'abilitiesv2'}).map(c=>[c.id,c]));
+    const hand=ids=>ids.map((id,i)=>toTabletopCard({...defs.get(id),uid:id+i},'abilitiesv2'));
+    const score=ids=>{const h=hand(ids);return scoreTabletopHand(h,0,chooseTabletopType(h))};
+    assert.equal(score(['dragon2','dragon1','dragon_ulti']).overwhelming,false);
+    const boundary=score([...Array(7).fill('dragon1'),'dragons_breath']);
+    assert.equal(boundary.dragonBase,7); assert.equal(boundary.stats.dragon,8); assert.equal(boundary.score,8);
+    const ultimate=score(['dragon2','dragon2','dragon_ulti']);
+    assert.equal(ultimate.score,10); assert.equal(ultimate.bonus,0);
+    const hybrid=score(['joker','dragon2','dragon1','dragon_ulti','one_off_each','any_off_each']);
+    assert.equal(hybrid.stats.dragon,5); assert.equal(hybrid.contributions.robot,5);
+    assert.equal(hybrid.neutral,7); assert.equal(hybrid.score,22);
+    const robot=score(['robot2','robot2','robot_attack']);
+    assert.equal(robot.score,6); assert.equal(robot.reconfigured.direction,'stat-to-attack');
+    assert.equal(score(['critter1','critter1']).score,0);
+    const c=hand(['critter1','swarm']), neutral=hand(['bite']);
+    assert.equal(resolveTabletopBattle(c,neutral,{playerType:chooseTabletopType(c)}).winner,'player');
+    assert.throws(()=>configureBalanceVariant('abilitiesv2'),/One variant per process/);`;
+  execFileSync(process.execPath, ['--input-type=module', '-e', code], { stdio: 'pipe' });
 })

@@ -44,7 +44,7 @@ const SPECIAL_TEXT = {
   draw_2_extra: 'Draw two extra cards.',
   copy_card_in_hand: 'Becomes a copy of another card in your hand.',
   double_dmg: 'Doubles all your damage this round.',
-  one_off_each: 'Damage = Critter × Robot × Dragon stats.',
+  one_off_each: 'Damage = Critter * Robot * Dragon stats.',
   any_off_each: 'Damage = Critter + Robot + Dragon stats.',
   shield_is_dmg: 'Damage equal to your shield this round.',
   shield2: 'Blocks 2 damage this round.',
@@ -57,11 +57,11 @@ const TABLETOP_TEXT = {
   shortcut: 'Grants your main faction bonus even below its threshold, after shields. Requires positive power. Adds no base power. Threshold rules only.',
   chameleon: 'Choose Critter, Robot or Dragon as your main faction before battle. Its bonus and shield vulnerability apply to your whole hand. Adds no stats or base power.',
   bite: 'Adds 1 power, no stats needed.',
-  double_dmg: 'Doubles your main faction bonus after shields. Works with any faction. Copies stack: ×2, ×4, ×8. Threshold rules only.',
+  double_dmg: 'Doubles your main faction bonus after shields. Works with any faction. Copies stack: *2, *4, *8. Threshold rules only.',
   devour: '2 power per Dragon stat. You may choose Dragon as your main damage type.',
   shield2: 'One shield. Reduces enemy Critter power by 2, Robot by 1, Dragon by 0, before bonuses.',
   shield_is_dmg: 'Adds 1 power per shield in your hand. Your shields still block.',
-  one_off_each: 'Robot power = Critter × Robot × Dragon stats. Counts as a Robot attack.',
+  one_off_each: 'Robot power = Critter * Robot * Dragon stats. Counts as a Robot attack.',
   any_off_each: 'Power = Critter + Robot + Dragon stats.',
 }
 

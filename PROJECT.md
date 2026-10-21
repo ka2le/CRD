@@ -4,6 +4,8 @@ Last full implementation review: **2026-10-18**. AI environment implemented **20
 
 `PROJECT.md` is the main living brief. Keep supporting docs and implementation aligned when rules, scope, architecture or priorities change. The assistant identity in this workspace is **CRD_Dev**.
 
+**V2 Dragon-only comparison (2026-10-21):** requested v2 with v1's Dragon ability (7+ contribution → extra stat), retaining v2 Critter/Robot effects. Completed1,000 new Normal search games, matched to1,000 archived baseline games (500permode/version,16samples). All2,000 replayed,8 search roots recomputed exactly. C/R/D cross-faction scores baseline→trial: Draft53.5/45.7/50.2→56.2/44.9/48.1%; Discard48.5/53.2/48.0→48.7/54.3/46.6%. Dragon declines uncertain; slight weakening, no demonstrated balance gain. Playable v2 remains+4. Report `docs/V2_DRAGON_STAT_RESULTS.md`; evidence `.ai-runs/v2-dragon-stat-2026-10-21/`. All runs complete; no training/publishing.
+
 **Latest Threshold tuning results (2026-10-21):** distinct +2/+3/+4 candidates tested at 1/4/7, 1/4/8, 1/4/9, plus Robot cutoff5 with Dragon8/9: 5,000 additional Normal games, own rules active in search, all replayed. See `docs/THRESHOLD_DISTINCT_RESULTS.md`. Of the creator's two proposals, 1/4/8 is the safer compromise; 1/4/9 hurts Discard Dragons (36.9% cross-faction score). Robot cutoff5 reduces Robot presence/wins but raises conditional scores; no clear overall balance fix. Creator subsequently adopted **+2/+3/+4 at 1/4/8** as the playable Threshold default and closed this tuning pass for now. Equal Critter/Robot bonuses rejected on identity grounds. No Critter upper bound. All prior runs finished. V2 unchanged and remains the more promising mode.
 
 ## Purpose and current stage

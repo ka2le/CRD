@@ -26,7 +26,7 @@ function AttackCard({ cls }) {
       <GameIcon name={cls} className="ab-pc__wm" />
       <span className="ab-pc__corner">
         <GameIcon name={cls} className="ab-pc__atk" />
-        <span className="ab-pc__x">×</span>
+        <span className="ab-pc__x">*</span>
         <GameIcon name="damage" className="ab-pc__heart" />
       </span>
     </span>

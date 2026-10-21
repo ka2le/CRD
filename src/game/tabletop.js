@@ -37,7 +37,7 @@ export function toTabletopCard(card, rules = 'threshold') {
 
 // ---------- abilities ----------
 export const ABILITY_RULES = { balanceBonus: 3, overwhelmingAt: 7 }
-export const FLEXIBLE_RULES = { overwhelmingAt: 7, overwhelmingBonus: 4 }
+export const FLEXIBLE_RULES = { overwhelmingAt: 7, overwhelmingBonus: 4, overwhelmingExtraStat: false }
 
 // Adapt: one stat card with a Critter stat turns its Critter stat(s) into an ordinary Critter attack
 // (1 power per Critter stat). Any other faction stats on that card stay (Joker keeps Robot + Dragon).
@@ -114,12 +114,16 @@ function getFlexibleProfile(hand) {
     }
   }
   const profiles = plans.map(({ cards, reconfigured }) => {
-    const profile = computeProfile(cards)
+    let profile = computeProfile(cards)
     const dragonBase = profile.contributions.dragon
+    const overwhelming = dragonBase >= FLEXIBLE_RULES.overwhelmingAt
+    // Study-only alternative: apply v1's extra stat once to each v2 conversion
+    // plan, including hybrid formulas, before choosing the strongest plan.
+    if (overwhelming && FLEXIBLE_RULES.overwhelmingExtraStat) profile = computeProfile(cards, { dragon: 1 })
     return { ...profile, rules: 'abilitiesv2', reconfigured, dragonBase,
-      overwhelming: dragonBase >= FLEXIBLE_RULES.overwhelmingAt }
+      overwhelming }
   })
-  const value = (profile) => profile.base + (profile.overwhelming ? FLEXIBLE_RULES.overwhelmingBonus : 0)
+  const value = (profile) => profile.base + (profile.overwhelming && !FLEXIBLE_RULES.overwhelmingExtraStat ? FLEXIBLE_RULES.overwhelmingBonus : 0)
   return profiles.reduce((best, profile) => value(profile) > value(best) ? profile : best)
 }
 
@@ -183,7 +187,7 @@ export function scoreTabletopHand(hand, enemyShields = 0, damageType = null) {
   const blocked = Math.min(profile.base, shieldPenalty)
   const power = profile.base - blocked
   if (profile.rules === 'abilitiesv2') {
-    const bonus = profile.overwhelming ? FLEXIBLE_RULES.overwhelmingBonus : 0
+    const bonus = profile.overwhelming && !FLEXIBLE_RULES.overwhelmingExtraStat ? FLEXIBLE_RULES.overwhelmingBonus : 0
     return { ...profile, damageType: type, enemyShields, shieldPenalty, blocked, power,
       naturalBonus: bonus, baseBonus: bonus, bonus, score: power + bonus,
       winsTies: type === 'critter' }

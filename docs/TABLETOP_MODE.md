@@ -36,6 +36,8 @@ Score = recomputed power − shields + Perfect Balance. Equal scores draw. Adapt
 
 ## Abilities v2 — Flexible Robots
 
+**Dragon-only experiment (2026-10-21):** `V2_DRAGON_STAT_RESULTS.md` compares +4 with v1's extra-stat Dragon effect, retaining both other v2 abilities.1,000 new Normal search games versus1,000 matched archived games; Dragon cross-faction scores50.2→48.1%Draft,48.0→46.6%Discard. Slight weakening, changes uncertain, no demonstrated balance gain. Study-only `abilitiesv2-extra-stat`; playable rules below remain unchanged.
+
 Same deck exclusions as v1. The older Adapt and Perfect Balance effects do not apply.
 
 - **Critter:** a Critter main faction wins equal final scores against another faction. Two Critter hands still draw. A Chameleon choosing Critter receives this rule; a wholly untyped zero-power hand does not.

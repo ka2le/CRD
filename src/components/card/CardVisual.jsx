@@ -50,7 +50,7 @@ function getEffectTokens(card) {
   if (effect.dmgType) {
     const icon = getStatIcon(effect.dmgType)
     if (icon) tokens.push({ type: 'icon', value: icon, alt: effect.dmgType })
-    tokens.push({ type: 'text', value: '×' })
+    tokens.push({ type: 'text', value: '*' })
   }
 
   if (effect.dmg) {
@@ -73,12 +73,16 @@ function getEffectTokens(card) {
   return tokens
 }
 
+// Long formula cards (Critter * Robot * Dragon, Critter + Robot + Dragon) get a
+// compact single-line row with slightly smaller icons instead of wrapping.
+const COMPACT_EFFECT_IDS = new Set(['one_off_each', 'any_off_each'])
+
 function CardEffectRow({ card }) {
   const hasStructuredEffect = Boolean(card.effect?.dmg || card.effect?.shield)
   let tokens = hasStructuredEffect ? getEffectTokens(card) : getCustomEffectTokens(card)
   if (card.tabletop && card.id === 'double_dmg') {
     tokens = [
-      { type: 'text', value: '2×' }, { type: 'icon', value: DISPLAY_ICONS.star, alt: 'faction bonus' },
+      { type: 'text', value: '2*' }, { type: 'icon', value: DISPLAY_ICONS.star, alt: 'faction bonus' },
     ]
   }
   if (card.tabletop && card.id === 'shield_is_dmg') {
@@ -96,8 +100,11 @@ function CardEffectRow({ card }) {
     ])
   }
 
+  const compact = COMPACT_EFFECT_IDS.has(card.id)
+  if (compact) tokens = tokens.filter((token) => token.type !== 'line-break')
+
   return (
-    <div className="card-visual__overlay card-visual__overlay--effect">
+    <div className={['card-visual__overlay', 'card-visual__overlay--effect', compact ? 'card-visual__overlay--compact' : ''].filter(Boolean).join(' ')}>
       <div className="card-visual__token-row">
         {tokens.map((token, index) => renderToken(token, index))}
       </div>

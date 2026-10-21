@@ -169,6 +169,20 @@
   width: 15.5cqw;
 }
 
+.card-visual__overlay--compact .card-visual__token-row {
+  flex-wrap: nowrap;
+  max-width: none;
+}
+
+.card-visual__overlay--compact .card-visual__icon-token {
+  width: 13.5cqw;
+}
+
+.card-visual__overlay--compact .card-visual__text-token {
+  font-size: 9cqw;
+  padding: 0 0.9cqw;
+}
+
 .card-visual__overlay--cooldown .card-visual__icon-token {
   width: 12.5cqw;
 }

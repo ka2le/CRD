@@ -25,7 +25,7 @@ export default function HelpSheet({ open, onClose, tabletop = false }) {
             <div className="help__fact"><GameIcon name="damage" /><span>Power − shields + Overwhelming = score. Ultimates: 2 per matching stat. Bite: 1. Chameleon changes main faction, including who wins ties.</span></div>
           </> : tabletop === 'abilities' ? <>
             <div className="help__fact"><GameIcon name="critter" /><span>Adapt: the Critter stat on one stat card becomes a Critter attack, used automatically when it scores more. Other stats on that card stay.</span></div>
-            <div className="help__fact"><GameIcon name="robot" /><span>Perfect Balance: with Robots as main faction, as many Robot stats as Robot attacks (at least one each) adds +3 after shields. Robot Ultimate counts as two attacks; Critter × Robot × Dragon counts as one Robot attack.</span></div>
+            <div className="help__fact"><GameIcon name="robot" /><span>Perfect Balance: with Robots as main faction, as many Robot stats as Robot attacks (at least one each) adds +3 after shields. Robot Ultimate counts as two attacks; Critter * Robot * Dragon counts as one Robot attack.</span></div>
             <div className="help__fact"><GameIcon name="dragon" /><span>Overwhelming: Dragon power of 7 or more gains one extra Dragon stat before shields.</span></div>
             <div className="help__fact"><GameIcon name="damage" /><span>Power − shields + Perfect Balance = score. Higher wins; equal scores tie.</span></div>
             <div className="help__fact"><GameIcon name="star" /><span>Chameleon lets you choose any main faction: tap it, then a faction icon. Ultimates, including Devour: 2 per matching stat. Bite: 1.</span></div>
@@ -33,7 +33,7 @@ export default function HelpSheet({ open, onClose, tabletop = false }) {
             <div className="help__fact"><GameIcon name="critter" /><span>After shields, your main faction earns one bonus: Critter +{TABLETOP_THRESHOLDS.critter.bonus} at {TABLETOP_THRESHOLDS.critter.at} power, Robot +{TABLETOP_THRESHOLDS.robot.bonus} at {TABLETOP_THRESHOLDS.robot.at}, Dragon +{TABLETOP_THRESHOLDS.dragon.bonus} at {TABLETOP_THRESHOLDS.dragon.at}.</span></div>
             <div className="help__fact"><GameIcon name="damage" /><span>Base − shields + bonus = score. Higher wins; equal scores tie.</span></div>
             <div className="help__fact"><GameIcon name="arrow" className="g-icon--up" /><span>Shortcut grants your main faction bonus even below its threshold, with positive power. Chameleon lets you choose any main faction: tap it, then a faction icon.</span></div>
-            <div className="help__fact"><GameIcon name="star" /><span>Ultimates, including Devour: 2 per matching stat. Bite: 1. The 2× card doubles your main faction bonus after shields; copies stack. Devour also offers a Dragon-type option. Hold a card for its full rule.</span></div>
+            <div className="help__fact"><GameIcon name="star" /><span>Ultimates, including Devour: 2 per matching stat. Bite: 1. The 2* card doubles your main faction bonus after shields; copies stack. Devour also offers a Dragon-type option. Hold a card for its full rule.</span></div>
           </>}
         </section> : <>
         <section className="help__block">
@@ -47,17 +47,17 @@ export default function HelpSheet({ open, onClose, tabletop = false }) {
                 {ROUNDS.map((round) => (
                   <span key={round} className={['help__tick', round % lane.every === 0 ? 'help__tick--on' : ''].filter(Boolean).join(' ')} />
                 ))}
-                <span className="help__lane-dmg">{lane.dmg}×</span>
+                <span className="help__lane-dmg">{lane.dmg}*</span>
               </div>
             ))}
           </div>
-          <p className="help__caption">Attacks fire on their rounds and hit for damage × your matching stats.</p>
+          <p className="help__caption">Attacks fire on their rounds and hit for damage * your matching stats.</p>
         </section>
 
         <section className="help__block help__equation">
           <span className="help__chip help__chip--critter"><GameIcon name="critter" /><GameIcon name="critter" /></span>
           <span className="help__op">+</span>
-          <span className="help__chip help__chip--critter"><GameIcon name="critter" /> × <GameIcon name="damage" /></span>
+          <span className="help__chip help__chip--critter"><GameIcon name="critter" /> * <GameIcon name="damage" /></span>
           <span className="help__op">=</span>
           <span className="help__chip help__chip--damage">2 <GameIcon name="damage" /></span>
         </section>

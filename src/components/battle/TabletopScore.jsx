@@ -8,7 +8,7 @@ export function TabletopFormula({ score, label }) {
   const bonusTitle = flexible ? 'Overwhelming: 7+ Dragon power earns +4'
     : abilities
     ? `Perfect Balance: +${score.bonus} after shields`
-    : `${score.baseBonus} faction bonus${score.shortcuts > 0 ? ` (Shortcut: ${score.naturalBonus} → ${score.baseBonus})` : ''}${score.bonusMultiplier > 1 ? ` × ${score.bonusMultiplier}` : ''} after shields`
+    : `${score.baseBonus} faction bonus${score.shortcuts > 0 ? ` (Shortcut: ${score.naturalBonus} → ${score.baseBonus})` : ''}${score.bonusMultiplier > 1 ? ` * ${score.bonusMultiplier}` : ''} after shields`
   const description = `${label}: ${score.base} base${score.blocked > 0 ? ` minus ${score.blocked} shields` : ''}${score.bonus > 0 ? ` plus ${score.bonus} bonus` : ''} equals ${score.score} damage`
   return (
     <div className="tabletop-formula" aria-label={description}>
