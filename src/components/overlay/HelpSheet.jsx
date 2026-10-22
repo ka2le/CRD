@@ -1,7 +1,13 @@
+import { useMemo } from 'react'
 import './HelpSheet.css'
 import Sheet from './Sheet'
+import CardVisual from '../card/CardVisual'
+import { getCardSummary } from '../card/cardMeta'
+import { useCardInspect } from './inspectContext'
+import { Crown } from './AbilityCards'
 import { GameIcon, SvgIcon } from '../ui/GameIcon'
-import { TABLETOP_THRESHOLDS, FLEXIBLE_RULES, TABLETOP_SHIELD_COST, TABLETOP_V2_SHIELD_COST } from '../../game/tabletop'
+import { getCoreCards } from '../../game/cards'
+import { TABLETOP_THRESHOLDS, MAIN_ABILITY_RULES, PERFECT_BALANCE_BONUS, TABLETOP_SHIELD_COST, MAIN_ABILITY_SHIELD_COST, toTabletopCard } from '../../game/tabletop'
 
 const ROUNDS = [1, 2, 3, 4, 5, 6]
 const LANES = [
@@ -10,21 +16,172 @@ const LANES = [
   { key: 'dragon', every: 3, dmg: 3 },
 ]
 
+// ---------- Abilities (main tabletop rules) ----------
+
+const AttackChip = ({ cls, ultimate = false }) => (
+  <span className={`help__chip help__chip--${cls}`}>
+    <GameIcon name={cls} /> * <GameIcon name="damage" />{ultimate ? <GameIcon name="damage" /> : null}
+  </span>
+)
+
+const Arrow = () => <GameIcon name="arrow" className="help__arrow" />
+
+function ShieldCost({ value }) {
+  return (
+    <span className={['help__chip', 'help__chip--shield', value ? '' : 'is-zero'].filter(Boolean).join(' ')}>
+      <GameIcon name="shield" />{value ? `−${value}` : '0'}
+    </span>
+  )
+}
+
+// One lane per faction: what an enemy shield costs it, and its ability as requirement → result.
+const ABILITY_LANES = [
+  {
+    cls: 'critter',
+    name: 'Win ties',
+    rule: (
+      <>
+        <span className="help__chip help__chip--critter"><GameIcon name="critter" /></span>
+        <span className="help__op">=</span>
+        <span className="help__chip"><GameIcon name="robot" className="help__c-robot" /><span className="help__slash">/</span><GameIcon name="dragon" className="help__c-dragon" /></span>
+        <Arrow />
+        <span className="help__chip help__chip--critter help__crowned"><Crown className="help__crown" /><GameIcon name="critter" /></span>
+      </>
+    ),
+    note: 'Equal scores against Robots or Dragons go to Critters. Two Critter hands still tie.',
+  },
+  {
+    cls: 'robot',
+    name: 'Perfect Balance',
+    rule: (
+      <>
+        <span className="help__chip help__chip--robot"><GameIcon name="robot" /></span>
+        <span className="help__op">=</span>
+        <AttackChip cls="robot" />
+        <Arrow />
+        <span className="help__chip help__chip--bonus">+{PERFECT_BALANCE_BONUS} <GameIcon name="damage" /></span>
+      </>
+    ),
+    note: 'As many Robot stats as Robot attacks (at least one each), added after shields. Robot Ultimate counts as two attacks; Critter * Robot * Dragon counts as one if it deals damage.',
+  },
+  {
+    cls: 'dragon',
+    name: 'Overwhelming',
+    rule: (
+      <>
+        <span className="help__chip help__chip--dragon">{MAIN_ABILITY_RULES.overwhelmingAt}+ <GameIcon name="damage" /></span>
+        <Arrow />
+        <span className="help__chip help__chip--dragon">+ <GameIcon name="dragon" /></span>
+      </>
+    ),
+    note: `${MAIN_ABILITY_RULES.overwhelmingAt}+ Dragon power before shields adds one Dragon stat. Recalculate all attacks once.`,
+  },
+]
+
+// Special cards in this rule set, in reading order: Ultimates, other power cards, shields, then preparation.
+const CLASS_ORDER = ['critter', 'robot', 'dragon']
+function specialRank(card) {
+  if (card.effect?.dmgType) return CLASS_ORDER.indexOf(card.effect.dmgType) + (card.id === 'devour' ? 0.5 : 0)
+  if (card.effect?.shield) return 20
+  return getCardSummary(card).timing === 'Before battle' ? 30 : 10
+}
+
+function useSpecialCards(rules) {
+  return useMemo(() => getCoreCards({ tabletop: rules })
+    .filter((card) => card.type !== 'stat' && !card.tags?.includes('base-attack'))
+    .map((card) => ({ ...toTabletopCard(card, rules), uid: `help__${card.id}`, imageIndex: 0 }))
+    .sort((a, b) => specialRank(a) - specialRank(b) || a.id.localeCompare(b.id)), [rules])
+}
+
+function SpecialCards({ rules }) {
+  const inspect = useCardInspect()
+  const cards = useSpecialCards(rules)
+  return (
+    <section className="help__block">
+      <h3 className="help__heading"><GameIcon name="star" />Special cards<span className="help__count">{cards.length}</span></h3>
+      <div className="help__specials">
+        {cards.map((card) => {
+          const { timing, text } = getCardSummary(card)
+          return (
+            <button key={card.id} type="button" className="help__special" onClick={() => inspect?.(card, [])}>
+              <span className="help__special-card"><CardVisual card={card} /></span>
+              <span className="help__special-text">
+                <span className={['help__special-timing', timing === 'Before battle' ? 'is-prep' : '', card.effect?.shield ? 'is-shield' : ''].filter(Boolean).join(' ')}>{timing}</span>
+                <span>{text}</span>
+              </span>
+            </button>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+function AbilitiesMainHelp({ rules }) {
+  return (
+    <>
+      <section className="help__block">
+        <div className="help__equation">
+          <span className="help__chip help__chip--critter"><GameIcon name="critter" /><GameIcon name="critter" /></span>
+          <span className="help__op">+</span>
+          <AttackChip cls="critter" />
+          <span className="help__op">=</span>
+          <span className="help__chip help__chip--damage">2 <GameIcon name="damage" /></span>
+        </div>
+        <div className="help__equation help__equation--next">
+          <span className="help__chip help__chip--critter"><GameIcon name="critter" /><GameIcon name="critter" /></span>
+          <span className="help__op">+</span>
+          <AttackChip cls="critter" ultimate />
+          <span className="help__op">=</span>
+          <span className="help__chip help__chip--damage">4 <GameIcon name="damage" /></span>
+        </div>
+        <p className="help__caption">Each attack gives 1 power per matching stat, Ultimates 2. Add up all attacks.</p>
+      </section>
+
+      <section className="help__block">
+        <div className="help__equation help__equation--score">
+          <span className="help__term"><span className="help__chip help__chip--damage"><GameIcon name="damage" /></span><small>power</small></span>
+          <span className="help__op">−</span>
+          <span className="help__term"><span className="help__chip help__chip--shield"><GameIcon name="shield" /></span><small>enemy shields</small></span>
+          <span className="help__op">+</span>
+          <span className="help__term"><span className="help__chip help__chip--bonus">+{PERFECT_BALANCE_BONUS}</span><small>balance</small></span>
+          <span className="help__op">=</span>
+          <span className="help__term"><span className="help__chip help__chip--score"><GameIcon name="star" /></span><small>score</small></span>
+        </div>
+        <p className="help__caption">Higher score wins. Power stops at zero. Only Perfect Balance adds score.</p>
+      </section>
+
+      <section className="help__block">
+        <div className="help__lanes">
+          {ABILITY_LANES.map(({ cls, name, rule, note }) => (
+            <div key={cls} className={`help__ability help__ability--${cls}`}>
+              <span className="help__lane-icon"><GameIcon name={cls} /></span>
+              <ShieldCost value={MAIN_ABILITY_SHIELD_COST[cls]} />
+              <span className="help__ability-name">{name}</span>
+              <span className="help__ability-rule">{rule}</span>
+              <span className="help__ability-note">{note}</span>
+            </div>
+          ))}
+        </div>
+        <p className="help__caption">Your largest faction contribution is your main faction: it sets the shield cost and the ability. If tied, tap a highlighted card before battle. Neutral-only power counts as Robot.</p>
+      </section>
+
+      <SpecialCards rules={rules} />
+    </>
+  )
+}
+
 export default function HelpSheet({ open, onClose, tabletop = false }) {
-  const shieldCosts = tabletop === 'abilitiesv2' ? TABLETOP_V2_SHIELD_COST : TABLETOP_SHIELD_COST
+  const abilitiesMain = tabletop === 'abilities-main'
+  const shieldCosts = abilitiesMain ? MAIN_ABILITY_SHIELD_COST : TABLETOP_SHIELD_COST
   return (
     <Sheet open={open} onClose={onClose} title={<SvgIcon name="help" />}>
       <div className="help">
-        {tabletop ? <section className="help__block help__facts">
+        {abilitiesMain ? <AbilitiesMainHelp rules={tabletop} /> : tabletop ? <section className="help__block help__facts">
           <div className="help__fact"><GameIcon name="damage" /><span>Each ordinary attack gives 1 power per matching stat. Add all attacks.</span></div>
           <div className="help__fact"><GameIcon name="star" /><span>Your largest class contribution is your main damage type. If tied, tap a highlighted card before battle. Neutral-only power uses Robot.</span></div>
           <div className="help__fact"><GameIcon name="shield" /><span>Each enemy shield removes {shieldCosts.critter} Critter power, {shieldCosts.robot} Robot power or {shieldCosts.dragon} Dragon power. Power stops at zero.</span></div>
-          {tabletop === 'abilitiesv2' ? <>
-            <div className="help__fact"><GameIcon name="critter" /><span>Critter main faction wins equal scores against other factions. Two Critter hands still tie.</span></div>
-            <div className="help__fact"><GameIcon name="robot" /><span>Perfect Balance: with Robots as main faction, as many Robot stats as Robot attack units (at least one each) adds +3 after shields. Robot Ultimate counts as two attacks; Critter * Robot * Dragon counts as one Robot attack if it deals damage. Cards stay unchanged.</span></div>
-            <div className="help__fact"><GameIcon name="dragon" /><span>Overwhelming: {FLEXIBLE_RULES.overwhelmingAt}+ Dragon power before shields adds one Dragon stat. Recalculate all attacks once.</span></div>
-            <div className="help__fact"><GameIcon name="damage" /><span>Power − shields + Perfect Balance = score. Ultimates: 2 per matching stat. Bite: 1.</span></div>
-          </> : tabletop === 'abilities' ? <>
+          {tabletop === 'abilities-prototype' ? <>
             <div className="help__fact"><GameIcon name="critter" /><span>Adapt: the Critter stat on one stat card becomes a Critter attack, used automatically when it scores more. Other stats on that card stay.</span></div>
             <div className="help__fact"><GameIcon name="robot" /><span>Perfect Balance: with Robots as main faction, as many Robot stats as Robot attacks (at least one each) adds +3 after shields. Robot Ultimate counts as two attacks; Critter * Robot * Dragon counts as one Robot attack if it deals damage.</span></div>
             <div className="help__fact"><GameIcon name="dragon" /><span>Overwhelming: Dragon power of 7 or more gains one extra Dragon stat before shields.</span></div>
@@ -78,7 +235,7 @@ export default function HelpSheet({ open, onClose, tabletop = false }) {
             <span className="help__chip help__chip--special"><GameIcon name="star" /></span>
             <span>Glowing specials can be used before the battle.</span>
           </div>
-          </> : <div className="help__fact"><GameIcon name="star" /><span>Use specials before battle, or press Battle to finish preparation.</span></div>}
+          </> : <div className="help__fact"><span className="help__chip help__chip--special"><GameIcon name="star" /></span><span>Use specials before battle, or press Battle to finish preparation.</span></div>}
           <div className="help__fact">
             <span className="help__chip"><GameIcon name="draw" /></span>
             <span>Draft: pick 1 of 5, opponent picks 1, the rest are discarded. Five packs.</span>

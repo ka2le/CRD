@@ -12,19 +12,19 @@ import { pickBestCardForHand, getHandAverageDamage } from '../src/game/cardEvalu
 import { createDevScenario, DEV_SCENARIO_NAMES } from '../src/game/devScenarios.js'
 import { createHeadlessGame, stepHeadlessGame, chooseHeadlessBaselineAction, getHeadlessSpec, encodeObservation } from '../src/game/headlessGame.js'
 
-const definitions = new Map(getCoreCards({ tabletop: true }).map((card) => [card.id, card]))
+const definitions = new Map(getCoreCards({ tabletop: 'threshold' }).map((card) => [card.id, card]))
 let serial = 0
-const card = (id) => toTabletopCard({ ...definitions.get(id), uid: `${id}-test-${++serial}` })
+const card = (id) => toTabletopCard({ ...definitions.get(id), uid: `${id}-test-${++serial}` }, 'threshold')
 const hand = (...ids) => ids.map(card)
-const abilityCard = (id) => toTabletopCard({ ...definitions.get(id), uid: `${id}-ability-${++serial}` }, 'abilities')
-const abilityHand = (...ids) => ids.map(abilityCard)
-const flexHand = (...ids) => ids.map((id) => toTabletopCard({ ...definitions.get(id), uid: `${id}-flex-${++serial}` }, 'abilitiesv2'))
+const prototypeCard = (id) => toTabletopCard({ ...definitions.get(id), uid: `${id}-ability-${++serial}` }, 'abilities-prototype')
+const prototypeHand = (...ids) => ids.map(prototypeCard)
+const mainHand = (...ids) => ids.map((id) => toTabletopCard({ ...definitions.get(id), uid: `${id}-flex-${++serial}` }, 'abilities-main'))
 
 test('headless deals real tabletop pools, advertises a distinct rules version and resolves the shared scorer', () => {
-  for (const tabletop of ['threshold', 'abilities', 'abilitiesv2']) {
+  for (const tabletop of ['threshold', 'abilities-prototype', 'abilities-main']) {
     const spec = getHeadlessSpec({ tabletop })
     assert(spec.rulesVersion.includes(tabletop))
-    assert.equal(spec.poolCards.length, tabletop === 'threshold' ? 108 : tabletop === 'abilitiesv2' ? 96 : 99)
+    assert.equal(spec.poolCards.length, tabletop === 'threshold' ? 108 : tabletop === 'abilities-main' ? 96 : 99)
     assert.equal(spec.cardTypes.find((c) => c.id === 'robot_attack').effect.dmg, 1)
     for (const mode of ['draft', 'five-hand-discard']) {
       let state = createHeadlessGame({ tabletop, mode, control: 'both', seed: 131 })
@@ -38,18 +38,18 @@ test('headless deals real tabletop pools, advertises a distinct rules version an
 })
 
 test('all three tabletop decks use 1/2 damage and correct card pools; digital stays intact', () => {
-  assert.equal(normalizeTabletopRules(true), 'threshold')
-  assert.equal(normalizeTabletopRules('abilitiesv2'), 'abilitiesv2')
+  assert.equal(normalizeTabletopRules(true), 'abilities-main')
+  assert.equal(normalizeTabletopRules('abilities-main'), 'abilities-main')
   for (const wildDeck of [false, true]) {
     const digital = getExpandedCoreDeck({ wildDeck })
     assert.equal(digital.length, wildDeck ? 102 : 70)
     assert.equal(digital.find((c) => c.id === 'dragons_breath').effect.dmg, 3)
-    for (const rules of ['threshold', 'abilities', 'abilitiesv2']) {
+    for (const rules of ['threshold', 'abilities-prototype', 'abilities-main']) {
       const deck = getExpandedCoreDeck({ wildDeck, tabletop: rules })
       assert(deck.every((c) => c.tabletop === rules && c.cd === 0))
       assert.equal(deck.some((c) => c.id === 'shortcut'), rules === 'threshold')
       assert.equal(deck.some((c) => c.id === 'double_dmg'), rules === 'threshold')
-      assert.equal(deck.some((c) => c.id === 'chameleon'), rules !== 'abilitiesv2')
+      assert.equal(deck.some((c) => c.id === 'chameleon'), rules !== 'abilities-main')
       for (const id of ['swarm', 'robot_attack', 'dragons_breath', 'bite']) assert.equal(deck.find((c) => c.id === id).effect.dmg, 1)
       for (const id of ['murder_rabbit', 'robot_ulti', 'dragon_ulti', 'devour']) assert.equal(deck.find((c) => c.id === id).effect.dmg, 2)
     }
@@ -96,37 +96,37 @@ test('threshold boundaries, post-shield checks, Shortcut and multiplier stacking
   assert.equal(getTabletopProfile(devour).base, 4)
 })
 
-test('Adapt retains mixed stats, is optional and converts one card', () => {
-  assert.equal(scoreTabletopHand(abilityHand('critter1', 'critter1', 'critter1')).base, 2)
-  assert.equal(scoreTabletopHand(abilityHand('critter1', 'swarm')).adaptedUid, null)
-  const cards = abilityHand('rabbit2', 'critter1', 'critter1')
+test('Prototype Adapt retains mixed stats, is optional and converts one card', () => {
+  assert.equal(scoreTabletopHand(prototypeHand('critter1', 'critter1', 'critter1')).base, 2)
+  assert.equal(scoreTabletopHand(prototypeHand('critter1', 'swarm')).adaptedUid, null)
+  const cards = prototypeHand('rabbit2', 'critter1', 'critter1')
   const profile = getTabletopProfile(cards)
   assert.equal(profile.base, 3)
   assert.equal(cards.find((c) => c.uid === profile.adaptedUid).id, 'critter1')
-  const mixed = getTabletopProfile(abilityHand('robot_critter', 'critter1', 'robot_attack'))
+  const mixed = getTabletopProfile(prototypeHand('robot_critter', 'critter1', 'robot_attack'))
   assert.deepEqual([mixed.stats.robot, mixed.stats.critter, mixed.base], [1, 1, 2])
 })
 
-test('Perfect Balance +3 requires Robot main type, counts ultimate as two and hybrid as one', () => {
-  assert.equal(scoreTabletopHand(abilityHand('robot2', 'robot_attack', 'robot_attack')).score, 7)
-  assert.equal(scoreTabletopHand(abilityHand('robot2', 'robot_attack', 'robot_attack'), 2).score, 5)
-  assert.equal(scoreTabletopHand(abilityHand('robot1', 'robot_ulti')).score, 2)
-  assert.equal(scoreTabletopHand(abilityHand('robot2', 'robot_ulti')).score, 7)
-  assert.equal(scoreTabletopHand(abilityHand('joker', 'one_off_each')).score, 4)
-  const mixed = abilityHand('robot1', 'robot_attack', 'rabbit2', 'swarm', 'chameleon')
+test('Prototype Perfect Balance +3 requires Robot main type, counts ultimate as two and hybrid as one', () => {
+  assert.equal(scoreTabletopHand(prototypeHand('robot2', 'robot_attack', 'robot_attack')).score, 7)
+  assert.equal(scoreTabletopHand(prototypeHand('robot2', 'robot_attack', 'robot_attack'), 2).score, 5)
+  assert.equal(scoreTabletopHand(prototypeHand('robot1', 'robot_ulti')).score, 2)
+  assert.equal(scoreTabletopHand(prototypeHand('robot2', 'robot_ulti')).score, 7)
+  assert.equal(scoreTabletopHand(prototypeHand('joker', 'one_off_each')).score, 4)
+  const mixed = prototypeHand('robot1', 'robot_attack', 'rabbit2', 'swarm', 'chameleon')
   assert.equal(scoreTabletopHand(mixed, 0, 'critter').bonus, 0)
   assert.equal(scoreTabletopHand(mixed, 0, 'robot').bonus, 3)
 })
 
-test('Abilities Overwhelming tests Dragon contribution before shields and adds a stat', () => {
-  const below = abilityHand('dragon2', 'dragon1', 'dragon_ulti')
+test('Prototype Overwhelming tests Dragon contribution before shields and adds a stat', () => {
+  const below = prototypeHand('dragon2', 'dragon1', 'dragon_ulti')
   assert.equal(scoreTabletopHand(below).overwhelming, false)
-  const above = abilityHand('dragon2', 'dragon2', 'dragon_ulti')
+  const above = prototypeHand('dragon2', 'dragon2', 'dragon_ulti')
   assert.deepEqual([scoreTabletopHand(above).dragonBase, scoreTabletopHand(above).base], [8, 10])
 })
 
-test('Adopted v2 uses Perfect Balance with shields 1/2/0 and never swaps cards', () => {
-  const hand = flexHand('robot2', 'robot_ulti', 'chameleon')
+test('Abilities main uses Perfect Balance with shields 1/2/0 and never swaps cards', () => {
+  const hand = mainHand('robot2', 'robot_ulti', 'chameleon')
   const saved = structuredClone(hand)
   const robot = scoreTabletopHand(hand, 1, 'robot')
   assert.deepEqual([robot.base, robot.power, robot.bonus, robot.score], [4, 2, 3, 5])
@@ -136,40 +136,40 @@ test('Adopted v2 uses Perfect Balance with shields 1/2/0 and never swaps cards',
   assert.equal(scoreTabletopHand(hand, 1, 'dragon').shieldPenalty, 0)
   assert.equal(scoreTabletopHand(hand, 1, 'critter').shieldPenalty, 1)
   assert.deepEqual(hand, saved)
-  assert.equal(getTabletopProfile(flexHand('robot2', 'robot2')).base, 0)
-  const dragon = scoreTabletopHand(flexHand('dragon2', 'dragon1', 'dragon_ulti'), 1)
+  assert.equal(getTabletopProfile(mainHand('robot2', 'robot2')).base, 0)
+  const dragon = scoreTabletopHand(mainHand('dragon2', 'dragon1', 'dragon_ulti'), 1)
   assert.deepEqual([dragon.dragonBase, dragon.stats.dragon, dragon.score], [6, 3, 6])
 })
 
-test('Flexible Dragon uses contribution 7+, adds one stat once, and recomputes hybrids', () => {
-  const six = scoreTabletopHand(flexHand('dragon2', 'dragon1', 'dragon_ulti'))
+test('Abilities main Dragon uses contribution 7+, adds one stat once, and recomputes hybrids', () => {
+  const six = scoreTabletopHand(mainHand('dragon2', 'dragon1', 'dragon_ulti'))
   assert.deepEqual([six.dragonBase, six.stats.dragon, six.base, six.bonus], [6, 3, 6, 0])
-  assert.equal(scoreTabletopHand(flexHand('dragon2', 'dragon1', 'dragons_breath', 'bite')).overwhelming, false)
-  const dragon = scoreTabletopHand(flexHand('dragon2', 'dragon2', 'dragon_ulti'))
+  assert.equal(scoreTabletopHand(mainHand('dragon2', 'dragon1', 'dragons_breath', 'bite')).overwhelming, false)
+  const dragon = scoreTabletopHand(mainHand('dragon2', 'dragon2', 'dragon_ulti'))
   assert.deepEqual([dragon.base, dragon.bonus, dragon.score], [10, 0, 10])
-  assert.equal(scoreTabletopHand(flexHand('dragon1', 'dragons_breath', 'rabbit2', 'swarm', 'swarm')).overwhelming, false)
-  assert.equal(scoreTabletopHand(flexHand('dragon2', 'dragon2', 'dragon2', 'dragon1', 'dragons_breath')).score, 8)
-  const hybrid = scoreTabletopHand(flexHand('joker', 'dragon2', 'dragon_ulti', 'one_off_each', 'any_off_each'))
+  assert.equal(scoreTabletopHand(mainHand('dragon1', 'dragons_breath', 'rabbit2', 'swarm', 'swarm')).overwhelming, false)
+  assert.equal(scoreTabletopHand(mainHand('dragon2', 'dragon2', 'dragon2', 'dragon1', 'dragons_breath')).score, 8)
+  const hybrid = scoreTabletopHand(mainHand('joker', 'dragon2', 'dragon_ulti', 'one_off_each', 'any_off_each'))
   assert.deepEqual([hybrid.dragonBase, hybrid.stats.dragon, hybrid.contributions.robot, hybrid.neutral, hybrid.score], [6, 3, 3, 5, 14])
-  assert.equal(scoreTabletopHand(abilityHand('dragon2', 'dragon2', 'dragon2', 'dragon1', 'dragons_breath')).score, 8)
+  assert.equal(scoreTabletopHand(prototypeHand('dragon2', 'dragon2', 'dragon2', 'dragon1', 'dragons_breath')).score, 8)
 })
 
-test('Flexible Critter tiebreak is symmetric; same-faction and untyped zero draws remain', () => {
-  const critter = flexHand('critter1', 'swarm')
-  const dragon = flexHand('dragon1', 'dragons_breath')
+test('Abilities main Critter tiebreak is symmetric; same-faction and untyped zero draws remain', () => {
+  const critter = mainHand('critter1', 'swarm')
+  const dragon = mainHand('dragon1', 'dragons_breath')
   assert.equal(resolveTabletopBattle(critter, dragon).winner, 'player')
   assert.equal(resolveTabletopBattle(dragon, critter).winner, 'opponent')
   assert.equal(resolveTabletopBattle(critter, critter).winner, 'tie')
   assert.equal(resolveTabletopBattle(dragon, dragon).winner, 'tie')
   assert.equal(resolveTabletopBattle(critter, dragon).reason, 'critter-tiebreak')
-  const chameleon = flexHand('dragon1', 'dragons_breath', 'chameleon')
+  const chameleon = mainHand('dragon1', 'dragons_breath', 'chameleon')
   assert.equal(chooseTabletopType(chameleon), 'critter')
   assert.equal(resolveTabletopBattle(chameleon, dragon, { playerType: 'critter' }).winner, 'player')
 })
 
 test('all rules reach draft/discard completion and search ignores hidden deck order', () => {
   const options = { minSamples: 2, maxSamples: 2, timeBudgetMs: 1e9, seed: 51 }
-  for (const rules of ['threshold', 'abilities', 'abilitiesv2']) {
+  for (const rules of ['threshold', 'abilities-prototype', 'abilities-main']) {
     let draft = createDraftGame({ tabletop: rules, seed: 7, firstPicker: 'opponent' })
     const result = searchDecision(draft, 'opponent', options)
     assert.deepEqual(searchDecision({ ...draft, deck: [...draft.deck].reverse() }, 'opponent', options).values, result.values)
@@ -196,10 +196,10 @@ test('session gates type choice, invalidates it after hand changes, preserves pr
     for (const name of DEV_SCENARIO_NAMES) {
       for (const mode of ['draft', 'discard']) {
         const initial = { settings: {}, battleInstance: 0, gameSessionKey: 0, dealId: 0 }
-        const prepared = sessionReducer(initial, { type: 'LOAD_DEV_SCENARIO', payload: createDevScenario({ name, mode }) })
+        const prepared = sessionReducer(initial, { type: 'LOAD_DEV_SCENARIO', payload: createDevScenario({ name, mode, rules: 'threshold' }) })
         assert.equal(prepared.game.phase, 'battle-ready')
         assert.equal(prepared.battleStarted, false)
-        const result = sessionReducer(initial, { type: 'LOAD_DEV_SCENARIO', payload: createDevScenario({ name, mode, result: true }) })
+        const result = sessionReducer(initial, { type: 'LOAD_DEV_SCENARIO', payload: createDevScenario({ name, mode, result: true, rules: 'threshold' }) })
         assert.equal(result.battleStarted, true)
         assert.equal(result.preBattle.opponentFinished, true)
         assert.doesNotThrow(() => resolveTabletopBattle(result.preBattle.playerHand, result.preBattle.opponentHand, {
@@ -212,7 +212,7 @@ test('session gates type choice, invalidates it after hand changes, preserves pr
     assert.throws(() => createDevScenario({ name: 'tie', playerType: 'critter' }), /Invalid main damage type/)
     assert.throws(() => createDevScenario({ playerCards: ['not-a-card'] }), /Card unavailable/)
     for (const mode of ['draft', 'discard']) {
-      const payload = createDevScenario({ name: 'chameleon', mode, playerCards: ['rabbit2', 'swarm', 'chameleon', 'draw_2_extra', 'copy_card_in_hand'] })
+      const payload = createDevScenario({ name: 'chameleon', mode, rules: 'threshold', playerCards: ['rabbit2', 'swarm', 'chameleon', 'draw_2_extra', 'copy_card_in_hand'] })
       let state = sessionReducer({ settings: {}, battleInstance: 0, gameSessionKey: 0, dealId: 0 }, { type: 'LOAD_DEV_SCENARIO', payload })
       const chameleon = state.preBattle.playerHand.find((entry) => entry.id === 'chameleon')
       state = sessionReducer(state, { type: 'CHOOSE_TABLETOP_TYPE', uid: chameleon.uid })
@@ -255,7 +255,7 @@ test('session gates type choice, invalidates it after hand changes, preserves pr
 })
 
 test('Critter * Robot * Dragon counts as a Robot attack only when it deals damage; Critter + Robot + Dragon is out of the Abilities decks', () => {
-  for (const make of [abilityHand, flexHand]) {
+  for (const make of [prototypeHand, mainHand]) {
     // No Critter stat: product is zero, so it does not count and Robot stat 1 vs 0 attacks is unbalanced.
     const dud = getTabletopProfile(make('robot1', 'dragon1', 'one_off_each'))
     assert.equal(dud.robotAttacks, 0)
@@ -265,7 +265,7 @@ test('Critter * Robot * Dragon counts as a Robot attack only when it deals damag
     assert.equal(hit.robotAttacks, 1)
     assert.equal(hit.balanced, true)
   }
-  for (const rules of ['abilities', 'abilitiesv2']) {
+  for (const rules of ['abilities-prototype', 'abilities-main']) {
     assert(!getCoreCards({ tabletop: rules }).some((card) => card.id === 'any_off_each'))
   }
   assert(getCoreCards({ tabletop: 'threshold' }).some((card) => card.id === 'any_off_each'))

@@ -48,7 +48,7 @@ export const DEV_SCENARIO_NAMES = Object.keys(SCENARIOS)
 
 // Deterministic real card instances, using the actual deck and normal reducer.
 export function createDevScenario({ name = 'bonuses', mode = 'draft', result = false, playerType = null,
-  playerCards, opponentCards, rules = 'threshold' } = {}) {
+  playerCards, opponentCards, rules = 'abilities-main' } = {}) {
   const preset = SCENARIOS[name]
   if (!preset) throw new Error(`Unknown scenario: ${name}. Choose ${DEV_SCENARIO_NAMES.join(', ')}`)
   const gameMode = mode === 'discard' ? 'five-hand-discard' : mode

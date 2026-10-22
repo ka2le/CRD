@@ -1,5 +1,7 @@
 # CRD
 
+**Current naming:** UI **Abilities** = code **`abilities-main`** (formerly v2). The original is **Abilities Prototype** / `abilities-prototype`, retained but hidden. Generic abilities/tabletop tests use main; prototype testing needs an explicit request. See [ruleset naming policy](docs/RULESET_NAMES.md).
+
 **CRD** is the working digital version of **Critters Robots Dragons**, a 2-player drafting and battle card game.
 
 Current build:

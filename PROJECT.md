@@ -1,5 +1,7 @@
 # Critters Robots Dragons - project brief
 
+**Abilities naming (2026-10-22):** UI Abilities is abilities-main (formerly v2), with unchanged Dragon7+, shields1/2/0, Perfect Balance and Critter ties. The original is Abilities Prototype (abilities-prototype), retained but hidden from selection and score cards. Four visible reference cards: two Threshold and two main. Generic abilities/tabletop tests use main; prototype tests require an explicit request. Historical IDs/evidence retained. Current icon-based help and card explanations included.96 checks,lint,Pages build,regression and exact1,000-game/four-root replay pass. See docs/RULESET_NAMES.md.
+
 **Abilities v2 update (2026-10-22):** Dragon7+ before shields adds one Dragon stat; shield penalties C/R/D1/2/0. Critter ties and Robot Perfect Balance+3 retained. Both score cards and help updated. Normal Svenbot500 games/mode: Draft44.8/54.3/52.0%, Discard52.7/51.3/44.9%; draws6.2/8.2%. All1,000 saved games and4search roots exactly reproduced by playable defaults;73 checks,lint,Pages build and regression pass. Headless v8. Adopted by creator.
 
 **Published v2 Chameleon exclusion (2026-10-21):** public b4f96cf, private443f39a; Pages39664763024 succeeded. Live index-Bn6RyOmf.js / searchAi.worker-BkzzaWhP.js byte-match the tested build. Fresh live browser confirms v2 collection has no Chameleon and v1/Threshold still have it; no page errors.36 targeted checks,lint,Pages build pass. Definition and artwork retained. V2 pools69 Normal/99 Wild, headless versionv6. Deployment request complete; no new balance run.

@@ -7,7 +7,7 @@ import { applyCopySelection } from '../src/game/copyCard.js'
 
 configureBalanceVariant('abilitiesv2-robot-pips')
 const defs = new Map(getCoreCards({ tabletop: 'threshold' }).map((c) => [c.id, c]))
-const hand = (...ids) => ids.map((id, i) => toTabletopCard({ ...defs.get(id), uid: `${id}-${i}` }, 'abilitiesv2'))
+const hand = (...ids) => ids.map((id, i) => toTabletopCard({ ...defs.get(id), uid: `${id}-${i}` }, 'abilities-main'))
 const score = (cards, type = chooseTabletopType(cards)) => scoreTabletopHand(cards, 0, type)
 
 test('Robot pips on mixed/double stats convert independently without touching other faction pips', () => {

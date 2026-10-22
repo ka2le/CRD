@@ -1,6 +1,8 @@
 # Gameplay rules
 
-Menu → Battle offers digital rounds and three tabletop resolvers: Threshold, Abilities and Abilities v2 (Flexible Robots). Tabletop attacks use 1 power/stat (ultimates 2), with current scaled thresholds, abilities and shields documented in `TABLETOP_MODE.md`. The sections below describe the original round combat unless stated otherwise.
+> Naming policy (2026-10-22): **Abilities = `abilities-main`** (formerly Abilities v2). The original is **Abilities Prototype** (`abilities-prototype`), hidden and excluded from balance testing unless explicitly requested. Generic tabletop requests mean main; Threshold must be named explicitly. Historical raw IDs/paths remain unchanged. See [ruleset naming policy](RULESET_NAMES.md).
+
+Menu → Battle offers digital Battle, Threshold and Abilities (`abilities-main`). Abilities Prototype is retained but hidden and requires explicit historical use. Tabletop attacks use 1 power/stat (ultimates 2); see `TABLETOP_MODE.md`. The sections below describe the original round combat unless stated otherwise.
 
 Reviewed 2026-10-18. These rules describe the shared game model and supported effects. Known implementation exceptions are identified explicitly; they do not silently redefine design intent. See `CURRENT_STATE.md` for the source review.
 

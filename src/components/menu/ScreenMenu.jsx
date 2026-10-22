@@ -3,12 +3,11 @@ import './ScreenMenu.css'
 import { GameIcon, SvgIcon } from '../ui/GameIcon'
 import { OPPONENT_AI_OPTIONS } from '../../game/opponentAi'
 
-// Round-by-round battle, or one of the three tabletop scoring rule sets.
+// Playable scoring modes. Abilities Prototype is intentionally hidden.
 const BATTLE_RULES = [
   { value: false, label: 'Battle' },
   { value: 'threshold', label: 'Threshold' },
-  { value: 'abilities', label: 'Abilities' },
-  { value: 'abilitiesv2', label: 'Abilities v2' },
+  { value: 'abilities-main', label: 'Abilities' },
 ]
 
 export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, settings, onUpdateSettings, onHelp, onScoreCard, onCollection, onTestDeck, onRoom, inRoom = false, canConfigure = true, humanOpponent = false }) {

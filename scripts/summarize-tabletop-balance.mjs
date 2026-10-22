@@ -1,3 +1,4 @@
+// Historical report: raw archived abilities = prototype; abilitiesv2 = historical main.
 import fs from 'node:fs'
 import path from 'node:path'
 import { getCoreCards } from '../src/game/cards.js'
@@ -98,7 +99,7 @@ fs.writeFileSync(path.join(root, 'summary.json'), JSON.stringify(reports, null, 
 const lines = ['# Tabletop balance study — 2026-10-21', '',
   '> ARCHIVAL WILD-DECK STUDY. The creator clarified that Wild is intentionally unbalanced and must not be used as the balance baseline. The Normal Deck comparison supersedes this study for tuning decisions.', '',
   'Search self-play using the actual browser search and mode-specific decks. This is an initial observational balance study, not proof of optimal play or a measurement of fun.', '',
-  'Confirmed rules: ordinary attacks 1/stat; ultimates 2/stat; Bite 1. Threshold: 1/4/7 power → +1/+2/+4 after shields. Abilities: Adapt, Robot-main Perfect Balance +3, Dragon power 7+ → +1 stat. Abilities v2: Critter-main wins ties, Robot Reconfigure, Dragon power 7+ → +4. Shield costs remain 2/1/0; unit-valued hybrid/shield attacks retain their whole-number formulas.', '',
+  'Confirmed rules: ordinary attacks 1/stat; ultimates 2/stat; Bite 1. Threshold: 1/4/7 power → +1/+2/+4 after shields. Abilities Prototype: Adapt, Robot-main Perfect Balance +3, Dragon power 7+ → +1 stat. Abilities v2: Critter-main wins ties, Robot Reconfigure, Dragon power 7+ → +4. Shield costs remain 2/1/0; unit-valued hybrid/shield attacks retain their whole-number formulas.', '',
   'Card-level follow-up: [faction wins, card presence and preparation analysis](TABLETOP_CARD_ANALYSIS.md).', '',
   '## Method', '',
   '- Both seats use browser search, including preparation, with fixed samples per candidate and prep-lookahead completions. No neural training. Actual decks include Chameleon; only Threshold includes Shortcut and 2×.',
@@ -149,7 +150,7 @@ const doubleStats = { critter: 'rabbit2', robot: 'robot2', dragon: 'dragon2' }
 lines.push('', '## Engine examples', '', 'Unshielded pure engines, calculated with the same resolver. These isolate the rule mechanics, not the difficulty of drafting the cards. Equal v2 scores favor Critters against the other factions.', '',
   '| Engine | Rules | Critter score | Robot score | Dragon score |', '|---|---|---:|---:|---:|')
 for (const [label, stats, attacks, ultimate] of [['4 single stats + 1 attack', 4, 1, false], ['1 stat + 4 attacks', 1, 4, false], ['3 stats + 2 attacks', 3, 2, false], ['Two double-stat cards + ultimate', 2, 1, true]]) {
-  for (const rules of ['threshold', 'abilities', 'abilitiesv2']) {
+  for (const rules of ['threshold', 'abilities-prototype', 'abilities-main']) {
     const scores = classes.map((type) => {
       const ids = [...Array(stats).fill(ultimate ? doubleStats[type] : `${type}1`), ...Array(attacks).fill(ultimate ? ultimates[type] : ordinary[type])]
       const hand = ids.map((id, i) => toTabletopCard({ ...definitions.get(id), uid: `${id}-${i}` }, rules))
@@ -160,7 +161,7 @@ for (const [label, stats, attacks, ultimate] of [['4 single stats + 1 attack', 4
 }
 lines.push('', '## Evidence and reproduction', '',
   `Local raw evidence: \`${root}\`. Each run saves manifest/rules/source hash, every game and final scoring breakdown, every decision and candidate values/WDL, progress, and complete root snapshots for decision probes. Summary: \`${root}/summary.json\`. Pilot/interrupted runs in other directories are excluded.`, '',
-  '```powershell', 'node scripts/tabletop-balance.mjs abilitiesv2 draft 500 16 21000000 wild .ai-runs/new-study',
+  '```powershell', 'node scripts/run-normal-balance.mjs .ai-runs/abilities-main-new-study 500 16 2 abilities-main',
   'node scripts/summarize-tabletop-balance.mjs .ai-runs/new-study docs/TABLETOP_BALANCE_RESULTS.md', '```', '')
 const interpretation = path.join(root, 'interpretation.md')
 if (fs.existsSync(interpretation)) lines.splice(lines.indexOf('## Method'), 0, fs.readFileSync(interpretation, 'utf8').trim(), '')

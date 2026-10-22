@@ -7,7 +7,7 @@ import { configureBalanceVariant, battleAnalysisProfile, BALANCE_VARIANTS } from
 import { createHeadlessGame, stepHeadlessGame } from '../src/game/headlessGame.js'
 import { getCoreCards } from '../src/game/cards.js'
 import { searchDecision, searchPreparationDecision } from '../src/game/searchAi.js'
-import { TABLETOP_V2_SHIELD_COST as TABLETOP_SHIELD_COST, FLEXIBLE_RULES } from '../src/game/tabletop.js'
+import { MAIN_ABILITY_SHIELD_COST as TABLETOP_SHIELD_COST, MAIN_ABILITY_RULES, normalizeTabletopRules } from '../src/game/tabletop.js'
 
 const [root = '.ai-runs/normal-balance-2026-10-21', arm, useDefaults] = process.argv.slice(2)
 const read = (p) => JSON.parse(fs.readFileSync(p, 'utf8'))
@@ -32,9 +32,14 @@ if (!arm) {
   const dir = path.join(root, arm), manifest = read(path.join(dir, 'complete.json'))
   assert.equal(manifest.deck, 'normal')
   assert.equal(manifest.samples, 16)
-  const variant = useDefaults === 'playable-defaults' ? BALANCE_VARIANTS[manifest.variant] : configureBalanceVariant(manifest.variant)
-  if (useDefaults === 'playable-defaults') assert.deepEqual(variant.flexible, FLEXIBLE_RULES)
-  assert.equal(variant.rules, manifest.rules)
+  // Archived manifests used abilities for the prototype and abilitiesv2 for main.
+  // Keep evidence intact while translating its metadata to the canonical names.
+  const variantName = manifest.rules === 'abilities' ? 'abilities-prototype'
+    : manifest.variant === 'abilitiesv2' ? 'abilities-main-legacy-flat4' : manifest.variant
+  const canonicalSavedRules = (rules) => rules === 'abilities' ? 'abilities-prototype' : normalizeTabletopRules(rules)
+  const variant = useDefaults === 'playable-defaults' ? BALANCE_VARIANTS[variantName] : configureBalanceVariant(variantName)
+  if (useDefaults === 'playable-defaults') assert.deepEqual(variant.flexible, MAIN_ABILITY_RULES)
+  assert.equal(variant.rules, canonicalSavedRules(manifest.rules))
   if (manifest.shieldCosts) assert.deepEqual(manifest.shieldCosts, TABLETOP_SHIELD_COST)
   for (const card of getCoreCards({ tabletop: variant.rules })) assert.equal(manifest.poolCounts[card.id], card.copies)
   for (const [file, expected] of Object.entries(manifest.sourceHashes)) {
@@ -68,7 +73,11 @@ if (!arm) {
           const options = { minSamples: manifest.samples, maxSamples: manifest.samples, timeBudgetMs: 1e12, rollout: 'prep-lookahead', seed: d.planningSeed }
           const fresh = state.preparation ? searchPreparationDecision(state.preparation, state.game, state.actor, options)
             : searchDecision(state.game, state.actor, options)
-          for (const key of ['action', 'values', 'counts', 'samples', 'chosenIndex', 'baselineIndex', 'simulations']) assert.deepEqual(fresh[key], d[key], `Search audit ${arm}/${phase}/${key}`)
+          for (const key of ['action', 'values', 'counts', 'samples', 'chosenIndex', 'baselineIndex', 'simulations']) {
+            const saved = key === 'action' && d.action.card?.tabletop
+              ? { ...d.action, card: { ...d.action.card, tabletop: canonicalSavedRules(d.action.card.tabletop) } } : d[key]
+            assert.deepEqual(fresh[key], saved, `Search audit ${arm}/${phase}/${key}`)
+          }
           audited.add(phase)
           searchAudits.push({ game: d.game, step: d.step, phase, samples: fresh.samples, simulations: fresh.simulations })
         }
@@ -80,7 +89,8 @@ if (!arm) {
     assert.equal(result.reason, g.reason)
     for (const side of ['player', 'opponent']) {
       assert.deepEqual(compact(result[`${side}Hand`]), g[`${side}Hand`])
-      assert.deepEqual(result[side] ?? battleAnalysisProfile(result[`${side}Hand`]), g[side])
+      const savedProfile = variant.rules ? { ...g[side], rules: canonicalSavedRules(g[side].rules) } : g[side]
+      assert.deepEqual(result[side] ?? battleAnalysisProfile(result[`${side}Hand`]), savedProfile)
     }
     if (!variant.rules) assert.equal(g.digitalWinner, result.winner)
   }

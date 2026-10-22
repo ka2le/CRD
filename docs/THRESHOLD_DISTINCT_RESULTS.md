@@ -1,5 +1,7 @@
 **Adopted after this study (2026-10-21):** the creator chose **+2/+3/+4 at 1/4/8** for the playable Threshold mode and closed tuning for now. Implemented in the shared scorer, AI and UI; V2 unchanged. The findings below describe the preceding evaluation.
 
+> Naming policy (2026-10-22): **Abilities = `abilities-main`** (formerly Abilities v2). The original is **Abilities Prototype** (`abilities-prototype`), hidden and excluded from balance testing unless explicitly requested. Generic tabletop requests mean main; Threshold must be named explicitly. Historical raw IDs/paths remain unchanged. See [ruleset naming policy](RULESET_NAMES.md).
+
 # Threshold: distinct faction rewards
 
 ## Verdict: retain the distinction; no automatic adoption

@@ -2,45 +2,55 @@ import { getHandStats } from './engine.js'
 
 export const TABLETOP_CLASSES = ['critter', 'robot', 'dragon']
 export const TABLETOP_SHIELD_COST = { critter: 2, robot: 1, dragon: 0 }
-export const TABLETOP_V2_SHIELD_COST = { critter: 1, robot: 2, dragon: 0 }
+export const MAIN_ABILITY_SHIELD_COST = { critter: 1, robot: 2, dragon: 0 }
 const ULTIMATES = new Set(['murder_rabbit', 'robot_ulti', 'dragon_ulti', 'devour'])
 
-// Three tabletop rule sets share the single power calculation and shield penalty:
+// Abilities means abilities-main. Prototype is retained only for explicit historical use.
 //   threshold – one bonus per main faction: Critters 1+ → +2, Robots 4+ → +3, Dragons 8+ → +4.
-//   abilities – class abilities (Adapt, Perfect Balance, Overwhelming); no Shortcut, 2× or
+//   abilities-prototype – original Adapt / Perfect Balance / Overwhelming; no Shortcut, 2× or
 //   Critter + Robot + Dragon cards in the deck.
-export const TABLETOP_RULES = ['threshold', 'abilities', 'abilitiesv2']
+export const TABLETOP_RULES = ['threshold', 'abilities-prototype', 'abilities-main']
 const ABILITIES_EXCLUDED_IDS = new Set(['double_dmg', 'shortcut', 'any_off_each'])
 
-// Settings store `false` for the round-by-round battle; `true` is the legacy threshold toggle.
+// Generic tabletop and abilities aliases always mean the active main rules.
+// Only an explicit prototype/old-version name selects the retained prototype.
 export function normalizeTabletopRules(value) {
   if (!value) return false
-  return TABLETOP_RULES.includes(value) ? value : 'threshold'
+  if (['abilities-prototype', 'abilities-v1', 'old-abilities'].includes(value)) return 'abilities-prototype'
+  if (value === 'threshold') return 'threshold'
+  return 'abilities-main'
+}
+
+// Saved settings must not silently reopen the hidden prototype in normal play.
+export function normalizePlayableTabletopRules(value) {
+  const rules = normalizeTabletopRules(value)
+  return rules === 'abilities-prototype' ? 'abilities-main' : rules
 }
 
 export function isCardInTabletopRules(card, rules) {
   const normalized = normalizeTabletopRules(rules)
-  if (normalized === 'abilitiesv2' && card.id === 'chameleon') return false
-  return !(['abilities', 'abilitiesv2'].includes(normalized) && ABILITIES_EXCLUDED_IDS.has(card.id))
+  if (normalized === 'abilities-main' && card.id === 'chameleon') return false
+  return !(['abilities-prototype', 'abilities-main'].includes(normalized) && ABILITIES_EXCLUDED_IDS.has(card.id))
 }
 
 // Tabletop cards carry their rule set, so any hand knows how it is scored.
 export function getHandTabletopRules(hand = []) {
-  return normalizeTabletopRules(hand.find((card) => card?.tabletop)?.tabletop) || 'threshold'
+  return normalizeTabletopRules(hand.find((card) => card?.tabletop)?.tabletop) || 'abilities-main'
 }
 
 // Derivatives belong to one game; the imported digital definitions stay intact.
-export function toTabletopCard(card, rules = 'threshold') {
+export function toTabletopCard(card, rules = 'abilities-main') {
   const effect = { ...card.effect }
   if (effect.dmgType) effect.dmg = ULTIMATES.has(card.id) ? 2 : 1
   if (card.id === 'bite') effect.dmg = 1
   if (effect.shield) effect.shield = 1
-  return { ...card, tabletop: normalizeTabletopRules(rules) || 'threshold', cd: 0, effect }
+  return { ...card, tabletop: normalizeTabletopRules(rules) || 'abilities-main', cd: 0, effect }
 }
 
 // ---------- abilities ----------
-export const ABILITY_RULES = { balanceBonus: 3, overwhelmingAt: 7 }
-export const FLEXIBLE_RULES = { overwhelmingAt: 7, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true }
+export const PERFECT_BALANCE_BONUS = 3
+export const PROTOTYPE_ABILITY_RULES = { balanceBonus: PERFECT_BALANCE_BONUS, overwhelmingAt: 7 }
+export const MAIN_ABILITY_RULES = { overwhelmingAt: 7, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true }
 
 // Adapt: one stat card with a Critter stat turns its Critter stat(s) into an ordinary Critter attack
 // (1 power per Critter stat). Any other faction stats on that card stay (Joker keeps Robot + Dragon).
@@ -68,23 +78,23 @@ export function countRobotAttacks(cards, stats = getHandStats(cards)) {
   }, 0)
 }
 
-function getAbilitiesPlan(hand, adaptedUid) {
+function getPrototypeAbilitiesPlan(hand, adaptedUid) {
   const cards = adaptedUid ? hand.map((card) => (card.uid === adaptedUid ? adaptCard(card) : card)) : hand
   let profile = computeProfile(cards)
   const dragonBase = profile.contributions.dragon
   // Overwhelming: Dragon base power 7+ gains one Dragon stat before final power.
-  const overwhelming = dragonBase >= ABILITY_RULES.overwhelmingAt
+  const overwhelming = dragonBase >= PROTOTYPE_ABILITY_RULES.overwhelmingAt
   if (overwhelming) profile = computeProfile(cards, { dragon: 1 })
   // Perfect Balance: as many Robot stats as Robot attacks (at least one of each); Robot main faction only.
   const robotAttacks = countRobotAttacks(cards, profile.stats)
   const balanced = profile.stats.robot > 0 && profile.stats.robot === robotAttacks
-  return { ...profile, rules: 'abilities', adaptedUid: adaptedUid ?? null, dragonBase, overwhelming, balanced, robotAttacks }
+  return { ...profile, rules: 'abilities-prototype', adaptedUid: adaptedUid ?? null, dragonBase, overwhelming, balanced, robotAttacks }
 }
 
 // Adapt is optional; take the conversion that scores best before reveal (no conversion on ties).
-function getAbilitiesProfile(hand) {
-  const plans = [null, ...hand.filter(isAdaptableCard).map((card) => card.uid)].map((uid) => getAbilitiesPlan(hand, uid))
-  const value = (plan) => plan.base + (plan.balanced && plan.types.includes('robot') ? ABILITY_RULES.balanceBonus : 0)
+function getPrototypeAbilitiesProfile(hand) {
+  const plans = [null, ...hand.filter(isAdaptableCard).map((card) => card.uid)].map((uid) => getPrototypeAbilitiesPlan(hand, uid))
+  const value = (plan) => plan.base + (plan.balanced && plan.types.includes('robot') ? PROTOTYPE_ABILITY_RULES.balanceBonus : 0)
   return plans.reduce((best, plan) => (value(plan) > value(best) ? plan : best))
 }
 
@@ -94,8 +104,8 @@ const profileCache = new WeakMap()
 export function getTabletopProfile(hand = []) {
   if (profileCache.has(hand)) return profileCache.get(hand)
   const rules = getHandTabletopRules(hand)
-  const profile = rules === 'abilities' ? getAbilitiesProfile(hand)
-    : rules === 'abilitiesv2' ? getFlexibleProfile(hand) : { ...computeProfile(hand), rules }
+  const profile = rules === 'abilities-prototype' ? getPrototypeAbilitiesProfile(hand)
+    : rules === 'abilities-main' ? getMainAbilitiesProfile(hand) : { ...computeProfile(hand), rules }
   profileCache.set(hand, profile)
   return profile
 }
@@ -184,20 +194,20 @@ function getRobotPipPlans(hand) {
   return plans
 }
 
-function getFlexiblePlanProfile({ cards, reconfigured }) {
+function getMainAbilitiesPlanProfile({ cards, reconfigured }) {
   let profile = computeProfile(cards)
   const dragonBase = profile.contributions.dragon
-  const overwhelming = dragonBase >= FLEXIBLE_RULES.overwhelmingAt
-  if (overwhelming && FLEXIBLE_RULES.overwhelmingExtraStat) profile = computeProfile(cards, { dragon: 1 })
-  return { ...profile, rules: 'abilitiesv2', reconfigured, dragonBase, overwhelming }
+  const overwhelming = dragonBase >= MAIN_ABILITY_RULES.overwhelmingAt
+  if (overwhelming && MAIN_ABILITY_RULES.overwhelmingExtraStat) profile = computeProfile(cards, { dragon: 1 })
+  return { ...profile, rules: 'abilities-main', reconfigured, dragonBase, overwhelming }
 }
 
 function flexibleValue(profile) {
-  return profile.base + (profile.overwhelming && !FLEXIBLE_RULES.overwhelmingExtraStat ? FLEXIBLE_RULES.overwhelmingBonus : 0)
+  return profile.base + (profile.overwhelming && !MAIN_ABILITY_RULES.overwhelmingExtraStat ? MAIN_ABILITY_RULES.overwhelmingBonus : 0)
 }
 
 function getRobotPipProfile(hand) {
-  const profiles = getRobotPipPlans(hand).map(getFlexiblePlanProfile)
+  const profiles = getRobotPipPlans(hand).map(getMainAbilitiesPlanProfile)
   const unchanged = profiles[0]
   // A converted hand must actually permit Robot as its resulting main faction.
   const best = profiles.slice(1).filter((profile) => profile.types.includes('robot'))
@@ -209,17 +219,17 @@ function getRobotPipProfile(hand) {
   return { ...best, types: TABLETOP_CLASSES.filter((type) => typeProfiles[type]), typeProfiles }
 }
 
-function getFlexibleProfile(hand) {
+function getMainAbilitiesProfile(hand) {
   // Adopted v2: Perfect Balance replaces Reconfigure. No Adapt or conversion.
   // The conversion branches below remain available to isolated study variants.
-  if (FLEXIBLE_RULES.perfectBalance) {
-    const profile = getFlexiblePlanProfile({ cards: hand, reconfigured: null })
+  if (MAIN_ABILITY_RULES.perfectBalance) {
+    const profile = getMainAbilitiesPlanProfile({ cards: hand, reconfigured: null })
     const robotAttacks = countRobotAttacks(hand, profile.stats)
     return { ...profile, robotAttacks, balanced: profile.stats.robot > 0 && profile.stats.robot === robotAttacks }
   }
-  if (FLEXIBLE_RULES.robotPipReconfigure) return getRobotPipProfile(hand)
-  const plans = FLEXIBLE_RULES.unlimitedBaseReconfigure ? getBaseFlexiblePlans(hand) : getLegacyFlexiblePlans(hand)
-  const profiles = plans.map(getFlexiblePlanProfile)
+  if (MAIN_ABILITY_RULES.robotPipReconfigure) return getRobotPipProfile(hand)
+  const plans = MAIN_ABILITY_RULES.unlimitedBaseReconfigure ? getBaseFlexiblePlans(hand) : getLegacyFlexiblePlans(hand)
+  const profiles = plans.map(getMainAbilitiesPlanProfile)
   return profiles.reduce((best, profile) => flexibleValue(profile) > flexibleValue(best) ? profile : best)
 }
 
@@ -280,27 +290,27 @@ export function scoreTabletopHand(hand, enemyShields = 0, damageType = null) {
   if (damageType && !profile.types.includes(damageType)) throw new Error('Invalid tabletop damage type')
   const type = damageType ?? profile.types[0] ?? null
   if (profile.typeProfiles) profile = profile.typeProfiles[type]
-  const shieldCosts = profile.rules === 'abilitiesv2' ? TABLETOP_V2_SHIELD_COST : TABLETOP_SHIELD_COST
+  const shieldCosts = profile.rules === 'abilities-main' ? MAIN_ABILITY_SHIELD_COST : TABLETOP_SHIELD_COST
   const shieldPenalty = enemyShields * (shieldCosts[type] ?? 0)
   const blocked = Math.min(profile.base, shieldPenalty)
   const power = profile.base - blocked
-  if (profile.rules === 'abilitiesv2') {
+  if (profile.rules === 'abilities-main') {
     // Study-only flat-bonus variant: subtract this hand's actual main-faction
     // shield penalty from Dragon contribution before testing the cutoff.
     const dragonThresholdPower = Math.max(0, profile.dragonBase - shieldPenalty)
-    const overwhelming = FLEXIBLE_RULES.overwhelmingAfterShields
-      ? dragonThresholdPower >= FLEXIBLE_RULES.overwhelmingAt : profile.overwhelming
-    const dragonBonus = overwhelming && !FLEXIBLE_RULES.overwhelmingExtraStat ? FLEXIBLE_RULES.overwhelmingBonus : 0
-    const balanceBonus = FLEXIBLE_RULES.perfectBalance && profile.balanced && type === 'robot' ? ABILITY_RULES.balanceBonus : 0
+    const overwhelming = MAIN_ABILITY_RULES.overwhelmingAfterShields
+      ? dragonThresholdPower >= MAIN_ABILITY_RULES.overwhelmingAt : profile.overwhelming
+    const dragonBonus = overwhelming && !MAIN_ABILITY_RULES.overwhelmingExtraStat ? MAIN_ABILITY_RULES.overwhelmingBonus : 0
+    const balanceBonus = MAIN_ABILITY_RULES.perfectBalance && profile.balanced && type === 'robot' ? PERFECT_BALANCE_BONUS : 0
     const bonus = dragonBonus + balanceBonus
-    return { ...profile, overwhelming, ...(FLEXIBLE_RULES.overwhelmingAfterShields ? { dragonThresholdPower } : {}),
+    return { ...profile, overwhelming, ...(MAIN_ABILITY_RULES.overwhelmingAfterShields ? { dragonThresholdPower } : {}),
       damageType: type, enemyShields, shieldPenalty, blocked, power,
       naturalBonus: bonus, baseBonus: bonus, bonus, score: power + bonus,
       winsTies: type === 'critter' }
   }
-  if (profile.rules === 'abilities') {
+  if (profile.rules === 'abilities-prototype') {
     // Perfect Balance is a Robot ability: only a Robot main faction earns it, after shields.
-    const bonus = profile.balanced && type === 'robot' ? ABILITY_RULES.balanceBonus : 0
+    const bonus = profile.balanced && type === 'robot' ? PROTOTYPE_ABILITY_RULES.balanceBonus : 0
     return { ...profile, damageType: type, enemyShields, shieldPenalty, blocked, power,
       naturalBonus: bonus, baseBonus: bonus, bonus, score: power + bonus }
   }
@@ -315,9 +325,9 @@ export function scoreTabletopHand(hand, enemyShields = 0, damageType = null) {
 // AI commits from its own hand, before reveal, without consulting enemy shields.
 export function chooseTabletopType(hand) {
   const { types } = getTabletopProfile(hand)
-  const shieldCosts = getHandTabletopRules(hand) === 'abilitiesv2' ? TABLETOP_V2_SHIELD_COST : TABLETOP_SHIELD_COST
+  const shieldCosts = getHandTabletopRules(hand) === 'abilities-main' ? MAIN_ABILITY_SHIELD_COST : TABLETOP_SHIELD_COST
   return [...types].sort((a, b) => scoreTabletopHand(hand, 0, b).score - scoreTabletopHand(hand, 0, a).score
-    || (getHandTabletopRules(hand) === 'abilitiesv2' ? Number(b === 'critter') - Number(a === 'critter') : 0)
+    || (getHandTabletopRules(hand) === 'abilities-main' ? Number(b === 'critter') - Number(a === 'critter') : 0)
     || shieldCosts[a] - shieldCosts[b])[0] ?? null
 }
 

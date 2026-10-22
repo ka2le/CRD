@@ -1,11 +1,12 @@
 // Study-only process configuration. Never imported by the browser.
 // Apply exactly once before constructing/scoring hands (profiles are cached).
-import { TABLETOP_THRESHOLDS, FLEXIBLE_RULES, TABLETOP_V2_SHIELD_COST as TABLETOP_SHIELD_COST } from '../src/game/tabletop.js'
+import { TABLETOP_THRESHOLDS, MAIN_ABILITY_RULES, MAIN_ABILITY_SHIELD_COST as TABLETOP_SHIELD_COST } from '../src/game/tabletop.js'
 import { simulateBattle } from '../src/game/engine.js'
 
 export const BALANCE_VARIANTS = {
-  'abilitiesv2-dragon7-immune-critter1': { rules: 'abilitiesv2', title: 'V2: Dragon 7+ immune; Critter shields -1', shieldCosts: { critter: 1, robot: 2, dragon: 0 }, flexible: { overwhelmingAt: 7, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true } },
-  'abilitiesv2-dragon7-immune': { rules: 'abilitiesv2', title: 'V2: Dragon 7+ extra stat; shield immunity', shieldCosts: { critter: 2, robot: 2, dragon: 0 }, flexible: { overwhelmingAt: 7, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true } },
+  'abilities-main': { rules: 'abilities-main', title: 'Abilities', shieldCosts: { critter: 1, robot: 2, dragon: 0 }, flexible: { overwhelmingAt: 7, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true } },
+  'abilitiesv2-dragon7-immune-critter1': { rules: 'abilities-main', title: 'V2: Dragon 7+ immune; Critter shields -1', shieldCosts: { critter: 1, robot: 2, dragon: 0 }, flexible: { overwhelmingAt: 7, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true } },
+  'abilitiesv2-dragon7-immune': { rules: 'abilities-main', title: 'V2: Dragon 7+ extra stat; shield immunity', shieldCosts: { critter: 2, robot: 2, dragon: 0 }, flexible: { overwhelmingAt: 7, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true } },
   battle: { rules: false, title: 'Battle' },
   threshold: { rules: 'threshold', title: 'Original Threshold +1/+2/+4', thresholds: { critter: { at: 1, bonus: 1 }, robot: { at: 4, bonus: 2 }, dragon: { at: 7, bonus: 4 } } },
   'threshold-tuned': { rules: 'threshold', title: 'Threshold +2/+3/+4', thresholds: { critter: { at: 1, bonus: 2 }, robot: { at: 4, bonus: 3 }, dragon: { at: 7, bonus: 4 } } },
@@ -16,19 +17,23 @@ export const BALANCE_VARIANTS = {
   'threshold-balanced': { rules: 'threshold', title: 'Threshold 2/2/3 at 1/4/7', thresholds: { critter: { at: 1, bonus: 2 }, robot: { at: 4, bonus: 2 }, dragon: { at: 7, bonus: 3 } } },
   'threshold-balanced-robot3': { rules: 'threshold', title: 'Threshold 2/2/3 at 1/3/7', thresholds: { critter: { at: 1, bonus: 2 }, robot: { at: 3, bonus: 2 }, dragon: { at: 7, bonus: 3 } } },
   'threshold-balanced-dragon8': { rules: 'threshold', title: 'Threshold 2/2/4 at 1/4/8', thresholds: { critter: { at: 1, bonus: 2 }, robot: { at: 4, bonus: 2 }, dragon: { at: 8, bonus: 4 } } },
-  abilitiesv2: { rules: 'abilitiesv2', title: 'V2: 7+ → +4', flexible: { overwhelmingAt: 7, overwhelmingBonus: 4, overwhelmingExtraStat: false, unlimitedBaseReconfigure: false, robotPipReconfigure: false } },
-  'abilitiesv2-extra-stat': { rules: 'abilitiesv2', title: 'V2: 7+ → +1 Dragon stat', flexible: { overwhelmingAt: 7, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false } },
-  'abilitiesv2-extra-stat6': { rules: 'abilitiesv2', title: 'V2: 6+ → +1 Dragon stat', flexible: { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false } },
-  'abilitiesv2-tuned': { rules: 'abilitiesv2', title: 'V2: 8+ → +3', flexible: { overwhelmingAt: 8, overwhelmingBonus: 3, overwhelmingExtraStat: false, unlimitedBaseReconfigure: false, robotPipReconfigure: false } },
-  'abilitiesv2-base-unlimited': { rules: 'abilitiesv2', title: 'V2: Dragon 6+ extra stat, unlimited base Robot conversions', flexible: { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: true, robotPipReconfigure: false } },
-  'abilitiesv2-robot-pips': { rules: 'abilitiesv2', title: 'V2: Robot-main pip/ultimate Reconfigure', flexible: { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: true, overwhelmingAfterShields: false, perfectBalance: false } },
-  'abilitiesv2-perfect-balance': { rules: 'abilitiesv2', title: 'V2: Perfect Balance replaces Reconfigure', shieldCosts: { critter: 2, robot: 1, dragon: 0 }, flexible: { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true } },
-  'abilitiesv2-perfect-balance-shields220': { rules: 'abilitiesv2', title: 'V2: Perfect Balance; shields 2/2/0', shieldCosts: { critter: 2, robot: 2, dragon: 0 }, flexible: { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true } },
-  'abilitiesv2-perfect-balance-shields221': { rules: 'abilitiesv2', title: 'V2: Perfect Balance; shields 2/2/1', shieldCosts: { critter: 2, robot: 2, dragon: 1 }, flexible: { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true } },
-  'abilitiesv2-robot-immune': { rules: 'abilitiesv2', title: 'V2: Robot shield immunity; Dragon 6+ extra stat', shieldCosts: { critter: 2, robot: 0, dragon: 0 }, flexible: { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: true, overwhelmingAfterShields: false } },
-  'abilitiesv2-dragon-shield': { rules: 'abilitiesv2', title: 'V2: Robot immunity; Dragon -1/shield then 7+ gives +4', shieldCosts: { critter: 2, robot: 0, dragon: 1 }, flexible: { overwhelmingAt: 7, overwhelmingBonus: 4, overwhelmingExtraStat: false, unlimitedBaseReconfigure: false, robotPipReconfigure: true, overwhelmingAfterShields: true } },
-  abilities: { rules: 'abilities', title: 'Abilities v1 (not in current study)' },
+  'abilities-main-legacy-flat4': { rules: 'abilities-main', title: 'Historical main: 7+ → +4 (archived abilitiesv2 baseline)', flexible: { overwhelmingAt: 7, overwhelmingBonus: 4, overwhelmingExtraStat: false, unlimitedBaseReconfigure: false, robotPipReconfigure: false } },
+  'abilitiesv2-extra-stat': { rules: 'abilities-main', title: 'V2: 7+ → +1 Dragon stat', flexible: { overwhelmingAt: 7, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false } },
+  'abilitiesv2-extra-stat6': { rules: 'abilities-main', title: 'V2: 6+ → +1 Dragon stat', flexible: { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false } },
+  'abilitiesv2-tuned': { rules: 'abilities-main', title: 'V2: 8+ → +3', flexible: { overwhelmingAt: 8, overwhelmingBonus: 3, overwhelmingExtraStat: false, unlimitedBaseReconfigure: false, robotPipReconfigure: false } },
+  'abilitiesv2-base-unlimited': { rules: 'abilities-main', title: 'V2: Dragon 6+ extra stat, unlimited base Robot conversions', flexible: { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: true, robotPipReconfigure: false } },
+  'abilitiesv2-robot-pips': { rules: 'abilities-main', title: 'V2: Robot-main pip/ultimate Reconfigure', flexible: { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: true, overwhelmingAfterShields: false, perfectBalance: false } },
+  'abilitiesv2-perfect-balance': { rules: 'abilities-main', title: 'V2: Perfect Balance replaces Reconfigure', shieldCosts: { critter: 2, robot: 1, dragon: 0 }, flexible: { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true } },
+  'abilitiesv2-perfect-balance-shields220': { rules: 'abilities-main', title: 'V2: Perfect Balance; shields 2/2/0', shieldCosts: { critter: 2, robot: 2, dragon: 0 }, flexible: { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true } },
+  'abilitiesv2-perfect-balance-shields221': { rules: 'abilities-main', title: 'V2: Perfect Balance; shields 2/2/1', shieldCosts: { critter: 2, robot: 2, dragon: 1 }, flexible: { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true } },
+  'abilitiesv2-robot-immune': { rules: 'abilities-main', title: 'V2: Robot shield immunity; Dragon 6+ extra stat', shieldCosts: { critter: 2, robot: 0, dragon: 0 }, flexible: { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: true, overwhelmingAfterShields: false } },
+  'abilitiesv2-dragon-shield': { rules: 'abilities-main', title: 'V2: Robot immunity; Dragon -1/shield then 7+ gives +4', shieldCosts: { critter: 2, robot: 0, dragon: 1 }, flexible: { overwhelmingAt: 7, overwhelmingBonus: 4, overwhelmingExtraStat: false, unlimitedBaseReconfigure: false, robotPipReconfigure: true, overwhelmingAfterShields: true } },
+  'abilities-prototype': { rules: 'abilities-prototype', title: 'Abilities Prototype (explicit historical use only)' },
 }
+// Generic requests must never select the prototype or a historical tuning arm.
+BALANCE_VARIANTS.abilities = BALANCE_VARIANTS['abilities-main']
+BALANCE_VARIANTS.tabletop = BALANCE_VARIANTS['abilities-main']
+BALANCE_VARIANTS.abilitiesv2 = BALANCE_VARIANTS['abilities-main']
 let configured = false
 export function configureBalanceVariant(name) {
   if (configured) throw new Error('One variant per process; cached scoring profiles must not cross configurations')
@@ -36,7 +41,7 @@ export function configureBalanceVariant(name) {
   if (!variant) throw new Error(`Unknown balance variant: ${name}`)
   configured = true
   if (variant.thresholds) for (const [faction, values] of Object.entries(variant.thresholds)) Object.assign(TABLETOP_THRESHOLDS[faction], values)
-  if (variant.flexible) Object.assign(FLEXIBLE_RULES, { overwhelmingAfterShields: false, perfectBalance: false }, variant.flexible)
+  if (variant.flexible) Object.assign(MAIN_ABILITY_RULES, { overwhelmingAfterShields: false, perfectBalance: false }, variant.flexible)
   Object.assign(TABLETOP_SHIELD_COST, { critter: 2, robot: 1, dragon: 0 }, variant.shieldCosts)
   return { ...variant, name }
 }

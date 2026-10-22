@@ -1,5 +1,11 @@
 # DECISIONS.md
 
+**Current naming:** UI **Abilities** = code **`abilities-main`** (formerly v2). The original is **Abilities Prototype** / `abilities-prototype`, retained but hidden. Generic abilities/tabletop tests use main; prototype testing needs an explicit request. See [ruleset naming policy](RULESET_NAMES.md).
+
+> Naming policy (2026-10-22): **Abilities = `abilities-main`** (formerly Abilities v2). The original is **Abilities Prototype** (`abilities-prototype`), hidden and excluded from balance testing unless explicitly requested. Generic tabletop requests mean main; Threshold must be named explicitly. Historical raw IDs/paths remain unchanged. See [ruleset naming policy](RULESET_NAMES.md).
+
+**Adopted v2 balance (2026-10-22):** creator selected Dragon contribution7+ before shields → one extra Dragon stat; shield costs C/R/D1/2/0. Critter wins ties; Robot-main Perfect Balance+3 unchanged. Both reference-card layouts show7+ and−1/−2/0; help derives shield costs from shared constants. Headless v2 versionv8. Playable defaults exactly reproduce all1,000 saved trial games and4search roots. Normal Svenbot16 samples: Draft C/R/D44.8/54.3/52.0%, Discard52.7/51.3/44.9%, draws6.2/8.2%. Creator considers this best so far and explicitly requested commit/deployment. Supersedes earlier current-v2 statements; historical variants retained.73 checks,lint,Pages build,regression pass. Published as public6d6c2ba (private implementation43c2126); Pages39746799653 succeeded. Live index-BYbUNPj1.js and searchAi.worker-Bhvc-M8X.js byte-match the tested build. Fresh live browser verified both score cards and help, with no page errors. Deployment complete.
+
 ## Creator accepted clarified v2 for publication — 2026-10-21
 
 Draft balance is the creator's priority. The clarified Robot-main pip/Ultimate version is the preferred result so far: Draft C/R/D53.4/45.9/50.8%; Discard45.0/51.4/53.6%. Accept the differing Critter outcomes across modes and retain this version; commit and publish it. Further balance tuning is not requested. This is a design preference informed by conditional simulation results, not proof of equal faction strength.
@@ -10,7 +16,7 @@ Draft balance is the creator's priority. The clarified Robot-main pip/Ultimate v
 
 ## Adopted Abilities v2 revision — 2026-10-21
 
-Creator adopted Dragon contribution6+ → one extra Dragon stat (all formulas recomputed once), and clarified that Robot Reconfigure is unrestricted in number of exchanges but restricted to base `robot1` and `robot_attack` cards, including copies. Double/mixed stats, ultimates and hybrids cannot be converted. Automatically maximize unshielded power after abilities; no conversion on ties, otherwise fewest conversions. Reference card: keep large6+, replace hearts with v1 extra-stat card; Robot artwork unchanged. Headless v2 rules version becomesv3. Historical study variants explicitly retain their old Robot interpretation. Normal-deck search verification runs under the adopted rules; no publishing requested.
+Creator adopted Dragon contribution6+ → one extra Dragon stat (all formulas recomputed once), and clarified that Robot Reconfigure is unrestricted in number of exchanges but restricted to base `robot1` and `robot_attack` cards, including copies. Double/mixed stats, ultimates and hybrids cannot be converted. Automatically maximize unshielded power after abilities; no conversion on ties, otherwise fewest conversions. Reference card: keep large6+, replace hearts with prototype extra-stat card; Robot artwork unchanged. Headless v2 rules version becomesv3. Historical study variants explicitly retain their old Robot interpretation. Normal-deck search verification runs under the adopted rules; no publishing requested.
 
 ## Larger net, search opponents and unknown future packs — 2026-10-19
 

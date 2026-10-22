@@ -8,11 +8,11 @@ configureBalanceVariant('abilitiesv2-perfect-balance')
 const defs = new Map(getCoreCards({ tabletop: 'threshold' }).map((c) => [c.id, c]))
 const hand = (...ids) => ids.map((id, i) => {
   assert(defs.has(id), `Unknown card ${id}`)
-  return toTabletopCard({ ...defs.get(id), uid: `${id}-${i}` }, 'abilitiesv2')
+  return toTabletopCard({ ...defs.get(id), uid: `${id}-${i}` }, 'abilities-main')
 })
 const score = (cards, shields = 0, type = chooseTabletopType(cards)) => scoreTabletopHand(cards, shields, type)
 
-test('Exact positive balance earns v1 +3, with Ultimate counting as two attacks', () => {
+test('Exact positive balance earns the shared +3, with Ultimate counting as two attacks', () => {
   const exact = score(hand('robot2', 'robot_ulti'))
   assert.deepEqual([exact.robotAttacks, exact.stats.robot, exact.base, exact.bonus, exact.score], [2, 2, 4, 3, 7])
   assert.equal(score(hand('robot1', 'robot_ulti')).bonus, 0)

@@ -1,5 +1,7 @@
 # Threshold refinement — Normal Deck
 
+> Naming policy (2026-10-22): **Abilities = `abilities-main`** (formerly Abilities v2). The original is **Abilities Prototype** (`abilities-prototype`), hidden and excluded from balance testing unless explicitly requested. Generic tabletop requests mean main; Threshold must be named explicitly. Historical raw IDs/paths remain unchanged. See [ruleset naming policy](RULESET_NAMES.md).
+
 Abilities v2 remains unchanged at Dragon7+ → +4. This pass targets a simple, reasonably balanced Threshold fallback.
 
 **Superseded design direction:** the creator rejected equal Critter/Robot bonuses because they remove the distinct reward curves. Trial A was selected statistically before that correction; its already-running confirmation was allowed to finish, but it will not be adopted. The next comparison preserves +2/+3/+4 and tests Dragon cutoffs 8 and 9 against 7. No Critter upper bound is being implemented or tested. Abilities v2 remains unchanged.

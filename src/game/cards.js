@@ -32,7 +32,8 @@ export const CORE_CARD_IDS = new Set([
   'any_off_each',
 ])
 
-// options.tabletop: false (round-by-round battle), 'threshold' or 'abilities' (true = 'threshold').
+// options.tabletop: false (digital), 'abilities-main' (also true / 'abilities'),
+// 'threshold', or explicit hidden 'abilities-prototype'.
 export function getCoreCards(options = {}) {
   const core = cardsData.cards.filter((card) => CORE_CARD_IDS.has(card.id))
   const rules = normalizeTabletopRules(options.tabletop)

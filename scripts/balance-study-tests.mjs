@@ -2,15 +2,15 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { battleAnalysisProfile, BALANCE_VARIANTS } from './balance-variants.mjs'
-import { FLEXIBLE_RULES, TABLETOP_V2_SHIELD_COST } from '../src/game/tabletop.js'
+import { MAIN_ABILITY_RULES, MAIN_ABILITY_SHIELD_COST } from '../src/game/tabletop.js'
 import { getCoreCards, getExpandedCoreDeck } from '../src/game/cards.js'
 
 const definitions = new Map(getCoreCards().map((c) => [c.id, c]))
 const hand = (ids) => ids.map((id, i) => ({ ...definitions.get(id), uid: `${id}-${i}` }))
 
 test('Adopted v2 balance configuration equals the playable rules', () => {
-  assert.deepEqual(BALANCE_VARIANTS['abilitiesv2-dragon7-immune-critter1'].flexible, FLEXIBLE_RULES)
-  assert.deepEqual(BALANCE_VARIANTS['abilitiesv2-dragon7-immune-critter1'].shieldCosts, TABLETOP_V2_SHIELD_COST)
+  assert.deepEqual(BALANCE_VARIANTS['abilities-main'].flexible, MAIN_ABILITY_RULES)
+  assert.deepEqual(BALANCE_VARIANTS['abilities-main'].shieldCosts, MAIN_ABILITY_SHIELD_COST)
 })
 test('Battle faction labels use the full CD cycle, preserve mixed ties and neutral damage', () => {
   assert.equal(battleAnalysisProfile(hand(['critter1', 'swarm', 'dragon1', 'dragons_breath'])).damageType, 'mixed')
@@ -33,7 +33,7 @@ test('Isolated trial parameters affect real shared scoring at both sides of cuto
     ['threshold-distinct8', [3, 7, 12]], ['threshold-distinct9', [3, 7, 8]],
     ['threshold-later8', [3, 4, 12]], ['threshold-later9', [3, 4, 8]],
     ['threshold-balanced', [3, 6, 11]], ['threshold-balanced-robot3', [3, 6, 11]], ['threshold-balanced-dragon8', [3, 6, 12]],
-    ['abilitiesv2', [11, 12]], ['abilitiesv2-tuned', [7, 11]], ['abilitiesv2-extra-stat', [8, 10]], ['abilitiesv2-extra-stat6', [8, 10]], ['abilitiesv2-base-unlimited', [8, 10]],
+    ['abilities-main-legacy-flat4', [11, 12]], ['abilitiesv2-tuned', [7, 11]], ['abilitiesv2-extra-stat', [8, 10]], ['abilitiesv2-extra-stat6', [8, 10]], ['abilitiesv2-base-unlimited', [8, 10]],
   ]) {
     const code = `import { configureBalanceVariant } from './scripts/balance-variants.mjs';
       import { getCoreCards } from './src/game/cards.js';

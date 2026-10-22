@@ -1,6 +1,8 @@
 # Critters Robots Dragons
 
-Menu → Battle offers Threshold, Abilities and Abilities v2 for Draft and Discard. All use ordinary attacks1/stat and ultimates2/stat. Threshold bonuses are1/4/8→+2/+3/+4. Abilities uses Adapt, Robot Perfect Balance+3 and Dragon7+→extra stat. Current Abilities v2 uses Critter tie wins, Robot-main Perfect Balance+3, Dragon7+→extra stat, and shield penalties C/R/D1/2/0. See `TABLETOP_MODE.md` for exact rules. The round-combat explanations below apply to Battle.
+> Naming policy (2026-10-22): **Abilities = `abilities-main`** (formerly Abilities v2). The original is **Abilities Prototype** (`abilities-prototype`), hidden and excluded from balance testing unless explicitly requested. Generic tabletop requests mean main; Threshold must be named explicitly. Historical raw IDs/paths remain unchanged. See [ruleset naming policy](RULESET_NAMES.md).
+
+Menu → Battle offers Battle, Threshold and **Abilities** (`abilities-main`) for Draft and Discard. Abilities uses Critter tie wins, Robot-main Perfect Balance+3, Dragon7+→extra stat, and shield penalties C/R/D1/2/0. The former first version is Abilities Prototype, retained but hidden. Generic tabletop requests refer to main; Threshold must be named explicitly. See `TABLETOP_MODE.md` for exact rules. The round-combat explanations below apply to Battle.
 
 Reviewed against source on 2026-10-18. See `CURRENT_STATE.md` for implementation limits and verification, and `RULES.md` for detailed rules.
 

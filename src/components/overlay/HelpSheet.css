@@ -133,3 +133,216 @@
 .help__fact--tip {
   color: var(--t1);
 }
+
+/* ---------- Abilities (main tabletop rules) ---------- */
+
+.help__equation--next {
+  margin-top: 8px;
+}
+
+.help__chip--robot { color: var(--robot); border-color: color-mix(in srgb, var(--robot) 35%, transparent); }
+.help__chip--dragon { color: var(--dragon); border-color: color-mix(in srgb, var(--dragon) 35%, transparent); }
+.help__chip--bonus { color: var(--brass-hi); border-color: color-mix(in srgb, var(--brass) 45%, transparent); }
+.help__chip--bonus .g-icon { color: var(--damage); }
+.help__chip--score { color: var(--brass-hi); background: rgba(214, 190, 140, 0.12); border-color: var(--b2); }
+.help__chip--shield.is-zero { color: var(--t1); border-color: var(--b1); }
+
+.help__term {
+  display: inline-grid;
+  justify-items: center;
+  gap: 3px;
+}
+
+.help__term small {
+  font-size: 0.64rem;
+  letter-spacing: 0.04em;
+  color: var(--t1);
+}
+
+.help__equation--score {
+  align-items: flex-start;
+}
+
+.help__equation--score .help__op {
+  line-height: 32px;
+}
+
+.help__arrow {
+  font-size: 1rem;
+  color: var(--t1);
+}
+
+.help__slash {
+  color: var(--t2);
+}
+
+.help__c-robot { color: var(--robot); }
+.help__c-dragon { color: var(--dragon); }
+
+.help__crowned {
+  position: relative;
+  padding-top: 4px;
+}
+
+.help__crown {
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  width: 16px;
+  height: 13px;
+  translate: -50% 0;
+  color: var(--brass-hi);
+}
+
+.help__lanes {
+  display: grid;
+  gap: 8px;
+}
+
+.help__ability {
+  --lane: var(--t0);
+  display: grid;
+  grid-template-columns: 34px 58px minmax(0, 1fr);
+  grid-template-areas:
+    "icon shield name"
+    "icon shield rule"
+    "note note note";
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 6px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--lane) 22%, transparent);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--lane) 10%, transparent), transparent 70%);
+}
+
+.help__ability--critter { --lane: var(--critter); }
+.help__ability--robot { --lane: var(--robot); }
+.help__ability--dragon { --lane: var(--dragon); }
+
+.help__ability .help__lane-icon {
+  grid-area: icon;
+  align-self: center;
+}
+
+.help__ability .help__chip--shield {
+  grid-area: shield;
+  justify-self: center;
+}
+
+.help__ability-name {
+  grid-area: name;
+  font-family: var(--display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lane);
+}
+
+.help__ability-rule {
+  grid-area: rule;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.help__ability-note {
+  grid-area: note;
+  font-size: 0.76rem;
+  line-height: 1.3;
+  color: var(--t1);
+}
+
+@media (min-width: 560px) {
+  .help__ability {
+    grid-template-columns: 34px 58px 150px minmax(0, 1fr);
+    grid-template-areas:
+      "icon shield name rule"
+      "icon shield note note";
+  }
+}
+
+.help__heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-family: var(--display);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brass-hi);
+}
+
+.help__heading .g-icon {
+  color: var(--special);
+}
+
+.help__count {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  color: var(--t1);
+}
+
+.help__specials {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 8px;
+}
+
+.help__special {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 6px 6px;
+  border-radius: 8px;
+  border: 1px solid var(--b0);
+  background: rgba(214, 190, 140, 0.03);
+  color: var(--t0);
+  font: inherit;
+  font-size: 0.8rem;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+}
+
+.help__special:hover,
+.help__special:focus-visible {
+  border-color: var(--b2);
+  background: rgba(214, 190, 140, 0.06);
+}
+
+.help__special-card {
+  position: relative;
+  width: 52px;
+  aspect-ratio: 635 / 888;
+  overflow: hidden;
+  border-radius: 3.5% / 2.5%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+}
+
+.help__special-text {
+  display: grid;
+  gap: 3px;
+}
+
+.help__special-timing {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+
+.help__special-timing.is-prep {
+  color: var(--special);
+}
+
+.help__special-timing.is-shield {
+  color: var(--shield);
+}

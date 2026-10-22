@@ -6,8 +6,8 @@ import { scoreTabletopHand, toTabletopCard } from '../src/game/tabletop.js'
 
 const prior = BALANCE_VARIANTS['abilitiesv2-dragon7-immune']
 const variant = configureBalanceVariant('abilitiesv2-dragon7-immune-critter1')
-const defs = new Map(getCoreCards({ tabletop: 'abilitiesv2' }).map(c => [c.id, c]))
-const hand = (...ids) => ids.map((id, i) => toTabletopCard({ ...defs.get(id), uid: `${id}-${i}` }, 'abilitiesv2'))
+const defs = new Map(getCoreCards({ tabletop: 'abilities-main' }).map(c => [c.id, c]))
+const hand = (...ids) => ids.map((id, i) => toTabletopCard({ ...defs.get(id), uid: `${id}-${i}` }, 'abilities-main'))
 
 test('Follow-up changes only Critter shield cost from 2 to 1', () => {
   assert.deepEqual(variant.flexible, prior.flexible)

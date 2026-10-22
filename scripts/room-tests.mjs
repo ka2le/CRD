@@ -46,7 +46,7 @@ function client(role, state, storage = memoryStorage()) {
 }
 
 test('both seats complete Draft and Discard with digital and all three tabletop rules', () => {
-  for (const mode of ['draft', 'five-hand-discard']) for (const tabletop of [false, 'threshold', 'abilities', 'abilitiesv2']) {
+  for (const mode of ['draft', 'five-hand-discard']) for (const tabletop of [false, 'threshold', 'abilities-prototype', 'abilities-main']) {
     for (let seed = 0; seed < 8; seed += 1) {
       let state = gameApi.startRoomGame(initial(mode, tabletop, seed))
       while (state.game.phase !== 'battle-ready') {

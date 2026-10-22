@@ -5,10 +5,10 @@ function check(variant, assertions) {
   const code = `import assert from 'node:assert/strict';
     import { configureBalanceVariant } from './scripts/balance-variants.mjs';
     import { getCoreCards } from './src/game/cards.js';
-    import { toTabletopCard, scoreTabletopHand, chooseTabletopType, resolveTabletopBattle, FLEXIBLE_RULES, TABLETOP_V2_SHIELD_COST as TABLETOP_SHIELD_COST } from './src/game/tabletop.js';
+    import { toTabletopCard, scoreTabletopHand, chooseTabletopType, resolveTabletopBattle, MAIN_ABILITY_RULES, MAIN_ABILITY_SHIELD_COST as TABLETOP_SHIELD_COST } from './src/game/tabletop.js';
     configureBalanceVariant(${JSON.stringify(variant)});
     const defs=new Map(getCoreCards({tabletop:'threshold'}).map(c=>[c.id,c]));
-    const hand=(...ids)=>ids.map((id,i)=>toTabletopCard({...defs.get(id),uid:id+i},'abilitiesv2'));
+    const hand=(...ids)=>ids.map((id,i)=>toTabletopCard({...defs.get(id),uid:id+i},'abilities-main'));
     const score=(cards,shields=0,type=chooseTabletopType(cards))=>scoreTabletopHand(cards,shields,type);
     ${assertions}`
   execFileSync(process.execPath, ['--input-type=module', '-e', code], { stdio: 'pipe' })
@@ -74,7 +74,7 @@ test('Dragon flat bonus checks Dragon contribution after the actual shield penal
   `)
 })
 
-test('Mixed hands retain v2 contribution-based bonus and apply the chosen main faction shield cost', () => {
+test('Mixed hands retain main contribution-based bonus and apply the chosen main faction shield cost', () => {
   check('abilitiesv2-dragon-shield', `
     const cards=hand('dragon2','dragon2','dragon_ulti','chameleon');
     assert.equal(score(cards,1,'dragon').score,11);

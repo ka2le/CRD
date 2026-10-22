@@ -4,7 +4,7 @@ import path from 'node:path'
 import { spawn } from 'node:child_process'
 
 const [root = '.ai-runs/normal-balance-2026-10-21', gamesArg = '500', samplesArg = '16', concurrencyArg = '6',
-  variantsArg = 'battle,threshold,threshold-tuned,abilitiesv2,abilitiesv2-tuned', seedBaseArg = '31000000'] = process.argv.slice(2)
+  variantsArg = 'abilities-main', seedBaseArg = '31000000'] = process.argv.slice(2)
 const games = Number(gamesArg), samples = Number(samplesArg), concurrency = Number(concurrencyArg)
 if (![games, samples, concurrency].every((x) => Number.isInteger(x) && x > 0) || concurrency > 10) throw new Error('Invalid study settings')
 const variants = variantsArg.split(',')

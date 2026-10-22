@@ -6,12 +6,12 @@ import { createHash } from 'node:crypto'
 import assert from 'node:assert/strict'
 import { createHeadlessGame, stepHeadlessGame, getLegalActions } from '../src/game/headlessGame.js'
 import { searchDecision, searchPreparationDecision, SEARCH_AI_VERSION } from '../src/game/searchAi.js'
-import { TABLETOP_THRESHOLDS, ABILITY_RULES, FLEXIBLE_RULES, TABLETOP_V2_SHIELD_COST as TABLETOP_SHIELD_COST } from '../src/game/tabletop.js'
+import { TABLETOP_THRESHOLDS, PROTOTYPE_ABILITY_RULES, MAIN_ABILITY_RULES, MAIN_ABILITY_SHIELD_COST as TABLETOP_SHIELD_COST } from '../src/game/tabletop.js'
 import { getCoreCards, getExpandedCoreDeck } from '../src/game/cards.js'
 import { simulateBattle } from '../src/game/engine.js'
 import { configureBalanceVariant, battleAnalysisProfile } from './balance-variants.mjs'
 
-const [variantName = 'abilitiesv2', mode = 'draft', gamesArg = '500', samplesArg = '16', seedArg = '31000000', deck = 'normal', output = '.ai-runs/normal-balance-2026-10-21', label = ''] = process.argv.slice(2)
+const [variantName = 'abilities-main', mode = 'draft', gamesArg = '500', samplesArg = '16', seedArg = '31000000', deck = 'normal', output = '.ai-runs/normal-balance-2026-10-21', label = ''] = process.argv.slice(2)
 if (deck !== 'normal') throw new Error('Balance studies require Normal Deck. Wild is an unbalanced fun mode; old Wild evidence is archival only.')
 const variant = configureBalanceVariant(variantName)
 const { rules } = variant
@@ -34,7 +34,7 @@ const poolCounts = Object.fromEntries(getCoreCards({ tabletop: rules }).map((c) 
 assert.ok(getCoreCards({ tabletop: rules }).every((c) => poolCounts[c.id] === c.copies))
 const manifest = { variant: variantName, title: variant.title, rules, mode, games, samples, seed, deck, label, searchVersion: SEARCH_AI_VERSION, sourceHash, sourceHashes,
   poolSize: pool.length, poolCounts,
-  thresholds: TABLETOP_THRESHOLDS, abilities: ABILITY_RULES, flexible: FLEXIBLE_RULES, shieldCosts: TABLETOP_SHIELD_COST,
+  thresholds: TABLETOP_THRESHOLDS, abilities: PROTOTYPE_ABILITY_RULES, flexible: MAIN_ABILITY_RULES, shieldCosts: TABLETOP_SHIELD_COST,
   policy: 'both seats: browser search, prep-lookahead, fixed samples; baseline tie preference',
   startedAt: new Date().toISOString() }
 fs.writeFileSync(path.join(dir, 'manifest.json'), JSON.stringify(manifest, null, 2))

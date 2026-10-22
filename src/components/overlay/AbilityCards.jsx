@@ -1,6 +1,6 @@
 import './AbilityCards.css'
 import { GameIcon } from '../ui/GameIcon'
-import { ABILITY_RULES, FLEXIBLE_RULES, TABLETOP_V2_SHIELD_COST } from '../../game/tabletop'
+import { PROTOTYPE_ABILITY_RULES, MAIN_ABILITY_RULES, MAIN_ABILITY_SHIELD_COST } from '../../game/tabletop'
 
 // Prototype reference cards for the alternative "class abilities" tabletop rule.
 // View only: nothing here affects digital combat.
@@ -48,7 +48,7 @@ function TransformArrow() {
 }
 
 // Every rule reads requirement → arrow → result on one line.
-const ABILITIES = [
+const PROTOTYPE_ABILITIES = [
   {
     cls: 'critter',
     name: 'Adapt',
@@ -69,13 +69,13 @@ const ABILITIES = [
       </>
     ),
     arrow: <Arrow />,
-    right: <span className="ab-plus4"><b>+{ABILITY_RULES.balanceBonus}</b><GameIcon name="damage" /></span>,
+    right: <span className="ab-plus4"><b>+{PROTOTYPE_ABILITY_RULES.balanceBonus}</b><GameIcon name="damage" /></span>,
   },
   {
     cls: 'dragon',
     name: 'Overwhelming',
     shield: '0',
-    left: <span className="ab-thr"><GameIcon name="damage" />{ABILITY_RULES.overwhelmingAt}+</span>,
+    left: <span className="ab-thr"><GameIcon name="damage" />{PROTOTYPE_ABILITY_RULES.overwhelmingAt}+</span>,
     arrow: <Arrow />,
     right: (
       <>
@@ -106,10 +106,10 @@ export function ShieldTab({ value }) {
   )
 }
 
-export function AbilityLedgerCard() {
+export function PrototypeAbilityLedgerCard() {
   return (
-    <div className="sc-card ab-ledger" aria-label="Class abilities: ledger">
-      {ABILITIES.map(({ cls, name, ...ability }) => (
+    <div className="sc-card ab-ledger" aria-label="Abilities Prototype: ledger">
+      {PROTOTYPE_ABILITIES.map(({ cls, name, ...ability }) => (
         <div key={cls} className="ab-ledger__row">
           <div className="ab-name">
             <GameIcon name={cls} className={`sc-${cls}`} />
@@ -123,10 +123,10 @@ export function AbilityLedgerCard() {
   )
 }
 
-export function AbilityBandsCard() {
+export function PrototypeAbilityBandsCard() {
   return (
-    <div className="sc-card ab-bands" aria-label="Class abilities: bands">
-      {ABILITIES.map(({ cls, name, ...ability }) => (
+    <div className="sc-card ab-bands" aria-label="Abilities Prototype: bands">
+      {PROTOTYPE_ABILITIES.map(({ cls, name, ...ability }) => (
         <div key={cls} className={`ab-band ab-band--${CLASS_CLASS[cls]}`}>
           <GameIcon name={cls} className="ab-band__mark" />
           <div className="ab-band__top">
@@ -141,13 +141,13 @@ export function AbilityBandsCard() {
   )
 }
 
-// ---------- Abilities v2 ----------
+// ---------- Abilities (abilities-main) ----------
 //   Critters – Win Ties: a Critter main faction wins equal scores against Robots or Dragons.
 //   Robots – Perfect Balance: v1's matching Robot stats / attack units, +3 after shields.
 //   Dragons – Overwhelming: 7+ Dragon power → +1 Dragon stat.
 
 // Crown for the Critter tie win (drawn after the crown_b board-game icon).
-function Crown({ className = '' }) {
+export function Crown({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 24 20" aria-hidden="true">
       <path
@@ -165,7 +165,7 @@ function Crown({ className = '' }) {
   )
 }
 
-const FLEXIBLE = [
+const MAIN_ABILITIES = [
   {
     cls: 'critter',
     name: 'Win Ties',
@@ -188,8 +188,8 @@ const FLEXIBLE = [
   },
   {
     cls: 'robot',
-    name: ABILITIES[1].name,
-    rule: <Rule {...ABILITIES[1]} />,
+    name: PROTOTYPE_ABILITIES[1].name,
+    rule: <Rule {...PROTOTYPE_ABILITIES[1]} />,
   },
   {
     cls: 'dragon',
@@ -197,7 +197,7 @@ const FLEXIBLE = [
     shield: '0',
     rule: (
       <div className="ab-cols">
-        <span className="ab-cols__req">{FLEXIBLE_RULES.overwhelmingAt}+</span>
+        <span className="ab-cols__req">{MAIN_ABILITY_RULES.overwhelmingAt}+</span>
         <span className="ab-cols__res">
           <span className="ab-cols__plus">+</span>
           <StatCard cls="dragon" />
@@ -207,24 +207,24 @@ const FLEXIBLE = [
   },
 ]
 
-export function FlexibleLedgerCard() {
+export function MainAbilityLedgerCard() {
   return (
-    <div className="sc-card ab-ledger ab-flex" aria-label="Abilities v2: ledger">
-      {FLEXIBLE.map(({ cls, name, rule }) => (
+    <div className="sc-card ab-ledger ab-flex" aria-label="Abilities: ledger">
+      {MAIN_ABILITIES.map(({ cls, name, rule }) => (
         <div key={cls} className="ab-ledger__row">
           <div className="ab-name"><GameIcon name={cls} className={`sc-${cls}`} />{name}</div>
           {rule}
-          <ShieldTab value={TABLETOP_V2_SHIELD_COST[cls] ? `−${TABLETOP_V2_SHIELD_COST[cls]}` : '0'} />
+          <ShieldTab value={MAIN_ABILITY_SHIELD_COST[cls] ? `−${MAIN_ABILITY_SHIELD_COST[cls]}` : '0'} />
         </div>
       ))}
     </div>
   )
 }
 
-export function FlexibleBandsCard() {
+export function MainAbilityBandsCard() {
   return (
-    <div className="sc-card ab-bands ab-flex" aria-label="Abilities v2: bands">
-      {FLEXIBLE.map(({ cls, name, rule }) => (
+    <div className="sc-card ab-bands ab-flex" aria-label="Abilities: bands">
+      {MAIN_ABILITIES.map(({ cls, name, rule }) => (
         <div key={cls} className={`ab-band ab-band--${CLASS_CLASS[cls]}`}>
           <GameIcon name={cls} className="ab-band__mark" />
           <div className="ab-band__top">
@@ -232,7 +232,7 @@ export function FlexibleBandsCard() {
             <span className="ab-band__name">{name}</span>
           </div>
           {rule}
-          <ShieldTab value={TABLETOP_V2_SHIELD_COST[cls] ? `−${TABLETOP_V2_SHIELD_COST[cls]}` : '0'} />
+          <ShieldTab value={MAIN_ABILITY_SHIELD_COST[cls] ? `−${MAIN_ABILITY_SHIELD_COST[cls]}` : '0'} />
         </div>
       ))}
     </div>

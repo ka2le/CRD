@@ -1,12 +1,12 @@
 // Plays two browser opponents against each other on seeded tabletop (or digital) deals.
 // Usage: node scripts/bot-ladder.mjs <botA> <botB> [mode] [games] [rules] [firstSeed]
-//   bots: rolf | inga | sven ; rules: abilities | threshold | digital
+//   bots: rolf | inga | sven ; rules: abilities-main | threshold | digital | abilities-prototype (explicit only)
 //   INGA_SAMPLES / INGA_MARGIN override IngaBot's budget for calibration runs.
 import { createHeadlessGame, stepHeadlessGame, chooseHeadlessBaselineAction } from '../src/game/headlessGame.js'
 import { searchDecision, searchPreparationDecision } from '../src/game/searchAi.js'
 import { BOT_SEARCH_PROFILES, getDecisionOptions } from '../src/game/opponentAi.js'
 
-const [botA = 'inga', botB = 'rolf', mode = 'draft', gamesArg = '100', rules = 'abilities', seedArg = '700000'] = process.argv.slice(2)
+const [botA = 'inga', botB = 'rolf', mode = 'draft', gamesArg = '100', rules = 'abilities-main', seedArg = '700000'] = process.argv.slice(2)
 const games = Number(gamesArg)
 const firstSeed = Number(seedArg)
 const override = process.env.INGA_SAMPLES ? Number(process.env.INGA_SAMPLES) : null

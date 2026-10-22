@@ -1,5 +1,7 @@
 # Normal Deck balance comparison — 2026-10-21
 
+> Naming policy (2026-10-22): **Abilities = `abilities-main`** (formerly Abilities v2). The original is **Abilities Prototype** (`abilities-prototype`), hidden and excluded from balance testing unless explicitly requested. Generic tabletop requests mean main; Threshold must be named explicitly. Historical raw IDs/paths remain unchanged. See [ruleset naming policy](RULESET_NAMES.md).
+
 **This supersedes the earlier Wild Deck study for balance decisions. Wild is an intentionally unbalanced fun mode.**
 
 ## Verdict and next decision
@@ -22,7 +24,7 @@ Creator follow-up: agrees current v2 may already be good and asks whether origin
 
 ## Design
 
-- 5,000 games: Battle, Threshold, Threshold trial, Abilities v2, V2 trial × Draft/Discard × 500. Normal Deck only; printed copy counts verified in every starting deal. No Abilities v1 runs.
+- 5,000 games: Battle, Threshold, Threshold trial, Abilities v2, V2 trial × Draft/Discard × 500. Normal Deck only; printed copy counts verified in every starting deal. No Abilities Prototype runs.
 - Threshold current: cutoffs 1/4/7, bonuses +1/+2/+4. Trial: same cutoffs, bonuses +2/+3/+4. V2 current: Dragon power7+ → +4. Trial: Dragon power8+ → +3. Other rules unchanged. Trials are isolated research processes, not adopted browser defaults.
 - Both players use the actual in-game sampled-world search, fixed16 samples/candidate, including preparation lookahead. Search makes decisions for each ruleset; Battle has independent native round-combat self-play. 256-world rechecks of selected decisions are diagnostics, not extra played games.
 - Draft first picker alternates. Discard uses the existing sequential local-AI flow and existing recycle-pile semantics. First-seat outcomes are reported; online simultaneous Discard and optimal human play are not established by this study.

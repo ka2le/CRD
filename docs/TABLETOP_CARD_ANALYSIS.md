@@ -1,5 +1,7 @@
 # Tabletop faction and card analysis — 2026-10-21
 
+> Naming policy (2026-10-22): **Abilities = `abilities-main`** (formerly Abilities v2). The original is **Abilities Prototype** (`abilities-prototype`), hidden and excluded from balance testing unless explicitly requested. Generic tabletop requests mean main; Threshold must be named explicitly. Historical raw IDs/paths remain unchanged. See [ruleset naming policy](RULESET_NAMES.md).
+
 Reanalysis of the six main Wild Deck arms: 500 games per ruleset/building mode, both players using the in-game search with 16 samples per candidate. 3,000 games / 6,000 final hands. The extra 400 budget-check games are excluded, avoiding repeated deals and mixed search budgets.
 
 ## Verdict

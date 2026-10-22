@@ -2,11 +2,11 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { configureBalanceVariant } from './balance-variants.mjs'
 import { getCoreCards, getExpandedCoreDeck } from '../src/game/cards.js'
-import { scoreTabletopHand, toTabletopCard, FLEXIBLE_RULES, TABLETOP_V2_SHIELD_COST } from '../src/game/tabletop.js'
+import { scoreTabletopHand, toTabletopCard, MAIN_ABILITY_RULES, MAIN_ABILITY_SHIELD_COST } from '../src/game/tabletop.js'
 
 configureBalanceVariant('abilitiesv2-dragon7-immune')
-const defs = new Map(getCoreCards({ tabletop: 'abilitiesv2' }).map((c) => [c.id, c]))
-const hand = (...ids) => ids.map((id, i) => toTabletopCard({ ...defs.get(id), uid: `${id}-${i}` }, 'abilitiesv2'))
+const defs = new Map(getCoreCards({ tabletop: 'abilities-main' }).map((c) => [c.id, c]))
+const hand = (...ids) => ids.map((id, i) => toTabletopCard({ ...defs.get(id), uid: `${id}-${i}` }, 'abilities-main'))
 
 test('Dragon threshold uses pre-shield contribution at 7, adds one stat once, and ignores shields', () => {
   const below = scoreTabletopHand(hand('dragon2', 'dragon1', 'dragon_ulti'), 5, 'dragon')
@@ -23,14 +23,14 @@ test('Perfect Balance, Critter ties, and other shield costs stay unchanged', () 
   const critter = scoreTabletopHand(hand('rabbit2', 'swarm'), 1, 'critter')
   assert.equal(critter.shieldPenalty, 2)
   assert.equal(critter.winsTies, true)
-  assert.equal(FLEXIBLE_RULES.perfectBalance, true)
-  assert.deepEqual(TABLETOP_V2_SHIELD_COST, { critter: 2, robot: 2, dragon: 0 })
+  assert.equal(MAIN_ABILITY_RULES.perfectBalance, true)
+  assert.deepEqual(MAIN_ABILITY_SHIELD_COST, { critter: 2, robot: 2, dragon: 0 })
 })
 
 test('Trial retains current regular v2 pool and zero-damage product fix', () => {
   assert.equal(defs.has('chameleon'), false)
   assert.equal(defs.has('any_off_each'), false)
-  assert.equal(getExpandedCoreDeck({ tabletop: 'abilitiesv2', wildDeck: false }).length, 68)
+  assert.equal(getExpandedCoreDeck({ tabletop: 'abilities-main', wildDeck: false }).length, 68)
   const dud = scoreTabletopHand(hand('robot1', 'robot_attack', 'one_off_each'), 0, 'robot')
   assert.equal(dud.robotAttacks, 1)
   assert.equal(dud.bonus, 3)

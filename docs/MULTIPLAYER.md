@@ -1,5 +1,7 @@
 # Online rooms
 
+> Naming policy (2026-10-22): **Abilities = `abilities-main`** (formerly Abilities v2). The original is **Abilities Prototype** (`abilities-prototype`), hidden and excluded from balance testing unless explicitly requested. Generic tabletop requests mean main; Threshold must be named explicitly. Historical raw IDs/paths remain unchanged. See [ruleset naming policy](RULESET_NAMES.md).
+
 Implemented 2026-10-20. Cloudflare relay and GitHub Pages frontend are deployed with Turnstile configured.
 
 ## Player flow

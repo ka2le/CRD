@@ -1,10 +1,12 @@
 # Tabletop balance study — 2026-10-21
 
+> Naming policy (2026-10-22): **Abilities = `abilities-main`** (formerly Abilities v2). The original is **Abilities Prototype** (`abilities-prototype`), hidden and excluded from balance testing unless explicitly requested. Generic tabletop requests mean main; Threshold must be named explicitly. Historical raw IDs/paths remain unchanged. See [ruleset naming policy](RULESET_NAMES.md).
+
 > ARCHIVAL WILD-DECK STUDY. The creator clarified that Wild is intentionally unbalanced and must not be used as the balance baseline. The Normal Deck comparison supersedes this study for tuning decisions.
 
 Search self-play using the actual browser search and mode-specific decks. This is an initial observational balance study, not proof of optimal play or a measurement of fun.
 
-Confirmed rules: ordinary attacks 1/stat; ultimates 2/stat; Bite 1. Threshold: 1/4/7 power → +1/+2/+4 after shields. Abilities: Adapt, Robot-main Perfect Balance +3, Dragon power 7+ → +1 stat. Abilities v2: Critter-main wins ties, Robot Reconfigure, Dragon power 7+ → +4. Shield costs remain 2/1/0; unit-valued hybrid/shield attacks retain their whole-number formulas.
+Confirmed rules: ordinary attacks 1/stat; ultimates 2/stat; Bite 1. Threshold: 1/4/7 power → +1/+2/+4 after shields. Abilities Prototype: Adapt, Robot-main Perfect Balance +3, Dragon power 7+ → +1 stat. Abilities v2: Critter-main wins ties, Robot Reconfigure, Dragon power 7+ → +4. Shield costs remain 2/1/0; unit-valued hybrid/shield attacks retain their whole-number formulas.
 
 Card-level follow-up: [faction wins, card presence and preparation analysis](TABLETOP_CARD_ANALYSIS.md).
 
@@ -31,7 +33,7 @@ Against other typed factions, score means wins plus half draws. These are outcom
 
 **Abilities v2 is promising for the intended identities, without yet establishing equal strength.** It had the fewest draws in the main runs. Critters appeared more often than under the other rules, particularly in Discard (29.9% of hands, versus Robot 32.8% and Dragon 36.5%). Robots used both conversion directions: in Discard, 275/1,000 hands swapped stat→attack and 88/1,000 attack→stat. Dragons rewarded completed engines. Critters still had lower non-mirror success, especially in Draft; that is compatible with a fallback role, but needs human playtesting to judge whether the fallback is satisfying.
 
-**Abilities v1 Robots are competitive with +3 Perfect Balance in these runs:** 56.6% Draft and 53.9% Discard non-mirror scores. Threshold remains simple, but its observed results favor Dragons more strongly than v1. This study does not justify automatically equalizing the three win percentages.
+**Abilities Prototype Robots are competitive with +3 Perfect Balance in these runs:** 56.6% Draft and 53.9% Discard non-mirror scores. Threshold remains simple, but its observed results favor Dragons more strongly than v1. This study does not justify automatically equalizing the three win percentages.
 
 **The Dragon payoff is not all the bonus.** In v2 Discard, Overwhelming activated in 135/1,000 hands; those hands scored 90.4%. Removing only the +4 bonus from both sides of the same finished matchups lowers their score to 78.5% and changes18/500 winners. The engines were already strong. Critter tiebreaks directly settled5 equal-score Draft games and 13 Discard games; other rule changes also affect draw frequency.
 

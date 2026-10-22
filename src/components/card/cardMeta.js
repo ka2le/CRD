@@ -1,5 +1,6 @@
 import { getHandAverageDamage } from '../../game/cardEvaluator'
 import { isPreBattleActivatableCard } from '../../game/preBattle'
+import { TABLETOP_SHIELD_COST, MAIN_ABILITY_SHIELD_COST } from '../../game/tabletop'
 
 const CLASS_ORDER = ['critter', 'robot', 'dragon']
 const ALL_CLASS_IDS = new Set(['one_off_each', 'any_off_each', 'joker'])
@@ -59,7 +60,11 @@ const TABLETOP_TEXT = {
   bite: 'Adds 1 power, no stats needed.',
   double_dmg: 'Doubles your main faction bonus after shields. Works with any faction. Copies stack: *2, *4, *8. Threshold rules only.',
   devour: '2 power per Dragon stat. You may choose Dragon as your main damage type.',
-  shield2: 'One shield. Reduces enemy Critter power by 2, Robot by 1, Dragon by 0, before bonuses.',
+  // Shield costs differ per rule set; the card carries its rules.
+  shield2: (card) => {
+    const cost = card.tabletop === 'abilities-main' ? MAIN_ABILITY_SHIELD_COST : TABLETOP_SHIELD_COST
+    return `One shield. Reduces enemy Critter power by ${cost.critter}, Robot by ${cost.robot}, Dragon by ${cost.dragon}, before bonuses.`
+  },
   shield_is_dmg: 'Adds 1 power per shield in your hand. Your shields still block.',
   one_off_each: 'Robot power = Critter * Robot * Dragon stats. Counts as a Robot attack if it deals damage.',
   any_off_each: 'Power = Critter + Robot + Dragon stats.',
@@ -79,8 +84,10 @@ export function getCardSummary(card) {
     return { timing: 'Stat', text: `${counts.join(', ')}. Powers matching attacks.` }
   }
 
-  const timing = card.tabletop && (card.effect?.dmg || TABLETOP_TEXT[card.id]) ? 'Tabletop power' : getTimingLabel(card.cd)
-  if (card.tabletop && TABLETOP_TEXT[card.id]) return { timing, text: TABLETOP_TEXT[card.id] }
+  const timing = card.tabletop && card.effect?.shield ? 'Tabletop shield'
+    : card.tabletop && (card.effect?.dmg || TABLETOP_TEXT[card.id]) ? 'Tabletop power' : getTimingLabel(card.cd)
+  const tabletopText = card.tabletop ? TABLETOP_TEXT[card.id] : null
+  if (tabletopText) return { timing, text: typeof tabletopText === 'function' ? tabletopText(card) : tabletopText }
   if (SPECIAL_TEXT[card.id]) return { timing, text: SPECIAL_TEXT[card.id] }
 
   const { dmg = 0, dmgType } = card.effect ?? {}

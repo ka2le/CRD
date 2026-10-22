@@ -1,5 +1,9 @@
 # Current card library
 
+Current Abilities (`abilities-main`) pool: 68 Normal / 96 Wild. Hidden Abilities Prototype: 69 Normal / 99 Wild; Chameleon remains there. Both exclude Shortcut, 2× and C+R+D; main also excludes Chameleon. Historical counts below predate exclusions.
+
+> Naming policy (2026-10-22): **Abilities = `abilities-main`** (formerly Abilities v2). The original is **Abilities Prototype** (`abilities-prototype`), hidden and excluded from balance testing unless explicitly requested. Generic tabletop requests mean main; Threshold must be named explicitly. Historical raw IDs/paths remain unchanged. See [ruleset naming policy](RULESET_NAMES.md).
+
 These are the digital definitions. Tabletop mode derives separate per-game cards with zero cooldown and converted symbols/effects; `TABLETOP_MODE.md` lists all conversions. Imported definitions and digital deck counts stay intact.
 
 Tabletop ultimates (Murder Rabbit, Robot Ultimate, Dragon Ultimate and Devour) all give **2 power per matching stat**, double an ordinary attack. Devour retains the Dragon main-type option.
