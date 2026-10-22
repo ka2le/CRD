@@ -2,7 +2,7 @@ import { getHandStats } from './engine.js'
 
 export const TABLETOP_CLASSES = ['critter', 'robot', 'dragon']
 export const TABLETOP_SHIELD_COST = { critter: 2, robot: 1, dragon: 0 }
-export const TABLETOP_V2_SHIELD_COST = { critter: 2, robot: 2, dragon: 1 }
+export const TABLETOP_V2_SHIELD_COST = { critter: 1, robot: 2, dragon: 0 }
 const ULTIMATES = new Set(['murder_rabbit', 'robot_ulti', 'dragon_ulti', 'devour'])
 
 // Three tabletop rule sets share the single power calculation and shield penalty:
@@ -40,7 +40,7 @@ export function toTabletopCard(card, rules = 'threshold') {
 
 // ---------- abilities ----------
 export const ABILITY_RULES = { balanceBonus: 3, overwhelmingAt: 7 }
-export const FLEXIBLE_RULES = { overwhelmingAt: 6, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true }
+export const FLEXIBLE_RULES = { overwhelmingAt: 7, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true }
 
 // Adapt: one stat card with a Critter stat turns its Critter stat(s) into an ordinary Critter attack
 // (1 power per Critter stat). Any other faction stats on that card stay (Joker keeps Robot + Dragon).

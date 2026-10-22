@@ -9,8 +9,8 @@ const definitions = new Map(getCoreCards().map((c) => [c.id, c]))
 const hand = (ids) => ids.map((id, i) => ({ ...definitions.get(id), uid: `${id}-${i}` }))
 
 test('Adopted v2 balance configuration equals the playable rules', () => {
-  assert.deepEqual(BALANCE_VARIANTS['abilitiesv2-perfect-balance-shields221'].flexible, FLEXIBLE_RULES)
-  assert.deepEqual(BALANCE_VARIANTS['abilitiesv2-perfect-balance-shields221'].shieldCosts, TABLETOP_V2_SHIELD_COST)
+  assert.deepEqual(BALANCE_VARIANTS['abilitiesv2-dragon7-immune-critter1'].flexible, FLEXIBLE_RULES)
+  assert.deepEqual(BALANCE_VARIANTS['abilitiesv2-dragon7-immune-critter1'].shieldCosts, TABLETOP_V2_SHIELD_COST)
 })
 test('Battle faction labels use the full CD cycle, preserve mixed ties and neutral damage', () => {
   assert.equal(battleAnalysisProfile(hand(['critter1', 'swarm', 'dragon1', 'dragons_breath'])).damageType, 'mixed')
@@ -67,7 +67,8 @@ test('V2 extra-stat trial uses pre-bonus Dragon contribution once, rescales hybr
     import { getCoreCards } from './src/game/cards.js';
     import { toTabletopCard, scoreTabletopHand, chooseTabletopType, resolveTabletopBattle } from './src/game/tabletop.js';
     configureBalanceVariant('abilitiesv2-extra-stat');
-    const defs=new Map(getCoreCards({tabletop:'abilitiesv2'}).map(c=>[c.id,c]));
+    // Historical scorer fixture includes the sum card, now excluded from real v2 decks.
+    const defs=new Map(getCoreCards({tabletop:'threshold'}).map(c=>[c.id,c]));
     const hand=ids=>ids.map((id,i)=>toTabletopCard({...defs.get(id),uid:id+i},'abilitiesv2'));
     const score=ids=>{const h=hand(ids);return scoreTabletopHand(h,0,chooseTabletopType(h))};
     assert.equal(score(['dragon2','dragon1','dragon_ulti']).overwhelming,false);

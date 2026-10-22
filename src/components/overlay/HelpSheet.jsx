@@ -1,7 +1,7 @@
 import './HelpSheet.css'
 import Sheet from './Sheet'
 import { GameIcon, SvgIcon } from '../ui/GameIcon'
-import { TABLETOP_THRESHOLDS, FLEXIBLE_RULES } from '../../game/tabletop'
+import { TABLETOP_THRESHOLDS, FLEXIBLE_RULES, TABLETOP_SHIELD_COST, TABLETOP_V2_SHIELD_COST } from '../../game/tabletop'
 
 const ROUNDS = [1, 2, 3, 4, 5, 6]
 const LANES = [
@@ -11,13 +11,14 @@ const LANES = [
 ]
 
 export default function HelpSheet({ open, onClose, tabletop = false }) {
+  const shieldCosts = tabletop === 'abilitiesv2' ? TABLETOP_V2_SHIELD_COST : TABLETOP_SHIELD_COST
   return (
     <Sheet open={open} onClose={onClose} title={<SvgIcon name="help" />}>
       <div className="help">
         {tabletop ? <section className="help__block help__facts">
           <div className="help__fact"><GameIcon name="damage" /><span>Each ordinary attack gives 1 power per matching stat. Add all attacks.</span></div>
           <div className="help__fact"><GameIcon name="star" /><span>Your largest class contribution is your main damage type. If tied, tap a highlighted card before battle. Neutral-only power uses Robot.</span></div>
-          <div className="help__fact"><GameIcon name="shield" /><span>Each enemy shield removes 2 Critter power, {tabletop === 'abilitiesv2' ? '2 Robot power or 1 Dragon power' : '1 Robot power or 0 Dragon power'}. Power stops at zero.</span></div>
+          <div className="help__fact"><GameIcon name="shield" /><span>Each enemy shield removes {shieldCosts.critter} Critter power, {shieldCosts.robot} Robot power or {shieldCosts.dragon} Dragon power. Power stops at zero.</span></div>
           {tabletop === 'abilitiesv2' ? <>
             <div className="help__fact"><GameIcon name="critter" /><span>Critter main faction wins equal scores against other factions. Two Critter hands still tie.</span></div>
             <div className="help__fact"><GameIcon name="robot" /><span>Perfect Balance: with Robots as main faction, as many Robot stats as Robot attack units (at least one each) adds +3 after shields. Robot Ultimate counts as two attacks; Critter * Robot * Dragon counts as one Robot attack if it deals damage. Cards stay unchanged.</span></div>

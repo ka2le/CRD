@@ -36,15 +36,15 @@ Score = recomputed power − shields + Perfect Balance. Equal scores draw. Adapt
 
 ## Abilities v2 — current adopted rules
 
-The creator adopted the tested Perfect Balance / shields **2/2/1** configuration on 2026-10-21 and requested publication. Follow-up: **Chameleon is excluded from the v2 deck and collection**, in both Normal and Wild; its definition, art and behavior remain available in v1 and Threshold. Headless v2 pool version is now `v6-abilitiesv2`. The balance figures below predate this card-pool change; no new balance run was requested.
+Adopted 2026-10-22 after creator review of 500 Normal Svenbot games per mode at16 samples per decision. Regular deck68 cards / Wild96; Chameleon, Any Of Each, Shortcut and2× excluded. Definitions and artwork remain available to other modes as applicable.
 
-- **Critter — Win Ties:** chosen Critter main wins equal scores against other main factions. Two Critter hands draw.
-- **Robot — Perfect Balance:** chosen Robot main earns **+3 after shields** when positive Robot stat pips equal Robot attack units. Mixed/double stats count all Robot pips. Robot Ultimate counts two attack units; One Of Each counts one only when its product is above zero (it deals damage); Any Of Each is excluded from the v2 deck. No card swapping or Adapt. Other chosen mains never earn the bonus.
-- **Dragon — Overwhelming:** Dragon contribution **6+ before shields** adds exactly one Dragon stat and recomputes all attacks once. Then the actual chosen main's shield penalty applies; shielding does not revoke the extra stat.
+- **Critter — Win Ties:** chosen Critter main wins equal scores against other factions; two Critter hands draw. Each enemy shield removes **1 power**.
+- **Robot — Perfect Balance:** chosen Robot main earns **+3 after shields** for equal positive Robot stat pips and Robot attack units. Ultimate counts2; One Of Each counts1 only when its product deals damage. No Reconfigure or Adapt. Each enemy shield removes **2 power**.
+- **Dragon — Overwhelming:** **7+ Dragon contribution before shields** adds exactly one Dragon stat and recomputes all attack formulas once. No recursive trigger. Dragon-main hands are **immune to shields**.
 
-Score = max(0, recomputed power - shields) + Perfect Balance. Both v2 reference-card layouts use the v1 Perfect Balance row, shield tabs **−2/−2/−1**, and the large **6+** Dragon requirement with an extra-stat reward. Help and result formulas follow the same rules. Headless rules version is `v5-abilitiesv2`; browser worker, offline play and online rooms share the scorer.
+Score = max(0, recomputed power - chosen-main shield penalty) + Perfect Balance. Both score-card layouts show Dragon7+ with the extra-stat reward and shield tabs−1/−2/0. Help, browser worker, offline games and rooms share the scorer. Headless rules version `v8-abilitiesv2`.
 
-Adoption evidence: 500 fresh Normal Deck search games per mode,16 samples/action, matching prior starting deals. Cross-faction wins+half draws excluding mirrors: Draft C/R/D **46.4/50.9/52.3%**, Discard **48.2/57.8/43.6%**; draws6.0/5.4%. The playable defaults replay all1,000 saved games and4 sampled search roots exactly. These are conditional estimates, not proof of equal faction strength.
+Normal Svenbot self-play: Draft C/R/D44.8/54.3/52.0%, Discard52.7/51.3/44.9%; draws6.2/8.2%. Metric: cross-faction wins+half draws, mirrors excluded. All1,000 trial games and4searched roots exactly reproduced by playable defaults. Conditional sample estimates, not proof of equal strength. Previous Dragon7/shields220 trial reused as matched control; only Critter shielding changed. Creator selected this version as best so far and requested commit/deployment.
 
 ### Preserved experiment — Robot Reconfigure (superseded)
 

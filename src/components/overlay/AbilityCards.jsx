@@ -144,7 +144,7 @@ export function AbilityBandsCard() {
 // ---------- Abilities v2 ----------
 //   Critters – Win Ties: a Critter main faction wins equal scores against Robots or Dragons.
 //   Robots – Perfect Balance: v1's matching Robot stats / attack units, +3 after shields.
-//   Dragons – Overwhelming: 6+ Dragon power → +1 Dragon stat.
+//   Dragons – Overwhelming: 7+ Dragon power → +1 Dragon stat.
 
 // Crown for the Critter tie win (drawn after the crown_b board-game icon).
 function Crown({ className = '' }) {
@@ -169,7 +169,6 @@ const FLEXIBLE = [
   {
     cls: 'critter',
     name: 'Win Ties',
-    shield: '−2',
     rule: (
       <div className="ab-rule ab-vs">
         <GameIcon name="critter" className="ab-vs__c" />

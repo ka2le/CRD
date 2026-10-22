@@ -125,7 +125,7 @@ test('Abilities Overwhelming tests Dragon contribution before shields and adds a
   assert.deepEqual([scoreTabletopHand(above).dragonBase, scoreTabletopHand(above).base], [8, 10])
 })
 
-test('Adopted v2 uses Perfect Balance with shields 2/2/1 and never swaps cards', () => {
+test('Adopted v2 uses Perfect Balance with shields 1/2/0 and never swaps cards', () => {
   const hand = flexHand('robot2', 'robot_ulti', 'chameleon')
   const saved = structuredClone(hand)
   const robot = scoreTabletopHand(hand, 1, 'robot')
@@ -133,23 +133,24 @@ test('Adopted v2 uses Perfect Balance with shields 2/2/1 and never swaps cards',
   assert.equal(robot.reconfigured, null)
   assert.equal(scoreTabletopHand(hand, 20, 'robot').score, 3)
   assert.equal(scoreTabletopHand(hand, 1, 'critter').bonus, 0)
-  assert.equal(scoreTabletopHand(hand, 1, 'dragon').shieldPenalty, 1)
+  assert.equal(scoreTabletopHand(hand, 1, 'dragon').shieldPenalty, 0)
+  assert.equal(scoreTabletopHand(hand, 1, 'critter').shieldPenalty, 1)
   assert.deepEqual(hand, saved)
   assert.equal(getTabletopProfile(flexHand('robot2', 'robot2')).base, 0)
   const dragon = scoreTabletopHand(flexHand('dragon2', 'dragon1', 'dragon_ulti'), 1)
-  assert.deepEqual([dragon.dragonBase, dragon.stats.dragon, dragon.score], [6, 4, 7])
+  assert.deepEqual([dragon.dragonBase, dragon.stats.dragon, dragon.score], [6, 3, 6])
 })
 
-test('Flexible Dragon uses contribution 6+, adds one stat once, and recomputes hybrids', () => {
+test('Flexible Dragon uses contribution 7+, adds one stat once, and recomputes hybrids', () => {
   const six = scoreTabletopHand(flexHand('dragon2', 'dragon1', 'dragon_ulti'))
-  assert.deepEqual([six.dragonBase, six.stats.dragon, six.base, six.bonus], [6, 4, 8, 0])
+  assert.deepEqual([six.dragonBase, six.stats.dragon, six.base, six.bonus], [6, 3, 6, 0])
   assert.equal(scoreTabletopHand(flexHand('dragon2', 'dragon1', 'dragons_breath', 'bite')).overwhelming, false)
   const dragon = scoreTabletopHand(flexHand('dragon2', 'dragon2', 'dragon_ulti'))
   assert.deepEqual([dragon.base, dragon.bonus, dragon.score], [10, 0, 10])
   assert.equal(scoreTabletopHand(flexHand('dragon1', 'dragons_breath', 'rabbit2', 'swarm', 'swarm')).overwhelming, false)
   assert.equal(scoreTabletopHand(flexHand('dragon2', 'dragon2', 'dragon2', 'dragon1', 'dragons_breath')).score, 8)
   const hybrid = scoreTabletopHand(flexHand('joker', 'dragon2', 'dragon_ulti', 'one_off_each', 'any_off_each'))
-  assert.deepEqual([hybrid.dragonBase, hybrid.stats.dragon, hybrid.contributions.robot, hybrid.neutral, hybrid.score], [6, 4, 4, 6, 18])
+  assert.deepEqual([hybrid.dragonBase, hybrid.stats.dragon, hybrid.contributions.robot, hybrid.neutral, hybrid.score], [6, 3, 3, 5, 14])
   assert.equal(scoreTabletopHand(abilityHand('dragon2', 'dragon2', 'dragon2', 'dragon1', 'dragons_breath')).score, 8)
 })
 

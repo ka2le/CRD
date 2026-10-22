@@ -4,6 +4,8 @@ import { TABLETOP_THRESHOLDS, FLEXIBLE_RULES, TABLETOP_V2_SHIELD_COST as TABLETO
 import { simulateBattle } from '../src/game/engine.js'
 
 export const BALANCE_VARIANTS = {
+  'abilitiesv2-dragon7-immune-critter1': { rules: 'abilitiesv2', title: 'V2: Dragon 7+ immune; Critter shields -1', shieldCosts: { critter: 1, robot: 2, dragon: 0 }, flexible: { overwhelmingAt: 7, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true } },
+  'abilitiesv2-dragon7-immune': { rules: 'abilitiesv2', title: 'V2: Dragon 7+ extra stat; shield immunity', shieldCosts: { critter: 2, robot: 2, dragon: 0 }, flexible: { overwhelmingAt: 7, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true } },
   battle: { rules: false, title: 'Battle' },
   threshold: { rules: 'threshold', title: 'Original Threshold +1/+2/+4', thresholds: { critter: { at: 1, bonus: 1 }, robot: { at: 4, bonus: 2 }, dragon: { at: 7, bonus: 4 } } },
   'threshold-tuned': { rules: 'threshold', title: 'Threshold +2/+3/+4', thresholds: { critter: { at: 1, bonus: 2 }, robot: { at: 4, bonus: 3 }, dragon: { at: 7, bonus: 4 } } },

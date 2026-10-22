@@ -1,6 +1,6 @@
 # Critters Robots Dragons
 
-Menu → Battle offers three optional tabletop resolvers for both Draft and Discard: **Threshold, Abilities, Abilities v2 (Flexible Robots)**. All use ordinary attacks1/stat and ultimates2/stat. Threshold bonuses are1/4/8→+2/+3/+4. Abilities uses Adapt, Robot Perfect Balance+3 and Dragon7+→an extra stat. V2 uses Critter tie wins, unlimited Robot stat-pip / ordinary-or-ultimate attack-unit exchanges to maximize power when Robot can be the resulting main faction (other faction stats stay, hybrid attacks cannot transform), and Dragon6+→one extra Dragon stat. See `TABLETOP_MODE.md` for shields, special cards and exact rules, and `TABLETOP_BALANCE_RESULTS.md` for the search self-play study. The round-combat explanations below apply to Battle.
+Menu → Battle offers Threshold, Abilities and Abilities v2 for Draft and Discard. All use ordinary attacks1/stat and ultimates2/stat. Threshold bonuses are1/4/8→+2/+3/+4. Abilities uses Adapt, Robot Perfect Balance+3 and Dragon7+→extra stat. Current Abilities v2 uses Critter tie wins, Robot-main Perfect Balance+3, Dragon7+→extra stat, and shield penalties C/R/D1/2/0. See `TABLETOP_MODE.md` for exact rules. The round-combat explanations below apply to Battle.
 
 Reviewed against source on 2026-10-18. See `CURRENT_STATE.md` for implementation limits and verification, and `RULES.md` for detailed rules.
 
