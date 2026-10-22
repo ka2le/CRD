@@ -24,7 +24,7 @@ test('headless deals real tabletop pools, advertises a distinct rules version an
   for (const tabletop of ['threshold', 'abilities', 'abilitiesv2']) {
     const spec = getHeadlessSpec({ tabletop })
     assert(spec.rulesVersion.includes(tabletop))
-    assert.equal(spec.poolCards.length, tabletop === 'threshold' ? 108 : tabletop === 'abilitiesv2' ? 99 : 102)
+    assert.equal(spec.poolCards.length, tabletop === 'threshold' ? 108 : tabletop === 'abilitiesv2' ? 96 : 99)
     assert.equal(spec.cardTypes.find((c) => c.id === 'robot_attack').effect.dmg, 1)
     for (const mode of ['draft', 'five-hand-discard']) {
       let state = createHeadlessGame({ tabletop, mode, control: 'both', seed: 131 })
@@ -251,4 +251,21 @@ test('session gates type choice, invalidates it after hand changes, preserves pr
       assert.equal(getTabletopChoice(reset.preBattle).selectedType, null)
     }
   } finally { await server.close() }
+})
+
+test('Critter * Robot * Dragon counts as a Robot attack only when it deals damage; Critter + Robot + Dragon is out of the Abilities decks', () => {
+  for (const make of [abilityHand, flexHand]) {
+    // No Critter stat: product is zero, so it does not count and Robot stat 1 vs 0 attacks is unbalanced.
+    const dud = getTabletopProfile(make('robot1', 'dragon1', 'one_off_each'))
+    assert.equal(dud.robotAttacks, 0)
+    assert.equal(dud.balanced, false)
+    // One of each: it deals 1 damage and counts as the single Robot attack.
+    const hit = getTabletopProfile(make('robot1', 'dragon1', 'critter1', 'one_off_each'))
+    assert.equal(hit.robotAttacks, 1)
+    assert.equal(hit.balanced, true)
+  }
+  for (const rules of ['abilities', 'abilitiesv2']) {
+    assert(!getCoreCards({ tabletop: rules }).some((card) => card.id === 'any_off_each'))
+  }
+  assert(getCoreCards({ tabletop: 'threshold' }).some((card) => card.id === 'any_off_each'))
 })

@@ -7,9 +7,10 @@ const ULTIMATES = new Set(['murder_rabbit', 'robot_ulti', 'dragon_ulti', 'devour
 
 // Three tabletop rule sets share the single power calculation and shield penalty:
 //   threshold – one bonus per main faction: Critters 1+ → +2, Robots 4+ → +3, Dragons 8+ → +4.
-//   abilities – class abilities (Adapt, Perfect Balance, Overwhelming); no Shortcut or 2× cards in the deck.
+//   abilities – class abilities (Adapt, Perfect Balance, Overwhelming); no Shortcut, 2× or
+//   Critter + Robot + Dragon cards in the deck.
 export const TABLETOP_RULES = ['threshold', 'abilities', 'abilitiesv2']
-const ABILITIES_EXCLUDED_IDS = new Set(['double_dmg', 'shortcut'])
+const ABILITIES_EXCLUDED_IDS = new Set(['double_dmg', 'shortcut', 'any_off_each'])
 
 // Settings store `false` for the round-by-round battle; `true` is the legacy threshold toggle.
 export function normalizeTabletopRules(value) {
@@ -54,13 +55,15 @@ function adaptCard(card) {
 }
 
 // Perfect Balance counts Robot attack cards. A Robot Ultimate counts as this many attacks
-// (it hits like two ordinary attacks); Critter × Robot × Dragon counts as one Robot attack.
+// (it hits like two ordinary attacks); Critter × Robot × Dragon counts as one Robot attack
+// only when it deals damage (at least one stat of each faction).
 export const ROBOT_ULTI_ATTACK_COUNT = 2
 
-export function countRobotAttacks(cards) {
+export function countRobotAttacks(cards, stats = getHandStats(cards)) {
+  const oneOfEachHits = stats.critter * stats.robot * stats.dragon > 0
   return cards.reduce((sum, card) => {
     if (card.id === 'robot_ulti') return sum + ROBOT_ULTI_ATTACK_COUNT
-    if (card.effect?.dmgType === 'robot' || card.id === 'one_off_each') return sum + 1
+    if (card.effect?.dmgType === 'robot' || (card.id === 'one_off_each' && oneOfEachHits)) return sum + 1
     return sum
   }, 0)
 }
@@ -73,7 +76,7 @@ function getAbilitiesPlan(hand, adaptedUid) {
   const overwhelming = dragonBase >= ABILITY_RULES.overwhelmingAt
   if (overwhelming) profile = computeProfile(cards, { dragon: 1 })
   // Perfect Balance: as many Robot stats as Robot attacks (at least one of each); Robot main faction only.
-  const robotAttacks = countRobotAttacks(cards)
+  const robotAttacks = countRobotAttacks(cards, profile.stats)
   const balanced = profile.stats.robot > 0 && profile.stats.robot === robotAttacks
   return { ...profile, rules: 'abilities', adaptedUid: adaptedUid ?? null, dragonBase, overwhelming, balanced, robotAttacks }
 }
@@ -211,7 +214,7 @@ function getFlexibleProfile(hand) {
   // The conversion branches below remain available to isolated study variants.
   if (FLEXIBLE_RULES.perfectBalance) {
     const profile = getFlexiblePlanProfile({ cards: hand, reconfigured: null })
-    const robotAttacks = countRobotAttacks(hand)
+    const robotAttacks = countRobotAttacks(hand, profile.stats)
     return { ...profile, robotAttacks, balanced: profile.stats.robot > 0 && profile.stats.robot === robotAttacks }
   }
   if (FLEXIBLE_RULES.robotPipReconfigure) return getRobotPipProfile(hand)

@@ -102,3 +102,14 @@ input.name-editor--editing { cursor: text; width: 14em; max-width: 60vw; padding
   .room-request { flex-wrap: wrap; }
 }
 .side-rail--named .side-rail__marker { top: calc(8px + var(--rail-top)); bottom: calc(8px + var(--rail-bottom)); }
+
+/* Phone landscape: height is scarce, so names sit inline before the stats instead of
+   on their own row above them. The rails keep their unnamed height, leaving more room for cards. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .side-rail--named { height: calc(var(--rail-h) + var(--rail-top) + var(--rail-bottom)); padding-top: var(--rail-top); }
+  .table > .side-rail--player.side-rail--named { height: calc(var(--dock-h) + var(--rail-bottom)); }
+  .side-rail__identity { position: static; flex: 0 1 auto; min-width: 0; max-width: 30vw; }
+  .player-identity { gap: 6px; }
+  .player-identity strong, .player-identity .name-editor { max-width: 22vw; }
+  .side-rail--named .side-rail__marker { top: calc(var(--rail-top) + 22%); bottom: calc(var(--rail-bottom) + 22%); }
+}

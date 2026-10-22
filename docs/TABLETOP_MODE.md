@@ -8,7 +8,7 @@ Ordinary attacks give **1 power per matching stat**. Ultimates (Murder Rabbit, R
 
 The largest class contribution determines main faction. Ties allow a player choice before reveal. Neutral-only hands use Robot; a powerless hand has no main type unless Chameleon provides one. Devour offers a Dragon override. Chameleon offers any main faction, including Critter's v2 tiebreak, without changing underlying stats or attack contributions.
 
-Each opposing shield removes Critter **2**, Robot **2**, Dragon **1** power in Abilities v2. Threshold and v1 retain **2/1/0**. Subtract from the whole hand, floored at zero, before earned bonuses. Shield cards count as one shield. Shield Is Damage remains 1 power per shield; One Of Each remains Critter × Robot × Dragon stats (Robot damage and one Robot attack); Any Of Each remains the sum of all stats (neutral). These unit-valued special formulas stay whole-number effects rather than introducing fractions.
+Each opposing shield removes Critter **2**, Robot **2**, Dragon **1** power in Abilities v2. Threshold and v1 retain **2/1/0**. Subtract from the whole hand, floored at zero, before earned bonuses. Shield cards count as one shield. Shield Is Damage remains 1 power per shield; One Of Each remains Critter × Robot × Dragon stats (Robot damage, and one Robot attack for Perfect Balance only when the product is above zero); Any Of Each remains the sum of all stats (neutral; Threshold deck only since 2026-10-22). These unit-valued special formulas stay whole-number effects rather than introducing fractions.
 
 ## Threshold
 
@@ -26,10 +26,10 @@ The creator selected +2/+3/+4 at1/4/8 after the Normal Deck comparison, retainin
 
 ## Abilities (v1)
 
-No Shortcut or 2× cards; Chameleon remains.
+No Shortcut, 2× or Any Of Each (Critter + Robot + Dragon) cards; Chameleon remains.
 
 - **Critter — Adapt:** automatically turn the Critter stat(s) on one stat card into one ordinary Critter attack when it improves the unshielded score; skip on equal value. Other faction stats on mixed cards remain. A double Critter stat card becomes one attack, as before.
-- **Robot — Perfect Balance:** with Robot as chosen main faction, equal positive Robot stats and attack counts earn **+3 after shields**. The creator explicitly increased this from the rescaled +2 because Robots previously felt weak. Robot Ultimate counts as two attacks; One Of Each counts as one. The bonus can survive fully blocked base power, preserving the prior rule.
+- **Robot — Perfect Balance:** with Robot as chosen main faction, equal positive Robot stats and attack counts earn **+3 after shields**. The creator explicitly increased this from the rescaled +2 because Robots previously felt weak. Robot Ultimate counts as two attacks; One Of Each counts as one if it deals damage. The bonus can survive fully blocked base power, preserving the prior rule.
 - **Dragon — Overwhelming:** **7+ Dragon contribution before shields** adds one Dragon stat; recompute all attack formulas once, then apply shields. The bonus stat can also affect hybrid attacks. No recursive retrigger.
 
 Score = recomputed power − shields + Perfect Balance. Equal scores draw. Adapt's automatic choice uses the hand before reveal and does not inspect enemy shields.
@@ -39,7 +39,7 @@ Score = recomputed power − shields + Perfect Balance. Equal scores draw. Adapt
 The creator adopted the tested Perfect Balance / shields **2/2/1** configuration on 2026-10-21 and requested publication. Follow-up: **Chameleon is excluded from the v2 deck and collection**, in both Normal and Wild; its definition, art and behavior remain available in v1 and Threshold. Headless v2 pool version is now `v6-abilitiesv2`. The balance figures below predate this card-pool change; no new balance run was requested.
 
 - **Critter — Win Ties:** chosen Critter main wins equal scores against other main factions. Two Critter hands draw.
-- **Robot — Perfect Balance:** chosen Robot main earns **+3 after shields** when positive Robot stat pips equal Robot attack units. Mixed/double stats count all Robot pips. Robot Ultimate counts two attack units; One Of Each product counts one; Any Of Each sum counts none. No card swapping or Adapt. Other chosen mains never earn the bonus.
+- **Robot — Perfect Balance:** chosen Robot main earns **+3 after shields** when positive Robot stat pips equal Robot attack units. Mixed/double stats count all Robot pips. Robot Ultimate counts two attack units; One Of Each counts one only when its product is above zero (it deals damage); Any Of Each is excluded from the v2 deck. No card swapping or Adapt. Other chosen mains never earn the bonus.
 - **Dragon — Overwhelming:** Dragon contribution **6+ before shields** adds exactly one Dragon stat and recomputes all attacks once. Then the actual chosen main's shield penalty applies; shielding does not revoke the extra stat.
 
 Score = max(0, recomputed power - shields) + Perfect Balance. Both v2 reference-card layouts use the v1 Perfect Balance row, shield tabs **−2/−2/−1**, and the large **6+** Dragon requirement with an extra-stat reward. Help and result formulas follow the same rules. Headless rules version is `v5-abilitiesv2`; browser worker, offline play and online rooms share the scorer.
@@ -101,3 +101,6 @@ Balance remains experimental. Digital Battle is a reference, not an exact parity
 
 
 **Perfect Balance shield follow-up (2026-10-21; test only):** 2,000 fresh Normal search games,500 per variant/mode,16 samples/action, same starting deals as Perfect Balance baseline. All variants replace Reconfigure with v1 Robot-main Perfect Balance +3 after shields; C wins ties, D contribution6+ adds one D stat before shields. C/R/D shield costs2/1/0 baseline: Draft46.0/49.3/53.9%, Discard46.6/55.8/47.1%; costs2/2/0: Draft47.7/47.7/53.8%, Discard44.0/61.6/43.6%; costs2/2/1: Draft46.4/50.9/52.3%, Discard48.2/57.8/43.6%. Draws baseline5.8/6.2%,220=5.8/6.2%,221=6.0/5.4%. Cross-faction wins+half draws, mirrors excluded.221 is closest to50% in Draft among these samples; Discard remains Robot-led. Higher conditional Robot score with a larger shield penalty reflects changed search-built hands/matchups and sample uncertainty; holding a baseline Robot hand fixed never increases its score. All2,000 games replayed,20,234 roots/3,027,760 completions verified,8 exact root audits; previous Perfect Balance1,000 games/4 roots also reproduced. All final hands checked for exact shield costs, unchanged printed Robot/Critter stats, no conversion, correct +3 and pre-shield Dragon6 extra stat.16 targeted tests and lint pass. Evidence `.ai-runs/v2-perfect-shields-2026-10-21/summary.json`; variants `abilitiesv2-perfect-balance-shields220` and `abilitiesv2-perfect-balance-shields221`. Defaults/live7aa1956 unchanged; no adoption or publishing requested.
+
+
+**2026-10-22 tweaks (creator):** Critter × Robot × Dragon (`one_off_each`) counts as one Robot attack for Perfect Balance only when it deals damage (at least one Critter, Robot and Dragon stat, after Overwhelming in v1) — no more free Perfect Balance from a dud card. Critter + Robot + Dragon (`any_off_each`) is removed from Abilities and Abilities v2 decks/collections: with 1 power per stat it had become a flexible "1 of everything" with no risk or planning. Kept in Threshold. Headless pool versions bumped to `v3-abilities` / `v7-abilitiesv2` (pool sizes 99 / 96). Not balance-tested; not published.

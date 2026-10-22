@@ -61,7 +61,7 @@ const TABLETOP_TEXT = {
   devour: '2 power per Dragon stat. You may choose Dragon as your main damage type.',
   shield2: 'One shield. Reduces enemy Critter power by 2, Robot by 1, Dragon by 0, before bonuses.',
   shield_is_dmg: 'Adds 1 power per shield in your hand. Your shields still block.',
-  one_off_each: 'Robot power = Critter * Robot * Dragon stats. Counts as a Robot attack.',
+  one_off_each: 'Robot power = Critter * Robot * Dragon stats. Counts as a Robot attack if it deals damage.',
   any_off_each: 'Power = Critter + Robot + Dragon stats.',
 }
 
