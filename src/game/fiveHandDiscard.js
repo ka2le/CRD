@@ -75,6 +75,7 @@ export function createFiveHandDiscardGame(options = {}) {
 
   return {
     mode: 'five-hand-discard',
+    ...(options.concurrentOpponent ? { concurrentOpponent: true } : {}),
     phase: 'player-discard-1',
     deck: opponentStart.rest,
     playerHand: playerStart.drawn,
@@ -94,6 +95,7 @@ export function createFiveHandDiscardGame(options = {}) {
 }
 
 export function applyDiscardPhase(game, selectedIds, options = {}) {
+  if (game.concurrentOpponent && game.playerDiscardsUsed >= 2) return game
   const {
     includeRecentMoves = true,
     deferOpponent = false,
@@ -148,11 +150,22 @@ export function applyDiscardPhase(game, selectedIds, options = {}) {
     recentMoves: includeRecentMoves ? moves : [],
   }
 
+  if (game.concurrentOpponent) return { ...afterPlayerGame, phase: concurrentDiscardPhase(afterPlayerGame) }
+
   return deferOpponent ? afterPlayerGame : applyOpponentDiscardPhase(afterPlayerGame, null, options)
+}
+
+// Local David play lets each seat finish its two passes independently. Only the
+// reducer consumes the shared deck, so simultaneous results cannot reuse cards.
+function concurrentDiscardPhase(game) {
+  if (game.playerDiscardsUsed < 2) return `player-discard-${game.playerDiscardsUsed + 1}`
+  if (game.opponentDiscardsUsed < 2) return `opponent-discard-${game.opponentDiscardsUsed + 1}`
+  return 'battle-ready'
 }
 
 // Optional external selection exposes the second seat without changing browser pass order.
 export function applyOpponentDiscardPhase(game, selectedIds = null, options = {}) {
+  if (game.concurrentOpponent && game.opponentDiscardsUsed >= 2) return game
   const { includeRecentMoves = true } = options
   const opponentMoves = []
   const opponentResult = resolveOpponentDiscardPass(game, {
@@ -182,7 +195,7 @@ export function applyOpponentDiscardPhase(game, selectedIds = null, options = {}
     totalDiscards: [...game.opponentDiscards, ...opponentResult.discarded].length,
   }
 
-  return {
+  const next = {
     ...game,
     deck: opponentResult.deck,
     opponentHand: opponentResult.hand,
@@ -194,4 +207,5 @@ export function applyOpponentDiscardPhase(game, selectedIds = null, options = {}
     phase: isDone ? 'battle-ready' : `player-discard-${nextDiscardsUsed + 1}`,
     recentMoves: includeRecentMoves ? [...(game.recentMoves ?? []), ...opponentMoves] : [],
   }
+  return game.concurrentOpponent ? { ...next, phase: concurrentDiscardPhase(next) } : next
 }

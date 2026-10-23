@@ -1,5 +1,5 @@
-// David's exact chance integration can take tens of seconds. A dedicated worker
-// has no Sven timeout and is terminated when the player changes game or mode.
+// David plans in a dedicated worker, using the adopted 128-point redraw profile.
+// It has no Sven timeout and is terminated when the player changes game or mode.
 export function requestDavidAction(game, { side = 'opponent', config = {}, signal, onProgress } = {}) {
   return new Promise((resolve, reject) => {
     let worker

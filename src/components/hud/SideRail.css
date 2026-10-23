@@ -175,6 +175,11 @@
 .thinking-dots span:nth-child(2) { animation-delay: 0.15s; }
 .thinking-dots span:nth-child(3) { animation-delay: 0.3s; }
 
+.thinking-dots--progress { gap: 3px; padding: 0 2px; }
+.thinking-dots--progress span { width: 4px; height: 4px; animation: none; opacity: 0.2; }
+.thinking-dots--progress .is-done { opacity: 0.8; }
+.thinking-dots--progress .is-current { animation: thinking 1.3s ease-in-out infinite; }
+
 /* Battle vitals */
 .side-rail__vitals {
   position: relative;

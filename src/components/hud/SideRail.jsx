@@ -46,12 +46,11 @@ export function Pips({ total, current, done = 0, side = 'neutral' }) {
   )
 }
 
-export function ThinkingDots() {
+export function ThinkingDots({ progress = null }) {
+  const stage = progress === null ? null : Math.min(2, Math.floor(Math.max(0, progress) * 3))
   return (
-    <span className="thinking-dots" aria-label="Thinking">
-      <span />
-      <span />
-      <span />
+    <span className={`thinking-dots${stage === null ? '' : ' thinking-dots--progress'}`} aria-label={stage === 2 ? 'Finishing' : 'Thinking'}>
+      {[0, 1, 2].map((index) => <span key={index} className={stage === null ? undefined : index < stage ? 'is-done' : index === stage ? 'is-current' : undefined} />)}
     </span>
   )
 }

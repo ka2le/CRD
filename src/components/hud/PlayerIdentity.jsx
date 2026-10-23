@@ -29,10 +29,11 @@ export function NameEditor({ name, onRename, label = 'Your online name', classNa
     }} />
 }
 
-export default function PlayerIdentity({ name, wins = null, connected = true, editable = false, onRename, label }) {
+export default function PlayerIdentity({ name, wins = null, connected = true, editable = false, onRename, label, indicator = null }) {
   return <div className="player-identity">
     <span className={`player-identity__dot${connected ? ' is-online' : ''}`} title={connected ? 'Online' : 'Offline'} />
     {editable ? <NameEditor name={name} onRename={onRename} label={label} /> : <strong>{name}</strong>}
+    {indicator}
     {wins !== null ? <span className="player-identity__wins" title="Wins in this room">{wins} {wins === 1 ? 'win' : 'wins'}</span> : null}
   </div>
 }

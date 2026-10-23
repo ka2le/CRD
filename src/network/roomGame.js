@@ -56,7 +56,8 @@ export function settleSession(state) {
 }
 
 export function startRoomGame(session, action = { type: 'RESET_GAME' }) {
-  const next = sessionReducer({ ...session, settings: { ...session.settings, opponentAi: 'rules', testing: false } }, action)
+  const next = sessionReducer({ ...session, settings: { ...session.settings, opponentAi: 'rules',
+    discardOpponentAi: 'rules', draftOpponentAi: 'rules', testing: false } }, action)
   return settleSession({ ...next, onlineHuman: true, gameVersion: GAME_VERSION, otherUi: {}, otherSelectedIds: [], discardReady: {}, roomResult: null })
 }
 

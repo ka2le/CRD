@@ -6,8 +6,9 @@ import * as tt from './tabletop.js'
 import { createDavidPolicy } from './davidBotCore.js'
 import sourcePool from '../../data/david-opponents.json' with { type: 'json' }
 
-export const DAVID_BOT_VERSION = 'david-discard-probability-v1'
-export const DAVID_BOT_OPTIONS = Object.freeze({ opponentCount: 50, prepScenarios: 2, chanceLimit: 1000000, stream: 912371 })
+export const DAVID_BOT_VERSION = 'david-discard-probability-cdf128-v2'
+export const DAVID_BOT_IMPLEMENTATION = 'david-exact-opponent-cdf-v2'
+export const DAVID_BOT_OPTIONS = Object.freeze({ opponentCount: 50, prepScenarios: 2, chanceLimit: 128, stream: 912371 })
 const policies = new Map()
 const sourceIds = cards.getCoreCards({ tabletop: 'abilities-main' }).map((card) => card.id)
 
@@ -43,7 +44,7 @@ export async function davidPlanningSeed(visible, stream = DAVID_BOT_OPTIONS.stre
 export async function searchDavidDecision(state, options = {}) {
   const policy = getDavidPolicy(state.config)
   const seed = await davidPlanningSeed(policy.view(state), options.stream ?? DAVID_BOT_OPTIONS.stream)
-  return policy.search(state, { ...DAVID_BOT_OPTIONS, ...options, seed })
+  return { ...policy.search(state, { ...DAVID_BOT_OPTIONS, ...options, seed }), implementation: DAVID_BOT_IMPLEMENTATION }
 }
 
 export function davidStateFromGame(game, side = 'opponent', config = {}) {

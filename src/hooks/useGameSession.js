@@ -92,6 +92,7 @@ function withOpponentAiTurn(game, settings) {
 // Identifies one opponent decision, so stale search results are ignored.
 export function getOpponentDecisionKey(dealId, game) {
   if (game.mode === 'draft') return `${dealId}:draft:${game.packNumber}:${game.picksThisPack}`
+  if (game.concurrentOpponent) return `${dealId}:david-discard:${game.opponentDiscardsUsed}`
   return `${dealId}:discard:${game.phase}`
 }
 
@@ -197,7 +198,7 @@ function createInitialSessionState() {
   try {
     const saved = JSON.parse(window.localStorage.getItem(SESSION_STORAGE_KEY))
     const hasScenario = import.meta.env.DEV && new URLSearchParams(window.location.search).has('scenario')
-    if (!hasScenario && saved?.version === 1 && compatibleGameVersion(saved.rulesVersion) && saved.state?.game?.deck && saved.state?.preBattle?.deck) {
+    if (!hasScenario && saved?.version === 1 && compatibleGameVersion(saved.rulesVersion) && !saved.state?.game?.concurrentOpponent && saved.state?.game?.deck && saved.state?.preBattle?.deck) {
       let restored = saved.state
       if (restored.preBattle.pendingResolution) restored = sessionReducer(restored, { type: 'RESOLVE_PRE_BATTLE_PENDING_DRAW_ALL_NEW_1' })
       return { ...restored, lastTransition: null, pendingPlayerDraftPickAnimation: null,
@@ -399,6 +400,7 @@ export function sessionReducer(state, action) {
     }
 
     case 'SUBMIT_DISCARD': {
+      if (!state.game.phase.startsWith('player-discard')) return state
       // Search AI answers asynchronously, so the opponent's pass is deferred until it decides.
       const nextGame = applyDiscardPhase(state.game, state.selectedIds, {
         deferOpponent: usesSearchOpponent(state.settings),
@@ -416,7 +418,7 @@ export function sessionReducer(state, action) {
 
     case 'APPLY_OPPONENT_DISCARD': {
       if (action.decisionKey !== getOpponentDecisionKey(state.dealId, state.game)) return state
-      if (!state.game.phase.startsWith('opponent-discard')) return state
+      if (state.game.concurrentOpponent ? state.game.opponentDiscardsUsed >= 2 : !state.game.phase.startsWith('opponent-discard')) return state
       const handIds = new Set(state.game.opponentHand.map((card) => card.uid))
       const selectedIds = (action.selectedIds ?? []).filter((uid) => handIds.has(uid))
       const nextGame = applyOpponentDiscardPhase(state.game, selectedIds)
@@ -829,6 +831,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
 
   const discardPhase = game.mode === 'five-hand-discard' && game.phase.startsWith('player-discard')
   const opponentDiscarding = game.mode === 'five-hand-discard' && game.phase.startsWith('opponent-discard')
+  const awaitingDiscardDecision = !online && opponentDiscarding
   const searchOpponent = !online && usesSearchOpponent(settings)
   const dealId = session.dealId
   const awaitingSearchDraftPick = searchOpponent && game.mode === 'draft'
@@ -1187,9 +1190,9 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [awaitingSearchDraftPick, opponentDecisionKey])
 
-  // Search AI discard pass: runs after the player's pass, then animates like a normal discard.
+  // Discard responses start only after the human submits the matching pass.
   useEffect(() => {
-    if (online || !opponentDiscarding) return undefined
+    if (!awaitingDiscardDecision) return undefined
     let cancelled = false
     const controller = new AbortController()
     let timeoutId = null
@@ -1197,7 +1200,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     const decide = searchOpponent
       ? requestOpponentSearchAction(game, settings.opponentAi, { config: settings, signal: controller.signal,
         onProgress: ({ completed, total }) => {
-          if (!cancelled) setAiFeedback({ key: opponentDecisionKey, completed, total })
+          if (!cancelled) setAiFeedback({ key: opponentDecisionKey, completed, total, pass: (game.opponentDiscardsUsed ?? 0) + 1 })
         } })
       : Promise.resolve(null)
     decide.then((choice) => {
@@ -1229,7 +1232,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     }
   // The decision key changes exactly when a new decision starts.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [online, opponentDiscarding, opponentDecisionKey, aiRetry])
+  }, [awaitingDiscardDecision, opponentDecisionKey, aiRetry])
 
   // Search AI preparation: after the player starts the battle, the worker plays the opponent's
   // whole preparation (searched step by step), then the battle starts with that result.
@@ -1274,7 +1277,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
 
   return {
     rawSession: session,
-    opponentAiFeedback: !online && opponentDiscarding && aiFeedback?.key === opponentDecisionKey ? aiFeedback : null,
+    opponentAiFeedback: awaitingDiscardDecision && aiFeedback?.key === opponentDecisionKey ? aiFeedback : null,
     retryOpponentAi: () => { setAiFeedback(null); setAiRetry((count) => count + 1) },
     online,
     onlineBlocked,

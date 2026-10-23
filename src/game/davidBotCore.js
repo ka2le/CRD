@@ -1,6 +1,7 @@
 // DavidBot probability planner, adopted from the frozen 2026-10-23 Discard pilot.
 // Dependencies are injected so browser workers and headless tests use the same policy.
 import {compileCombatCycle,compareCombatCycles} from './davidCombat.js'
+import {createOpponentScoreEvaluator} from './davidOpponentScores.js'
 export function combination(n,k) {
   if(k<0||k>n)return 0
   let v=1;for(let j=1;j<=k;j++)v=v*(n-j+1)/j
@@ -56,12 +57,13 @@ export function createDavidPolicy({h,cards,prep,oldPrep,tt,pool,config}) {
     while(chosen.length<n)chosen.push(shuffled[chosen.length%shuffled.length])
     return {chosen,eligible:eligible.length,families:families.size}
   }
-  function search(state,{opponentCount=50,prepScenarios=2,chanceLimit=1000000,seed,onProgress}={}) {
+  function search(state,{opponentCount=50,prepScenarios=2,chanceLimit=128,seed,onProgress}={}) {
     const start=performance.now(),v=view(state)
     if(!Number.isSafeInteger(seed))throw Error('DavidBot requires a public-view planning seed')
     const opponent=opponents(v,cards.createSeededRng(seed^0x563812),opponentCount)
     const enemies=opponent.chosen.map(e=>config.tabletop?({hand:e.prepared,type:tt.chooseTabletopType(e.prepared),
       shields:tt.getTabletopProfile(e.prepared).shields,scores:new Map()}):({cycle:compileCombatCycle(e.prepared)}))
+    const opponentScores=config.tabletop?createOpponentScoreEvaluator(tt,enemies):null
     const metrics={handValues:0,handCacheHits:0,preparationTrials:0,preparedHands:0,battleComparisons:0,scenarioPlayouts:0}
     const valueCache=new Map(),battleCache=new Map(),distributions=new Map()
     function readyValue(hand) {
@@ -72,16 +74,9 @@ export function createDavidPolicy({h,cards,prep,oldPrep,tt,pool,config}) {
         const mean=enemies.reduce((sum,e)=>sum+compareCombatCycles(cycle,e.cycle),0)/enemies.length
         metrics.battleComparisons+=enemies.length;battleCache.set(k,mean);return mean
       }
-      const type=tt.chooseTabletopType(hand),shield=tt.getTabletopProfile(hand).shields,ownScores=new Map()
-      let value=0
-      for(const enemy of enemies) {
-        if(!ownScores.has(enemy.shields))ownScores.set(enemy.shields,tt.scoreTabletopHand(hand,enemy.shields,type))
-        if(!enemy.scores.has(shield))enemy.scores.set(shield,tt.scoreTabletopHand(enemy.hand,shield,enemy.type))
-        const a=ownScores.get(enemy.shields),b=enemy.scores.get(shield)
-        value+=a.score>b.score?1:a.score<b.score?-1:a.winsTies===b.winsTies?0:a.winsTies?1:-1
-        metrics.battleComparisons++
-      }
-      const mean=value/enemies.length;battleCache.set(k,mean);return mean
+      const mean=opponentScores.evaluate(hand)
+      // Logical pairwise outcomes retained for parity with the historical counter.
+      metrics.battleComparisons+=enemies.length;battleCache.set(k,mean);return mean
     }
     function rulesFinish(p) {
       for(let guard=0;!p.playerFinished;guard++) {
@@ -153,6 +148,7 @@ export function createDavidPolicy({h,cards,prep,oldPrep,tt,pool,config}) {
     values.forEach((value,i)=>{if(value>values[chosen]+1e-12||Math.abs(value-values[chosen])<=1e-12&&legal[i].selectedIds.length<legal[chosen].selectedIds.length)chosen=i})
     return {action:legal[chosen],chosenIndex:chosen,values,actions,distinctActions:groups.size,rootCandidates:legal.length,
       milliseconds:performance.now()-start,visible:v,metrics,
+      ...(opponentScores?{work:{opponentScoreGroups:opponentScores.stats.groups,opponentGroupQueries:opponentScores.stats.queries}}:{}),
       opponentPrior:{count:enemies.length,eligible:opponent.eligible,sourceFamilies:[...new Set(opponent.chosen.map(e=>e.family))]},
       settings:{opponentCount,prepScenarios,chanceLimit},
       redrawIntegration:actions.every(a=>a.exact)?'full-exact':'cdf-quadrature',

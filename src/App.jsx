@@ -18,7 +18,7 @@ import ScoreSheet from './components/overlay/ScoreSheet'
 import CollectionSheet from './components/overlay/CollectionSheet'
 import FactionPicker from './components/overlay/FactionPicker'
 import TestDeckSheet from './components/overlay/TestDeckSheet'
-import SideRail, { Pips, ThinkingDots } from './components/hud/SideRail'
+import SideRail, { Pips } from './components/hud/SideRail'
 import { GameIcon, SvgIcon } from './components/ui/GameIcon'
 import useBattlePlayback from './hooks/useBattlePlayback'
 import useGameSession from './hooks/useGameSession'
@@ -337,9 +337,9 @@ function AppContent() {
       {roomStatus && !roomSheetOpen ? <button type="button" className={`room-status${room.error ? ' room-status--error' : room.presence?.pending?.length ? ' room-status--request' : ''}`} onClick={() => setRoomOpen(true)}>
         {roomStatus}
       </button> : null}
-        {session.opponentAiFeedback ? <div className="ai-status" role={session.opponentAiFeedback.error ? 'alert' : 'status'}>
-          {session.opponentAiFeedback.error ?? `DavidBot: ${session.opponentAiFeedback.completed}/${session.opponentAiFeedback.total} discard choices`}
-          {session.opponentAiFeedback.error ? <button type="button" onClick={session.retryOpponentAi}>Retry</button> : null}
+        {session.opponentAiFeedback?.error ? <div className="ai-status" role="alert">
+          {session.opponentAiFeedback.error}
+          <button type="button" onClick={session.retryOpponentAi}>Retry</button>
         </div> : null}
 
       <main ref={tableRef} className={['table', `table--${layout}`].join(' ')}>
@@ -358,7 +358,6 @@ function AppContent() {
           winner={winner}
         >
           <EmoteBubble emote={emoteSide === 'opponent' ? emote : null} side="opponent" />
-          {opponentThinking ? <ThinkingDots /> : null}
           {layout !== 'battle' ? phasePips : null}
           <RoomButtons room={room} onOpenRoom={() => setRoomOpen(true)} />
           <ScreenMenu
