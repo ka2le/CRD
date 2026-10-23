@@ -1,5 +1,8 @@
 # AI opponent
 
+**Current policy (2026-10-23):** New Discard data/comparisons use DavidBot (Very Hard), with Sven actual preparation; Draft still uses Sven. Use `researchAi.js` / headless `research-action`, which returns the canonical profile, prior hash and full diagnostics without advancing the session. Historical `baseline` remains the Rules action, and historical study protocols below are unchanged. The creator closed further Discard neural/search research unless explicitly reopened. See [DavidBot](DAVID_BOT.md).
+
+
 Newest (2026-10-19 evening): preparation search + 183k draft/preparation network, 58.6% vs plain search and 86.1% vs this heuristic; see `AI_PREP_V5.md`. Earlier offline experiment (2026-10-19): draft-only rollout scores 79.25% against this heuristic on 100 unseen deals / 400 games; a first trained NumPy network and experimental search correction also run. See `AI_DRAFT_EXPERIMENT.md`. Preparation remains this existing policy. Browser opponent remains heuristic; neural gains are not established.
 
 Reviewed 2026-10-18. Both browser modes use a hand-written heuristic AI. No trained model or difficulty selection exists.

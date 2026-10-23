@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { compatibleGameVersion } from '../network/gameCompatibility.js'
 import { createFiveHandDiscardGame, applyDiscardPhase, applyOpponentDiscardPhase } from '../game/fiveHandDiscard'
 import {
@@ -18,7 +18,7 @@ import {
 import { applyPreparationAction, createPreparationState } from '../game/preparationState'
 import { chooseDiscardIds } from '../game/cardEvaluator'
 import {
-  DEFAULT_OPPONENT_AI, isSearchOpponentAi, normalizeOpponentAi, requestOpponentPreparation, requestOpponentSearchAction,
+  DEFAULT_OPPONENT_AI, isSearchOpponentAi, normalizeOpponentSettings, requestOpponentPreparation, requestOpponentSearchAction,
 } from '../game/opponentAi'
 import { getTabletopChoice, getTabletopHandKey, getCardTabletopTypes, normalizeTabletopRules, normalizePlayableTabletopRules } from '../game/tabletop'
 import { createDevScenario, DEV_SCENARIO_NAMES } from '../game/devScenarios'
@@ -67,12 +67,11 @@ function loadStoredSettings() {
     if (!raw) return DEFAULT_SETTINGS
 
     const parsed = JSON.parse(raw)
-    return {
+    return normalizeOpponentSettings({
       ...DEFAULT_SETTINGS,
       ...parsed,
-      opponentAi: normalizeOpponentAi(parsed.opponentAi),
       tabletop: normalizePlayableTabletopRules(parsed.tabletop),
-    }
+    })
   } catch {
     return DEFAULT_SETTINGS
   }
@@ -202,6 +201,7 @@ function createInitialSessionState() {
       let restored = saved.state
       if (restored.preBattle.pendingResolution) restored = sessionReducer(restored, { type: 'RESOLVE_PRE_BATTLE_PENDING_DRAW_ALL_NEW_1' })
       return { ...restored, lastTransition: null, pendingPlayerDraftPickAnimation: null,
+        settings: normalizeOpponentSettings(restored.settings, { gameMode: restored.gameMode }),
         suppressedHandCardIds: { player: [], opponent: [] },
         preBattle: { ...restored.preBattle, pendingAnimation: null, pendingResolution: null } }
     }
@@ -291,7 +291,7 @@ export function sessionReducer(state, action) {
       if (result) preBattle = { ...preBattle, playerFinished: true, opponentFinished: true }
       const next = {
         ...state, game, preBattle, gameMode: game.mode,
-        settings: { ...state.settings, gameMode: game.mode, tabletop: game.playerHand[0]?.tabletop || 'abilities-main', wildDeck: true },
+        settings: normalizeOpponentSettings(state.settings, { gameMode: game.mode, tabletop: game.playerHand[0]?.tabletop || 'abilities-main', wildDeck: true }),
         selectedIds: [], battleStarted: false, battleLogOpen: false,
         battleInstance: state.battleInstance + 1, gameSessionKey: state.gameSessionKey + 1, dealId: state.dealId + 1,
         lastTransition: null, pendingPlayerDraftPickAnimation: null, suppressedHandCardIds: { player: [], opponent: [] },
@@ -301,22 +301,17 @@ export function sessionReducer(state, action) {
 
     case 'RESET_GAME': {
       const nextMode = action.nextMode ?? state.gameMode
+      const nextSettings = normalizeOpponentSettings(state.settings, { gameMode: nextMode })
       const nextBattleInstance = state.battleInstance + 1
       const nextGameSessionKey = state.gameSessionKey + 1
 
       if (nextMode === 'draft') {
         const startingPicker = state.nextDraftStartingPicker
-        const game = createDraftGameWithDealing(startingPicker, {
-          ...state.settings,
-          gameMode: nextMode,
-        })
+        const game = createDraftGameWithDealing(startingPicker, nextSettings)
 
         return createTransitionResult(state, {
           gameMode: nextMode,
-          settings: {
-            ...state.settings,
-            gameMode: nextMode,
-          },
+          settings: nextSettings,
           nextDraftStartingPicker: getNextDraftStartingPicker(startingPicker),
           game,
           preBattle: createPreBattleState(game),
@@ -333,17 +328,11 @@ export function sessionReducer(state, action) {
         })
       }
 
-      const game = createGameForMode(nextMode, state.nextDraftStartingPicker, {
-        ...state.settings,
-        gameMode: nextMode,
-      })
+      const game = createGameForMode(nextMode, state.nextDraftStartingPicker, nextSettings)
 
       return createTransitionResult(state, {
         gameMode: nextMode,
-        settings: {
-          ...state.settings,
-          gameMode: nextMode,
-        },
+        settings: nextSettings,
         game,
         preBattle: createPreBattleState(game),
         selectedIds: [],
@@ -768,11 +757,7 @@ export function sessionReducer(state, action) {
       })
 
     case 'UPDATE_SETTINGS': {
-      const nextSettings = {
-        ...state.settings,
-        ...action.patch,
-      }
-      nextSettings.opponentAi = normalizeOpponentAi(nextSettings.opponentAi)
+      const nextSettings = normalizeOpponentSettings(state.settings, action.patch)
       nextSettings.tabletop = normalizePlayableTabletopRules(nextSettings.tabletop)
 
       if (Object.keys(action.patch).every((key) => NON_RESETTING_SETTINGS.includes(key))) {
@@ -809,6 +794,8 @@ export function sessionReducer(state, action) {
 export default function useGameSession({ animateCardMove, getAnchorRect, maskSlot, unmaskSlot, timing = {}, room = null }) {
   const sessionTiming = createSessionTiming(timing)
   const [localSession, localDispatch] = useReducer(sessionReducer, undefined, createInitialSessionState)
+  const [aiFeedback, setAiFeedback] = useState(null)
+  const [aiRetry, setAiRetry] = useState(0)
   const online = Boolean(room?.session)
   const session = room?.session ?? localSession
   const dispatch = online ? room.dispatch : localDispatch
@@ -1204,10 +1191,14 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
   useEffect(() => {
     if (online || !opponentDiscarding) return undefined
     let cancelled = false
+    const controller = new AbortController()
     let timeoutId = null
     const startedAt = performance.now()
     const decide = searchOpponent
-      ? requestOpponentSearchAction(game, settings.opponentAi)
+      ? requestOpponentSearchAction(game, settings.opponentAi, { config: settings, signal: controller.signal,
+        onProgress: ({ completed, total }) => {
+          if (!cancelled) setAiFeedback({ key: opponentDecisionKey, completed, total })
+        } })
       : Promise.resolve(null)
     decide.then((choice) => {
       if (cancelled) return
@@ -1227,14 +1218,18 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
           decisionKey: opponentDecisionKey,
         })
       }, remainingMs)
+    }).catch((error) => {
+      if (!cancelled && error.name !== 'AbortError') setAiFeedback({ key: opponentDecisionKey,
+        error: 'DavidBot could not finish this turn. Please retry.' })
     })
     return () => {
       cancelled = true
+      controller.abort()
       if (timeoutId) window.clearTimeout(timeoutId)
     }
   // The decision key changes exactly when a new decision starts.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [online, opponentDiscarding, opponentDecisionKey])
+  }, [online, opponentDiscarding, opponentDecisionKey, aiRetry])
 
   // Search AI preparation: after the player starts the battle, the worker plays the opponent's
   // whole preparation (searched step by step), then the battle starts with that result.
@@ -1279,6 +1274,8 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
 
   return {
     rawSession: session,
+    opponentAiFeedback: !online && opponentDiscarding && aiFeedback?.key === opponentDecisionKey ? aiFeedback : null,
+    retryOpponentAi: () => { setAiFeedback(null); setAiRetry((count) => count + 1) },
     online,
     onlineBlocked,
     onlineDiscardSubmitted,

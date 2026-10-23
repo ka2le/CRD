@@ -1,0 +1,16 @@
+{
+  "version": "david-discard-probability-v1",
+  "sourceStudy": "crd-discard-probability-empirical50-20261023-v1",
+  "sourcePoolSha256": "fbcc3ff60b6de474b48097d758b7d81f6b344415cba64f1185937f57f78b41ed",
+  "publicPoolSha256": "6a4267bc330e89153a58f89baa0028c3a8e6728ce4f8f457e6c3589ec3cdb17b",
+  "hands": 256,
+  "sourceFamilies": 128,
+  "sourcePolicy": "SvenBot training-only shadow games; no validation or test games",
+  "parameters": {
+    "opponentCount": 50,
+    "prepScenarios": 2,
+    "chanceLimit": 1000000,
+    "stream": 912371
+  },
+  "extensions": "Other battle rules remap the empirical hand compositions through the current card definitions; their strength is not established by the original pilot."
+}

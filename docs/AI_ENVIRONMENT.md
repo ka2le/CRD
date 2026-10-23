@@ -1,5 +1,8 @@
 # Headless decision environment
 
+**Current policy (2026-10-23):** New Discard data/comparisons use DavidBot (Very Hard), with Sven actual preparation; Draft still uses Sven. Use `researchAi.js` / headless `research-action`, which returns the canonical profile, prior hash and full diagnostics without advancing the session. Historical `baseline` remains the Rules action, and historical study protocols below are unchanged. The creator closed further Discard neural/search research unless explicitly reopened. See [DavidBot](DAVID_BOT.md).
+
+
 Latest experiment: `AI_DRAFT_EXPERIMENT.md` gives the draft-only data/model/tournament workflow. It uses both-seat worker control with the existing heuristic for every preparation decision. The new `baseline` command returns the acting seat's existing heuristic action without advancing the session (terminal requests error). A trained NumPy draft model now exists offline; earlier "no trained model" descriptions below concern the initial environment milestone. Protocol remains v2 with this additive command.
 
 Implemented and verified **2026-10-19**. This is the working environment contract; `AI_TRAINING.md` describes the remaining search/neural plan.

@@ -119,3 +119,21 @@
     min-height: 34px;
   }
 }
+.ai-status {
+  position: fixed;
+  z-index: 30;
+  bottom: calc(var(--dock-h) + max(env(safe-area-inset-bottom, 0px), 4px) + 44px);
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100vw - 24px);
+  padding: 8px 12px;
+  border: 1px solid var(--b1);
+  border-radius: 8px;
+  background: var(--surface-hi);
+  color: var(--t0);
+  font-size: 13px;
+  text-align: center;
+  box-shadow: 0 2px 12px #0005;
+}
+
+.ai-status button { margin-left: 12px; }

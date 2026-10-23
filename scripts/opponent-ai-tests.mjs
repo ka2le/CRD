@@ -14,9 +14,9 @@ function advanceToOpponentDecision(mode, seed, firstPicker = 'player') {
   return state
 }
 
-test('opponent options list RolfBot, IngaBot and SvenBot', () => {
-  assert.deepEqual(OPPONENT_AI_OPTIONS.map((option) => option.label), ['RolfBot (Easy)', 'IngaBot (Medium)', 'SvenBot (Hard)'])
-  assert.deepEqual(OPPONENT_AI_OPTIONS.map((option) => option.id), ['rules', 'shallow', 'search'])
+test('opponent options list RolfBot, IngaBot, SvenBot and Discard DavidBot', () => {
+  assert.deepEqual(OPPONENT_AI_OPTIONS.map((option) => option.label), ['RolfBot (Easy)', 'IngaBot (Medium)', 'SvenBot (Hard)', 'DavidBot (Very Hard)'])
+  assert.deepEqual(OPPONENT_AI_OPTIONS.map((option) => option.id), ['rules', 'shallow', 'search', 'david'])
   assert.equal(normalizeOpponentAi('search'), 'search')
   assert.equal(normalizeOpponentAi('shallow'), 'shallow')
   assert.equal(normalizeOpponentAi('neural'), 'rules')

@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import './ScreenMenu.css'
 import { GameIcon, SvgIcon } from '../ui/GameIcon'
-import { OPPONENT_AI_OPTIONS } from '../../game/opponentAi'
+import { getOpponentAiOptions } from '../../game/opponentAi'
 
 // Playable scoring modes. Abilities Prototype is intentionally hidden.
 const BATTLE_RULES = [
@@ -137,7 +137,7 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
               aria-label="Opponent"
             >
               {humanOpponent ? <option value="human">Player in room</option> : null}
-              {OPPONENT_AI_OPTIONS.map((option) => (
+              {getOpponentAiOptions(gameMode).map((option) => (
                 <option key={option.id} value={option.id}>{option.label}</option>
               ))}
             </select>

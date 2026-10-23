@@ -29,7 +29,7 @@ function getSession(id) {
   return session
 }
 
-function handleRequest(request) {
+async function handleRequest(request) {
   if (!request || typeof request !== 'object' || Array.isArray(request)) throw new Error('Request must be an object')
   if (request.command === 'ping') {
     return { ok: true, pong: true }
@@ -95,6 +95,15 @@ function handleRequest(request) {
     return { ok: true, action: chooseHeadlessBaselineAction(state) }
   }
 
+  if (request.command === 'research-action') {
+    const state = getSession(request.sessionId ?? 'default')
+    if (state.terminal) throw new Error('No research action after terminal')
+    // Legacy snapshots need no David prior unless this new command is requested.
+    const { chooseResearchAiDecision, getResearchAiProfile } = await import('../src/game/researchAi.js')
+    const report = await chooseResearchAiDecision(state, { seed: request.seed })
+    return { ok: true, action: report.action, profile: getResearchAiProfile(state.game.mode), report }
+  }
+
   // Privileged host operation. It does not resample hidden worlds and is NOT fair search.
   // Branches share immutable state until step replaces one session's value.
   if (request.command === 'fork') {
@@ -120,23 +129,25 @@ const rl = readline.createInterface({
   crlfDelay: Infinity,
 })
 
+let requests = Promise.resolve()
 rl.on('line', (line) => {
   if (!line.trim()) return
-
-  let request = null
-  try {
-    request = JSON.parse(line)
-    const response = handleRequest(request)
-    send({
-      id: request.id ?? null,
-      ...response,
-    })
-  } catch (error) {
-    send({
-      id: request?.id ?? null,
-      ok: false,
-      error: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
-    })
-  }
+  requests = requests.then(async () => {
+    let request = null
+    try {
+      request = JSON.parse(line)
+      const response = await handleRequest(request)
+      send({
+        id: request.id ?? null,
+        ...response,
+      })
+    } catch (error) {
+      send({
+        id: request?.id ?? null,
+        ok: false,
+        error: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+      })
+    }
+  })
 })

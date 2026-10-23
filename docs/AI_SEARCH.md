@@ -1,5 +1,8 @@
 # Observation-sampled rollout teacher
 
+**Current policy (2026-10-23):** New Discard data/comparisons use DavidBot (Very Hard), with Sven actual preparation; Draft still uses Sven. Use `researchAi.js` / headless `research-action`, which returns the canonical profile, prior hash and full diagnostics without advancing the session. Historical `baseline` remains the Rules action, and historical study protocols below are unchanged. The creator closed further Discard neural/search research unless explicitly reopened. See [DavidBot](DAVID_BOT.md).
+
+
 Current scale-up: `AI_DRAFT_V2.md` documents per-candidate compressed W/D/L examples, search self-play, ~100k parameters and paired search-opponent tournaments. Search continues to use the independent observation-only sampler below. A new draft-specific test requires identical evaluations after reversing the real unseen deck/changing its seed, and different hypothetical packs across independent planning seeds.
 
 Latest follow-up: `AI_DRAFT_EXPERIMENT.md` implements the creator's narrower draft-only experiment, preserving heuristic preparation. It includes grouped mixed self-play collection, first NumPy model, same-budget experimental neural root correction and held-out tournaments. The original general teacher remains unchanged; "no model" statements below describe its initial delivery.

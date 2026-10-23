@@ -337,6 +337,10 @@ function AppContent() {
       {roomStatus && !roomSheetOpen ? <button type="button" className={`room-status${room.error ? ' room-status--error' : room.presence?.pending?.length ? ' room-status--request' : ''}`} onClick={() => setRoomOpen(true)}>
         {roomStatus}
       </button> : null}
+        {session.opponentAiFeedback ? <div className="ai-status" role={session.opponentAiFeedback.error ? 'alert' : 'status'}>
+          {session.opponentAiFeedback.error ?? `DavidBot: ${session.opponentAiFeedback.completed}/${session.opponentAiFeedback.total} discard choices`}
+          {session.opponentAiFeedback.error ? <button type="button" onClick={session.retryOpponentAi}>Retry</button> : null}
+        </div> : null}
 
       <main ref={tableRef} className={['table', `table--${layout}`].join(' ')}>
         <SideRail

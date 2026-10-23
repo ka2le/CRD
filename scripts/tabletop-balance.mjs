@@ -10,6 +10,7 @@ import { TABLETOP_THRESHOLDS, PROTOTYPE_ABILITY_RULES, MAIN_ABILITY_RULES, MAIN_
 import { getCoreCards, getExpandedCoreDeck } from '../src/game/cards.js'
 import { simulateBattle } from '../src/game/engine.js'
 import { configureBalanceVariant, battleAnalysisProfile } from './balance-variants.mjs'
+import { chooseResearchAiDecision, getResearchAiProfile } from '../src/game/researchAi.js'
 
 const [variantName = 'abilities-main', mode = 'draft', gamesArg = '500', samplesArg = '16', seedArg = '31000000', deck = 'normal', output = '.ai-runs/normal-balance-2026-10-21', label = ''] = process.argv.slice(2)
 if (deck !== 'normal') throw new Error('Balance studies require Normal Deck. Wild is an unbalanced fun mode; old Wild evidence is archival only.')
@@ -26,7 +27,8 @@ if (fs.existsSync(path.join(dir, 'games.jsonl'))) throw new Error(`Refusing to o
 const gameFile = fs.openSync(path.join(dir, 'games.jsonl'), 'wx')
 const decisionFile = fs.openSync(path.join(dir, 'decisions.jsonl'), 'wx')
 const sourceFiles = [...fs.readdirSync('src/game').filter((f) => f.endsWith('.js')).map((f) => `src/game/${f}`),
-  'data/cards.json', 'data/tabletop-cards.json', 'scripts/tabletop-balance.mjs', 'scripts/balance-variants.mjs'].sort()
+  'data/cards.json', 'data/tabletop-cards.json', 'data/david-opponents.json', 'data/david-opponents.meta.json',
+  'scripts/tabletop-balance.mjs', 'scripts/balance-variants.mjs'].sort()
 const sourceHashes = Object.fromEntries(sourceFiles.map((file) => [file, createHash('sha256').update(fs.readFileSync(file)).digest('hex')]))
 const sourceHash = createHash('sha256').update(JSON.stringify(sourceHashes)).digest('hex')
 const pool = getExpandedCoreDeck({ tabletop: rules, wildDeck: false })
@@ -35,7 +37,8 @@ assert.ok(getCoreCards({ tabletop: rules }).every((c) => poolCounts[c.id] === c.
 const manifest = { variant: variantName, title: variant.title, rules, mode, games, samples, seed, deck, label, searchVersion: SEARCH_AI_VERSION, sourceHash, sourceHashes,
   poolSize: pool.length, poolCounts,
   thresholds: TABLETOP_THRESHOLDS, abilities: PROTOTYPE_ABILITY_RULES, flexible: MAIN_ABILITY_RULES, shieldCosts: TABLETOP_SHIELD_COST,
-  policy: 'both seats: browser search, prep-lookahead, fixed samples; baseline tie preference',
+  policy: mode === 'five-hand-discard' ? 'both seats: DavidBot Discard, timed SvenBot preparation' : 'both seats: browser search, prep-lookahead, fixed samples; baseline tie preference',
+  ...(mode === 'five-hand-discard' ? { researchAi: getResearchAiProfile(mode), samplesArgumentApplies: false } : {}),
   startedAt: new Date().toISOString() }
 fs.writeFileSync(path.join(dir, 'manifest.json'), JSON.stringify(manifest, null, 2))
 const options = { minSamples: samples, maxSamples: samples, timeBudgetMs: 1e12, rollout: 'prep-lookahead' }
@@ -56,7 +59,9 @@ for (let game = 0; game < games; game++) {
   while (!state.terminal) {
     if (++step > 200) throw new Error('Study decision guard exceeded')
     const planningSeed = seed + 100000000 + game * 1009 + step * 7919
-    const report = state.preparation
+    const report = mode === 'five-hand-discard'
+      ? await chooseResearchAiDecision(state, { seed: planningSeed })
+      : state.preparation
       ? searchPreparationDecision(state.preparation, state.game, state.actor, { ...options, seed: planningSeed })
       : searchDecision(state.game, state.actor, { ...options, seed: planningSeed })
     roots++

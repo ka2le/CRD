@@ -2,18 +2,44 @@
 import { searchDecision, searchSidePreparation } from './searchAi.js'
 import { chooseDiscardIds, pickBestCardForHand } from './cardEvaluator.js'
 import { completeOpponentPreBattle } from './preBattle.js'
+import { requestDavidAction } from './davidBotClient.js'
 
 // Ids stay 'rules' / 'search' so saved settings keep working; the names are what players see.
 export const OPPONENT_AI_OPTIONS = [
   { id: 'rules', name: 'RolfBot', label: 'RolfBot (Easy)' },
   { id: 'shallow', name: 'IngaBot', label: 'IngaBot (Medium)' },
   { id: 'search', name: 'SvenBot', label: 'SvenBot (Hard)' },
+  { id: 'david', name: 'DavidBot', label: 'DavidBot (Very Hard)' },
 ]
+
+export function getOpponentAiOptions(mode) {
+  return OPPONENT_AI_OPTIONS.filter((option) => mode === 'five-hand-discard' || option.id !== 'david')
+}
 
 export const DEFAULT_OPPONENT_AI = 'rules'
 
 export function normalizeOpponentAi(value) {
   return OPPONENT_AI_OPTIONS.some((option) => option.id === value) ? value : DEFAULT_OPPONENT_AI
+}
+
+// Separate memories survive mode changes and reloads. Legacy single-bot settings
+// migrate on first use; David always hands Draft play to Sven.
+export function normalizeOpponentSettings(current, patch = {}) {
+  const next = { ...current, ...patch }
+  const previous = normalizeOpponentAi(current.opponentAi)
+  const discard = normalizeOpponentAi(current.discardOpponentAi ?? previous)
+  const draft = normalizeOpponentAi(current.draftOpponentAi ?? (previous === 'david' ? 'search' : previous))
+  next.discardOpponentAi = discard
+  next.draftOpponentAi = draft === 'david' ? 'search' : draft
+  if (Object.hasOwn(patch, 'opponentAi')) {
+    const selected = normalizeOpponentAi(patch.opponentAi)
+    if (next.gameMode === 'five-hand-discard') next.discardOpponentAi = selected
+    else next.draftOpponentAi = selected === 'david' ? 'search' : selected
+  } else if (next.gameMode === 'draft' && current.gameMode === 'five-hand-discard' && previous === 'david') {
+    next.draftOpponentAi = 'search'
+  }
+  next.opponentAi = next.gameMode === 'five-hand-discard' ? next.discardOpponentAi : next.draftOpponentAi
+  return next
 }
 
 export function getOpponentAiName(id) {
@@ -22,7 +48,7 @@ export function getOpponentAiName(id) {
 
 // Bots that search (everything except RolfBot, which plays the Rules AI directly).
 export function isSearchOpponentAi(id) {
-  return Boolean(BOT_SEARCH_PROFILES[id])
+  return id === 'david' || Boolean(BOT_SEARCH_PROFILES[id])
 }
 
 // Search budgets per bot. `decision` covers draft picks / discard passes, `preparation` each
@@ -142,9 +168,11 @@ function requestFromWorker(game, message) {
 
 /**
  * Ask the Search AI for the opponent's draft pick or discard selection.
- * Always resolves: worker → short main-thread search → Rules AI choice.
+ * Sven/Inga resolve through their existing fallback. David errors are surfaced
+ * to the player for retry; a slow David turn must never silently become Sven.
  */
-export function requestOpponentSearchAction(game, bot = 'search') {
+export function requestOpponentSearchAction(game, bot = 'search', options = {}) {
+  if (bot === 'david' && game.mode === 'five-hand-discard') return requestDavidAction(snapshotGame(game), options)
   const profile = BOT_SEARCH_PROFILES[bot] ?? BOT_SEARCH_PROFILES.search
   const message = { game: snapshotGame(game), side: 'opponent', options: getDecisionOptions(profile.decision, game.mode) }
   return requestFromWorker(game, message).catch(() => new Promise((resolve) => {

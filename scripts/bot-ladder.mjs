@@ -1,18 +1,20 @@
 // Plays two browser opponents against each other on seeded tabletop (or digital) deals.
 // Usage: node scripts/bot-ladder.mjs <botA> <botB> [mode] [games] [rules] [firstSeed]
-//   bots: rolf | inga | sven ; rules: abilities-main | threshold | digital | abilities-prototype (explicit only)
+//   bots: rolf | inga | sven | david ; David falls back to Sven in Draft.
 //   INGA_SAMPLES / INGA_MARGIN override IngaBot's budget for calibration runs.
 import { createHeadlessGame, stepHeadlessGame, chooseHeadlessBaselineAction } from '../src/game/headlessGame.js'
 import { searchDecision, searchPreparationDecision } from '../src/game/searchAi.js'
 import { BOT_SEARCH_PROFILES, getDecisionOptions } from '../src/game/opponentAi.js'
+import { searchDavidDecision } from '../src/game/davidBot.js'
 
 const [botA = 'inga', botB = 'rolf', mode = 'draft', gamesArg = '100', rules = 'abilities-main', seedArg = '700000'] = process.argv.slice(2)
 const games = Number(gamesArg)
 const firstSeed = Number(seedArg)
+if (![botA, botB].every((bot) => ['rolf', 'inga', 'sven', 'david'].includes(bot))) throw new Error('Unknown bot')
 const override = process.env.INGA_SAMPLES ? Number(process.env.INGA_SAMPLES) : null
 const profile = (bot) => {
   if (bot === 'rolf') return null
-  const base = BOT_SEARCH_PROFILES[bot === 'sven' ? 'search' : 'shallow']
+  const base = BOT_SEARCH_PROFILES[bot === 'sven' || bot === 'david' ? 'search' : 'shallow']
   const decision = getDecisionOptions(base.decision, mode)
   if (bot !== 'inga' || !override) return { ...base, decision }
   return { ...base, decision: { ...decision, minSamples: override, maxSamples: override, ...(process.env.INGA_MARGIN ? { margin: Number(process.env.INGA_MARGIN) } : {}) } }
@@ -30,7 +32,9 @@ for (let game = 0; game < games; game += 1) {
     const config = profile(bot)
     let action = chooseHeadlessBaselineAction(state)
     decisions += 1
-    if (config && !state.preparation) {
+    if (bot === 'david' && !state.preparation && mode === 'five-hand-discard') {
+      action = (await searchDavidDecision(state)).action
+    } else if (config && !state.preparation) {
       action = searchDecision(state.game, state.actor, { ...config.decision, seed: firstSeed * 7 + decisions }).action
     } else if (config && state.preparation && config.preparation) {
       action = searchPreparationDecision(state.preparation, state.game, state.actor, { ...config.preparation, seed: firstSeed * 13 + decisions }).action
