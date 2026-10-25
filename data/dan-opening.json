@@ -1,0 +1,232 @@
+{
+  "version": "dan-opening-prominence-frozen-v1",
+  "source": "crd-draft-opening-prominence16-20261023-v1",
+  "semantics": "P(card present | win) / P(card present), raw historical drafted hands; not a win probability",
+  "cards": [
+    {
+      "card": "murder_rabbit",
+      "name": "Murder rabbit",
+      "hands": 147,
+      "wins": 94,
+      "draws": 4,
+      "losses": 49,
+      "score": 1.3634451648463224
+    },
+    {
+      "card": "dragon_ulti",
+      "name": "Dragon Ulti",
+      "hands": 147,
+      "wins": 86,
+      "draws": 10,
+      "losses": 51,
+      "score": 1.2474072784764227
+    },
+    {
+      "card": "devour",
+      "name": "Devour",
+      "hands": 154,
+      "wins": 90,
+      "draws": 10,
+      "losses": 54,
+      "score": 1.2460886661313102
+    },
+    {
+      "card": "robot_dragon",
+      "name": "robot_dragon",
+      "hands": 105,
+      "wins": 59,
+      "draws": 8,
+      "losses": 38,
+      "score": 1.1980911767692153
+    },
+    {
+      "card": "joker",
+      "name": "joker",
+      "hands": 158,
+      "wins": 88,
+      "draws": 12,
+      "losses": 58,
+      "score": 1.18755229278562
+    },
+    {
+      "card": "dragon2",
+      "name": "dragon2",
+      "hands": 141,
+      "wins": 78,
+      "draws": 6,
+      "losses": 57,
+      "score": 1.1795127704940345
+    },
+    {
+      "card": "robot_ulti",
+      "name": "robot_ulti",
+      "hands": 134,
+      "wins": 73,
+      "draws": 5,
+      "losses": 56,
+      "score": 1.161569550965853
+    },
+    {
+      "card": "copy_card_in_hand",
+      "name": "copy_card_in_hand",
+      "hands": 161,
+      "wins": 87,
+      "draws": 9,
+      "losses": 65,
+      "score": 1.1521805347706897
+    },
+    {
+      "card": "recycle_card",
+      "name": "recycle_card",
+      "hands": 156,
+      "wins": 84,
+      "draws": 8,
+      "losses": 64,
+      "score": 1.148105625717566
+    },
+    {
+      "card": "one_off_each",
+      "name": "one_off_each",
+      "hands": 90,
+      "wins": 46,
+      "draws": 6,
+      "losses": 38,
+      "score": 1.089789149490642
+    },
+    {
+      "card": "rabbit2",
+      "name": "rabbit2",
+      "hands": 224,
+      "wins": 111,
+      "draws": 11,
+      "losses": 102,
+      "score": 1.0565793481571732
+    },
+    {
+      "card": "draw_2_extra",
+      "name": "draw_2_extra",
+      "hands": 151,
+      "wins": 74,
+      "draws": 7,
+      "losses": 70,
+      "score": 1.0449173244468293
+    },
+    {
+      "card": "bite",
+      "name": "bite",
+      "hands": 75,
+      "wins": 35,
+      "draws": 4,
+      "losses": 36,
+      "score": 0.9950248756218905
+    },
+    {
+      "card": "dragon_rabbit",
+      "name": "dragon_rabbit",
+      "hands": 281,
+      "wins": 131,
+      "draws": 16,
+      "losses": 134,
+      "score": 0.9940131573955336
+    },
+    {
+      "card": "robot2",
+      "name": "robot2",
+      "hands": 85,
+      "wins": 39,
+      "draws": 4,
+      "losses": 42,
+      "score": 0.9783017684685814
+    },
+    {
+      "card": "robot_critter",
+      "name": "robot_critter",
+      "hands": 181,
+      "wins": 83,
+      "draws": 14,
+      "losses": 84,
+      "score": 0.9777474113253778
+    },
+    {
+      "card": "swarm",
+      "name": "Swarm",
+      "hands": 447,
+      "wins": 192,
+      "draws": 27,
+      "losses": 228,
+      "score": 0.9158426467852492
+    },
+    {
+      "card": "dragon1",
+      "name": "dragon1",
+      "hands": 362,
+      "wins": 155,
+      "draws": 32,
+      "losses": 175,
+      "score": 0.9129569202134552
+    },
+    {
+      "card": "critter1",
+      "name": "critter1",
+      "hands": 287,
+      "wins": 122,
+      "draws": 18,
+      "losses": 147,
+      "score": 0.9063691002429367
+    },
+    {
+      "card": "robot_attack",
+      "name": "robot_attack",
+      "hands": 178,
+      "wins": 75,
+      "draws": 11,
+      "losses": 92,
+      "score": 0.8983972592894277
+    },
+    {
+      "card": "dragons_breath",
+      "name": "Dragons Breath",
+      "hands": 411,
+      "wins": 168,
+      "draws": 31,
+      "losses": 212,
+      "score": 0.871554635581218
+    },
+    {
+      "card": "draw_all_new_1",
+      "name": "draw_all_new_1",
+      "hands": 94,
+      "wins": 38,
+      "draws": 3,
+      "losses": 53,
+      "score": 0.8619516399764098
+    },
+    {
+      "card": "robot1",
+      "name": "robot1",
+      "hands": 213,
+      "wins": 80,
+      "draws": 12,
+      "losses": 121,
+      "score": 0.8008248495950829
+    },
+    {
+      "card": "shield2",
+      "name": "Shield2",
+      "hands": 112,
+      "wins": 37,
+      "draws": 7,
+      "losses": 68,
+      "score": 0.7043862321047822
+    },
+    {
+      "card": "shield_is_dmg",
+      "name": "shield_is_dmg",
+      "hands": 9,
+      "wins": 1,
+      "draws": 1,
+      "losses": 7,
+      "score": 0.2369106846718787
+    }
+  ]
+}

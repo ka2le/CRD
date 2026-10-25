@@ -4,6 +4,20 @@
   padding-bottom: 6px;
 }
 
+.help__copy {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.help > textarea {
+  width: 100%;
+  box-sizing: border-box;
+  color: inherit;
+  background: var(--bg0, #181818);
+}
+
 .help__block {
   padding: 12px;
   border-radius: 8px;

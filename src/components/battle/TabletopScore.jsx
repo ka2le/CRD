@@ -7,9 +7,11 @@ export function TabletopFormula({ score, label }) {
   const prototype = score.rules === 'abilities-prototype'
   const main = score.rules === 'abilities-main'
   const bonusTitle = prototype || (main && MAIN_ABILITY_RULES.perfectBalance)
-    ? `Perfect Balance: +${score.bonus} after shields`
+    ? `Perfect Balance: +${score.bonus} ${main ? 'before shields' : 'after shields'}`
     : `${score.baseBonus} faction bonus${score.shortcuts > 0 ? ` (Shortcut: ${score.naturalBonus} → ${score.baseBonus})` : ''}${score.bonusMultiplier > 1 ? ` * ${score.bonusMultiplier}` : ''} after shields`
-  const description = `${label}: ${score.base} base${score.blocked > 0 ? ` minus ${score.blocked} shields` : ''}${score.bonus > 0 ? ` plus ${score.bonus} bonus` : ''} equals ${score.score} damage`
+  const bonusText = score.bonus > 0 ? ` plus ${score.bonus} bonus` : ''
+  const shieldText = score.blocked > 0 ? ` minus ${score.blocked} shields` : ''
+  const description = `${label}: ${score.base} base${main ? bonusText + shieldText : shieldText + bonusText} equals ${score.score} damage`
   return (
     <div className="tabletop-formula" aria-label={description}>
       <span className="tabletop-formula__label">{label}</span>
@@ -23,16 +25,19 @@ export function TabletopFormula({ score, label }) {
           </span>
         ) : null}
         {(prototype || main) && score.overwhelming ? (
-          <span className="tabletop-formula__ability" title={`Overwhelming: Dragon power ${main ? MAIN_ABILITY_RULES.overwhelmingAt : PROTOTYPE_ABILITY_RULES.overwhelmingAt}+ gained one Dragon stat`}>
+          <span className="tabletop-formula__ability" title={`Overwhelming: ${main ? 'Dragon main faction with total' : 'Dragon'} power ${main ? MAIN_ABILITY_RULES.overwhelmingAt : PROTOTYPE_ABILITY_RULES.overwhelmingAt}+ gained one Dragon stat`}>
             <GameIcon name="dragon" style={{ color: 'var(--dragon)' }} />+1
           </span>
         ) : null}
         {hasCalculation ? <span title="Base power">{score.base}</span> : null}
+        {main && score.bonus > 0 ? <>
+          <span>+</span><span title={bonusTitle}>{score.bonus}<GameIcon name="damage" className="tabletop-formula__damage" /></span>
+        </> : null}
         {score.blocked > 0 ? <>
           <span>−</span>
-          <span title={`${score.enemyShields} enemy shields; ${score.shieldPenalty} penalty, capped at base power`}>{score.blocked}<GameIcon name="shield" className="tabletop-formula__shield" /></span>
+          <span title={`${score.enemyShields} enemy shields; ${score.shieldPenalty} penalty, capped at ${main ? 'power plus bonuses' : 'base power'}`}>{score.blocked}<GameIcon name="shield" className="tabletop-formula__shield" /></span>
         </> : null}
-        {score.bonus > 0 ? <>
+        {!main && score.bonus > 0 ? <>
           <span>+</span><span title={bonusTitle}>{score.bonus}<GameIcon name="damage" className="tabletop-formula__damage" /></span>
         </> : null}
         {hasCalculation ? <span>=</span> : null}

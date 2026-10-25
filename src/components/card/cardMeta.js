@@ -57,16 +57,20 @@ const SPECIAL_TEXT = {
 const TABLETOP_TEXT = {
   shortcut: 'Grants your main faction bonus even below its threshold, after shields. Requires positive power. Adds no base power. Threshold rules only.',
   chameleon: 'Choose Critter, Robot or Dragon as your main faction before battle. Its bonus and shield vulnerability apply to your whole hand. Adds no stats or base power.',
-  bite: 'Adds 1 power, no stats needed.',
+  bite: (card) => `Adds ${card.tabletop === 'abilities-main' ? 2 : 1} power, no stats needed.`,
   double_dmg: 'Doubles your main faction bonus after shields. Works with any faction. Copies stack: *2, *4, *8. Threshold rules only.',
-  devour: '2 power per Dragon stat. You may choose Dragon as your main damage type.',
+  devour: (card) => card.tabletop === 'abilities-main'
+    ? '2 power per Dragon stat, like Dragon Ultimate.'
+    : '2 power per Dragon stat. You may choose Dragon as your main damage type.',
   // Shield costs differ per rule set; the card carries its rules.
   shield2: (card) => {
     const cost = card.tabletop === 'abilities-main' ? MAIN_ABILITY_SHIELD_COST : TABLETOP_SHIELD_COST
-    return `One shield. Reduces enemy Critter power by ${cost.critter}, Robot by ${cost.robot}, Dragon by ${cost.dragon}, before bonuses.`
+    return `One shield. Reduces enemy Critter power by ${cost.critter}, Robot by ${cost.robot}, Dragon by ${cost.dragon}, ${card.tabletop === 'abilities-main' ? 'after all bonuses and effects' : 'before bonuses'}.`
   },
   shield_is_dmg: 'Adds 1 power per shield in your hand. Your shields still block.',
-  one_off_each: 'Robot power = Critter * Robot * Dragon stats. Counts as a Robot attack if it deals damage.',
+  one_off_each: (card) => card.tabletop === 'abilities-main'
+    ? 'Neutral power = Critter * Robot * Dragon stats. Does not count as a Robot attack for Perfect Balance. Choose among tied main factions; with no typed damage, choose any faction.'
+    : 'Robot power = Critter * Robot * Dragon stats. Counts as a Robot attack if it deals damage.',
   any_off_each: 'Power = Critter + Robot + Dragon stats.',
 }
 

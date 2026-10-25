@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import './HelpSheet.css'
 import Sheet from './Sheet'
 import CardVisual from '../card/CardVisual'
@@ -7,6 +7,7 @@ import { useCardInspect } from './inspectContext'
 import { Crown } from './AbilityCards'
 import { GameIcon, SvgIcon } from '../ui/GameIcon'
 import { getCoreCards } from '../../game/cards'
+import { getRulesText } from './rulesText'
 import { TABLETOP_THRESHOLDS, MAIN_ABILITY_RULES, PERFECT_BALANCE_BONUS, TABLETOP_SHIELD_COST, MAIN_ABILITY_SHIELD_COST, toTabletopCard } from '../../game/tabletop'
 
 const ROUNDS = [1, 2, 3, 4, 5, 6]
@@ -62,7 +63,7 @@ const ABILITY_LANES = [
         <span className="help__chip help__chip--bonus">+{PERFECT_BALANCE_BONUS} <GameIcon name="damage" /></span>
       </>
     ),
-    note: 'As many Robot stats as Robot attacks (at least one each), added after shields. Robot Ultimate counts as two attacks; Critter * Robot * Dragon counts as one if it deals damage.',
+    note: 'As many Robot stats as Robot attack units (at least one each), added before shields. Robot Ultimate counts as two attacks. One of Each is neutral and does not count.',
   },
   {
     cls: 'dragon',
@@ -74,7 +75,7 @@ const ABILITY_LANES = [
         <span className="help__chip help__chip--dragon">+ <GameIcon name="dragon" /></span>
       </>
     ),
-    note: `${MAIN_ABILITY_RULES.overwhelmingAt}+ Dragon power before shields adds one Dragon stat. Recalculate all attacks once.`,
+    note: `With Dragon as main faction, ${MAIN_ABILITY_RULES.overwhelmingAt}+ total power before bonuses and shields adds one Dragon stat. Include neutral and other-faction power. Recalculate attacks once; keep the original faction choices.`,
   },
 ]
 
@@ -141,14 +142,14 @@ function AbilitiesMainHelp({ rules }) {
       <section className="help__block">
         <div className="help__equation help__equation--score">
           <span className="help__term"><span className="help__chip help__chip--damage"><GameIcon name="damage" /></span><small>power</small></span>
-          <span className="help__op">−</span>
-          <span className="help__term"><span className="help__chip help__chip--shield"><GameIcon name="shield" /></span><small>enemy shields</small></span>
           <span className="help__op">+</span>
           <span className="help__term"><span className="help__chip help__chip--bonus">+{PERFECT_BALANCE_BONUS}</span><small>balance</small></span>
+          <span className="help__op">−</span>
+          <span className="help__term"><span className="help__chip help__chip--shield"><GameIcon name="shield" /></span><small>enemy shields</small></span>
           <span className="help__op">=</span>
           <span className="help__term"><span className="help__chip help__chip--score"><GameIcon name="star" /></span><small>score</small></span>
         </div>
-        <p className="help__caption">Higher score wins. Power stops at zero. Only Perfect Balance adds score.</p>
+        <p className="help__caption">Apply effects and bonuses, then enemy shields. Score stops at zero. Each enemy shield removes {MAIN_ABILITY_SHIELD_COST.critter} Critter power, {MAIN_ABILITY_SHIELD_COST.robot} Robot power or {MAIN_ABILITY_SHIELD_COST.dragon} Dragon power.</p>
       </section>
 
       <section className="help__block">
@@ -163,7 +164,7 @@ function AbilitiesMainHelp({ rules }) {
             </div>
           ))}
         </div>
-        <p className="help__caption">Your largest faction contribution is your main faction: it sets the shield cost and the ability. If tied, tap a highlighted card before battle. Neutral-only power counts as Robot.</p>
+        <p className="help__caption">Your largest typed damage contribution sets your main faction, shield cost and ability. If tied, tap a highlighted card and choose among tied factions. With no typed damage, choose any faction, even at zero power. One of Each deals neutral damage.</p>
       </section>
 
       <SpecialCards rules={rules} />
@@ -172,11 +173,31 @@ function AbilitiesMainHelp({ rules }) {
 }
 
 export default function HelpSheet({ open, onClose, tabletop = false }) {
+  // Separate state per rules screen, including when changing mode while help is open.
+  return <RulesHelp key={`${open}-${tabletop}`} open={open} onClose={onClose} tabletop={tabletop} />
+}
+
+function RulesHelp({ open, onClose, tabletop }) {
+  const [copyStatus, setCopyStatus] = useState('')
+  const rulesText = useMemo(() => getRulesText(tabletop), [tabletop])
+  async function copyRules() {
+    try {
+      await navigator.clipboard.writeText(rulesText)
+      setCopyStatus('Copied!')
+    } catch {
+      setCopyStatus('Select and copy the rules below.')
+    }
+  }
   const abilitiesMain = tabletop === 'abilities-main'
   const shieldCosts = abilitiesMain ? MAIN_ABILITY_SHIELD_COST : TABLETOP_SHIELD_COST
   return (
     <Sheet open={open} onClose={onClose} title={<SvgIcon name="help" />}>
       <div className="help">
+        <div className="help__copy">
+          <button type="button" className="ui-button" onClick={copyRules}>Copy rules</button>
+          <span role="status">{copyStatus}</span>
+        </div>
+        {copyStatus === 'Select and copy the rules below.' ? <textarea aria-label="Rules to copy" readOnly value={rulesText} onFocus={(event) => event.target.select()} rows={10} /> : null}
         {abilitiesMain ? <AbilitiesMainHelp rules={tabletop} /> : tabletop ? <section className="help__block help__facts">
           <div className="help__fact"><GameIcon name="damage" /><span>Each ordinary attack gives 1 power per matching stat. Add all attacks.</span></div>
           <div className="help__fact"><GameIcon name="star" /><span>Your largest class contribution is your main damage type. If tied, tap a highlighted card before battle. Neutral-only power uses Robot.</span></div>

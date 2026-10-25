@@ -1184,11 +1184,13 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     requestOpponentSearchAction(game, settings.opponentAi).then((choice) => {
       if (cancelled || !choice?.uid) return
       dispatch({ type: 'SET_OPPONENT_DRAFT_PICK', uid: choice.uid, decisionKey: opponentDecisionKey })
+    }).catch(() => {
+      if (!cancelled) setAiFeedback({ key: opponentDecisionKey, error: 'Draft decision could not finish. Please retry.' })
     })
     return () => { cancelled = true }
   // The decision key changes exactly when a new decision starts.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [awaitingSearchDraftPick, opponentDecisionKey])
+  }, [awaitingSearchDraftPick, opponentDecisionKey, aiRetry])
 
   // Discard responses start only after the human submits the matching pass.
   useEffect(() => {
@@ -1248,6 +1250,8 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
       timeoutId = window.setTimeout(() => {
         if (!cancelled) dispatch({ type: 'START_BATTLE', opponentPreparation, decisionKey: opponentSearchKey })
       }, remainingMs)
+    }).catch(() => {
+      if (!cancelled) setAiFeedback({ key: opponentSearchKey, error: 'Preparation could not finish. Please retry.' })
     })
     return () => {
       cancelled = true
@@ -1255,7 +1259,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     }
   // The search key changes exactly when a new preparation search starts.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [online, opponentSearchKey])
+  }, [online, opponentSearchKey, aiRetry])
 
   useDraftFlowEffects({
     game: online ? { ...game, mode: 'network-managed' } : game,
@@ -1277,7 +1281,8 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
 
   return {
     rawSession: session,
-    opponentAiFeedback: awaitingDiscardDecision && aiFeedback?.key === opponentDecisionKey ? aiFeedback : null,
+    opponentAiFeedback: aiFeedback?.error && [opponentDecisionKey, opponentSearchKey].includes(aiFeedback.key)
+      ? aiFeedback : awaitingDiscardDecision && aiFeedback?.key === opponentDecisionKey ? aiFeedback : null,
     retryOpponentAi: () => { setAiFeedback(null); setAiRetry((count) => count + 1) },
     online,
     onlineBlocked,

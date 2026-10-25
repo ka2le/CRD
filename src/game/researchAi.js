@@ -1,21 +1,25 @@
 // Canonical NEW research/data policy. Historical baseline helpers and archived
 // replay protocols retain their old meanings; callers opt into this named policy.
 import { searchDavidDecision, DAVID_BOT_OPTIONS, DAVID_BOT_VERSION, DAVID_BOT_IMPLEMENTATION } from './davidBot.js'
-import { searchDecision, searchPreparationDecision, SEARCH_AI_VERSION } from './searchAi.js'
-import { BOT_SEARCH_PROFILES } from './opponentAi.js'
+import { chooseDanDecision, DAN_BOT_VERSION, DAN_SEARCH_OPTIONS, DAN_PAIR_TABLE_VERSION, DAN_PAIR_SOURCE_SHA256, DAN_ROUND3_MODEL_VERSION, DAN_ROUND3_CHECKPOINT_SHA256 } from './danBot.js'
+import { chooseFastPreparation, FAST_PREPARATION_VERSION, FAST_PREPARATION_PROFILE } from './fastPreparation.js'
 import priorMetadata from '../../data/david-opponents.meta.json' with { type: 'json' }
 
 export function getResearchAiProfile(mode) {
-  return { id: mode === 'five-hand-discard' ? 'david' : 'search',
+  return { id: mode === 'five-hand-discard' ? 'david' : 'dan',
     ...(mode === 'five-hand-discard' ? { opponentPoolSha256: priorMetadata.publicPoolSha256, implementation: DAVID_BOT_IMPLEMENTATION } : {}),
-    decisionVersion: mode === 'five-hand-discard' ? DAVID_BOT_VERSION : SEARCH_AI_VERSION,
-    decision: mode === 'five-hand-discard' ? DAVID_BOT_OPTIONS : BOT_SEARCH_PROFILES.search.decision,
-    preparationVersion: SEARCH_AI_VERSION, preparation: BOT_SEARCH_PROFILES.search.preparation }
+    decisionVersion: mode === 'five-hand-discard' ? DAVID_BOT_VERSION : DAN_BOT_VERSION,
+    decision: mode === 'five-hand-discard' ? DAVID_BOT_OPTIONS : { opening: 'frozen-single-card-ranking',
+      round2: { policy: 'own-pair-ranking', version: DAN_PAIR_TABLE_VERSION, sourceTableSha256: DAN_PAIR_SOURCE_SHA256 },
+      round3: { policy: 'frozen-final-outcome-net-maximin', modelVersion: DAN_ROUND3_MODEL_VERSION,
+        checkpointSha256: DAN_ROUND3_CHECKPOINT_SHA256, comparisons: [4, 20] },
+      laterRounds: [4, 5], later: DAN_SEARCH_OPTIONS },
+    preparationVersion: FAST_PREPARATION_VERSION, preparation: FAST_PREPARATION_PROFILE,
+    comparisonOpponent: 'search (SvenBot, unchanged historical profile)' }
 }
 
 export async function chooseResearchAiDecision(state, { seed, onProgress } = {}) {
-  if (state.preparation) return searchPreparationDecision(state.preparation, state.game, state.actor,
-    { ...BOT_SEARCH_PROFILES.search.preparation, seed })
+  if (state.preparation) return chooseFastPreparation(state)
   if (state.game.mode === 'five-hand-discard') return searchDavidDecision(state, { onProgress })
-  return searchDecision(state.game, state.actor, { ...BOT_SEARCH_PROFILES.search.decision, seed })
+  return chooseDanDecision(state.game, state.actor, { seed })
 }

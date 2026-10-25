@@ -1,0 +1,2186 @@
+{
+  "version": "dan-round2-updated-scalar-mean5fold-v1",
+  "sourceExperiment": "crd-dan-scalar-round2-games-20261024-v1",
+  "sourceTableSha256": "b8d10cd3b8223dec8d1e0a963c1b528a3a1f181d0cbfc3d3f6ed16a08b0e8d27",
+  "semantics": "Frozen mean of five training-fold fits; relative log-odds strength, not a direct win probability. No tags or denial.",
+  "trainingGames": 18824,
+  "pairs": [
+    {
+      "cards": [
+        "bite",
+        "bite"
+      ],
+      "score": 0.07151789198661743
+    },
+    {
+      "cards": [
+        "bite",
+        "copy_card_in_hand"
+      ],
+      "score": 0.5652583111475579
+    },
+    {
+      "cards": [
+        "bite",
+        "critter1"
+      ],
+      "score": -0.45086936825727975
+    },
+    {
+      "cards": [
+        "bite",
+        "devour"
+      ],
+      "score": 0.09595739321965344
+    },
+    {
+      "cards": [
+        "bite",
+        "dragon1"
+      ],
+      "score": -0.6759585995630871
+    },
+    {
+      "cards": [
+        "bite",
+        "dragon2"
+      ],
+      "score": 0.1021772356646978
+    },
+    {
+      "cards": [
+        "bite",
+        "dragon_rabbit"
+      ],
+      "score": -0.3874993904053915
+    },
+    {
+      "cards": [
+        "bite",
+        "dragon_ulti"
+      ],
+      "score": 0.1463462680363797
+    },
+    {
+      "cards": [
+        "bite",
+        "dragons_breath"
+      ],
+      "score": -0.4586776821029216
+    },
+    {
+      "cards": [
+        "bite",
+        "draw_2_extra"
+      ],
+      "score": 0.134265911077924
+    },
+    {
+      "cards": [
+        "bite",
+        "draw_all_new_1"
+      ],
+      "score": -0.4307388681043848
+    },
+    {
+      "cards": [
+        "bite",
+        "joker"
+      ],
+      "score": 0.3337877717554637
+    },
+    {
+      "cards": [
+        "bite",
+        "murder_rabbit"
+      ],
+      "score": 0.5039564103126348
+    },
+    {
+      "cards": [
+        "bite",
+        "one_off_each"
+      ],
+      "score": -0.1655224591015311
+    },
+    {
+      "cards": [
+        "bite",
+        "rabbit2"
+      ],
+      "score": -0.13494586384714405
+    },
+    {
+      "cards": [
+        "bite",
+        "recycle_card"
+      ],
+      "score": 0.6094830702569364
+    },
+    {
+      "cards": [
+        "bite",
+        "robot1"
+      ],
+      "score": -0.23651652204978846
+    },
+    {
+      "cards": [
+        "bite",
+        "robot2"
+      ],
+      "score": -0.15439406381177243
+    },
+    {
+      "cards": [
+        "bite",
+        "robot_attack"
+      ],
+      "score": -0.18255747227573707
+    },
+    {
+      "cards": [
+        "bite",
+        "robot_critter"
+      ],
+      "score": -0.18741203261807457
+    },
+    {
+      "cards": [
+        "bite",
+        "robot_dragon"
+      ],
+      "score": 0.13226669089967283
+    },
+    {
+      "cards": [
+        "bite",
+        "robot_ulti"
+      ],
+      "score": 0.3319686295915769
+    },
+    {
+      "cards": [
+        "bite",
+        "shield2"
+      ],
+      "score": -0.3161124364649811
+    },
+    {
+      "cards": [
+        "bite",
+        "shield_is_dmg"
+      ],
+      "score": -1.1348317381021613
+    },
+    {
+      "cards": [
+        "bite",
+        "swarm"
+      ],
+      "score": -0.4484844114821449
+    },
+    {
+      "cards": [
+        "copy_card_in_hand",
+        "critter1"
+      ],
+      "score": 0.02641844932406709
+    },
+    {
+      "cards": [
+        "copy_card_in_hand",
+        "devour"
+      ],
+      "score": 1.0231570521618651
+    },
+    {
+      "cards": [
+        "copy_card_in_hand",
+        "dragon1"
+      ],
+      "score": 0.10094768371169013
+    },
+    {
+      "cards": [
+        "copy_card_in_hand",
+        "dragon2"
+      ],
+      "score": 0.7896915540363358
+    },
+    {
+      "cards": [
+        "copy_card_in_hand",
+        "dragon_rabbit"
+      ],
+      "score": 0.5490709333986162
+    },
+    {
+      "cards": [
+        "copy_card_in_hand",
+        "dragon_ulti"
+      ],
+      "score": 0.7643925304614616
+    },
+    {
+      "cards": [
+        "copy_card_in_hand",
+        "dragons_breath"
+      ],
+      "score": -0.0029498958799173414
+    },
+    {
+      "cards": [
+        "copy_card_in_hand",
+        "draw_2_extra"
+      ],
+      "score": 1.0215992009275006
+    },
+    {
+      "cards": [
+        "copy_card_in_hand",
+        "draw_all_new_1"
+      ],
+      "score": -0.1417689062741066
+    },
+    {
+      "cards": [
+        "copy_card_in_hand",
+        "joker"
+      ],
+      "score": 0.7602378005608295
+    },
+    {
+      "cards": [
+        "copy_card_in_hand",
+        "murder_rabbit"
+      ],
+      "score": 0.8897385912154129
+    },
+    {
+      "cards": [
+        "copy_card_in_hand",
+        "one_off_each"
+      ],
+      "score": 0.5222644828484103
+    },
+    {
+      "cards": [
+        "copy_card_in_hand",
+        "rabbit2"
+      ],
+      "score": 0.7664009299297164
+    },
+    {
+      "cards": [
+        "copy_card_in_hand",
+        "recycle_card"
+      ],
+      "score": 0.39424778163563723
+    },
+    {
+      "cards": [
+        "copy_card_in_hand",
+        "robot1"
+      ],
+      "score": -0.2601741168923495
+    },
+    {
+      "cards": [
+        "copy_card_in_hand",
+        "robot2"
+      ],
+      "score": 0.590104401849496
+    },
+    {
+      "cards": [
+        "copy_card_in_hand",
+        "robot_attack"
+      ],
+      "score": 0.30488283784774683
+    },
+    {
+      "cards": [
+        "copy_card_in_hand",
+        "robot_critter"
+      ],
+      "score": 0.3639252306963128
+    },
+    {
+      "cards": [
+        "copy_card_in_hand",
+        "robot_dragon"
+      ],
+      "score": 0.5989475572738818
+    },
+    {
+      "cards": [
+        "copy_card_in_hand",
+        "robot_ulti"
+      ],
+      "score": 0.5470746925246809
+    },
+    {
+      "cards": [
+        "copy_card_in_hand",
+        "shield2"
+      ],
+      "score": -0.5168427312544401
+    },
+    {
+      "cards": [
+        "copy_card_in_hand",
+        "shield_is_dmg"
+      ],
+      "score": -1.1119429862618821
+    },
+    {
+      "cards": [
+        "copy_card_in_hand",
+        "swarm"
+      ],
+      "score": 0.35395709814121645
+    },
+    {
+      "cards": [
+        "critter1",
+        "critter1"
+      ],
+      "score": -0.8601604379821011
+    },
+    {
+      "cards": [
+        "critter1",
+        "devour"
+      ],
+      "score": -0.322810446903961
+    },
+    {
+      "cards": [
+        "critter1",
+        "dragon1"
+      ],
+      "score": -0.8578903570022741
+    },
+    {
+      "cards": [
+        "critter1",
+        "dragon2"
+      ],
+      "score": -0.39956642096225203
+    },
+    {
+      "cards": [
+        "critter1",
+        "dragon_rabbit"
+      ],
+      "score": -0.37830177174291657
+    },
+    {
+      "cards": [
+        "critter1",
+        "dragon_ulti"
+      ],
+      "score": -0.44886082774703395
+    },
+    {
+      "cards": [
+        "critter1",
+        "dragons_breath"
+      ],
+      "score": -0.7572111187331897
+    },
+    {
+      "cards": [
+        "critter1",
+        "draw_2_extra"
+      ],
+      "score": -0.7638188325942452
+    },
+    {
+      "cards": [
+        "critter1",
+        "draw_all_new_1"
+      ],
+      "score": -0.7207765824074327
+    },
+    {
+      "cards": [
+        "critter1",
+        "joker"
+      ],
+      "score": -0.1988619792328561
+    },
+    {
+      "cards": [
+        "critter1",
+        "murder_rabbit"
+      ],
+      "score": 0.4062184899498561
+    },
+    {
+      "cards": [
+        "critter1",
+        "one_off_each"
+      ],
+      "score": -0.2776934264687497
+    },
+    {
+      "cards": [
+        "critter1",
+        "rabbit2"
+      ],
+      "score": -0.2758618189691644
+    },
+    {
+      "cards": [
+        "critter1",
+        "recycle_card"
+      ],
+      "score": 0.02295621939405379
+    },
+    {
+      "cards": [
+        "critter1",
+        "robot1"
+      ],
+      "score": -0.737111139521837
+    },
+    {
+      "cards": [
+        "critter1",
+        "robot2"
+      ],
+      "score": -0.5857407565438463
+    },
+    {
+      "cards": [
+        "critter1",
+        "robot_attack"
+      ],
+      "score": -1.1712607894039426
+    },
+    {
+      "cards": [
+        "critter1",
+        "robot_critter"
+      ],
+      "score": -0.6077943353761479
+    },
+    {
+      "cards": [
+        "critter1",
+        "robot_dragon"
+      ],
+      "score": -0.4730977032753313
+    },
+    {
+      "cards": [
+        "critter1",
+        "robot_ulti"
+      ],
+      "score": -0.07324971909288924
+    },
+    {
+      "cards": [
+        "critter1",
+        "shield2"
+      ],
+      "score": -0.6442254033920382
+    },
+    {
+      "cards": [
+        "critter1",
+        "shield_is_dmg"
+      ],
+      "score": -1.5955861473405655
+    },
+    {
+      "cards": [
+        "critter1",
+        "swarm"
+      ],
+      "score": -0.5936268492695065
+    },
+    {
+      "cards": [
+        "devour",
+        "dragon1"
+      ],
+      "score": 0.7441122380624449
+    },
+    {
+      "cards": [
+        "devour",
+        "dragon2"
+      ],
+      "score": 1.9963344372773546
+    },
+    {
+      "cards": [
+        "devour",
+        "dragon_rabbit"
+      ],
+      "score": 0.8197913317191629
+    },
+    {
+      "cards": [
+        "devour",
+        "dragon_ulti"
+      ],
+      "score": 0.6570364890238507
+    },
+    {
+      "cards": [
+        "devour",
+        "dragons_breath"
+      ],
+      "score": 0.14889801482405166
+    },
+    {
+      "cards": [
+        "devour",
+        "draw_2_extra"
+      ],
+      "score": 0.38014120418047515
+    },
+    {
+      "cards": [
+        "devour",
+        "draw_all_new_1"
+      ],
+      "score": -0.273125073749295
+    },
+    {
+      "cards": [
+        "devour",
+        "joker"
+      ],
+      "score": 0.9869092185891001
+    },
+    {
+      "cards": [
+        "devour",
+        "murder_rabbit"
+      ],
+      "score": 0.7230284768393114
+    },
+    {
+      "cards": [
+        "devour",
+        "one_off_each"
+      ],
+      "score": -0.022313359616851908
+    },
+    {
+      "cards": [
+        "devour",
+        "rabbit2"
+      ],
+      "score": -0.12297471244588068
+    },
+    {
+      "cards": [
+        "devour",
+        "recycle_card"
+      ],
+      "score": 0.15265856613116027
+    },
+    {
+      "cards": [
+        "devour",
+        "robot1"
+      ],
+      "score": -0.5028208182450958
+    },
+    {
+      "cards": [
+        "devour",
+        "robot2"
+      ],
+      "score": -0.015572334451194991
+    },
+    {
+      "cards": [
+        "devour",
+        "robot_attack"
+      ],
+      "score": -0.34764750421869506
+    },
+    {
+      "cards": [
+        "devour",
+        "robot_critter"
+      ],
+      "score": -0.05766245807589633
+    },
+    {
+      "cards": [
+        "devour",
+        "robot_dragon"
+      ],
+      "score": 0.6809142048458711
+    },
+    {
+      "cards": [
+        "devour",
+        "robot_ulti"
+      ],
+      "score": 0.3543651766738235
+    },
+    {
+      "cards": [
+        "devour",
+        "shield2"
+      ],
+      "score": -0.3961680118033414
+    },
+    {
+      "cards": [
+        "devour",
+        "shield_is_dmg"
+      ],
+      "score": -1.0065824706040558
+    },
+    {
+      "cards": [
+        "devour",
+        "swarm"
+      ],
+      "score": -0.364662232430365
+    },
+    {
+      "cards": [
+        "dragon1",
+        "dragon1"
+      ],
+      "score": -0.7632433750272569
+    },
+    {
+      "cards": [
+        "dragon1",
+        "dragon2"
+      ],
+      "score": -0.10421185476679448
+    },
+    {
+      "cards": [
+        "dragon1",
+        "dragon_rabbit"
+      ],
+      "score": -0.586750329374348
+    },
+    {
+      "cards": [
+        "dragon1",
+        "dragon_ulti"
+      ],
+      "score": 0.5676562529291279
+    },
+    {
+      "cards": [
+        "dragon1",
+        "dragons_breath"
+      ],
+      "score": -0.6301512873504324
+    },
+    {
+      "cards": [
+        "dragon1",
+        "draw_2_extra"
+      ],
+      "score": -0.13128702564539305
+    },
+    {
+      "cards": [
+        "dragon1",
+        "draw_all_new_1"
+      ],
+      "score": -0.8643001783302532
+    },
+    {
+      "cards": [
+        "dragon1",
+        "joker"
+      ],
+      "score": -0.08696304286382825
+    },
+    {
+      "cards": [
+        "dragon1",
+        "murder_rabbit"
+      ],
+      "score": -0.36567958650787613
+    },
+    {
+      "cards": [
+        "dragon1",
+        "one_off_each"
+      ],
+      "score": -0.49085701435691154
+    },
+    {
+      "cards": [
+        "dragon1",
+        "rabbit2"
+      ],
+      "score": -0.5788176289707017
+    },
+    {
+      "cards": [
+        "dragon1",
+        "recycle_card"
+      ],
+      "score": 0.22756078079526917
+    },
+    {
+      "cards": [
+        "dragon1",
+        "robot1"
+      ],
+      "score": -0.8549057557522821
+    },
+    {
+      "cards": [
+        "dragon1",
+        "robot2"
+      ],
+      "score": -0.562468029748733
+    },
+    {
+      "cards": [
+        "dragon1",
+        "robot_attack"
+      ],
+      "score": -0.9438740059918582
+    },
+    {
+      "cards": [
+        "dragon1",
+        "robot_critter"
+      ],
+      "score": -0.39909654099110226
+    },
+    {
+      "cards": [
+        "dragon1",
+        "robot_dragon"
+      ],
+      "score": -0.3690794560973819
+    },
+    {
+      "cards": [
+        "dragon1",
+        "robot_ulti"
+      ],
+      "score": -0.11816126614764372
+    },
+    {
+      "cards": [
+        "dragon1",
+        "shield2"
+      ],
+      "score": -1.0579990943029327
+    },
+    {
+      "cards": [
+        "dragon1",
+        "shield_is_dmg"
+      ],
+      "score": -1.5618650673290477
+    },
+    {
+      "cards": [
+        "dragon1",
+        "swarm"
+      ],
+      "score": -1.004845254104421
+    },
+    {
+      "cards": [
+        "dragon2",
+        "dragon_rabbit"
+      ],
+      "score": 0.17446546257971032
+    },
+    {
+      "cards": [
+        "dragon2",
+        "dragon_ulti"
+      ],
+      "score": 1.757151024257021
+    },
+    {
+      "cards": [
+        "dragon2",
+        "dragons_breath"
+      ],
+      "score": 0.5641073713914333
+    },
+    {
+      "cards": [
+        "dragon2",
+        "draw_2_extra"
+      ],
+      "score": 0.6168799083862496
+    },
+    {
+      "cards": [
+        "dragon2",
+        "draw_all_new_1"
+      ],
+      "score": -0.3077827268652695
+    },
+    {
+      "cards": [
+        "dragon2",
+        "joker"
+      ],
+      "score": 0.5236517481838492
+    },
+    {
+      "cards": [
+        "dragon2",
+        "murder_rabbit"
+      ],
+      "score": 0.47100849493617214
+    },
+    {
+      "cards": [
+        "dragon2",
+        "one_off_each"
+      ],
+      "score": 0.6074163660552202
+    },
+    {
+      "cards": [
+        "dragon2",
+        "rabbit2"
+      ],
+      "score": -0.026862463228604805
+    },
+    {
+      "cards": [
+        "dragon2",
+        "recycle_card"
+      ],
+      "score": 0.39796227728346023
+    },
+    {
+      "cards": [
+        "dragon2",
+        "robot1"
+      ],
+      "score": -0.2629305036606636
+    },
+    {
+      "cards": [
+        "dragon2",
+        "robot2"
+      ],
+      "score": 0.1301718023754266
+    },
+    {
+      "cards": [
+        "dragon2",
+        "robot_attack"
+      ],
+      "score": -0.38845962574333437
+    },
+    {
+      "cards": [
+        "dragon2",
+        "robot_critter"
+      ],
+      "score": -0.17649821799516235
+    },
+    {
+      "cards": [
+        "dragon2",
+        "robot_dragon"
+      ],
+      "score": 0.3199580036741664
+    },
+    {
+      "cards": [
+        "dragon2",
+        "robot_ulti"
+      ],
+      "score": 0.4275455467687288
+    },
+    {
+      "cards": [
+        "dragon2",
+        "shield2"
+      ],
+      "score": -0.4446310489699512
+    },
+    {
+      "cards": [
+        "dragon2",
+        "shield_is_dmg"
+      ],
+      "score": -1.2583782376074673
+    },
+    {
+      "cards": [
+        "dragon2",
+        "swarm"
+      ],
+      "score": -0.3202807996476926
+    },
+    {
+      "cards": [
+        "dragon_rabbit",
+        "dragon_rabbit"
+      ],
+      "score": -0.46995144569918024
+    },
+    {
+      "cards": [
+        "dragon_rabbit",
+        "dragon_ulti"
+      ],
+      "score": 0.9252370925816226
+    },
+    {
+      "cards": [
+        "dragon_rabbit",
+        "dragons_breath"
+      ],
+      "score": -0.2424277715885131
+    },
+    {
+      "cards": [
+        "dragon_rabbit",
+        "draw_2_extra"
+      ],
+      "score": 0.3075265316793776
+    },
+    {
+      "cards": [
+        "dragon_rabbit",
+        "draw_all_new_1"
+      ],
+      "score": -0.6944356357636172
+    },
+    {
+      "cards": [
+        "dragon_rabbit",
+        "joker"
+      ],
+      "score": 0.2915626446188453
+    },
+    {
+      "cards": [
+        "dragon_rabbit",
+        "murder_rabbit"
+      ],
+      "score": 0.7654789533012096
+    },
+    {
+      "cards": [
+        "dragon_rabbit",
+        "one_off_each"
+      ],
+      "score": 0.4841670841970751
+    },
+    {
+      "cards": [
+        "dragon_rabbit",
+        "rabbit2"
+      ],
+      "score": -0.08379362919346539
+    },
+    {
+      "cards": [
+        "dragon_rabbit",
+        "recycle_card"
+      ],
+      "score": 0.2946728313476621
+    },
+    {
+      "cards": [
+        "dragon_rabbit",
+        "robot1"
+      ],
+      "score": -0.641304612225322
+    },
+    {
+      "cards": [
+        "dragon_rabbit",
+        "robot2"
+      ],
+      "score": -0.20251909312385993
+    },
+    {
+      "cards": [
+        "dragon_rabbit",
+        "robot_attack"
+      ],
+      "score": -0.8760269711693807
+    },
+    {
+      "cards": [
+        "dragon_rabbit",
+        "robot_critter"
+      ],
+      "score": -0.2042373417106095
+    },
+    {
+      "cards": [
+        "dragon_rabbit",
+        "robot_dragon"
+      ],
+      "score": -0.13718225186211
+    },
+    {
+      "cards": [
+        "dragon_rabbit",
+        "robot_ulti"
+      ],
+      "score": -0.014148944889599835
+    },
+    {
+      "cards": [
+        "dragon_rabbit",
+        "shield2"
+      ],
+      "score": -1.2274594234893066
+    },
+    {
+      "cards": [
+        "dragon_rabbit",
+        "shield_is_dmg"
+      ],
+      "score": -1.362329315443328
+    },
+    {
+      "cards": [
+        "dragon_rabbit",
+        "swarm"
+      ],
+      "score": -0.19656196633659798
+    },
+    {
+      "cards": [
+        "dragon_ulti",
+        "dragons_breath"
+      ],
+      "score": 0.19632898387197964
+    },
+    {
+      "cards": [
+        "dragon_ulti",
+        "draw_2_extra"
+      ],
+      "score": 0.053206824356215154
+    },
+    {
+      "cards": [
+        "dragon_ulti",
+        "draw_all_new_1"
+      ],
+      "score": 0.15045984808627474
+    },
+    {
+      "cards": [
+        "dragon_ulti",
+        "joker"
+      ],
+      "score": 1.214820846800275
+    },
+    {
+      "cards": [
+        "dragon_ulti",
+        "murder_rabbit"
+      ],
+      "score": 1.0191066543805853
+    },
+    {
+      "cards": [
+        "dragon_ulti",
+        "one_off_each"
+      ],
+      "score": 0.013620305003574334
+    },
+    {
+      "cards": [
+        "dragon_ulti",
+        "rabbit2"
+      ],
+      "score": -0.3265562266521944
+    },
+    {
+      "cards": [
+        "dragon_ulti",
+        "recycle_card"
+      ],
+      "score": 0.678355538593535
+    },
+    {
+      "cards": [
+        "dragon_ulti",
+        "robot1"
+      ],
+      "score": -0.428260323678504
+    },
+    {
+      "cards": [
+        "dragon_ulti",
+        "robot2"
+      ],
+      "score": 0.13098705887839304
+    },
+    {
+      "cards": [
+        "dragon_ulti",
+        "robot_attack"
+      ],
+      "score": -0.26533911090724305
+    },
+    {
+      "cards": [
+        "dragon_ulti",
+        "robot_critter"
+      ],
+      "score": -0.1321179586954706
+    },
+    {
+      "cards": [
+        "dragon_ulti",
+        "robot_dragon"
+      ],
+      "score": 1.165275315304084
+    },
+    {
+      "cards": [
+        "dragon_ulti",
+        "robot_ulti"
+      ],
+      "score": 0.45703245670485426
+    },
+    {
+      "cards": [
+        "dragon_ulti",
+        "shield2"
+      ],
+      "score": -0.1622155475374124
+    },
+    {
+      "cards": [
+        "dragon_ulti",
+        "shield_is_dmg"
+      ],
+      "score": -0.8787196194671519
+    },
+    {
+      "cards": [
+        "dragon_ulti",
+        "swarm"
+      ],
+      "score": -0.1740857553308437
+    },
+    {
+      "cards": [
+        "dragons_breath",
+        "dragons_breath"
+      ],
+      "score": -0.6881739503958527
+    },
+    {
+      "cards": [
+        "dragons_breath",
+        "draw_2_extra"
+      ],
+      "score": -0.3694628317569063
+    },
+    {
+      "cards": [
+        "dragons_breath",
+        "draw_all_new_1"
+      ],
+      "score": -0.9425497632035577
+    },
+    {
+      "cards": [
+        "dragons_breath",
+        "joker"
+      ],
+      "score": 0.26958004722797146
+    },
+    {
+      "cards": [
+        "dragons_breath",
+        "murder_rabbit"
+      ],
+      "score": -0.22306735930822813
+    },
+    {
+      "cards": [
+        "dragons_breath",
+        "one_off_each"
+      ],
+      "score": -0.3710739728686886
+    },
+    {
+      "cards": [
+        "dragons_breath",
+        "rabbit2"
+      ],
+      "score": -0.7120519962085594
+    },
+    {
+      "cards": [
+        "dragons_breath",
+        "recycle_card"
+      ],
+      "score": 0.19376591821213748
+    },
+    {
+      "cards": [
+        "dragons_breath",
+        "robot1"
+      ],
+      "score": -0.8970845533811835
+    },
+    {
+      "cards": [
+        "dragons_breath",
+        "robot2"
+      ],
+      "score": -0.809144890350218
+    },
+    {
+      "cards": [
+        "dragons_breath",
+        "robot_attack"
+      ],
+      "score": -0.453118723590354
+    },
+    {
+      "cards": [
+        "dragons_breath",
+        "robot_critter"
+      ],
+      "score": -0.958527237282409
+    },
+    {
+      "cards": [
+        "dragons_breath",
+        "robot_dragon"
+      ],
+      "score": -0.26255380047014143
+    },
+    {
+      "cards": [
+        "dragons_breath",
+        "robot_ulti"
+      ],
+      "score": -0.13732499268828943
+    },
+    {
+      "cards": [
+        "dragons_breath",
+        "shield2"
+      ],
+      "score": -0.6910963869622341
+    },
+    {
+      "cards": [
+        "dragons_breath",
+        "shield_is_dmg"
+      ],
+      "score": -1.584955650452546
+    },
+    {
+      "cards": [
+        "dragons_breath",
+        "swarm"
+      ],
+      "score": -0.9196856283447703
+    },
+    {
+      "cards": [
+        "draw_2_extra",
+        "draw_all_new_1"
+      ],
+      "score": -0.23103350540417086
+    },
+    {
+      "cards": [
+        "draw_2_extra",
+        "joker"
+      ],
+      "score": 0.7609263778732018
+    },
+    {
+      "cards": [
+        "draw_2_extra",
+        "murder_rabbit"
+      ],
+      "score": 0.3910362997196801
+    },
+    {
+      "cards": [
+        "draw_2_extra",
+        "one_off_each"
+      ],
+      "score": 0.07528219416188839
+    },
+    {
+      "cards": [
+        "draw_2_extra",
+        "rabbit2"
+      ],
+      "score": 0.5109386981327412
+    },
+    {
+      "cards": [
+        "draw_2_extra",
+        "recycle_card"
+      ],
+      "score": 0.6560999415874978
+    },
+    {
+      "cards": [
+        "draw_2_extra",
+        "robot1"
+      ],
+      "score": -0.6838657609148076
+    },
+    {
+      "cards": [
+        "draw_2_extra",
+        "robot2"
+      ],
+      "score": -0.14560419040240774
+    },
+    {
+      "cards": [
+        "draw_2_extra",
+        "robot_attack"
+      ],
+      "score": -0.04189926596311516
+    },
+    {
+      "cards": [
+        "draw_2_extra",
+        "robot_critter"
+      ],
+      "score": -0.13673797977849006
+    },
+    {
+      "cards": [
+        "draw_2_extra",
+        "robot_dragon"
+      ],
+      "score": 0.2406941040215874
+    },
+    {
+      "cards": [
+        "draw_2_extra",
+        "robot_ulti"
+      ],
+      "score": 0.09589409828626147
+    },
+    {
+      "cards": [
+        "draw_2_extra",
+        "shield2"
+      ],
+      "score": -0.7096210507451662
+    },
+    {
+      "cards": [
+        "draw_2_extra",
+        "shield_is_dmg"
+      ],
+      "score": -1.197196378620614
+    },
+    {
+      "cards": [
+        "draw_2_extra",
+        "swarm"
+      ],
+      "score": 0.07552157472548432
+    },
+    {
+      "cards": [
+        "draw_all_new_1",
+        "joker"
+      ],
+      "score": -0.5939097730974289
+    },
+    {
+      "cards": [
+        "draw_all_new_1",
+        "murder_rabbit"
+      ],
+      "score": -0.25353772462317814
+    },
+    {
+      "cards": [
+        "draw_all_new_1",
+        "one_off_each"
+      ],
+      "score": -0.2858555519473548
+    },
+    {
+      "cards": [
+        "draw_all_new_1",
+        "rabbit2"
+      ],
+      "score": -0.4555888691799769
+    },
+    {
+      "cards": [
+        "draw_all_new_1",
+        "recycle_card"
+      ],
+      "score": -0.09094831911346267
+    },
+    {
+      "cards": [
+        "draw_all_new_1",
+        "robot1"
+      ],
+      "score": -0.38040900579790693
+    },
+    {
+      "cards": [
+        "draw_all_new_1",
+        "robot2"
+      ],
+      "score": -0.39988036453953435
+    },
+    {
+      "cards": [
+        "draw_all_new_1",
+        "robot_attack"
+      ],
+      "score": -0.5966895890145327
+    },
+    {
+      "cards": [
+        "draw_all_new_1",
+        "robot_critter"
+      ],
+      "score": -0.3619354951354792
+    },
+    {
+      "cards": [
+        "draw_all_new_1",
+        "robot_dragon"
+      ],
+      "score": -0.060813027380600196
+    },
+    {
+      "cards": [
+        "draw_all_new_1",
+        "robot_ulti"
+      ],
+      "score": -0.16606166308078898
+    },
+    {
+      "cards": [
+        "draw_all_new_1",
+        "shield2"
+      ],
+      "score": -1.1305745994083702
+    },
+    {
+      "cards": [
+        "draw_all_new_1",
+        "shield_is_dmg"
+      ],
+      "score": -1.8467481143569857
+    },
+    {
+      "cards": [
+        "draw_all_new_1",
+        "swarm"
+      ],
+      "score": -0.5557036746359391
+    },
+    {
+      "cards": [
+        "joker",
+        "murder_rabbit"
+      ],
+      "score": 0.9642301605682099
+    },
+    {
+      "cards": [
+        "joker",
+        "one_off_each"
+      ],
+      "score": 1.70263109124004
+    },
+    {
+      "cards": [
+        "joker",
+        "rabbit2"
+      ],
+      "score": 0.5848871339881496
+    },
+    {
+      "cards": [
+        "joker",
+        "recycle_card"
+      ],
+      "score": 0.936854943360448
+    },
+    {
+      "cards": [
+        "joker",
+        "robot1"
+      ],
+      "score": -0.30467470489226983
+    },
+    {
+      "cards": [
+        "joker",
+        "robot2"
+      ],
+      "score": -0.24641369457029064
+    },
+    {
+      "cards": [
+        "joker",
+        "robot_attack"
+      ],
+      "score": 0.21793418232056158
+    },
+    {
+      "cards": [
+        "joker",
+        "robot_critter"
+      ],
+      "score": 0.13211215893767483
+    },
+    {
+      "cards": [
+        "joker",
+        "robot_dragon"
+      ],
+      "score": 0.7620812700967549
+    },
+    {
+      "cards": [
+        "joker",
+        "robot_ulti"
+      ],
+      "score": 0.38842904541650014
+    },
+    {
+      "cards": [
+        "joker",
+        "shield2"
+      ],
+      "score": -0.24491098938363498
+    },
+    {
+      "cards": [
+        "joker",
+        "shield_is_dmg"
+      ],
+      "score": -1.0729012706825458
+    },
+    {
+      "cards": [
+        "joker",
+        "swarm"
+      ],
+      "score": 0.09086635525243583
+    },
+    {
+      "cards": [
+        "murder_rabbit",
+        "one_off_each"
+      ],
+      "score": 0.158359551094605
+    },
+    {
+      "cards": [
+        "murder_rabbit",
+        "rabbit2"
+      ],
+      "score": 1.2060587292818632
+    },
+    {
+      "cards": [
+        "murder_rabbit",
+        "recycle_card"
+      ],
+      "score": 0.8912134665786385
+    },
+    {
+      "cards": [
+        "murder_rabbit",
+        "robot1"
+      ],
+      "score": -0.44875811140803856
+    },
+    {
+      "cards": [
+        "murder_rabbit",
+        "robot2"
+      ],
+      "score": 0.2099553020551335
+    },
+    {
+      "cards": [
+        "murder_rabbit",
+        "robot_attack"
+      ],
+      "score": -0.09020958560972034
+    },
+    {
+      "cards": [
+        "murder_rabbit",
+        "robot_critter"
+      ],
+      "score": 0.9841219258287247
+    },
+    {
+      "cards": [
+        "murder_rabbit",
+        "robot_dragon"
+      ],
+      "score": 0.5336962313919803
+    },
+    {
+      "cards": [
+        "murder_rabbit",
+        "robot_ulti"
+      ],
+      "score": 0.7203586796630903
+    },
+    {
+      "cards": [
+        "murder_rabbit",
+        "shield2"
+      ],
+      "score": 0.04088679624789751
+    },
+    {
+      "cards": [
+        "murder_rabbit",
+        "shield_is_dmg"
+      ],
+      "score": -0.7544756771849801
+    },
+    {
+      "cards": [
+        "murder_rabbit",
+        "swarm"
+      ],
+      "score": 0.27133504073779124
+    },
+    {
+      "cards": [
+        "one_off_each",
+        "rabbit2"
+      ],
+      "score": 0.2631214118638854
+    },
+    {
+      "cards": [
+        "one_off_each",
+        "recycle_card"
+      ],
+      "score": 0.5927785747352409
+    },
+    {
+      "cards": [
+        "one_off_each",
+        "robot1"
+      ],
+      "score": -0.5211322161088712
+    },
+    {
+      "cards": [
+        "one_off_each",
+        "robot2"
+      ],
+      "score": 0.19400295494461586
+    },
+    {
+      "cards": [
+        "one_off_each",
+        "robot_attack"
+      ],
+      "score": -0.5728012966620324
+    },
+    {
+      "cards": [
+        "one_off_each",
+        "robot_critter"
+      ],
+      "score": 0.33432985175400376
+    },
+    {
+      "cards": [
+        "one_off_each",
+        "robot_dragon"
+      ],
+      "score": 0.6594472680476734
+    },
+    {
+      "cards": [
+        "one_off_each",
+        "robot_ulti"
+      ],
+      "score": 0.03941679650399643
+    },
+    {
+      "cards": [
+        "one_off_each",
+        "shield2"
+      ],
+      "score": -0.5353902894588038
+    },
+    {
+      "cards": [
+        "one_off_each",
+        "shield_is_dmg"
+      ],
+      "score": -1.3270959658122734
+    },
+    {
+      "cards": [
+        "one_off_each",
+        "swarm"
+      ],
+      "score": -0.6956227354771328
+    },
+    {
+      "cards": [
+        "rabbit2",
+        "rabbit2"
+      ],
+      "score": -0.30253307039024036
+    },
+    {
+      "cards": [
+        "rabbit2",
+        "recycle_card"
+      ],
+      "score": 0.5547603386705945
+    },
+    {
+      "cards": [
+        "rabbit2",
+        "robot1"
+      ],
+      "score": -1.0142645857493362
+    },
+    {
+      "cards": [
+        "rabbit2",
+        "robot2"
+      ],
+      "score": -0.09502754385788181
+    },
+    {
+      "cards": [
+        "rabbit2",
+        "robot_attack"
+      ],
+      "score": -0.33279280818100776
+    },
+    {
+      "cards": [
+        "rabbit2",
+        "robot_critter"
+      ],
+      "score": 0.01834355347807412
+    },
+    {
+      "cards": [
+        "rabbit2",
+        "robot_dragon"
+      ],
+      "score": -0.09153128628633064
+    },
+    {
+      "cards": [
+        "rabbit2",
+        "robot_ulti"
+      ],
+      "score": 0.10867075022605746
+    },
+    {
+      "cards": [
+        "rabbit2",
+        "shield2"
+      ],
+      "score": -0.49098831411305743
+    },
+    {
+      "cards": [
+        "rabbit2",
+        "shield_is_dmg"
+      ],
+      "score": -1.5138471036471683
+    },
+    {
+      "cards": [
+        "rabbit2",
+        "swarm"
+      ],
+      "score": 0.3386027144194521
+    },
+    {
+      "cards": [
+        "recycle_card",
+        "robot1"
+      ],
+      "score": -0.5497398682187704
+    },
+    {
+      "cards": [
+        "recycle_card",
+        "robot2"
+      ],
+      "score": 0.25244033216693373
+    },
+    {
+      "cards": [
+        "recycle_card",
+        "robot_attack"
+      ],
+      "score": 0.21376482435682717
+    },
+    {
+      "cards": [
+        "recycle_card",
+        "robot_critter"
+      ],
+      "score": 0.26336543182162464
+    },
+    {
+      "cards": [
+        "recycle_card",
+        "robot_dragon"
+      ],
+      "score": 0.7190176527961264
+    },
+    {
+      "cards": [
+        "recycle_card",
+        "robot_ulti"
+      ],
+      "score": 0.7202062345549323
+    },
+    {
+      "cards": [
+        "recycle_card",
+        "shield2"
+      ],
+      "score": -0.3862719438280978
+    },
+    {
+      "cards": [
+        "recycle_card",
+        "shield_is_dmg"
+      ],
+      "score": -1.220838905740314
+    },
+    {
+      "cards": [
+        "recycle_card",
+        "swarm"
+      ],
+      "score": 0.23410294503724147
+    },
+    {
+      "cards": [
+        "robot1",
+        "robot1"
+      ],
+      "score": -0.7559464775837718
+    },
+    {
+      "cards": [
+        "robot1",
+        "robot2"
+      ],
+      "score": -0.8611929346478354
+    },
+    {
+      "cards": [
+        "robot1",
+        "robot_attack"
+      ],
+      "score": -0.7560386415501466
+    },
+    {
+      "cards": [
+        "robot1",
+        "robot_critter"
+      ],
+      "score": -0.5555557738825063
+    },
+    {
+      "cards": [
+        "robot1",
+        "robot_dragon"
+      ],
+      "score": -0.3630124972531032
+    },
+    {
+      "cards": [
+        "robot1",
+        "robot_ulti"
+      ],
+      "score": 0.5562156092000766
+    },
+    {
+      "cards": [
+        "robot1",
+        "shield2"
+      ],
+      "score": -1.0730077351574236
+    },
+    {
+      "cards": [
+        "robot1",
+        "shield_is_dmg"
+      ],
+      "score": -1.9949678832754187
+    },
+    {
+      "cards": [
+        "robot1",
+        "swarm"
+      ],
+      "score": -0.877987033138267
+    },
+    {
+      "cards": [
+        "robot2",
+        "robot_attack"
+      ],
+      "score": 0.013999039633285026
+    },
+    {
+      "cards": [
+        "robot2",
+        "robot_critter"
+      ],
+      "score": -0.29263025965288525
+    },
+    {
+      "cards": [
+        "robot2",
+        "robot_dragon"
+      ],
+      "score": -0.04083024261191465
+    },
+    {
+      "cards": [
+        "robot2",
+        "robot_ulti"
+      ],
+      "score": 0.7701237617175201
+    },
+    {
+      "cards": [
+        "robot2",
+        "shield2"
+      ],
+      "score": -0.7892708213181236
+    },
+    {
+      "cards": [
+        "robot2",
+        "shield_is_dmg"
+      ],
+      "score": -1.4650401088527303
+    },
+    {
+      "cards": [
+        "robot2",
+        "swarm"
+      ],
+      "score": -0.519148382986952
+    },
+    {
+      "cards": [
+        "robot_attack",
+        "robot_attack"
+      ],
+      "score": -0.7618713258001669
+    },
+    {
+      "cards": [
+        "robot_attack",
+        "robot_critter"
+      ],
+      "score": -0.5323335261093
+    },
+    {
+      "cards": [
+        "robot_attack",
+        "robot_dragon"
+      ],
+      "score": -0.25417170042013615
+    },
+    {
+      "cards": [
+        "robot_attack",
+        "robot_ulti"
+      ],
+      "score": -0.18183757560503436
+    },
+    {
+      "cards": [
+        "robot_attack",
+        "shield2"
+      ],
+      "score": -0.899813339909727
+    },
+    {
+      "cards": [
+        "robot_attack",
+        "shield_is_dmg"
+      ],
+      "score": -1.6347364708785597
+    },
+    {
+      "cards": [
+        "robot_attack",
+        "swarm"
+      ],
+      "score": -0.8827197591623449
+    },
+    {
+      "cards": [
+        "robot_critter",
+        "robot_critter"
+      ],
+      "score": -0.3065749699160164
+    },
+    {
+      "cards": [
+        "robot_critter",
+        "robot_dragon"
+      ],
+      "score": -0.37510854364385793
+    },
+    {
+      "cards": [
+        "robot_critter",
+        "robot_ulti"
+      ],
+      "score": 0.7383483873110546
+    },
+    {
+      "cards": [
+        "robot_critter",
+        "shield2"
+      ],
+      "score": -0.921781451715839
+    },
+    {
+      "cards": [
+        "robot_critter",
+        "shield_is_dmg"
+      ],
+      "score": -1.4803059396090643
+    },
+    {
+      "cards": [
+        "robot_critter",
+        "swarm"
+      ],
+      "score": -0.2479202541912049
+    },
+    {
+      "cards": [
+        "robot_dragon",
+        "robot_ulti"
+      ],
+      "score": 0.5000071525415553
+    },
+    {
+      "cards": [
+        "robot_dragon",
+        "shield2"
+      ],
+      "score": -0.11959423627228655
+    },
+    {
+      "cards": [
+        "robot_dragon",
+        "shield_is_dmg"
+      ],
+      "score": -0.9788860894944236
+    },
+    {
+      "cards": [
+        "robot_dragon",
+        "swarm"
+      ],
+      "score": -0.5877219458610402
+    },
+    {
+      "cards": [
+        "robot_ulti",
+        "shield2"
+      ],
+      "score": -0.615712141727653
+    },
+    {
+      "cards": [
+        "robot_ulti",
+        "shield_is_dmg"
+      ],
+      "score": -1.1596584593015486
+    },
+    {
+      "cards": [
+        "robot_ulti",
+        "swarm"
+      ],
+      "score": -0.0392844598745655
+    },
+    {
+      "cards": [
+        "shield2",
+        "shield2"
+      ],
+      "score": -1.1221633791526757
+    },
+    {
+      "cards": [
+        "shield2",
+        "shield_is_dmg"
+      ],
+      "score": -1.723197508875094
+    },
+    {
+      "cards": [
+        "shield2",
+        "swarm"
+      ],
+      "score": -0.8170692030881034
+    },
+    {
+      "cards": [
+        "shield_is_dmg",
+        "swarm"
+      ],
+      "score": -1.5916992337559979
+    },
+    {
+      "cards": [
+        "swarm",
+        "swarm"
+      ],
+      "score": -0.6053203957519253
+    }
+  ]
+}
