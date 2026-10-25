@@ -10,7 +10,7 @@ const BATTLE_RULES = [
   { value: 'abilities-main', label: 'Abilities' },
 ]
 
-export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, settings, onUpdateSettings, onHelp, onScoreCard, onCollection, onTestDeck, onRoom, inRoom = false, canConfigure = true, humanOpponent = false }) {
+export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, settings, onUpdateSettings, battleAnimation = true, onBattleAnimation, onHelp, onScoreCard, onCollection, onTestDeck, onRoom, inRoom = false, canConfigure = true, humanOpponent = false }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
   const menuRef = useRef(null)
@@ -186,6 +186,18 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
           ) : null}
 
           </fieldset>
+          {/* Personal display preference: not a shared room setting, never deals a new game. */}
+          <label className="screen-menu__toggle">
+            <input
+              type="checkbox"
+              checked={battleAnimation}
+              onChange={(event) => onBattleAnimation?.(event.target.checked)}
+            />
+            <span className="screen-menu__switch" aria-hidden="true" />
+            <SvgIcon name="swords" />
+            <span>Battle animation</span>
+          </label>
+
           <div className="screen-menu__row screen-menu__row--split">
             <button type="button" className="screen-menu__item" onClick={() => run(onCollection)}>
               <SvgIcon name="collection" />

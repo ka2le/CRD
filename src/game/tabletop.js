@@ -378,3 +378,9 @@ export function getTabletopChoice(preBattle) {
   const selectedType = choice?.handKey === getTabletopHandKey(hand) && profile.types.includes(choice.type) ? choice.type : null
   return { ...profile, selectedType, needsChoice: profile.types.length > 1 && !selectedType }
 }
+
+// Profile before any ability changes the hand (no Overwhelming extra stat).
+// Used to replay a resolution step by step; scoring never needs it.
+export function getTabletopBaseProfile(hand = []) {
+  return computeProfile(hand)
+}

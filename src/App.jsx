@@ -10,6 +10,9 @@ import ShuffleIntro from './components/board/ShuffleIntro'
 import BattleArena from './components/battle/BattleArena'
 import BattleOverlay from './components/battle/BattleOverlay'
 import TabletopScore from './components/battle/TabletopScore'
+import TabletopResolution from './components/battle/TabletopResolution'
+import useBattleAnimationSetting from './hooks/useBattleAnimationSetting'
+import { canAnimateTabletopResolution } from './game/tabletopResolution'
 import InfoOverlay from './components/overlay/InfoOverlay'
 import CardInspectProvider from './components/overlay/CardInspect'
 import PileSheet from './components/overlay/PileSheet'
@@ -118,6 +121,7 @@ function AppContent() {
     swapTestDeckCards,
     moveTestDeckCardToTop,
   } = session
+  const [battleAnimation, setBattleAnimation] = useBattleAnimationSetting()
 
   const {
     battlePlayback,
@@ -137,7 +141,12 @@ function AppContent() {
     tabletop: settings.tabletop,
     playerType: tabletopChoice.selectedType,
     opponentType: session.opponentTabletopType,
+    animate: battleAnimation,
   })
+  // Tabletop scores count up on the table first; the result waits for that.
+  const [tabletopCountedKey, setTabletopCountedKey] = useState(null)
+  const tabletopLedger = Boolean(settings.tabletop && canAnimateTabletopResolution(battleResult))
+  const tabletopCounting = tabletopLedger && battleAnimation && tabletopCountedKey !== battleKey
 
   const [tableRef, tableSize] = useElementSize()
   const [dismissedResultKey, setDismissedResultKey] = useState(null)
@@ -164,7 +173,7 @@ function AppContent() {
   const opponentThinking = (game.mode === 'draft' && game.phase === 'draft-opponent-thinking') || opponentDiscarding
     || opponentPreparing
   const playerTurn = !session.onlineBlocked && (layout === 'draft' ? canPickDraftCard : layout === 'focus')
-  const battleFinished = battleStarted && showBattleResult
+  const battleFinished = battleStarted && showBattleResult && !tabletopCounting
   const resultDismissed = dismissedResultKey === battleKey
   const winner = battleFinished ? battleResult?.winner : null
   const roster = room.presence ?? room.record?.roster
@@ -179,7 +188,7 @@ function AppContent() {
   function winsFor(member) {
     if (!member) return null
     const score = room.record?.scores?.[member.id] ?? 0
-    return score - (battleStarted && !showBattleResult && session.rawSession.roomResult?.winnerId === member.id ? 1 : 0)
+    return score - (battleStarted && !battleFinished && session.rawSession.roomResult?.winnerId === member.id ? 1 : 0)
   }
   // Emotes: online players only. Viewers see the host at the bottom, like the host does.
   const seated = session.online && ['host', 'guest'].includes(room.record?.role)
@@ -366,6 +375,12 @@ function AppContent() {
             onChangeGameMode={handleGameModeChange}
             settings={settings}
             onUpdateSettings={updateSettings}
+            battleAnimation={battleAnimation}
+            onBattleAnimation={(next) => {
+              // Turning it on mid-battle keeps the result already on the table.
+              if (next && battleStarted) setTabletopCountedKey(battleKey)
+              setBattleAnimation(next)
+            }}
             onHelp={() => setHelpOpen(true)}
             onScoreCard={() => setScoreOpen(true)}
             onCollection={() => setDeckView('collection')}
@@ -410,7 +425,20 @@ function AppContent() {
               {tabletopChoice.selectedType ? <span className="tabletop-choice__selected">Main type <GameIcon name={tabletopChoice.selectedType} /></span> : <span>Choose your main damage type: tap a highlighted card</span>}
             </div>
           ) : null}
-          {layout === 'battle' && settings.tabletop ? (
+          {layout === 'battle' && settings.tabletop && tabletopLedger ? (
+            <TabletopResolution
+              key={battleKey}
+              result={battleResult}
+              animate={battleAnimation}
+              finished={battleFinished}
+              playerName={playerName}
+              opponentName={opponentName}
+              resultLabel={resultLabel}
+              onShowResult={() => setDismissedResultKey(null)}
+              onFinished={() => setTabletopCountedKey(battleKey)}
+            />
+          ) : null}
+          {layout === 'battle' && settings.tabletop && !tabletopLedger ? (
             <TabletopScore result={battleResult} resultLabel={resultLabel} onShowResult={() => setDismissedResultKey(null)} />
           ) : null}
           {layout === 'battle' && !settings.tabletop ? (

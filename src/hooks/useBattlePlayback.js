@@ -57,7 +57,8 @@ function createInitialPlayback(playerHand = null, opponentHand = null, activatio
   }
 }
 
-export default function useBattlePlayback({ battleStarted, battleInstance, playerHand, opponentHand, deck, tabletop = false, playerType = null, opponentType = null, timing = {} }) {
+// `animate: false` (the Battle animation setting) jumps straight to the final round.
+export default function useBattlePlayback({ battleStarted, battleInstance, playerHand, opponentHand, deck, tabletop = false, playerType = null, opponentType = null, animate = true, timing = {} }) {
   const isActive = battleStarted
   const baseRoundIntervalMs = timing.baseRoundIntervalMs
   const damageFlashMs = timing.damageFlashMs
@@ -102,7 +103,7 @@ export default function useBattlePlayback({ battleStarted, battleInstance, playe
   }, [deck, isActive, opponentHand, playerHand, tabletop, playerType, opponentType])
 
   useEffect(() => {
-    if (!isActive || !battleResult || tabletop) return undefined
+    if (!isActive || !battleResult || tabletop || !animate) return undefined
 
     let timeoutId = null
     let cancelled = false
@@ -167,7 +168,7 @@ export default function useBattlePlayback({ battleStarted, battleInstance, playe
       control.stepNow = null
       if (timeoutId) window.clearTimeout(timeoutId)
     }
-  }, [battleTiming, isActive, battleResult, battleInstance, tabletop])
+  }, [battleTiming, isActive, battleResult, battleInstance, tabletop, animate])
 
   useEffect(() => {
     if (!damageFlash) return undefined
@@ -178,11 +179,12 @@ export default function useBattlePlayback({ battleStarted, battleInstance, playe
 
   const battlePlayback = useMemo(() => {
     if (!isActive) return null
-    if (!battleResult || playbackIndex < 0) {
+    const index = animate || tabletop ? playbackIndex : (battleResult?.rounds.length ?? 0) - 1
+    if (!battleResult || index < 0) {
       return createInitialPlayback(playerHand, opponentHand, 0)
     }
 
-    const round = battleResult.rounds[playbackIndex]
+    const round = battleResult.rounds[index]
     if (!round) {
       return createInitialPlayback(playerHand, opponentHand, 0)
     }
@@ -213,7 +215,7 @@ export default function useBattlePlayback({ battleStarted, battleInstance, playe
       opponentStats: round.opponentStats ?? getHandStats(round.opponentHand ?? []),
       activationTick,
     }
-  }, [activationTick, battleResult, isActive, opponentHand, playbackIndex, playerHand])
+  }, [activationTick, animate, battleResult, isActive, opponentHand, playbackIndex, playerHand, tabletop])
 
   const setSpeed = useCallback((nextSpeed) => {
     controlRef.current.speed = nextSpeed
@@ -231,7 +233,7 @@ export default function useBattlePlayback({ battleStarted, battleInstance, playe
   return {
     battlePlayback,
     battleResult,
-    showBattleResult: tabletop ? Boolean(battleResult) : showBattleResult,
+    showBattleResult: tabletop || !animate ? Boolean(battleResult) : showBattleResult,
     damageFlash,
     speed,
     setSpeed,
