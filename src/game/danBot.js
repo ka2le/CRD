@@ -4,7 +4,7 @@ import net3 from '../../data/dan-round3-net.json' with { type: 'json' }
 import { searchDecision } from './searchAi.js'
 import { createLearnedHandPolicy } from './learnedHandEvaluator.js'
 
-export const DAN_BOT_VERSION = 'dan-draft-scalar2-subset3-search128-v3'
+export const DAN_BOT_VERSION = 'dan-draft-scalar2-expanded3-search128-v4'
 export const DAN_ROUND3_MODEL_VERSION = net3.version
 export const DAN_ROUND3_CHECKPOINT_SHA256 = net3.checkpoint_sha256
 export const DAN_PAIR_TABLE_VERSION = pairs.version

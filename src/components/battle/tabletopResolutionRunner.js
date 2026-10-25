@@ -209,63 +209,70 @@ export function createResolutionRunner({ root, fx, getSpeed, update }) {
   const setCurrent = (side) => set((ledger) => ({ ...ledger, current: side }))
 
   // ---------- steps ----------
-  async function countStats(plan, side) {
-    for (const entry of plan[side].stats) {
-      if (!entry.total) continue
-      focus(side, entry.type)
-      const target = slot(side, `${entry.type}-stat`)
-      const flights = []
-      let index = 0
-      for (const card of entry.cards) {
-        glowCard(side, card.uid, entry.type)
-        for (const icon of cardIcons(side, card.uid, entry.type, card.count)) {
-          const delay = index++ * 50
-          pulse(icon, entry.type)
-          flights.push(fly({ from: icon, to: target, icon: entry.type, type: entry.type, delay })
-            .then(() => add(side, 'stats', entry.type, 1)))
-        }
+  async function countStats(side, entry) {
+    if (!entry.total) return
+    focus(side, entry.type)
+    const target = slot(side, `${entry.type}-stat`)
+    const flights = []
+    let index = 0
+    for (const card of entry.cards) {
+      glowCard(side, card.uid, entry.type)
+      for (const icon of cardIcons(side, card.uid, entry.type, card.count)) {
+        const delay = index++ * 50
+        pulse(icon, entry.type)
+        flights.push(fly({ from: icon, to: target, icon: entry.type, type: entry.type, delay })
+          .then(() => add(side, 'stats', entry.type, 1)))
       }
-      await Promise.all(flights)
-      await wait(80)
     }
+    await Promise.all(flights)
+    await wait(80)
   }
 
-  async function countDamage(plan, side) {
+  async function countPulses(side, pulsePlan) {
+    if (!pulsePlan.cards.length) return
+    const { type } = pulsePlan
+    focus(side, type)
+    const target = slot(side, `${type}-dmg`)
+    const statSlot = slot(side, `${type}-stat`)
+    if (!pulsePlan.stats) {
+      pulsePlan.cards.forEach((card) => pulse(cardTypeIcon(side, card.uid, type), 'neutral', 1.15))
+      await wait(320)
+      return
+    }
+    const arrivals = []
+    for (let firing = 0; firing < pulsePlan.stats; firing++) {
+      bump(statSlot)
+      for (const card of pulsePlan.cards) {
+        pulse(cardTypeIcon(side, card.uid, type), type, 1.6)
+        cardIcons(side, card.uid, 'damage', card.units).forEach((heart, index) => {
+          arrivals.push(fly({ from: heart, to: target, icon: 'damage', type, delay: 40 + index * 40, duration: 300 })
+            .then(() => add(side, 'damage', type, 1)))
+        })
+      }
+      await wait(200)
+    }
+    await Promise.all(arrivals)
+    await wait(80)
+  }
+
+  async function countDirect(side, attack) {
+    focus(side, attack.type)
+    glowCard(side, attack.uid, attack.type)
+    await fly({ from: cardEffectRow(side, attack.uid), to: slot(side, `${attack.type}-dmg`), icon: 'damage',
+      type: attack.type, label: String(attack.power), className: 'ttr-ghost--value' })
+    add(side, 'damage', attack.type, attack.power)
+    await wait(80)
+  }
+
+  // Faction by faction: its stats, then the damage they power. Neutral damage last.
+  async function countHand(plan, side) {
     const sidePlan = plan[side]
-    for (const pulsePlan of sidePlan.pulses) {
-      if (!pulsePlan.cards.length) continue
-      const { type } = pulsePlan
-      focus(side, type)
-      const target = slot(side, `${type}-dmg`)
-      const statSlot = slot(side, `${type}-stat`)
-      if (!pulsePlan.stats) {
-        pulsePlan.cards.forEach((card) => pulse(cardTypeIcon(side, card.uid, type), 'neutral', 1.15))
-        await wait(320)
-        continue
-      }
-      const arrivals = []
-      for (let firing = 0; firing < pulsePlan.stats; firing++) {
-        bump(statSlot)
-        for (const card of pulsePlan.cards) {
-          pulse(cardTypeIcon(side, card.uid, type), type, 1.6)
-          cardIcons(side, card.uid, 'damage', card.units).forEach((heart, index) => {
-            arrivals.push(fly({ from: heart, to: target, icon: 'damage', type, delay: 40 + index * 40, duration: 300 })
-              .then(() => add(side, 'damage', type, 1)))
-          })
-        }
-        await wait(200)
-      }
-      await Promise.all(arrivals)
-      await wait(80)
+    for (const entry of sidePlan.stats) {
+      await countStats(side, entry)
+      await countPulses(side, sidePlan.pulses.find((pulsePlan) => pulsePlan.type === entry.type))
+      for (const attack of sidePlan.direct.filter((direct) => direct.type === entry.type)) await countDirect(side, attack)
     }
-    for (const attack of sidePlan.direct) {
-      focus(side, attack.type)
-      glowCard(side, attack.uid, attack.type)
-      await fly({ from: cardEffectRow(side, attack.uid), to: slot(side, `${attack.type}-dmg`), icon: 'damage',
-        type: attack.type, label: String(attack.power), className: 'ttr-ghost--value' })
-      add(side, 'damage', attack.type, attack.power)
-      await wait(80)
-    }
+    for (const attack of sidePlan.direct.filter((direct) => direct.type === 'neutral')) await countDirect(side, attack)
   }
 
   async function showMain(plan, side) {
@@ -405,8 +412,7 @@ export function createResolutionRunner({ root, fx, getSpeed, update }) {
     for (const side of RESOLUTION_SIDES) {
       setCurrent(side)
       await wait(150)
-      await countStats(plan, side)
-      await countDamage(plan, side)
+      await countHand(plan, side)
       await showMain(plan, side)
       if (plan.bonusFirst) {
         await abilities(plan, side)
