@@ -9,6 +9,8 @@ import { createProbabilityPreparation } from './probabilityPreparationCore.js'
 import { createOpponentScoreEvaluator } from './davidOpponentScores.js'
 import { compileCombatCycle, compareCombatCycles } from './davidCombat.js'
 import sourcePool from '../../data/david-opponents.json' with { type: 'json' }
+import { supportsOpponentFirst } from './opponentFirstPreparation.js'
+import { chooseTwoOrderPreparation } from './twoOrderPreparation.js'
 
 export const FAST_PREPARATION_VERSION = 'david-preparation-adaptive-probability-unbiased-v2'
 export const FAST_PREPARATION_PROFILE = Object.freeze({ chanceLimit: 16, maxDepth: 8, maxNodes: 12000,
@@ -78,6 +80,7 @@ export async function preparationOpponentModel(state) {
 }
 
 export async function chooseFastPreparation(state, options = {}) {
+  if (supportsOpponentFirst(state.game)) return chooseTwoOrderPreparation(state, options)
   // Once credited, DiscardAll cannot gain another bonus on a later real action.
   const used = Boolean(state.history?.some(e => e.side === state.actor && e.action?.type === 'prepare' && e.action.cardId === 'draw_all_new_1') ||
     state.preparation[`${state.actor}Discard`]?.some(c => c.id === 'draw_all_new_1' &&
