@@ -40,7 +40,7 @@ function LedgerRow({ side, name, plan, state, focus, current, stage, winner, cro
   ) : null
   const shieldChip = hasShield ? (
     <span className={['ttr-sum__chip', 'ttr-sum__shield', state.shieldShown ? '' : 'is-hidden'].filter(Boolean).join(' ')}
-      data-ttr={`${side}-shield`} title={`Enemy shields: −${plan.shields.cost} each`}>
+      data-ttr={`${side}-shield`} title={`Enemy shields: −${plan.shields.cost} per shield point`}>
       −{state.blocked}<GameIcon name="shield" />
     </span>
   ) : null

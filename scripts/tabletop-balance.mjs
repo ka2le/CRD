@@ -5,7 +5,7 @@ import path from 'node:path'
 import { createHash } from 'node:crypto'
 import assert from 'node:assert/strict'
 import { createHeadlessGame, stepHeadlessGame, getLegalActions } from '../src/game/headlessGame.js'
-import { searchDecision, searchPreparationDecision, SEARCH_AI_VERSION } from '../src/game/searchAi.js'
+import { searchDecision, SEARCH_AI_VERSION } from '../src/game/searchAi.js'
 import { TABLETOP_THRESHOLDS, PROTOTYPE_ABILITY_RULES, MAIN_ABILITY_RULES, MAIN_ABILITY_SHIELD_COST as TABLETOP_SHIELD_COST } from '../src/game/tabletop.js'
 import { getCoreCards, getExpandedCoreDeck } from '../src/game/cards.js'
 import { simulateBattle } from '../src/game/engine.js'
@@ -27,7 +27,7 @@ if (fs.existsSync(path.join(dir, 'games.jsonl'))) throw new Error(`Refusing to o
 const gameFile = fs.openSync(path.join(dir, 'games.jsonl'), 'wx')
 const decisionFile = fs.openSync(path.join(dir, 'decisions.jsonl'), 'wx')
 const sourceFiles = [...fs.readdirSync('src/game').filter((f) => f.endsWith('.js')).map((f) => `src/game/${f}`),
-  'data/cards.json', 'data/tabletop-cards.json', 'data/david-opponents.json', 'data/david-opponents.meta.json',
+  'data/cards.json', 'data/tabletop-cards.json', 'data/dan-opening.json', 'data/dan-pairs.json', 'data/dan-round3-net.json', 'data/david-opponents.json', 'data/david-opponents.meta.json',
   'scripts/tabletop-balance.mjs', 'scripts/balance-variants.mjs'].sort()
 const sourceHashes = Object.fromEntries(sourceFiles.map((file) => [file, createHash('sha256').update(fs.readFileSync(file)).digest('hex')]))
 const sourceHash = createHash('sha256').update(JSON.stringify(sourceHashes)).digest('hex')
@@ -37,8 +37,8 @@ assert.ok(getCoreCards({ tabletop: rules }).every((c) => poolCounts[c.id] === c.
 const manifest = { variant: variantName, title: variant.title, rules, mode, games, samples, seed, deck, label, searchVersion: SEARCH_AI_VERSION, sourceHash, sourceHashes,
   poolSize: pool.length, poolCounts,
   thresholds: TABLETOP_THRESHOLDS, abilities: PROTOTYPE_ABILITY_RULES, flexible: MAIN_ABILITY_RULES, shieldCosts: TABLETOP_SHIELD_COST,
-  policy: mode === 'five-hand-discard' ? 'both seats: DavidBot Discard, timed SvenBot preparation' : 'both seats: browser search, prep-lookahead, fixed samples; baseline tie preference',
-  ...(mode === 'five-hand-discard' ? { researchAi: getResearchAiProfile(mode), samplesArgumentApplies: false } : {}),
+  policy: mode === 'five-hand-discard' ? 'both seats: DavidBot Discard, adaptive probability preparation' : 'both seats: DanBot Draft, frozen opening/scalar pair ranking, subset net pick3, search128 picks4–5, adaptive probability preparation',
+  researchAi: getResearchAiProfile(mode), samplesArgumentApplies: false,
   startedAt: new Date().toISOString() }
 fs.writeFileSync(path.join(dir, 'manifest.json'), JSON.stringify(manifest, null, 2))
 const options = { minSamples: samples, maxSamples: samples, timeBudgetMs: 1e12, rollout: 'prep-lookahead' }
@@ -59,11 +59,7 @@ for (let game = 0; game < games; game++) {
   while (!state.terminal) {
     if (++step > 200) throw new Error('Study decision guard exceeded')
     const planningSeed = seed + 100000000 + game * 1009 + step * 7919
-    const report = mode === 'five-hand-discard'
-      ? await chooseResearchAiDecision(state, { seed: planningSeed })
-      : state.preparation
-      ? searchPreparationDecision(state.preparation, state.game, state.actor, { ...options, seed: planningSeed })
-      : searchDecision(state.game, state.actor, { ...options, seed: planningSeed })
+    const report = await chooseResearchAiDecision(state, { seed: planningSeed })
     roots++
     simulations += report.simulations ?? 0
     const legal = getLegalActions(state)

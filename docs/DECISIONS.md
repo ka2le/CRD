@@ -1,5 +1,19 @@
 # DECISIONS.md
 
+## Streamlined shields adopted — 2026-10-26
+
+Creator explicitly adopted, requested commitment and deployment of: 2 shield points on every main-Abilities Shield card; Critter/Robot costs both 1 power per point; Dragon immune. This keeps Robot's blocking at 2 per Shield card and raises Critter's to the same value. Shield is Damage keeps its existing equality formula and naturally gives 2 power per Shield card. Count actual shield values in scoring and animation; copied Shields retain both points. Reference-card layouts remain unchanged with −1/−1/0 numbers. Current main rules revision is v13.
+
+Creator separately confirmed the **first deployment keeps seven Robot Attacks**, 69 Regular / 97 Wild. Preserve the newest artwork. Only after deployment, compare this baseline against hiding ordinary Attack copy seven and against removing one ordinary Robot stat instead, 600 games per mode per arm. Neither nerf is automatically adopted.
+
+Keep learned weights and opening unchanged. Mechanically rescore the same 10,000 existing prepared replacement hands into draw-six prior v2 (169 bins); no new games or fitting. Original prepared-hand policy bias and pool-independent approximation remain. David's empirical opponent compositions/weights stay the same but are hydrated with current card effects in every ruleset. The raw prior remains historical source data; current runtime shields are two points. Earlier shield-cost test was cost2 per old one-point card without this Shield-is-Damage boost; it is not an end-to-end test of this adopted package.
+
+## Seventh Robot Attack adopted — 2026-10-26
+
+Creator adopted the extra-attack arm of the completed balance study to make Robot Perfect Balance easier to assemble without changing its +3 bonus. `robot_attack.copies` increases from six to seven; ordinary tabletop attack power remains one per Robot stat. Current Abilities regular deck is 69 cards (Wild 97). The shared card definition also increases each other deck by one; digital attack effect/cooldown are unchanged. Headless pool revisions distinguish the new decks: Abilities main v12, Threshold/Prototype v5, digital v2.
+
+The supplied image is archived byte-for-byte under `assets/originals/robot-attack/robot-attack-7.png`; the creator then requested rescaling the actual image to the existing 1856×2592 artwork ratio, without cropping. `robot-attack-7-rescaled.png` is the corrected source, and its 550×768 WebP in `public/images/art/` is assigned to physical copy seven through the existing image manifest/index mechanism. Existing six artworks remain assigned to copies one through six. Dan v10 and other bot code, weights, opening tables and empirical priors remain unchanged. The prior remains its previously tested approximation on the changed pool. No Dragon or shield-damage variant is adopted. Historical studies retain frozen 68-card sources. No new balance collection, training or public deployment is part of this adoption.
+
 **Current naming:** UI **Abilities** = code **`abilities-main`** (formerly v2). The original is **Abilities Prototype** / `abilities-prototype`, retained but hidden. Generic abilities/tabletop tests use main; prototype testing needs an explicit request. See [ruleset naming policy](RULESET_NAMES.md).
 
 > Naming policy (2026-10-22): **Abilities = `abilities-main`** (formerly Abilities v2). The original is **Abilities Prototype** (`abilities-prototype`), hidden and excluded from balance testing unless explicitly requested. Generic tabletop requests mean main; Threshold must be named explicitly. Historical raw IDs/paths remain unchanged. See [ruleset naming policy](RULESET_NAMES.md).

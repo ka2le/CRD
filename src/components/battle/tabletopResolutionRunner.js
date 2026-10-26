@@ -361,18 +361,19 @@ export function createResolutionRunner({ root, fx, getSpeed, update }) {
 
   async function shields(plan, side) {
     const sidePlan = plan[side]
-    const { cards, cost } = sidePlan.shields
+    const { cards, pointsByUid, cost } = sidePlan.shields
     if (!cards.length) return
     focus(side, sidePlan.mainType)
     patch(side, () => ({ shieldShown: true }))
     const enemy = OTHER[side]
     for (const uid of cards) {
+      const reduction = cost * pointsByUid[uid]
       const icon = cardIcons(enemy, uid, 'shield', 1)[0]
       pulse(icon, 'shield', 1.6)
-      await fly({ from: icon, to: slot(side, 'shield'), icon: 'shield', type: 'shield', label: `−${cost}`, className: 'ttr-ghost--value' })
+      await fly({ from: icon, to: slot(side, 'shield'), icon: 'shield', type: 'shield', label: `−${reduction}`, className: 'ttr-ghost--value' })
       patch(side, (current) => {
         const cap = plan.bonusFirst ? current.base + current.bonus : current.base
-        return { blocked: Math.min(cap, current.blocked + cost) }
+        return { blocked: Math.min(cap, current.blocked + reduction) }
       })
       await wait(140)
     }

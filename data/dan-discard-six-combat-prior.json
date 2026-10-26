@@ -1,12 +1,12 @@
 {
-  "version": "dan-discard-six-combat-prior-v1",
+  "version": "dan-discard-six-combat-prior-shield-points-v2",
   "draw_size": 6,
   "examples": 10000,
   "physical_source_families": 1000,
-  "bins": 167,
+  "bins": 169,
   "source": "crd-random-six-combat-distribution-20261026-v1",
   "source_histogram_sha256": "18eb6eac323385ecd6dcb555e9ccc5879ad58fef9c3f8fb0974f62b8605852b5",
-  "scope": "Prepared replacement hands from Regular/v11 TRAIN-derived samples; joint faction/unshielded-damage/own-shield distribution. Approximate pool-independent prior; not a neural model.",
+  "scope": "Same 10000 previously prepared TRAIN-derived hands, deterministically rescored under Abilities-main v13. No new preparation optimization, generation or fitting. Pool-independent approximation and old preparation-selection bias remain.",
   "histogram": [
     {
       "faction": "dragon",
@@ -29,8 +29,8 @@
     {
       "faction": "critter",
       "damage0": 7,
-      "shields": 1,
-      "count": 20
+      "shields": 2,
+      "count": 19
     },
     {
       "faction": "robot",
@@ -59,13 +59,13 @@
     {
       "faction": "robot",
       "damage0": 7,
-      "shields": 1,
-      "count": 60
+      "shields": 2,
+      "count": 62
     },
     {
       "faction": "critter",
       "damage0": 0,
-      "shields": 1,
+      "shields": 2,
       "count": 235
     },
     {
@@ -77,8 +77,8 @@
     {
       "faction": "critter",
       "damage0": 8,
-      "shields": 1,
-      "count": 29
+      "shields": 2,
+      "count": 30
     },
     {
       "faction": "dragon",
@@ -125,7 +125,7 @@
     {
       "faction": "dragon",
       "damage0": 4,
-      "shields": 2,
+      "shields": 4,
       "count": 8
     },
     {
@@ -137,8 +137,8 @@
     {
       "faction": "critter",
       "damage0": 2,
-      "shields": 1,
-      "count": 237
+      "shields": 2,
+      "count": 257
     },
     {
       "faction": "critter",
@@ -149,8 +149,8 @@
     {
       "faction": "critter",
       "damage0": 4,
-      "shields": 1,
-      "count": 186
+      "shields": 2,
+      "count": 195
     },
     {
       "faction": "critter",
@@ -161,7 +161,7 @@
     {
       "faction": "robot",
       "damage0": 15,
-      "shields": 1,
+      "shields": 2,
       "count": 1
     },
     {
@@ -173,8 +173,8 @@
     {
       "faction": "critter",
       "damage0": 2,
-      "shields": 2,
-      "count": 37
+      "shields": 4,
+      "count": 27
     },
     {
       "faction": "critter",
@@ -185,14 +185,14 @@
     {
       "faction": "critter",
       "damage0": 3,
-      "shields": 1,
-      "count": 140
+      "shields": 2,
+      "count": 130
     },
     {
       "faction": "robot",
       "damage0": 5,
-      "shields": 1,
-      "count": 65
+      "shields": 2,
+      "count": 63
     },
     {
       "faction": "robot",
@@ -203,8 +203,8 @@
     {
       "faction": "critter",
       "damage0": 1,
-      "shields": 1,
-      "count": 85
+      "shields": 2,
+      "count": 54
     },
     {
       "faction": "dragon",
@@ -215,8 +215,8 @@
     {
       "faction": "robot",
       "damage0": 4,
-      "shields": 1,
-      "count": 124
+      "shields": 2,
+      "count": 132
     },
     {
       "faction": "robot",
@@ -233,26 +233,26 @@
     {
       "faction": "dragon",
       "damage0": 3,
-      "shields": 1,
-      "count": 132
+      "shields": 2,
+      "count": 135
     },
     {
       "faction": "dragon",
       "damage0": 2,
-      "shields": 1,
-      "count": 140
+      "shields": 2,
+      "count": 122
     },
     {
       "faction": "critter",
       "damage0": 1,
-      "shields": 2,
+      "shields": 4,
       "count": 13
     },
     {
       "faction": "dragon",
       "damage0": 4,
-      "shields": 1,
-      "count": 105
+      "shields": 2,
+      "count": 114
     },
     {
       "faction": "critter",
@@ -269,8 +269,8 @@
     {
       "faction": "dragon",
       "damage0": 5,
-      "shields": 1,
-      "count": 71
+      "shields": 2,
+      "count": 68
     },
     {
       "faction": "dragon",
@@ -305,8 +305,8 @@
     {
       "faction": "dragon",
       "damage0": 11,
-      "shields": 1,
-      "count": 5
+      "shields": 2,
+      "count": 8
     },
     {
       "faction": "dragon",
@@ -323,20 +323,20 @@
     {
       "faction": "robot",
       "damage0": 6,
-      "shields": 1,
-      "count": 63
+      "shields": 2,
+      "count": 61
     },
     {
       "faction": "critter",
-      "damage0": 4,
-      "shields": 2,
-      "count": 12
+      "damage0": 8,
+      "shields": 4,
+      "count": 3
     },
     {
       "faction": "dragon",
       "damage0": 6,
-      "shields": 1,
-      "count": 52
+      "shields": 2,
+      "count": 60
     },
     {
       "faction": "robot",
@@ -347,14 +347,14 @@
     {
       "faction": "critter",
       "damage0": 5,
-      "shields": 1,
-      "count": 84
+      "shields": 2,
+      "count": 89
     },
     {
       "faction": "critter",
       "damage0": 12,
-      "shields": 1,
-      "count": 8
+      "shields": 2,
+      "count": 9
     },
     {
       "faction": "dragon",
@@ -365,14 +365,14 @@
     {
       "faction": "dragon",
       "damage0": 1,
-      "shields": 1,
+      "shields": 2,
       "count": 62
     },
     {
       "faction": "robot",
       "damage0": 4,
-      "shields": 2,
-      "count": 25
+      "shields": 4,
+      "count": 24
     },
     {
       "faction": "critter",
@@ -383,13 +383,13 @@
     {
       "faction": "dragon",
       "damage0": 1,
-      "shields": 2,
+      "shields": 4,
       "count": 17
     },
     {
       "faction": "critter",
       "damage0": 0,
-      "shields": 2,
+      "shields": 4,
       "count": 67
     },
     {
@@ -401,8 +401,14 @@
     {
       "faction": "robot",
       "damage0": 3,
-      "shields": 1,
-      "count": 97
+      "shields": 2,
+      "count": 84
+    },
+    {
+      "faction": "critter",
+      "damage0": 4,
+      "shields": 4,
+      "count": 17
     },
     {
       "faction": "dragon",
@@ -413,8 +419,8 @@
     {
       "faction": "critter",
       "damage0": 6,
-      "shields": 1,
-      "count": 84
+      "shields": 2,
+      "count": 90
     },
     {
       "faction": "robot",
@@ -435,15 +441,21 @@
       "count": 106
     },
     {
+      "faction": "critter",
+      "damage0": 6,
+      "shields": 4,
+      "count": 9
+    },
+    {
       "faction": "dragon",
       "damage0": 12,
-      "shields": 1,
+      "shields": 2,
       "count": 19
     },
     {
       "faction": "dragon",
       "damage0": 22,
-      "shields": 1,
+      "shields": 2,
       "count": 2
     },
     {
@@ -454,20 +466,20 @@
     },
     {
       "faction": "critter",
-      "damage0": 3,
-      "shields": 3,
+      "damage0": 6,
+      "shields": 6,
       "count": 1
     },
     {
       "faction": "robot",
       "damage0": 5,
-      "shields": 3,
+      "shields": 6,
       "count": 1
     },
     {
       "faction": "critter",
       "damage0": 1,
-      "shields": 3,
+      "shields": 6,
       "count": 2
     },
     {
@@ -485,7 +497,7 @@
     {
       "faction": "robot",
       "damage0": 2,
-      "shields": 1,
+      "shields": 2,
       "count": 78
     },
     {
@@ -503,26 +515,20 @@
     {
       "faction": "robot",
       "damage0": 5,
-      "shields": 2,
+      "shields": 4,
       "count": 7
     },
     {
       "faction": "dragon",
       "damage0": 3,
-      "shields": 2,
-      "count": 9
-    },
-    {
-      "faction": "dragon",
-      "damage0": 10,
-      "shields": 1,
-      "count": 17
+      "shields": 4,
+      "count": 7
     },
     {
       "faction": "robot",
       "damage0": 8,
-      "shields": 1,
-      "count": 30
+      "shields": 2,
+      "count": 33
     },
     {
       "faction": "robot",
@@ -545,14 +551,14 @@
     {
       "faction": "robot",
       "damage0": 14,
-      "shields": 1,
+      "shields": 2,
       "count": 3
     },
     {
       "faction": "robot",
       "damage0": 9,
-      "shields": 1,
-      "count": 18
+      "shields": 2,
+      "count": 22
     },
     {
       "faction": "dragon",
@@ -562,9 +568,15 @@
     },
     {
       "faction": "robot",
-      "damage0": 7,
+      "damage0": 9,
+      "shields": 4,
+      "count": 1
+    },
+    {
+      "faction": "dragon",
+      "damage0": 10,
       "shields": 2,
-      "count": 11
+      "count": 18
     },
     {
       "faction": "robot",
@@ -581,13 +593,13 @@
     {
       "faction": "robot",
       "damage0": 11,
-      "shields": 1,
+      "shields": 2,
       "count": 8
     },
     {
       "faction": "robot",
       "damage0": 2,
-      "shields": 2,
+      "shields": 4,
       "count": 5
     },
     {
@@ -605,31 +617,31 @@
     {
       "faction": "robot",
       "damage0": 6,
-      "shields": 2,
-      "count": 8
+      "shields": 4,
+      "count": 6
     },
     {
       "faction": "critter",
       "damage0": 11,
-      "shields": 1,
+      "shields": 2,
       "count": 4
     },
     {
       "faction": "critter",
       "damage0": 10,
-      "shields": 1,
-      "count": 9
+      "shields": 2,
+      "count": 11
     },
     {
       "faction": "dragon",
       "damage0": 2,
-      "shields": 2,
+      "shields": 4,
       "count": 13
     },
     {
       "faction": "dragon",
       "damage0": 20,
-      "shields": 1,
+      "shields": 2,
       "count": 2
     },
     {
@@ -641,8 +653,8 @@
     {
       "faction": "critter",
       "damage0": 9,
-      "shields": 1,
-      "count": 11
+      "shields": 2,
+      "count": 9
     },
     {
       "faction": "robot",
@@ -651,22 +663,28 @@
       "count": 1
     },
     {
+      "faction": "robot",
+      "damage0": 7,
+      "shields": 4,
+      "count": 10
+    },
+    {
       "faction": "dragon",
       "damage0": 14,
-      "shields": 1,
-      "count": 1
+      "shields": 2,
+      "count": 2
     },
     {
       "faction": "critter",
-      "damage0": 5,
-      "shields": 2,
-      "count": 4
+      "damage0": 7,
+      "shields": 4,
+      "count": 1
     },
     {
       "faction": "dragon",
       "damage0": 13,
-      "shields": 1,
-      "count": 3
+      "shields": 2,
+      "count": 2
     },
     {
       "faction": "dragon",
@@ -677,14 +695,14 @@
     {
       "faction": "robot",
       "damage0": 3,
-      "shields": 2,
+      "shields": 4,
       "count": 6
     },
     {
       "faction": "robot",
       "damage0": 10,
-      "shields": 2,
-      "count": 1
+      "shields": 4,
+      "count": 2
     },
     {
       "faction": "dragon",
@@ -701,14 +719,8 @@
     {
       "faction": "critter",
       "damage0": 0,
-      "shields": 3,
+      "shields": 6,
       "count": 9
-    },
-    {
-      "faction": "dragon",
-      "damage0": 9,
-      "shields": 1,
-      "count": 18
     },
     {
       "faction": "critter",
@@ -717,69 +729,75 @@
       "count": 2
     },
     {
-      "faction": "critter",
-      "damage0": 3,
+      "faction": "dragon",
+      "damage0": 9,
       "shields": 2,
-      "count": 17
-    },
-    {
-      "faction": "robot",
-      "damage0": 18,
-      "shields": 1,
-      "count": 1
-    },
-    {
-      "faction": "critter",
-      "damage0": 18,
-      "shields": 1,
-      "count": 1
-    },
-    {
-      "faction": "robot",
-      "damage0": 8,
-      "shields": 2,
-      "count": 1
+      "count": 15
     },
     {
       "faction": "dragon",
-      "damage0": 15,
-      "shields": 1,
+      "damage0": 5,
+      "shields": 4,
+      "count": 4
+    },
+    {
+      "faction": "critter",
+      "damage0": 3,
+      "shields": 4,
+      "count": 13
+    },
+    {
+      "faction": "critter",
+      "damage0": 5,
+      "shields": 4,
       "count": 7
     },
     {
-      "faction": "critter",
-      "damage0": 6,
+      "faction": "robot",
+      "damage0": 18,
       "shields": 2,
-      "count": 5
+      "count": 1
+    },
+    {
+      "faction": "critter",
+      "damage0": 18,
+      "shields": 2,
+      "count": 1
     },
     {
       "faction": "dragon",
       "damage0": 15,
       "shields": 2,
+      "count": 7
+    },
+    {
+      "faction": "dragon",
+      "damage0": 15,
+      "shields": 4,
       "count": 2
     },
     {
       "faction": "dragon",
       "damage0": 26,
-      "shields": 1,
-      "count": 1
-    },
-    {
-      "faction": "dragon",
-      "damage0": 5,
       "shields": 2,
-      "count": 2
+      "count": 1
     },
     {
-      "faction": "critter",
-      "damage0": 13,
-      "shields": 1,
-      "count": 1
+      "faction": "robot",
+      "damage0": 8,
+      "shields": 4,
+      "count": 3
     },
     {
       "faction": "critter",
       "damage0": 13,
       "shields": 2,
+      "count": 1
+    },
+    {
+      "faction": "critter",
+      "damage0": 13,
+      "shields": 4,
       "count": 1
     },
     {
@@ -790,26 +808,20 @@
     },
     {
       "faction": "critter",
-      "damage0": 8,
-      "shields": 2,
-      "count": 2
-    },
-    {
-      "faction": "critter",
       "damage0": 17,
-      "shields": 1,
+      "shields": 2,
       "count": 1
     },
     {
       "faction": "robot",
       "damage0": 10,
-      "shields": 1,
+      "shields": 2,
       "count": 4
     },
     {
       "faction": "robot",
       "damage0": 14,
-      "shields": 2,
+      "shields": 4,
       "count": 1
     },
     {
@@ -851,7 +863,7 @@
     {
       "faction": "robot",
       "damage0": 12,
-      "shields": 1,
+      "shields": 2,
       "count": 3
     },
     {
@@ -869,13 +881,13 @@
     {
       "faction": "dragon",
       "damage0": 12,
-      "shields": 2,
+      "shields": 4,
       "count": 1
     },
     {
       "faction": "dragon",
       "damage0": 9,
-      "shields": 2,
+      "shields": 4,
       "count": 2
     },
     {
@@ -887,13 +899,13 @@
     {
       "faction": "dragon",
       "damage0": 16,
-      "shields": 1,
+      "shields": 2,
       "count": 1
     },
     {
       "faction": "robot",
-      "damage0": 9,
-      "shields": 2,
+      "damage0": 11,
+      "shields": 4,
       "count": 1
     },
     {
@@ -905,13 +917,13 @@
     {
       "faction": "dragon",
       "damage0": 17,
-      "shields": 1,
+      "shields": 2,
       "count": 2
     },
     {
       "faction": "critter",
       "damage0": 9,
-      "shields": 2,
+      "shields": 4,
       "count": 1
     },
     {
@@ -941,7 +953,7 @@
     {
       "faction": "robot",
       "damage0": 6,
-      "shields": 3,
+      "shields": 6,
       "count": 1
     },
     {
@@ -953,7 +965,7 @@
     {
       "faction": "dragon",
       "damage0": 80,
-      "shields": 1,
+      "shields": 2,
       "count": 1
     },
     {
@@ -965,31 +977,31 @@
     {
       "faction": "dragon",
       "damage0": 18,
-      "shields": 1,
+      "shields": 2,
       "count": 1
     },
     {
       "faction": "dragon",
       "damage0": 6,
-      "shields": 2,
+      "shields": 4,
       "count": 1
     },
     {
       "faction": "critter",
       "damage0": 16,
-      "shields": 1,
+      "shields": 2,
       "count": 1
     },
     {
       "faction": "dragon",
       "damage0": 24,
-      "shields": 1,
+      "shields": 2,
       "count": 2
     },
     {
       "faction": "dragon",
       "damage0": 1,
-      "shields": 3,
+      "shields": 6,
       "count": 1
     },
     {
@@ -1001,7 +1013,7 @@
     {
       "faction": "critter",
       "damage0": 4,
-      "shields": 3,
+      "shields": 6,
       "count": 1
     },
     {
@@ -1010,5 +1022,8 @@
       "shields": 0,
       "count": 1
     }
-  ]
+  ],
+  "source_examples_sha256": "0a41bcb6db54b7d5ca2449348f0d1d8008b758bb6bf3bf4ff0620df901656093",
+  "previousVersion": "dan-discard-six-combat-prior-v1",
+  "mechanicsRevision": "Two shield points/card; Critter/Robot lose1 per point; Dragon immune. Shield is Damage uses summed shield points."
 }

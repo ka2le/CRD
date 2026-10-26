@@ -4,7 +4,7 @@ import { TABLETOP_THRESHOLDS, MAIN_ABILITY_RULES, MAIN_ABILITY_SHIELD_COST as TA
 import { simulateBattle } from '../src/game/engine.js'
 
 export const BALANCE_VARIANTS = {
-  'abilities-main': { rules: 'abilities-main', title: 'Abilities', shieldCosts: { critter: 1, robot: 2, dragon: 0 }, flexible: { overwhelmingAt: 7, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true } },
+  'abilities-main': { rules: 'abilities-main', title: 'Abilities', shieldCosts: { critter: 1, robot: 1, dragon: 0 }, flexible: { overwhelmingAt: 7, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true } },
   'abilitiesv2-dragon7-immune-critter1': { rules: 'abilities-main', title: 'V2: Dragon 7+ immune; Critter shields -1', shieldCosts: { critter: 1, robot: 2, dragon: 0 }, flexible: { overwhelmingAt: 7, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true } },
   'abilitiesv2-dragon7-immune': { rules: 'abilities-main', title: 'V2: Dragon 7+ extra stat; shield immunity', shieldCosts: { critter: 2, robot: 2, dragon: 0 }, flexible: { overwhelmingAt: 7, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true } },
   battle: { rules: false, title: 'Battle' },
@@ -41,7 +41,7 @@ export function configureBalanceVariant(name) {
   if (!variant) throw new Error(`Unknown balance variant: ${name}`)
   configured = true
   if (variant.thresholds) for (const [faction, values] of Object.entries(variant.thresholds)) Object.assign(TABLETOP_THRESHOLDS[faction], values)
-  if (variant.flexible) Object.assign(MAIN_ABILITY_RULES, { overwhelmingAfterShields: false, perfectBalance: false }, variant.flexible)
+  if (variant.flexible) Object.assign(MAIN_ABILITY_RULES, { shieldValue: variant === BALANCE_VARIANTS['abilities-main'] ? 2 : 1, overwhelmingAfterShields: false, perfectBalance: false }, variant.flexible)
   Object.assign(TABLETOP_SHIELD_COST, { critter: 2, robot: 1, dragon: 0 }, variant.shieldCosts)
   return { ...variant, name }
 }

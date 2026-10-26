@@ -73,6 +73,8 @@ function buildSide(hand, score, enemyHand) {
 
   const costs = main ? MAIN_ABILITY_SHIELD_COST : TABLETOP_SHIELD_COST
   const shieldCards = enemyHand.filter((card) => card.effect?.shield > 0).map((card) => card.uid)
+  const pointsByUid = Object.fromEntries(enemyHand.filter((card) => card.effect?.shield > 0)
+    .map((card) => [card.uid, card.effect.shield]))
   const finalDamage = emptyDamage()
   for (const type of TABLETOP_CLASSES) finalDamage[type] = score.contributions[type]
   finalDamage.neutral = score.neutral
@@ -91,7 +93,7 @@ function buildSide(hand, score, enemyHand) {
     balance,
     // Threshold rules add the faction bonus after shields; main rules add abilities before them.
     thresholdBonus: main ? 0 : score.bonus,
-    shields: { cards: shieldCards, cost: costs[score.damageType] ?? 0, penalty: score.shieldPenalty, blocked: score.blocked },
+    shields: { cards: shieldCards, pointsByUid, cost: costs[score.damageType] ?? 0, penalty: score.shieldPenalty, blocked: score.blocked },
     final: {
       stats: { ...score.stats },
       damage: finalDamage,

@@ -28,7 +28,7 @@ This matches the current goal of getting the core 3-class version playable first
 {
   "id": "robot_attack",
   "name": "robot_attack",
-  "copies": 6,
+  "copies": 7,
   "type": "action",
   "images": ["https://..."],
   "stats": [],

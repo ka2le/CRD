@@ -149,7 +149,7 @@ function AbilitiesMainHelp({ rules }) {
           <span className="help__op">=</span>
           <span className="help__term"><span className="help__chip help__chip--score"><GameIcon name="star" /></span><small>score</small></span>
         </div>
-        <p className="help__caption">Apply effects and bonuses, then enemy shields. Score stops at zero. Each enemy shield removes {MAIN_ABILITY_SHIELD_COST.critter} Critter power, {MAIN_ABILITY_SHIELD_COST.robot} Robot power or {MAIN_ABILITY_SHIELD_COST.dragon} Dragon power.</p>
+        <p className="help__caption">Each Shield card gives {MAIN_ABILITY_RULES.shieldValue} shield. Subtract enemy shield points after effects and bonuses, stopping at zero. Critters and Robots lose 1 power per point; Dragons are immune. Shield is Damage adds power equal to your shield points.</p>
       </section>
 
       <section className="help__block">

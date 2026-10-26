@@ -53,22 +53,22 @@ for (const tabletop of [false, 'threshold', 'abilities-main', 'abilities-prototy
   }
 }
 
-test('David is Discard-only; its memory persists through Draft, reload and alternate choices', () => {
-  assert.equal(getOpponentAiOptions('draft').length, 3)
+test('Dan and David are linked; common opponents persist across modes and reload', () => {
+  assert.equal(getOpponentAiOptions('draft').length, 4)
   assert.equal(getOpponentAiOptions('five-hand-discard').at(-1).label, 'DavidBot (Very Hard)')
   let s = normalizeOpponentSettings({ gameMode: 'five-hand-discard', opponentAi: 'rules' }, { opponentAi: 'david' })
   s = normalizeOpponentSettings(s, { gameMode: 'draft' })
-  assert.equal(s.opponentAi, 'search')
+  assert.equal(s.opponentAi, 'dan')
   s = normalizeOpponentSettings(JSON.parse(JSON.stringify(s)))
   s = normalizeOpponentSettings(s, { opponentAi: 'shallow' })
   s = normalizeOpponentSettings(s, { gameMode: 'five-hand-discard' })
-  assert.equal(s.opponentAi, 'david')
+  assert.equal(s.opponentAi, 'shallow')
   s = normalizeOpponentSettings(s, { opponentAi: 'rules' })
   s = normalizeOpponentSettings(s, { gameMode: 'draft' })
-  assert.equal(s.opponentAi, 'shallow')
+  assert.equal(s.opponentAi, 'rules')
   assert.equal(normalizeOpponentSettings(s, { gameMode: 'five-hand-discard' }).opponentAi, 'rules')
   assert.equal(getResearchAiProfile('five-hand-discard').id, 'david')
-  assert.equal(getResearchAiProfile('draft').id, 'search')
+  assert.equal(getResearchAiProfile('draft').id, 'dan')
 })
 
 test('real settings reducer preserves David across UPDATE_SETTINGS and RESET_GAME', async () => {
@@ -79,7 +79,7 @@ test('real settings reducer preserves David across UPDATE_SETTINGS and RESET_GAM
       game: createHeadlessGame({ mode: 'five-hand-discard' }).game, nextDraftStartingPicker: 'player',
       battleInstance: 0, gameSessionKey: 0, dealId: 1 }
     s = sessionReducer(s, { type: 'UPDATE_SETTINGS', patch: { gameMode: 'draft' } })
-    assert.equal(s.settings.opponentAi, 'search')
+    assert.equal(s.settings.opponentAi, 'dan')
     s = sessionReducer(s, { type: 'RESET_GAME', nextMode: 'five-hand-discard' })
     assert.equal(s.settings.opponentAi, 'david')
   } finally { await server.close() }

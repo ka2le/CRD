@@ -1,5 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { createServer } from 'vite'
 import { getCoreCards, getExpandedCoreDeck } from '../src/game/cards.js'
 import { getTabletopBonus, getTabletopProfile, getTabletopChoice, getCardTabletopTypes,
@@ -24,7 +26,8 @@ test('headless deals real tabletop pools, advertises a distinct rules version an
   for (const tabletop of ['threshold', 'abilities-prototype', 'abilities-main']) {
     const spec = getHeadlessSpec({ tabletop })
     assert(spec.rulesVersion.includes(tabletop))
-    assert.equal(spec.poolCards.length, tabletop === 'threshold' ? 108 : tabletop === 'abilities-main' ? 96 : 99)
+    assert.equal(spec.rulesVersion, `tabletop-single-score-${tabletop === 'abilities-main' ? 'v13' : 'v5'}-${tabletop}`)
+    assert.equal(spec.poolCards.length, tabletop === 'threshold' ? 109 : tabletop === 'abilities-main' ? 97 : 100)
     assert.equal(spec.cardTypes.find((c) => c.id === 'robot_attack').effect.dmg, 1)
     for (const mode of ['draft', 'five-hand-discard']) {
       let state = createHeadlessGame({ tabletop, mode, control: 'both', seed: 131 })
@@ -37,22 +40,96 @@ test('headless deals real tabletop pools, advertises a distinct rules version an
   }
 })
 
-test('all three tabletop decks use 1/2 damage and correct card pools; digital stays intact', () => {
+test('shared decks include seven distinct Robot Attacks with the seventh artwork and unchanged effects', () => {
   assert.equal(normalizeTabletopRules(true), 'abilities-main')
   assert.equal(normalizeTabletopRules('abilities-main'), 'abilities-main')
   for (const wildDeck of [false, true]) {
     const digital = getExpandedCoreDeck({ wildDeck })
-    assert.equal(digital.length, wildDeck ? 102 : 70)
+    assert.equal(digital.length, wildDeck ? 103 : 71)
     assert.equal(digital.find((c) => c.id === 'dragons_breath').effect.dmg, 3)
+    assert.equal(digital.filter(c => c.id === 'robot_attack').length, 7)
     for (const rules of ['threshold', 'abilities-prototype', 'abilities-main']) {
       const deck = getExpandedCoreDeck({ wildDeck, tabletop: rules })
+      const sizes = { threshold: [73, 109], 'abilities-prototype': [70, 100], 'abilities-main': [69, 97] }
+      assert.equal(deck.length, sizes[rules][Number(wildDeck)])
+      assert.equal(new Set(deck.map(c => c.uid)).size, deck.length)
+      const attacks = deck.filter(c => c.id === 'robot_attack')
+      assert.equal(attacks.length, 7)
+      assert.equal(attacks[6].uid, 'robot_attack__7')
+      assert.equal(attacks[6].images[attacks[6].imageIndex], 'assets/originals/robot-attack/robot-attack-7-rescaled.png')
       assert(deck.every((c) => c.tabletop === rules && c.cd === 0))
       assert.equal(deck.some((c) => c.id === 'shortcut'), rules === 'threshold')
       assert.equal(deck.some((c) => c.id === 'double_dmg'), rules === 'threshold')
       assert.equal(deck.some((c) => c.id === 'chameleon'), rules !== 'abilities-main')
-      for (const id of ['swarm', 'robot_attack', 'dragons_breath', 'bite']) assert.equal(deck.find((c) => c.id === id).effect.dmg, 1)
+      for (const id of ['swarm', 'robot_attack', 'dragons_breath']) assert.equal(deck.find((c) => c.id === id).effect.dmg, 1)
+      assert.equal(deck.find((c) => c.id === 'bite').effect.dmg, rules === 'abilities-main' ? 2 : 1)
       for (const id of ['murder_rabbit', 'robot_ulti', 'dragon_ulti', 'devour']) assert.equal(deck.find((c) => c.id === id).effect.dmg, 2)
     }
+  }
+})
+
+test('current Abilities Bite adds two flat power, stacks and respects shields', () => {
+  assert.equal(getTabletopProfile(mainHand('bite')).base, 2)
+  assert.equal(getHandAverageDamage(mainHand('bite', 'bite')), 4)
+  assert.equal(scoreTabletopHand(mainHand('bite', 'bite'), 1, 'robot').score, 3)
+  assert.equal(scoreTabletopHand(mainHand('bite'), 2, 'robot').score, 0)
+  assert.equal(scoreTabletopHand(mainHand('critter1', 'swarm', 'bite')).base, 3)
+  assert.equal(getCoreCards().find((c) => c.id === 'bite').effect.dmg, 3)
+})
+
+test('current Abilities Devour is a second Dragon ultimate without a faction override', () => {
+  // Critter contribution exceeds Dragon: Devour cannot offer shield immunity.
+  for (const attack of ['devour', 'dragon_ulti']) {
+    const mixed = mainHand('rabbit2', 'critter1', 'swarm', 'dragon1', attack)
+    const profile = getTabletopProfile(mixed)
+    assert.deepEqual(profile.types, ['critter'])
+    assert.equal(profile.base, 5)
+    assert.deepEqual(getCardTabletopTypes(mixed.at(-1), profile), [])
+    assert.throws(() => scoreTabletopHand(mixed, 0, 'dragon'), /Invalid/)
+    const tied = mainHand('rabbit2', 'swarm', 'dragon1', attack)
+    assert.deepEqual(getTabletopProfile(tied).types, ['critter', 'dragon'])
+    assert.equal(scoreTabletopHand(mainHand('dragon2', 'dragon2', attack)).base, 10)
+  }
+  assert.deepEqual(getTabletopProfile(mainHand('bite', 'devour')).types, ['critter', 'robot', 'dragon'])
+  assert.equal(getCoreCards().find((c) => c.id === 'devour').effect.dmg, 7)
+  assert.equal(getCoreCards().find((c) => c.id === 'dragon_ulti').effect.dmg, 6)
+})
+
+test('all rules sheets render Copy rules and export readable mode-specific rules and card descriptions', async () => {
+  const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' })
+  try {
+    const { getRulesText } = await server.ssrLoadModule('/src/components/overlay/rulesText.js')
+    const { default: HelpSheet } = await server.ssrLoadModule('/src/components/overlay/HelpSheet.jsx')
+    const { default: CardVisual } = await server.ssrLoadModule('/src/components/card/CardVisual.jsx')
+    for (const rules of [false, 'threshold', 'abilities-prototype', 'abilities-main']) {
+      const html = renderToStaticMarkup(createElement(HelpSheet, { open: true, tabletop: rules }))
+      assert.match(html, />Copy rules<\/button>/)
+      const text = getRulesText(rules)
+      assert.match(text, /Draft: pick 1 of 5/)
+      assert.match(text, /Discard mode: five cards, two redraws/)
+      assert.match(text, /Dragon Ulti:/)
+      assert.match(text, /Devour:/)
+      if (rules === 'abilities-main') {
+        assert.match(html, /Adds 2 power, no stats needed/)
+        assert.doesNotMatch(html, /You may choose Dragon/)
+        assert.match(text, /Devour does not grant a main faction choice/)
+        assert.match(text, /Critter main faction wins equal scores/)
+        assert.match(text, /1 Critter power, 1 Robot power or 0 Dragon power/)
+        assert.match(text, /Each Shield card gives 2 shield points/)
+        assert.doesNotMatch(text, /You may choose Dragon/)
+        const bite = toTabletopCard(definitions.get('bite'), rules)
+        const art = renderToStaticMarkup(createElement(CardVisual, { card: bite }))
+        assert.equal((art.match(/alt="damage"/g) ?? []).length, 2)
+      } else if (rules) {
+        assert.match(text, /Bite adds 1 power/)
+        assert.match(text, /You may choose Dragon as your main damage type/)
+      } else {
+        assert.match(text, /3 damage, no stats needed/)
+        assert.match(text, /round 50/)
+      }
+    }
+  } finally {
+    await server.close()
   }
 })
 
@@ -65,7 +142,7 @@ test('power, neutral specials, shields, zero scores and choice validation', () =
   assert.equal(scoreTabletopHand(hand('dragon1', 'dragons_breath'), 20).score, 1)
   assert.equal(getTabletopProfile(hand('joker', 'one_off_each', 'any_off_each')).base, 4)
   assert.equal(getTabletopProfile(hand('shield2', 'shield2', 'shield_is_dmg')).base, 2)
-  assert.equal(resolveTabletopBattle([], []).winner, 'tie')
+  assert.equal(resolveTabletopBattle([], [], { playerType: 'critter' }).winner, 'tie')
   assert.equal(scoreTabletopHand(hand('bite'), 1).score, 0)
   const tied = hand('robot_dragon', 'robot_attack', 'dragons_breath')
   assert.deepEqual(getTabletopProfile(tied).types, ['robot', 'dragon'])
@@ -125,13 +202,13 @@ test('Prototype Overwhelming tests Dragon contribution before shields and adds a
   assert.deepEqual([scoreTabletopHand(above).dragonBase, scoreTabletopHand(above).base], [8, 10])
 })
 
-test('Abilities main uses Perfect Balance with shields 1/2/0 and never swaps cards', () => {
+test('Abilities main uses Perfect Balance with shield-point costs 1/1/0 and never swaps cards', () => {
   const hand = mainHand('robot2', 'robot_ulti', 'chameleon')
   const saved = structuredClone(hand)
   const robot = scoreTabletopHand(hand, 1, 'robot')
-  assert.deepEqual([robot.base, robot.power, robot.bonus, robot.score], [4, 2, 3, 5])
+  assert.deepEqual([robot.base, robot.power, robot.bonus, robot.score], [4, 3, 3, 6])
   assert.equal(robot.reconfigured, null)
-  assert.equal(scoreTabletopHand(hand, 20, 'robot').score, 3)
+  assert.equal(scoreTabletopHand(hand, 20, 'robot').score, 0)
   assert.equal(scoreTabletopHand(hand, 1, 'critter').bonus, 0)
   assert.equal(scoreTabletopHand(hand, 1, 'dragon').shieldPenalty, 0)
   assert.equal(scoreTabletopHand(hand, 1, 'critter').shieldPenalty, 1)
@@ -141,7 +218,7 @@ test('Abilities main uses Perfect Balance with shields 1/2/0 and never swaps car
   assert.deepEqual([dragon.dragonBase, dragon.stats.dragon, dragon.score], [6, 3, 6])
 })
 
-test('Abilities main Dragon uses contribution 7+, adds one stat once, and recomputes hybrids', () => {
+test('Abilities main Dragon uses total power 7+, adds one stat once, and recomputes hybrids', () => {
   const six = scoreTabletopHand(mainHand('dragon2', 'dragon1', 'dragon_ulti'))
   assert.deepEqual([six.dragonBase, six.stats.dragon, six.base, six.bonus], [6, 3, 6, 0])
   assert.equal(scoreTabletopHand(mainHand('dragon2', 'dragon1', 'dragons_breath', 'bite')).overwhelming, false)
@@ -150,7 +227,7 @@ test('Abilities main Dragon uses contribution 7+, adds one stat once, and recomp
   assert.equal(scoreTabletopHand(mainHand('dragon1', 'dragons_breath', 'rabbit2', 'swarm', 'swarm')).overwhelming, false)
   assert.equal(scoreTabletopHand(mainHand('dragon2', 'dragon2', 'dragon2', 'dragon1', 'dragons_breath')).score, 8)
   const hybrid = scoreTabletopHand(mainHand('joker', 'dragon2', 'dragon_ulti', 'one_off_each', 'any_off_each'))
-  assert.deepEqual([hybrid.dragonBase, hybrid.stats.dragon, hybrid.contributions.robot, hybrid.neutral, hybrid.score], [6, 3, 3, 5, 14])
+  assert.deepEqual([hybrid.dragonBase, hybrid.stats.dragon, hybrid.contributions.robot, hybrid.neutral, hybrid.score], [6, 4, 0, 10, 18])
   assert.equal(scoreTabletopHand(prototypeHand('dragon2', 'dragon2', 'dragon2', 'dragon1', 'dragons_breath')).score, 8)
 })
 
@@ -165,6 +242,55 @@ test('Abilities main Critter tiebreak is symmetric; same-faction and untyped zer
   const chameleon = mainHand('dragon1', 'dragons_breath', 'chameleon')
   assert.equal(chooseTabletopType(chameleon), 'critter')
   assert.equal(resolveTabletopBattle(chameleon, dragon, { playerType: 'critter' }).winner, 'player')
+})
+
+test('Dragon reward uses all original power and only the chosen Dragon faction', () => {
+  const neutralPush = mainHand('dragon2', 'dragon1', 'dragon_ulti', 'bite')
+  const d = scoreTabletopHand(neutralPush, 20, 'dragon')
+  assert.deepEqual([d.dragonBase, d.dragonThresholdPower, d.stats.dragon, d.base, d.score], [6, 8, 4, 10, 10])
+  const tied = mainHand('robot2', 'dragon2', 'robot_ulti', 'dragon_ulti')
+  assert.deepEqual(getTabletopProfile(tied).types, ['robot', 'dragon'])
+  const robot = scoreTabletopHand(tied, 0, 'robot'), dragon = scoreTabletopHand(tied, 0, 'dragon')
+  assert.deepEqual([robot.stats.dragon, robot.overwhelming, robot.bonus, robot.score], [2, false, 3, 11])
+  assert.deepEqual([dragon.stats.dragon, dragon.overwhelming, dragon.bonus, dragon.score], [3, true, 0, 10])
+  const dominated = mainHand('robot2', 'robot_ulti', 'robot_attack', 'dragon1', 'dragons_breath')
+  assert.deepEqual(getTabletopProfile(dominated).types, ['robot'])
+  assert.equal(scoreTabletopHand(dominated).overwhelming, false)
+  assert.throws(() => scoreTabletopHand(dominated, 0, 'dragon'), /Invalid/)
+  const near = mainHand('dragon2', 'dragon1', 'dragon_ulti')
+  assert.equal(scoreTabletopHand(near).overwhelming, false) // reward cannot lift its own cutoff
+})
+
+test('Neutral product neither supplies Robot balance nor overrides typed dominance', () => {
+  const product = mainHand('joker', 'one_off_each')
+  assert.deepEqual(getTabletopProfile(product).contributions, { critter: 0, robot: 0, dragon: 0 })
+  assert.equal(getTabletopProfile(product).neutral, 1)
+  assert.equal(scoreTabletopHand(product, 0, 'robot').bonus, 0)
+  const typed = mainHand('joker', 'robot1', 'robot_attack', 'dragons_breath', 'one_off_each')
+  const p = getTabletopProfile(typed)
+  assert.deepEqual(p.types, ['robot'])
+  assert.equal(p.robotAttacks, 1)
+  assert.equal(p.balanced, false)
+  assert.deepEqual(getCardTabletopTypes(typed.at(-1), p), ['robot'])
+})
+
+test('Fully neutral and zero-damage hands offer every faction through clickable cards', () => {
+  for (const cards of [mainHand('copy_card_in_hand', 'shield2', 'bite'), mainHand('shield2'), mainHand('joker')]) {
+    const p = getTabletopProfile(cards)
+    assert.deepEqual(p.types, ['critter', 'robot', 'dragon'])
+    for (const card of cards) assert.deepEqual(getCardTabletopTypes(card, p), p.types)
+    for (const type of p.types) assert.equal(scoreTabletopHand(cards, 0, type).damageType, type)
+    assert.equal(getTabletopChoice({ playerHand: cards }).needsChoice, true)
+  }
+})
+
+test('Shields subtract from the complete Robot score and can consume the entire bonus', () => {
+  const cards = mainHand('robot2', 'robot_ulti') // 4 + 3 = 7
+  assert.deepEqual([0, 1, 2, 3, 4, 5, 6, 7, 8].map((n) => scoreTabletopHand(cards, n).score), [7, 6, 5, 4, 3, 2, 1, 0, 0])
+  const blocked = scoreTabletopHand(cards, 8)
+  assert.equal(blocked.blocked, 7)
+  assert.equal(blocked.base + blocked.bonus - blocked.blocked, blocked.score)
+  assert.equal(scoreTabletopHand(prototypeHand('robot2', 'robot_ulti'), 20).score, 3)
 })
 
 test('all rules reach draft/discard completion and search ignores hidden deck order', () => {
@@ -206,7 +332,7 @@ test('session gates type choice, invalidates it after hand changes, preserves pr
           playerType: getTabletopChoice(result.preBattle).selectedType,
         }))
         const physicalIds = [...result.game.playerHand, ...result.game.opponentHand, ...result.game.deck].map((entry) => entry.uid)
-        assert.equal(new Set(physicalIds).size, 108)
+        assert.equal(new Set(physicalIds).size, 109)
       }
     }
     assert.throws(() => createDevScenario({ name: 'tie', playerType: 'critter' }), /Invalid main damage type/)
@@ -254,7 +380,7 @@ test('session gates type choice, invalidates it after hand changes, preserves pr
   } finally { await server.close() }
 })
 
-test('Critter * Robot * Dragon counts as a Robot attack only when it deals damage; Critter + Robot + Dragon is out of the Abilities decks', () => {
+test('Product is neutral in main and a Robot attack only in Prototype; sum is out of both decks', () => {
   for (const make of [prototypeHand, mainHand]) {
     // No Critter stat: product is zero, so it does not count and Robot stat 1 vs 0 attacks is unbalanced.
     const dud = getTabletopProfile(make('robot1', 'dragon1', 'one_off_each'))
@@ -262,8 +388,8 @@ test('Critter * Robot * Dragon counts as a Robot attack only when it deals damag
     assert.equal(dud.balanced, false)
     // One of each: it deals 1 damage and counts as the single Robot attack.
     const hit = getTabletopProfile(make('robot1', 'dragon1', 'critter1', 'one_off_each'))
-    assert.equal(hit.robotAttacks, 1)
-    assert.equal(hit.balanced, true)
+    assert.equal(hit.robotAttacks, make === prototypeHand ? 1 : 0)
+    assert.equal(hit.balanced, make === prototypeHand)
   }
   for (const rules of ['abilities-prototype', 'abilities-main']) {
     assert(!getCoreCards({ tabletop: rules }).some((card) => card.id === 'any_off_each'))

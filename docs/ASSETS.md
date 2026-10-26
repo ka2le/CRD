@@ -1,6 +1,8 @@
 # Image assets
 
-Updated 2026-10-19. All 90 unique referenced images are saved locally: 77 artworks (including every alternate, excluded-card variant, Shortcut and Chameleon) and 13 icons. Originals total 556.25 MiB; game derivatives total 4.28 MiB, a 99.2% reduction.
+Updated 2026-10-26. All 91 unique referenced images are saved locally: 78 artworks (including every alternate, excluded-card variant, Shortcut, Chameleon and the seventh Robot Attack) and 13 icons. Referenced originals total 564.30 MiB; game derivatives total 4.34 MiB, a 99.2% reduction.
+
+The creator's seventh Robot Attack original is `assets/originals/robot-attack/robot-attack-7.png` (2,231,737 bytes, preserved byte-for-byte). The supplied 1086×1448 image is rescaled without cropping to `assets/originals/robot-attack/robot-attack-7-rescaled.png` (1856×2592), matching all six existing Robot Attack originals. Its 550×768 game WebP is `public/images/art/448a4bf746bf5087daca-33db01d158c70e4d68d2.webp` (63,674 bytes). The seventh image in `robot_attack.images` maps to physical copy `robot_attack__7`. The source filename is recorded in the archive README; no personal filesystem path is shipped.
 
 ## Locations and rendering
 

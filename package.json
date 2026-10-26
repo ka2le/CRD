@@ -17,14 +17,15 @@
     "regression:smoke": "node scripts/regression-smoke.mjs",
     "opponent:test": "node --test scripts/opponent-ai-tests.mjs",
     "david:test": "node --test scripts/david-bot-tests.mjs scripts/david-concurrent-tests.mjs",
-    "tabletop:test": "node --test scripts/tabletop-tests.mjs",
+    "tabletop:test": "node --test scripts/tabletop-tests.mjs scripts/tabletop-resolution-tests.mjs scripts/shield-points-tests.mjs",
     "opponent:benchmark": "node scripts/opponent-ai-benchmark.mjs",
     "testdeck:test": "node --test scripts/test-deck-tests.mjs",
     "rooms:test": "node --test scripts/room-tests.mjs",
     "relay:dev": "wrangler dev --config relay/wrangler.jsonc --var ALLOW_LOCAL_TESTING:true",
     "relay:login": "wrangler login",
     "relay:deploy": "wrangler deploy --config relay/wrangler.jsonc",
-    "relay:secret": "wrangler secret put TURNSTILE_SECRET_KEY --config relay/wrangler.jsonc"
+    "relay:secret": "wrangler secret put TURNSTILE_SECRET_KEY --config relay/wrangler.jsonc",
+    "dan:test": "node --test scripts/dan-bot-tests.mjs scripts/prepared-planner-tests.mjs scripts/discard-six-lookup-tests.mjs"
   },
   "dependencies": {
     "react": "^19.2.6",

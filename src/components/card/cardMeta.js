@@ -65,9 +65,11 @@ const TABLETOP_TEXT = {
   // Shield costs differ per rule set; the card carries its rules.
   shield2: (card) => {
     const cost = card.tabletop === 'abilities-main' ? MAIN_ABILITY_SHIELD_COST : TABLETOP_SHIELD_COST
-    return `One shield. Reduces enemy Critter power by ${cost.critter}, Robot by ${cost.robot}, Dragon by ${cost.dragon}, ${card.tabletop === 'abilities-main' ? 'after all bonuses and effects' : 'before bonuses'}.`
+    const points = card.effect?.shield ?? 1
+    if (card.tabletop === 'abilities-main') return `${points} shields. Blocks ${points} power from Critters or Robots after bonuses. Dragons are immune.`
+    return `${points} shield${points === 1 ? '' : 's'}. Each shield point reduces enemy Critter power by ${cost.critter}, Robot by ${cost.robot}, Dragon by ${cost.dragon}, ${card.tabletop === 'abilities-main' ? 'after all bonuses and effects' : 'before bonuses'}.`
   },
-  shield_is_dmg: 'Adds 1 power per shield in your hand. Your shields still block.',
+  shield_is_dmg: 'Adds 1 power per shield point in your hand. Your shields still block.',
   one_off_each: (card) => card.tabletop === 'abilities-main'
     ? 'Neutral power = Critter * Robot * Dragon stats. Does not count as a Robot attack for Perfect Balance. Choose among tied main factions; with no typed damage, choose any faction.'
     : 'Robot power = Critter * Robot * Dragon stats. Counts as a Robot attack if it deals damage.',

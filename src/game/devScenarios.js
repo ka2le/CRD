@@ -2,6 +2,18 @@ import { getExpandedCoreDeck } from './cards.js'
 import { chooseTabletopType, getTabletopProfile } from './tabletop.js'
 
 const SCENARIOS = {
+  'shield-bonus-blocked': {
+    player: ['robot1', 'robot_attack', 'shield2', 'critter1', 'dragon1'],
+    opponent: ['shield2', 'shield2', 'bite', 'critter1', 'dragon1'],
+  },
+  'neutral-choice': {
+    player: ['shield2', 'shield_is_dmg', 'bite', 'critter1', 'dragon1'],
+    opponent: ['robot2', 'robot_ulti', 'robot1', 'robot_attack', 'critter1'],
+  },
+  'dragon-total-power': {
+    player: ['robot2', 'dragon2', 'robot_ulti', 'dragon_ulti', 'shield2'],
+    opponent: ['rabbit2', 'swarm', 'swarm', 'shield2', 'critter1'],
+  },
   'perfect-balance': {
     player: ['robot2', 'robot_ulti', 'robot1', 'robot_attack', 'shield2'],
     opponent: ['dragon2', 'dragon1', 'dragon_ulti', 'shield2', 'critter1'],

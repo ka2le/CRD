@@ -7,7 +7,7 @@ import { createDavidPolicy } from './davidBotCore.js'
 import sourcePool from '../../data/david-opponents.json' with { type: 'json' }
 
 export const DAVID_BOT_VERSION = 'david-discard-probability-cdf128-v2'
-export const DAVID_BOT_IMPLEMENTATION = 'david-exact-opponent-cdf-v2'
+export const DAVID_BOT_IMPLEMENTATION = 'david-exact-opponent-cdf-shield-points-v3'
 export const DAVID_BOT_OPTIONS = Object.freeze({ opponentCount: 50, prepScenarios: 2, chanceLimit: 128, stream: 912371 })
 const policies = new Map()
 const sourceIds = cards.getCoreCards({ tabletop: 'abilities-main' }).map((card) => card.id)
@@ -20,9 +20,10 @@ export function getDavidPolicy(input = {}) {
   const definitions = cards.getCoreCards({ tabletop: config.tabletop })
     .map((card) => config.tabletop ? tt.toTabletopCard(card, config.tabletop) : card)
   const byId = new Map(definitions.map((card) => [card.id, card]))
-  // Preserve the tested prior exactly for Abilities. Other resolvers inherit its
-  // hand compositions, with current printed mechanics and current card ordering.
-  const pool = config.tabletop === 'abilities-main' ? sourcePool : {
+  // Preserve prior hand compositions and selection weights, but use current
+  // printed mechanics in every resolver (including two-point main shields).
+  const pool = {
+    ...sourcePool,
     entries: sourcePool.entries.filter((entry) => entry.prepared.every((card) => byId.has(card.id))).map((entry) => ({
       ...entry,
       rawCounts: definitions.map((card) => entry.rawCounts[sourceIds.indexOf(card.id)] ?? 0),

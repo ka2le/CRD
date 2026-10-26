@@ -2,7 +2,7 @@ import { getHandStats } from './engine.js'
 
 export const TABLETOP_CLASSES = ['critter', 'robot', 'dragon']
 export const TABLETOP_SHIELD_COST = { critter: 2, robot: 1, dragon: 0 }
-export const MAIN_ABILITY_SHIELD_COST = { critter: 1, robot: 2, dragon: 0 }
+export const MAIN_ABILITY_SHIELD_COST = { critter: 1, robot: 1, dragon: 0 }
 const ULTIMATES = new Set(['murder_rabbit', 'robot_ulti', 'dragon_ulti', 'devour'])
 
 // Abilities means abilities-main. Prototype is retained only for explicit historical use.
@@ -43,14 +43,14 @@ export function toTabletopCard(card, rules = 'abilities-main') {
   const effect = { ...card.effect }
   if (effect.dmgType) effect.dmg = ULTIMATES.has(card.id) ? 2 : 1
   if (card.id === 'bite') effect.dmg = normalizeTabletopRules(rules) === 'abilities-main' ? 2 : 1
-  if (effect.shield) effect.shield = 1
+  if (effect.shield) effect.shield = normalizeTabletopRules(rules) === 'abilities-main' ? MAIN_ABILITY_RULES.shieldValue : 1
   return { ...card, tabletop: normalizeTabletopRules(rules) || 'abilities-main', cd: 0, effect }
 }
 
 // ---------- abilities ----------
 export const PERFECT_BALANCE_BONUS = 3
 export const PROTOTYPE_ABILITY_RULES = { balanceBonus: PERFECT_BALANCE_BONUS, overwhelmingAt: 7 }
-export const MAIN_ABILITY_RULES = { overwhelmingAt: 7, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true, balanceBonus: PERFECT_BALANCE_BONUS }
+export const MAIN_ABILITY_RULES = { shieldValue: 2, overwhelmingAt: 7, overwhelmingBonus: 0, overwhelmingExtraStat: true, unlimitedBaseReconfigure: false, robotPipReconfigure: false, overwhelmingAfterShields: false, perfectBalance: true, balanceBonus: PERFECT_BALANCE_BONUS }
 
 // Adapt: one stat card with a Critter stat turns its Critter stat(s) into an ordinary Critter attack
 // (1 power per Critter stat). Any other faction stats on that card stay (Joker keeps Robot + Dragon).
@@ -245,7 +245,7 @@ function computeProfile(hand = [], extraStats = {}) {
   const rules = getHandTabletopRules(hand)
   const stats = getHandStats(hand)
   for (const [type, extra] of Object.entries(extraStats)) stats[type] += extra
-  const shields = hand.reduce((sum, card) => sum + (card.effect?.shield > 0 ? 1 : 0), 0)
+  const shields = hand.reduce((sum, card) => sum + Math.max(0, card.effect?.shield ?? 0), 0)
   const bonusMultiplier = 2 ** hand.filter((card) => card.id === 'double_dmg').length
   const shortcuts = hand.filter((card) => card.id === 'shortcut').length
   const hasChameleon = hand.some((card) => card.id === 'chameleon')

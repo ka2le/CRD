@@ -9,7 +9,7 @@ test('Abilities and generic tabletop aliases select main, including legacy v2 se
   for (const alias of [true, 'tabletop', 'abilities', 'abilitiesv2', 'abilities-main']) {
     assert.equal(normalizeTabletopRules(alias), 'abilities-main')
     const pool = getExpandedCoreDeck({ tabletop: alias, wildDeck: false })
-    assert.equal(pool.length, 68)
+    assert.equal(pool.length, 69)
     assert(pool.every(c => c.tabletop === 'abilities-main'))
     assert(!pool.some(c => ['chameleon', 'any_off_each'].includes(c.id)))
   }
@@ -18,7 +18,7 @@ test('Abilities and generic tabletop aliases select main, including legacy v2 se
   assert.equal(createDevScenario().game.playerHand[0].tabletop, 'abilities-main')
   for (const alias of ['abilities', 'tabletop', 'abilitiesv2', 'abilities-main']) {
     assert.equal(BALANCE_VARIANTS[alias].rules, 'abilities-main')
-    assert.deepEqual(BALANCE_VARIANTS[alias].shieldCosts, { critter: 1, robot: 2, dragon: 0 })
+    assert.deepEqual(BALANCE_VARIANTS[alias].shieldCosts, { critter: 1, robot: 1, dragon: 0 })
   }
 })
 

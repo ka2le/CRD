@@ -267,7 +267,8 @@ test('sampled worlds reproduce observations throughout both modes, including con
   let conditionedRoots = 0
   for (const mode of ['draft', 'five-hand-discard']) {
     for (const revealOpponent of [false, true]) {
-      for (let seed = 1; seed <= 20; seed++) {
+      // Keep the coverage floor even when deck changes shorten seeded episodes.
+      for (let seed = 1; seed <= 32; seed++) {
         const config = { mode, revealOpponent, control: 'both', seed }
         const spec = getHeadlessSpec(config)
         const rng = createSeededRng(seed + 500)

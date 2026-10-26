@@ -1,1 +1,1 @@
-Sanitized CRD game snapshot, 2026-10-21. Source commit 11fe574. Private workspace history, identity files, memory, raw runs, original art and relay local state excluded.
+Sanitized game-source snapshot, 26 October 2026. Source commit 62fae67c8b3064901e5a5656f768901fbb0ccd36.

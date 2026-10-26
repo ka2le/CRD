@@ -1,20 +1,22 @@
 # Current card library
 
-Current Abilities (`abilities-main`) pool: 68 Normal / 96 Wild. Hidden Abilities Prototype: 69 Normal / 99 Wild; Chameleon remains there. Both exclude Shortcut, 2× and C+R+D; main also excludes Chameleon. Historical counts below predate exclusions.
+Current Abilities (`abilities-main`) pool: **69 Regular / 97 Wild**, with seven ordinary Robot Attacks (creator-adopted 2026-10-26). Perfect Balance remains +3. Hidden Abilities Prototype: 70 Regular / 100 Wild; Chameleon remains there. Both exclude Shortcut, 2× and C+R+D; main also excludes Chameleon. Historical counts below predate exclusions.
+
+Current Abilities Shields supply **2 shield points per card**, blocking one power per point from Critters or Robots; Dragons are immune. Shield is Damage adds power equal to your total shield points (2 per Shield card), and shields still block. This uses the card's actual shield value rather than counting Shield cards. The seventh Robot Attack and its artwork remain active pending separate nerf tests.
 
 > Naming policy (2026-10-22): **Abilities = `abilities-main`** (formerly Abilities v2). The original is **Abilities Prototype** (`abilities-prototype`), hidden and excluded from balance testing unless explicitly requested. Generic tabletop requests mean main; Threshold must be named explicitly. Historical raw IDs/paths remain unchanged. See [ruleset naming policy](RULESET_NAMES.md).
 
 These are the digital definitions. Tabletop mode derives separate per-game cards with zero cooldown and converted symbols/effects; `TABLETOP_MODE.md` lists all conversions. Imported definitions and digital deck counts stay intact.
 
-Tabletop ultimates (Murder Rabbit, Robot Ultimate, Dragon Ultimate and Devour) all give **2 power per matching stat**, double an ordinary attack. Devour retains the Dragon main-type option.
+Tabletop ultimates (Murder Rabbit, Robot Ultimate, Dragon Ultimate and Devour) all give **2 power per matching stat**, double an ordinary attack. In current Abilities, Devour is a second Dragon ultimate without a main-faction override; Dragon Ultimate is a separate, unchanged card. Bite adds **2 flat power** in Abilities. Threshold and hidden Prototype retain Bite at 1 and Devour's Dragon main-type option. Digital definitions below stay unchanged.
 
 The tabletop 2× card is neutral: it doubles the earned main-faction bonus after shields, rather than any attack's power. Copies stack on the bonus.
 
 Reviewed 2026-10-18. Definitions: `data/cards.json`. Playable inclusion: `CORE_CARD_IDS` in `src/game/cards.js`. Use these IDs rather than display-name capitalization in code.
 
-There are 30 imported definitions, 27 playable. Normal deck: 70 cards. Wild Deck: 102, replacing each playable one-copy count with three and leaving other counts unchanged. Extra and monster sets are not imported.
+There are 30 imported definitions, 27 playable in digital Battle. Normal deck: 71 cards. Wild Deck: 103, replacing each playable one-copy count with three and leaving other counts unchanged. Extra and monster sets are not imported.
 
-Tabletop-only additions in `data/tabletop-cards.json`: **Shortcut** grants the single main-faction bonus below its threshold after shields (positive power required); **Chameleon** lets the player click the card and choose any main faction, controlling bonuses and shield vulnerability. Each has one Normal / three Wild copies, so Threshold decks have 29 playable definitions and 72 / 108 cards; both Abilities modes exclude Shortcut and 2×, giving27definitions and70/102cards. Both use the creator's archived artwork and icons from the local set. See `TABLETOP_MODE.md` for stacking and selection details.
+Tabletop-only additions in `data/tabletop-cards.json`: **Shortcut** grants the single main-faction bonus below its threshold after shields (positive power required); **Chameleon** lets the player click the card and choose any main faction, controlling bonuses and shield vulnerability. Each has one Normal / three Wild copies. Threshold has 29 definitions and 73 / 109 cards; hidden Prototype has 26 definitions and 70 / 100 cards; current Abilities has 25 definitions and 69 / 97 cards. Both additions use the creator's archived artwork and icons from the local set. See `TABLETOP_MODE.md` for stacking and selection details.
 
 ## Stats
 
@@ -38,7 +40,7 @@ Damage applies when triggered. Each class attack uses the full matching stat tot
 | ID | Normal copies | CD | Implemented effect |
 | --- | --- | --- | --- |
 | `swarm` | 8 | 1 | 1 damage per Critter stat |
-| `robot_attack` | 6 | 2 | 2 damage per Robot stat |
+| `robot_attack` | 7 | 2 | 2 damage per Robot stat |
 | `dragons_breath` | 8 | 3 | 3 damage per Dragon stat |
 | `murder_rabbit` | 1 | 1 | 2 damage per Critter stat |
 | `robot_ulti` | 1 | 2 | 4 damage per Robot stat |

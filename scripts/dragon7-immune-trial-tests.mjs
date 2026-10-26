@@ -30,7 +30,7 @@ test('Perfect Balance, Critter ties, and other shield costs stay unchanged', () 
 test('Trial retains current regular v2 pool and zero-damage product fix', () => {
   assert.equal(defs.has('chameleon'), false)
   assert.equal(defs.has('any_off_each'), false)
-  assert.equal(getExpandedCoreDeck({ tabletop: 'abilities-main', wildDeck: false }).length, 68)
+  assert.equal(getExpandedCoreDeck({ tabletop: 'abilities-main', wildDeck: false }).length, 69)
   const dud = scoreTabletopHand(hand('robot1', 'robot_attack', 'one_off_each'), 0, 'robot')
   assert.equal(dud.robotAttacks, 1)
   assert.equal(dud.bonus, 3)

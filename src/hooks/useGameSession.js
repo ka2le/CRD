@@ -32,8 +32,8 @@ const SESSION_STORAGE_KEY = 'crd-local-game-v1'
 const DEFAULT_SETTINGS = {
   gameMode: 'draft',
   showOpponentCards: true,
-  wildDeck: true,
-  tabletop: false,
+  wildDeck: false,
+  tabletop: 'abilities-main',
   testing: false,
   opponentAi: DEFAULT_OPPONENT_AI,
 }
@@ -70,7 +70,7 @@ function loadStoredSettings() {
     return normalizeOpponentSettings({
       ...DEFAULT_SETTINGS,
       ...parsed,
-      tabletop: normalizePlayableTabletopRules(parsed.tabletop),
+      tabletop: normalizePlayableTabletopRules(parsed.tabletop ?? DEFAULT_SETTINGS.tabletop),
     })
   } catch {
     return DEFAULT_SETTINGS
