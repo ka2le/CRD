@@ -2,7 +2,7 @@ import sharedModel from '../../data/dan-shared-handpairs-net.json' with { type: 
 import { createLearnedHandPolicy } from './learnedHandEvaluator.js'
 import { chooseDanDecision as chooseLegacyDanDecision, DAN_BOT_VERSION as LEGACY_DAN_BOT_VERSION } from './legacyDanBotV6.js'
 
-export const DAN_BOT_VERSION = 'dan-draft-shared234-opponentfirst5-twoorderprep-v8'
+export const DAN_BOT_VERSION = 'dan-draft-shared234-opponentfirst5-twoorderprep-v9'
 export const DAN_SHARED_MODEL_VERSION = sharedModel.version
 export const DAN_SHARED_CHECKPOINT_SHA256 = sharedModel.checkpoint_sha256
 // Keep historical metadata imports available for explicit fallback/replay users.
