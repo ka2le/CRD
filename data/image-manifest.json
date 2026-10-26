@@ -1,6 +1,22 @@
 {
   "version": 1,
   "images": {
+    "assets/originals/robot-attack/robot-attack-7-rescaled.png": {
+      "role": "art",
+      "original": "assets/originals/robot-attack/robot-attack-7-rescaled.png",
+      "path": "images/art/448a4bf746bf5087daca-33db01d158c70e4d68d2.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "2188b830a984967045408053c80fea7e7191a5ffcf219ca008ac8a47bab98a14",
+      "outputSha256": "469a671b846eaf165b83c0d4d4e14457f226907fc1b1dce3860bb82b8dc0708c",
+      "originalBytes": 8444749,
+      "bytes": 63674,
+      "width": 550,
+      "height": 768
+    },
     "assets/originals/tabletop/chameleon.png": {
       "role": "art",
       "original": "assets/originals/tabletop/chameleon.png",

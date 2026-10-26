@@ -10,10 +10,10 @@ import { applyPreparationAction, createPreparationState, getPreparationActions }
 import { resolveTabletopBattle, chooseTabletopType, toTabletopCard, normalizeTabletopRules } from './tabletop.js'
 
 export const HEADLESS_PROTOCOL_VERSION = 2
-export const HEADLESS_RULES_VERSION = 'digital-21-50-preparation-v1'
+export const HEADLESS_RULES_VERSION = 'digital-21-50-preparation-v2'
 const rulesVersion = (config) => {
   const rules = normalizeTabletopRules(config.tabletop)
-  return rules ? `tabletop-single-score-${rules === 'abilities-main' ? 'v11' : 'v4'}-${rules}` : HEADLESS_RULES_VERSION
+  return rules ? `tabletop-single-score-${rules === 'abilities-main' ? 'v12' : 'v5'}-${rules}` : HEADLESS_RULES_VERSION
 }
 const SIDES = ['player', 'opponent']
 const otherSide = (side) => side === 'player' ? 'opponent' : 'player'

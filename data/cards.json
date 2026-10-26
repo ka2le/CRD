@@ -464,7 +464,7 @@
     {
       "id": "robot_attack",
       "name": "robot_attack",
-      "copies": 6,
+      "copies": 7,
       "type": "action",
       "images": [
         "https://cdn.midjourney.com/5413367d-1f71-4247-b4e7-7b808a88805f/0_0.png",
@@ -472,7 +472,8 @@
         "https://cdn.midjourney.com/8a1748d0-d30f-43d6-9f73-c6c3c491edd2/0_0.png",
         "https://cdn.midjourney.com/ef1a2d8f-b2b9-4e80-9dff-390439a77d73/0_0.png",
         "https://cdn.midjourney.com/d0ab3f46-1a6d-4292-8fdd-bcf7863fb886/0_0.png",
-        "https://cdn.midjourney.com/2f1865c9-4a26-49a4-84a6-578ec5c7d011/0_0.png"
+        "https://cdn.midjourney.com/2f1865c9-4a26-49a4-84a6-578ec5c7d011/0_0.png",
+        "assets/originals/robot-attack/robot-attack-7-rescaled.png"
       ],
       "stats": [],
       "effect": {
