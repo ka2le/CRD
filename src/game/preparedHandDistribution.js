@@ -22,8 +22,14 @@ export function createDistributionPreparation({ search, prep, rules, tt }) {
   const better = (a, b) => a.utility > b.utility + 1e-10 ||
     (Math.abs(a.utility - b.utility) <= 1e-10 && a.margin > b.margin + 1e-10)
   function choose(state, { chanceLimit = 16, exactChance = false, maxDepth = 8,
-    maxNodes = 12000, timeBudgetMs = 250, trace = false, cache = true, discardAllBias = 0, discardAllAlreadyUsed = false, opponentModel = null } = {}) {
+    maxNodes = 12000, timeBudgetMs = 250, trace = false, cache = true, discardAllBias = 0, discardAllAlreadyUsed = false, opponentModel = null, exactMemo = false, discardAllLookup = null } = {}) {
     if (!Number.isFinite(discardAllBias) || discardAllBias < 0 || discardAllBias > .2) throw Error("Bias must be in [0, .2]")
+    const mechanicsCache = new WeakMap()
+    const handMechanics = c => {
+      if (!exactMemo) return mechanics(c)
+      if (!mechanicsCache.has(c)) mechanicsCache.set(c, mechanics(c))
+      return mechanicsCache.get(c)
+    }
     const started = performance.now(), side = state.actor
     if (!state.preparation || !['draft', 'five-hand-discard'].includes(state.game.mode)) throw Error('Preparation required')
     const actions = prep.getPreparationActions(state.preparation, side)
@@ -35,7 +41,7 @@ export function createDistributionPreparation({ search, prep, rules, tt }) {
     const types = new Map(), codeCache = new WeakMap(), unknownCache = new WeakMap()
     const typeCode = c => {
       if (codeCache.has(c)) return codeCache.get(c)
-      const key = mechanics(c)
+      const key = handMechanics(c)
       if (!types.has(key)) types.set(key, types.size)
       const code = types.get(key); codeCache.set(c, code); return code
     }
@@ -51,6 +57,17 @@ export function createDistributionPreparation({ search, prep, rules, tt }) {
     }
     const keyOf = (p, unknown) => cardKey(p.playerHand, p.playerActivated) + '/' +
       cardKey(p.playerDiscard, p.playerActivated) + '/' + unknownKey(unknown) + '/' + Number(p.playerFinished)
+    const initialCounts = {}
+    if (exactMemo) for (const c of v.unseen) initialCounts[c.id] = (initialCounts[c.id] ?? 0) + 1
+    const consumedCache = new WeakMap()
+    const consumedFor = unknown => {
+      if (!consumedCache.has(unknown)) {
+        const consumed = { ...initialCounts }
+        for (const c of unknown) consumed[c.id]--
+        consumedCache.set(unknown, consumed)
+      }
+      return consumedCache.get(unknown)
+    }
     const leafCache = new Map(), memo = new Map(), distributions = new Map(), traceEdges = []
     const root = prep.createPreparationState({ playerHand: v.ownHand, opponentHand: v.enemyPublicHand ?? [],
       playerDiscards: v.ownDiscard, opponentDiscards: v.enemyPublicPile, deck: [] })
@@ -66,12 +83,16 @@ export function createDistributionPreparation({ search, prep, rules, tt }) {
         score = { reward: battle.winner === 'tie' ? 0 : battle.winner === 'player' ? 1 : -1,
           margin: battle.player.score - battle.opponent.score }
       }
-      const remaining = new Map()
-      for (const c of unknown) remaining.set(c.id, (remaining.get(c.id) ?? 0) + 1)
-      const consumed = {}
-      for (const c of v.unseen) consumed[c.id] = (consumed[c.id] ?? 0) + 1
-      for (const [id, n] of remaining) consumed[id] -= n
-      const outcomeKey = JSON.stringify([p.playerHand.map(c => mechanics(c)).sort(), consumed])
+      let consumed
+      if (exactMemo) consumed = consumedFor(unknown)
+      else {
+        const remaining = new Map()
+        for (const c of unknown) remaining.set(c.id, (remaining.get(c.id) ?? 0) + 1)
+        consumed = {}
+        for (const c of v.unseen) consumed[c.id] = (consumed[c.id] ?? 0) + 1
+        for (const [id, n] of remaining) consumed[id] -= n
+      }
+      const outcomeKey = JSON.stringify([p.playerHand.map(c => handMechanics(c)).sort(), consumed])
       const distribution = new Map([[outcomeKey, { hand: p.playerHand, consumed, weight: 1 }]])
       const value = { ...score, truncated: false, distribution }
       value.activationProbability = Number(usedDiscardAll)
@@ -107,13 +128,22 @@ export function createDistributionPreparation({ search, prep, rules, tt }) {
       metrics.actionEdges++
       const requested = action.type !== 'prepare' ? 0 : action.cardId === 'draw_2_extra' ? 2 :
         action.cardId === 'draw_all_new_1' ? p.playerHand.length + 1 : 0
+      if (discardAllLookup && action.type === 'prepare' && action.cardId === 'draw_all_new_1') {
+        if (requested === 6 && unknown.length >= 6) {
+          metrics.lookupLeaves = (metrics.lookupLeaves ?? 0) + 1
+          return discardAllLookup({p, unknown, v, opponentModel})
+        }
+        metrics.lookupFallbacks = (metrics.lookupFallbacks ?? 0) + 1
+      }
       const distributionKey = unknownKey(unknown) + ':' + requested
       if (!distributions.has(distributionKey)) distributions.set(distributionKey, weightedDraws(unknown, requested, chanceLimit, exactChance))
       const distribution = distributions.get(distributionKey)
       if (requested) metrics[distribution.exact ? 'exactChanceNodes' : 'approximateChanceNodes']++
       const result = { reward: 0, margin: 0, activationProbability: 0, utility: 0, truncated: false, distribution: new Map() }
       for (const outcome of distribution.outcomes) {
-        const remaining = [...unknown], drawn = []
+        // No-draw branches never splice the unseen pool. Retain its immutable
+        // identity so depth passes and sibling actions reuse exact summaries.
+        const remaining = exactMemo && outcome.ids.length === 0 ? unknown : [...unknown], drawn = []
         for (const id of outcome.ids) {
           const i = remaining.findIndex(c => c.id === id)
           if (i < 0) throw Error('Infeasible draw')

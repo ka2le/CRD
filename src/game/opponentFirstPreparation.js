@@ -8,6 +8,7 @@ import { createOpponentFirstPolicy } from './opponentFirstCore.js'
 
 export const DAN_PREPARATION_VERSION = 'two-order-mixed-actual-preparation-v1'
 export const DAN_FIFTH_VERSION = 'opponent-first-prepared-response-pick5-v1'
+export const DAN_FIFTH_IMPLEMENTATION = 'opponent-first-pick5-exact-memo-v1'
 const ids = new Set(getCoreCards({ tabletop: 'abilities-main' }).map(c => c.id))
 const policies = new Map()
 export function supportsOpponentFirst(game) {

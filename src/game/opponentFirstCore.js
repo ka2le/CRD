@@ -3,7 +3,7 @@ import { createPreparedJointEvaluation } from './preparedJointEvaluation.js'
 
 export function createOpponentFirstPolicy({ search, prep, rules, tt, h }, options={}) {
   const core=createDistributionPreparation({search,prep,rules,tt})
-  const profile={chanceLimit:16,maxDepth:8,maxNodes:12000,timeBudgetMs:1e12,discardAllBias:0,...options}
+  const profile={chanceLimit:16,maxDepth:8,maxNodes:12000,timeBudgetMs:1e12,discardAllBias:0,exactMemo:true,...options}
   const cache=new Map(),other=s=>s==='player'?'opponent':'player'
   const counts=cs=>{const v={};for(const c of cs)v[c.id]=(v[c.id]??0)+1;return v}
   const keyCards=cs=>cs.map(c=>[c.id,c.uid,c.stats,c.effect,c.tabletopAttackUnits]).sort()
