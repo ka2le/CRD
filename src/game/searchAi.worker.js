@@ -1,6 +1,7 @@
 // Runs Search AI decisions off the main thread so animations stay smooth.
 import { searchDecision, searchSidePreparation } from './searchAi.js'
 import { chooseDanDecision } from './danBot.js'
+import { chooseFelixDecision } from './felixBot.js'
 import { completeFastPreparation } from './fastPreparation.js'
 
 self.onmessage = async (event) => {
@@ -17,7 +18,7 @@ self.onmessage = async (event) => {
       self.postMessage({ id, ok: true, preparation: result.preparation, steps: result.steps })
       return
     }
-    const result = bot === 'dan' ? chooseDanDecision(game, side, options) : searchDecision(game, side, options)
+    const result = bot === 'felix' ? chooseFelixDecision(game, side, options) : bot === 'dan' ? chooseDanDecision(game, side, options) : searchDecision(game, side, options)
     self.postMessage({
       id, ok: true, action: result.action, samples: result.samples, elapsedMs: result.elapsedMs,
     })

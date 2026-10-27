@@ -4,6 +4,7 @@ import { chooseDiscardIds, pickBestCardForHand } from './cardEvaluator.js'
 import { completeOpponentPreBattle } from './preBattle.js'
 import { requestDavidAction } from './davidBotClient.js'
 import { chooseDanDecision } from './danBot.js'
+import { chooseFelixDecision } from './felixBot.js'
 import { completeFastPreparation } from './fastPreparation.js'
 
 // Ids stay 'rules' / 'search' so saved settings keep working; the names are what players see.
@@ -12,11 +13,12 @@ export const OPPONENT_AI_OPTIONS = [
   { id: 'shallow', name: 'IngaBot', label: 'IngaBot (Medium)' },
   { id: 'search', name: 'SvenBot', label: 'SvenBot (Hard)' },
   { id: 'dan', name: 'DanBot', label: 'DanBot (Hard)' },
+  { id: 'felix', name: 'FelixBot', label: 'FelixBot (Hard)' },
   { id: 'david', name: 'DavidBot', label: 'DavidBot (Very Hard)' },
 ]
 
 export function getOpponentAiOptions(mode) {
-  return OPPONENT_AI_OPTIONS.filter(option => mode === 'five-hand-discard' ? option.id !== 'dan' : option.id !== 'david')
+  return OPPONENT_AI_OPTIONS.filter(option => mode === 'five-hand-discard' ? !['dan', 'felix'].includes(option.id) : option.id !== 'david')
 }
 
 export const DEFAULT_OPPONENT_AI = 'dan'
@@ -32,8 +34,9 @@ export function normalizeOpponentSettings(current, patch = {}) {
   const active = current.opponentAi ?? (current.gameMode === 'five-hand-discard' ? current.discardOpponentAi : current.draftOpponentAi)
   const selected = normalizeOpponentAi(Object.hasOwn(patch, 'opponentAi') ? patch.opponentAi : active)
   const linked = selected === 'dan' || selected === 'david'
-  next.discardOpponentAi = linked ? 'david' : selected
-  next.draftOpponentAi = linked ? 'dan' : selected
+  const keepFelix = !Object.hasOwn(patch, 'opponentAi') && current.draftOpponentAi === 'felix' && selected === 'david'
+  next.discardOpponentAi = linked || selected === 'felix' ? 'david' : selected
+  next.draftOpponentAi = keepFelix ? 'felix' : linked ? 'dan' : selected
   next.opponentAi = next.gameMode === 'five-hand-discard' ? next.discardOpponentAi : next.draftOpponentAi
   return next
 }
@@ -44,7 +47,7 @@ export function getOpponentAiName(id) {
 
 // Bots that search (everything except RolfBot, which plays the Rules AI directly).
 export function isSearchOpponentAi(id) {
-  return id === 'dan' || id === 'david' || Boolean(BOT_SEARCH_PROFILES[id])
+  return id === 'dan' || id === 'felix' || id === 'david' || Boolean(BOT_SEARCH_PROFILES[id])
 }
 
 // Search budgets per bot. `decision` covers draft picks / discard passes, `preparation` each
@@ -169,10 +172,11 @@ function requestFromWorker(game, message) {
  */
 export function requestOpponentSearchAction(game, bot = 'search', options = {}) {
   if (bot === 'david' && game.mode === 'five-hand-discard') return requestDavidAction(snapshotGame(game), options)
-  if (bot === 'dan' && game.mode === 'draft') {
-    return requestFromWorker(game, { game: snapshotGame(game), side: 'opponent', bot: 'dan' })
+  if ((bot === 'dan' || bot === 'felix') && game.mode === 'draft') {
+    const choose = bot === 'felix' ? chooseFelixDecision : chooseDanDecision
+    return requestFromWorker(game, { game: snapshotGame(game), side: 'opponent', bot })
       .catch(() => new Promise((resolve, reject) => setTimeout(() => {
-        try { resolve(chooseDanDecision(game).action) } catch (error) { reject(error) }
+        try { resolve(choose(game).action) } catch (error) { reject(error) }
       }, 0)))
   }
   const profile = BOT_SEARCH_PROFILES[bot] ?? BOT_SEARCH_PROFILES.search
@@ -214,10 +218,11 @@ function inlinePreparation(preparation, game, profile) {
  * Always resolves: worker → short main-thread search → Rules AI preparation.
  */
 export function requestOpponentPreparation(preBattle, game, bot = 'search') {
-  if (bot === 'dan' || bot === 'david') {
+  if (bot === 'dan' || bot === 'felix' || bot === 'david') {
     const preparation = snapshotPreparation(preBattle)
-    return requestFromWorker(game, { kind: 'fast-preparation', preparation, game: snapshotGame(game), side: 'opponent' })
-      .catch(() => completeFastPreparation(preparation, game).then(r => r.preparation))
+    const options = bot === 'felix' ? { discardSixLookup: false } : {}
+    return requestFromWorker(game, { kind: 'fast-preparation', preparation, game: snapshotGame(game), side: 'opponent', options })
+      .catch(() => completeFastPreparation(preparation, game, 'opponent', options).then(r => r.preparation))
       .then(opponentPreparationPatch)
   }
   const profile = BOT_SEARCH_PROFILES[bot] ?? BOT_SEARCH_PROFILES.search
