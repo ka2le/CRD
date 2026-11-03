@@ -57,6 +57,8 @@ Card size is computed, not set by breakpoints (`hooks/useFitLayout.js`):
 
 ## Animations
 
+- **Abilities calculation bar:** the central resolution rows render at 1.45× scale, including numbers, icons, and spacing. Compact rows start below 1400px; controls move underneath at 800px. At 640px and below, scale drops to 1.2× and each player uses two lines: all faction/neutral cells together, then the formula underneath.
+
 - **Shuffle** (`board/ShuffleIntro.jsx`): a riffle in the centre at each new game, after which the deck settles into its pile. Timing lives in `hooks/dealTiming.js`, and game flow waits for it (the AI's first pick is delayed until the deal has landed).
 - **Deal:** cards enter from the deck pile face down and flip face up, staggered (`enterFrom` on `CardButton`, using WAAPI).
 - **Zone changes** (for example the hand moving from the dock to the centre, or into battle): cards FLIP from their last on-screen rect (`card/cardRects.js`).

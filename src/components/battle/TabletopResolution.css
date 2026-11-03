@@ -13,6 +13,8 @@
   display: grid;
   gap: 4px;
   justify-self: center;
+  /* Include spacing and icons in the enlargement; reserve real layout space. */
+  zoom: 1.45;
 }
 
 .ttr-row {
@@ -304,7 +306,7 @@
   to { transform: scale(1); opacity: 1; }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 1400px) {
   .ttr { gap: 6px; padding: 2px; }
   .ttr-row { grid-template-columns: auto auto; gap: 6px; padding: 3px 6px 3px 10px; }
   .ttr-row__name { display: none; }
@@ -317,6 +319,18 @@
   .ttr__controls { flex-direction: column; gap: 4px; }
   .ttr__controls .ui-button--icon { min-width: 36px; min-height: 36px; }
   .ttr__result { max-width: 6.5em; padding: 6px; font-size: 0.68rem; white-space: normal; }
+}
+
+@media (max-width: 800px) {
+  .ttr { grid-template-columns: minmax(0, 1fr); }
+  .ttr__controls { flex-direction: row; justify-content: center; }
+  .ttr__result { max-width: none; }
+}
+
+@media (max-width: 640px) {
+  .ttr__rows { justify-self: stretch; zoom: 1.2; }
+  .ttr-row { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+  .ttr-row__cells { justify-content: center; }
   .ttr-banner { font-size: 2.3rem; }
   .ttr-banner--pill { font-size: 1.6rem; }
   .ttr-banner--crown .g-icon { font-size: 3.4rem; }
