@@ -21,6 +21,8 @@ Added 2026-10-18 with the table redesign. Rules logic is unchanged. This file de
 
 ## Visual language
 
+- Draft turns have a persistent callout above the pack: **Your turn · Pick a card** or **[opponent name]'s turn**, with a down/up arrow and brass/rose styling. The acting side's rail has a stronger tinted edge and background. Between packs the callout says **Next pack**; viewers see the active player's name. The callout reserves its own space so it never overlaps cards, including in phone landscape.
+
 - Style follows the app icon: "classy poker meets minimalist sci-fi meets fantasy battle". Midnight navy felt with a faint brass hex weave (`--hex`), champagne/brass ink (`--brass`), muted jewel tones, flat colour and real drop shadows instead of glows/bloom.
 - Type: Cinzel (`--display`) for titles, result banner and primary buttons; Manrope (`--font`) for UI; DM Mono (`--mono`) for numbers.
 - Class colours are muted jewel tones: Critter `--critter` (sage), Robot `--robot` (steel blue), Dragon `--dragon` (copper), each with a `-deep` variant matching the icon's card backs. Shield is pale blue, preparation specials lilac, damage oxblood red.

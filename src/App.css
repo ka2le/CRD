@@ -24,6 +24,16 @@
   grid-template-rows: auto auto minmax(0, 1fr) auto auto;
 }
 
+.table--draft > .side-rail--turn {
+  border-color: var(--side);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--side) 18%, #121d31), #090f1b);
+}
+
+.table--draft > .side-rail--turn .side-rail__marker {
+  width: 4px;
+  animation: none;
+}
+
 /* Discard + preparation: your hand is the hero. */
 .table--focus {
   grid-template-rows: auto auto minmax(0, 1fr) auto;

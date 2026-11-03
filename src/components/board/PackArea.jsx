@@ -33,6 +33,7 @@ export default function PackArea({
   playerHand = [],
   dealDelayMs = 0,
   turn = null,
+  turnLabel = 'Next pack',
 }) {
   const [measureRef, size] = useElementSize()
   const { hiddenSlots } = useCardMotion()
@@ -46,48 +47,54 @@ export default function PackArea({
 
   return (
     <section
-      ref={measureRef}
       className={['pack-area', turn ? `pack-area--turn-${turn}` : ''].filter(Boolean).join(' ')}
     >
-      {cardWidth > 0 ? (
-        <div className="pack-area__grid" style={{ '--card-w': `${cardWidth}px`, gap: `${gap}px`, maxWidth: `${maxWidth}px` }}>
-          {Array.from({ length: slotCount }).map((_, index) => {
-            const uid = slotUids[index]
-            const card = uid ? byUid.get(uid) : null
+      <div className="pack-area__turn" role="status" aria-live="polite" aria-atomic="true">
+        <span className="pack-area__turn-direction" aria-hidden="true">{turn === 'player' ? '↓' : turn === 'opponent' ? '↑' : '·'}</span>
+        <strong className="pack-area__turn-label">{turnLabel}</strong>
+        {canPick ? <span className="pack-area__turn-action">Pick a card</span> : null}
+      </div>
+      <div ref={measureRef} className="pack-area__cards">
+        {cardWidth > 0 ? (
+          <div className="pack-area__grid" style={{ '--card-w': `${cardWidth}px`, gap: `${gap}px`, maxWidth: `${maxWidth}px` }}>
+            {Array.from({ length: slotCount }).map((_, index) => {
+              const uid = slotUids[index]
+              const card = uid ? byUid.get(uid) : null
 
-            if (!card) {
-              return <div key={`empty-${index}`} className="pack-area__slot pack-area__slot--empty" style={{ width: `${cardWidth}px` }} />
-            }
+              if (!card) {
+                return <div key={`empty-${index}`} className="pack-area__slot pack-area__slot--empty" style={{ width: `${cardWidth}px` }} />
+              }
 
-            const masked = (hiddenSlots[`draft-row::${card.uid}`] ?? 0) > 0
-            const dealing = card.draftAnimation === 'dealing'
-            const delta = getDamageDelta(card, playerHand)
+              const masked = (hiddenSlots[`draft-row::${card.uid}`] ?? 0) > 0
+              const dealing = card.draftAnimation === 'dealing'
+              const delta = getDamageDelta(card, playerHand)
 
-            return (
-              <MotionAnchor
-                key={card.uid}
-                section="draft-row"
-                slot={card.uid}
-                className="pack-area__slot"
-                style={{ width: `${cardWidth}px` }}
-              >
-                <CardButton
-                  card={card}
-                  onToggle={onPick}
-                  disabled={!canPick}
-                  masked={masked}
-                  eyed={eyedUid === card.uid}
-                  eyedDelayMs={eyedDelayMs}
-                  dimmed={Boolean(eyedUid) && eyedUid !== card.uid}
-                  enterFrom={dealing ? { section: 'draft-deck', delayMs: dealDelayMs + (index * DEAL_STAGGER_MS) } : null}
-                  hint={delta === null ? null : formatDelta(delta)}
-                  inspectContextHand={playerHand}
-                />
-              </MotionAnchor>
-            )
-          })}
-        </div>
-      ) : null}
+              return (
+                <MotionAnchor
+                  key={card.uid}
+                  section="draft-row"
+                  slot={card.uid}
+                  className="pack-area__slot"
+                  style={{ width: `${cardWidth}px` }}
+                >
+                  <CardButton
+                    card={card}
+                    onToggle={onPick}
+                    disabled={!canPick}
+                    masked={masked}
+                    eyed={eyedUid === card.uid}
+                    eyedDelayMs={eyedDelayMs}
+                    dimmed={Boolean(eyedUid) && eyedUid !== card.uid}
+                    enterFrom={dealing ? { section: 'draft-deck', delayMs: dealDelayMs + (index * DEAL_STAGGER_MS) } : null}
+                    hint={delta === null ? null : formatDelta(delta)}
+                    inspectContextHand={playerHand}
+                  />
+                </MotionAnchor>
+              )
+            })}
+          </div>
+        ) : null}
+      </div>
     </section>
   )
 }

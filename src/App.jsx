@@ -183,6 +183,12 @@ function AppContent() {
   const rivalMember = session.online ? (guestSeat ? roster?.host : roster?.guest) : null
   const playerName = ownMember?.name ?? room.profile.name
   const opponentName = rivalMember?.name ?? (session.online ? 'Player two' : getOpponentAiName(settings.opponentAi))
+  const draftTurn = game.phase === 'draft-player-pick' && (canPickDraftCard || spectating)
+    ? 'player' : game.phase === 'draft-opponent-thinking' ? 'opponent' : null
+  const draftTurnLabel = draftTurn === 'player'
+    ? (spectating ? `${playerName}'s turn` : 'Your turn')
+    : draftTurn === 'opponent' ? `${opponentName}'s turn`
+      : game.phase === 'draft-player-pick' ? 'Waiting to connect' : 'Next pack'
   const winnerName = winner === 'player' ? playerName : winner === 'opponent' ? opponentName : ''
   const resultLabel = winner === 'tie' ? 'Draw' : winnerName ? `${spectating ? '' : `${RESULT_LABELS[winner]} · `}${winnerName} wins` : ''
   function winsFor(member) {
@@ -363,7 +369,7 @@ function AppContent() {
           hitTick={damageFlash?.tick ?? null}
           shield={battleStarted ? (battlePlayback?.opponentShield ?? 0) : 0}
           blocked={damageFlash?.opponentBlocked ?? 0}
-          turn={opponentThinking}
+          turn={layout === 'draft' ? draftTurn === 'opponent' : opponentThinking}
           winner={winner}
         >
           <EmoteBubble emote={emoteSide === 'opponent' ? emote : null} side="opponent" />
@@ -414,7 +420,8 @@ function AppContent() {
               eyedDelayMs={game.picksThisPack === 0 ? getPackDealMs(game.draftRow.length, game.packNumber === 1) : 250}
               playerHand={playerHand}
               dealDelayMs={dealLeadMs}
-              turn={canPickDraftCard ? 'player' : (opponentThinking ? 'opponent' : null)}
+              turn={draftTurn}
+              turnLabel={draftTurnLabel}
             />
           ) : null}
           {layout === 'focus' ? (
@@ -478,7 +485,7 @@ function AppContent() {
           hitTick={damageFlash?.tick ?? null}
           shield={battleStarted ? (battlePlayback?.playerShield ?? 0) : 0}
           blocked={damageFlash?.playerBlocked ?? 0}
-          turn={playerTurn}
+          turn={layout === 'draft' ? draftTurn === 'player' : playerTurn}
           winner={winner}
           crowded={Boolean(primaryAction)}
         >
