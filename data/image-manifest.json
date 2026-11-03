@@ -145,6 +145,22 @@
       "width": 550,
       "height": 768
     },
+    "https://cdn.midjourney.com/1617f771-5d18-4091-bbbe-97f2652171f9/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/7751bc7ef8bb2dcbd7f6.png",
+      "path": "images/art/7751bc7ef8bb2dcbd7f6-b20ecd3d0fe235e27d09.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "ad8f5d5d7877ca8d2880d76663454650e24970d1d3e2ad031cffce8306de8573",
+      "outputSha256": "cbe9403c189de9ea7f87109ad9acb341a6370f025da4a4735532f8dfe771379a",
+      "originalBytes": 8627078,
+      "bytes": 80572,
+      "width": 550,
+      "height": 768
+    },
     "https://cdn.midjourney.com/164bb496-ef9f-4b75-8994-65997ec5d065/0_0.png": {
       "role": "art",
       "original": "assets/originals/f8ab3d9393d6710e5dad.png",
@@ -1041,6 +1057,22 @@
       "width": 550,
       "height": 768
     },
+    "https://cdn.midjourney.com/d36bc28c-3a37-408c-8bae-fda77593860c/0_2.png": {
+      "role": "art",
+      "original": "assets/originals/988ebae6eb763a0f12c7.png",
+      "path": "images/art/988ebae6eb763a0f12c7-708f538501febd64ddfc.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "f15244efb8bedec5e84781a24262e45d20d433c16288742799775c4566e1a60b",
+      "outputSha256": "9ce7c304f081976e60d8d2e4762d6472eefc8ed80b87e16602aece0a9bcc3e44",
+      "originalBytes": 1694975,
+      "bytes": 52092,
+      "width": 550,
+      "height": 768
+    },
     "https://cdn.midjourney.com/daa83228-5295-4c1d-bc58-c330c9a9c025/0_0.png": {
       "role": "art",
       "original": "assets/originals/4313c2b33e42cdaa3220.png",
@@ -1054,6 +1086,22 @@
       "outputSha256": "95a1159cefeac06ef69630a90449f593f01da67c1c15be714614ee5ca4b6fb37",
       "originalBytes": 6679136,
       "bytes": 31000,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/dcdbb743-a2fa-4d98-b166-3cea3c7a4c8e/0_3.png": {
+      "role": "art",
+      "original": "assets/originals/68c53c60bab0767835ba.png",
+      "path": "images/art/68c53c60bab0767835ba-0e55ce5b0b587f15d986.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "1ce7652822531f4d45b4b01c48fbf29db28944effe2edc7cff15e090b125f632",
+      "outputSha256": "880513e64c7c7adeba6128643cc8b43f5a278cff1c64aa48720e40b73b44ef22",
+      "originalBytes": 2346002,
+      "bytes": 90916,
       "width": 550,
       "height": 768
     },
@@ -1326,6 +1374,38 @@
       "outputSha256": "2830227b7b64f4644295b145827be753759071daed8684028b35fe69c967eac3",
       "originalBytes": 1137,
       "bytes": 818,
+      "width": 128,
+      "height": 128
+    },
+    "https://ka2le.github.io/chatgpt-apps3/images/mp/extra_icons/card_subtract.png": {
+      "role": "icon",
+      "original": "assets/originals/7f4fe787470f8a6cc14b.png",
+      "path": "images/icon/7f4fe787470f8a6cc14b-da6b0bb1052a568459bf.webp",
+      "settings": {
+        "maxSize": 128,
+        "lossless": true,
+        "effort": 6
+      },
+      "sourceSha256": "18b332305a7fd8173b46d875920ab14edcd8622b0abc18005d0b2f9700c492db",
+      "outputSha256": "afd497e579be66b0e82ddbd94403f44a440cae7f5ca0021914f2179a09271be1",
+      "originalBytes": 1031,
+      "bytes": 694,
+      "width": 128,
+      "height": 128
+    },
+    "https://ka2le.github.io/chatgpt-apps3/images/mp/extra_icons/cards_return.png": {
+      "role": "icon",
+      "original": "assets/originals/9c95462443dccbb7f1fd.png",
+      "path": "images/icon/9c95462443dccbb7f1fd-1741bcaf61f4e9ffddc4.webp",
+      "settings": {
+        "maxSize": 128,
+        "lossless": true,
+        "effort": 6
+      },
+      "sourceSha256": "40f89fc208b508b8930bac636423464f0182e7d4f320c9b4d8adfd196b3132ac",
+      "outputSha256": "8310db61273b0c29a749f7e41ce24a597fb27e93c0b3a5c05534fbca8af5e0c2",
+      "originalBytes": 1444,
+      "bytes": 1158,
       "width": 128,
       "height": 128
     },

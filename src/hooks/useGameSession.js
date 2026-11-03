@@ -248,7 +248,7 @@ export function getTestEditTarget(state) {
   const { game, preBattle } = state
   if (game.phase === 'battle-ready') {
     if (preBattle.pendingResolution || preBattle.pendingAnimation || preBattle.opponentSearchKey
-      || preBattle.recycleSelection) return null
+      || preBattle.recycleSelection || preBattle.playerPendingDiscard) return null
     return 'preparation'
   }
   if (game.phase === 'draft-player-pick' || game.phase.startsWith('player-discard')) return 'game'
@@ -508,6 +508,7 @@ export function sessionReducer(state, action) {
 
     case 'ACTIVATE_PLAYER_PRE_BATTLE_CARD': {
       const current = state.preBattle
+      if (state.battleStarted || state.game.phase !== 'battle-ready' || current.playerFinished || current.playerPendingDiscard || current.pendingResolution || current.opponentSearchKey) return state
       const { cards, armedCopyCard, copyCandidates } = getPlayerPreBattleView(current)
       const uid = action.uid
       const directCard = cards.find((card) => card.uid === uid)
@@ -606,6 +607,7 @@ export function sessionReducer(state, action) {
           playerDiscard: result.playerDiscard,
           playerActivated: result.playerActivated,
           playerDrawnCount: result.playerDrawnCount,
+          playerPendingDiscard: result.playerPendingDiscard,
           armedPlayerCopyUid: null,
           recycleSelection: null,
           pendingAnimation: null,
@@ -615,9 +617,24 @@ export function sessionReducer(state, action) {
       })
     }
 
+    case 'DISCARD_PLAYER_PREPARATION_CARD':
+    case 'FINISH_PLAYER_PREPARATION_DISCARD': {
+      const current = state.preBattle
+      const pending = current.playerPendingDiscard
+      if (!pending || state.battleStarted || current.playerFinished) return state
+      if (action.type === 'DISCARD_PLAYER_PREPARATION_CARD' && (!current.playerHand.some((card) => card.uid === action.uid) || action.uid === pending.sourceUid)) return state
+      if (action.type === 'FINISH_PLAYER_PREPARATION_DISCARD' && pending.remaining !== null) return state
+      const result = applyPreparationAction(current, 'player', {
+        type: action.type === 'DISCARD_PLAYER_PREPARATION_CARD' ? 'discard-preparation' : 'finish-preparation-discard',
+        sourceUid: pending.sourceUid,
+        ...(action.type === 'DISCARD_PLAYER_PREPARATION_CARD' ? { targetUid: action.uid } : {}),
+      })
+      return createTransitionResult(state, { preBattle: { ...result, tabletopChoice: null, activationTick: current.activationTick + 1 } })
+    }
+
     case 'RESOLVE_PLAYER_RECYCLE_PICK': {
       const current = state.preBattle
-      if (!current.recycleSelection || current.recycleSelection.side !== 'player') return state
+      if (current.playerPendingDiscard || !current.recycleSelection || current.recycleSelection.side !== 'player') return state
 
       const pickedCard = (current.playerDiscard ?? []).find((card) => card.uid === action.uid)
       if (!pickedCard) return state
@@ -696,7 +713,7 @@ export function sessionReducer(state, action) {
 
     case 'CHOOSE_TABLETOP_TYPE': {
       if (!state.settings?.tabletop || state.battleStarted || state.game.phase !== 'battle-ready'
-        || state.preBattle.pendingResolution || state.preBattle.armedPlayerCopyUid || state.preBattle.recycleSelection
+        || state.preBattle.pendingResolution || state.preBattle.playerPendingDiscard || state.preBattle.armedPlayerCopyUid || state.preBattle.recycleSelection
         || state.preBattle.opponentSearchKey) return state
       const choice = getTabletopChoice(state.preBattle)
       const card = state.preBattle.playerHand.find((entry) => entry.uid === action.uid)
@@ -714,7 +731,7 @@ export function sessionReducer(state, action) {
       return { ...state, preBattle: { ...state.preBattle, tabletopTypeCardUid: null } }
 
     case 'START_BATTLE': {
-      if (state.battleStarted || state.game.phase !== 'battle-ready' || state.preBattle.pendingResolution) return state
+      if (state.battleStarted || state.game.phase !== 'battle-ready' || state.preBattle.pendingResolution || state.preBattle.playerPendingDiscard) return state
       if (state.settings?.tabletop && getTabletopChoice(state.preBattle).needsChoice) {
         return { ...state, preBattle: { ...state.preBattle, playerFinished: true, armedPlayerCopyUid: null, recycleSelection: null } }
       }
@@ -838,7 +855,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     && game.phase === 'draft-opponent-thinking' && !game.pendingOpponentPickUid
   const opponentDecisionKey = getOpponentDecisionKey(dealId, game)
   const opponentPreparing = (Boolean(preBattle.opponentSearchKey) || (online && preBattle.playerFinished)) && !battleStarted
-  const canStartBattle = !onlineBlocked && !battleStarted && game.phase === 'battle-ready' && !preBattle.pendingResolution && !opponentPreparing
+  const canStartBattle = !onlineBlocked && !battleStarted && game.phase === 'battle-ready' && !preBattle.pendingResolution && !preBattle.playerPendingDiscard && !opponentPreparing
   const pendingDraftPickUid = game.pendingOpponentPickUid ?? null
   const draftActivationTick = pendingDraftPickUid ? `${pendingDraftPickUid}-${game.phase}-${game.playerHand.length}-${game.opponentHand.length}` : 'draft-idle'
   const canPickDraftCard = !onlineBlocked && game.phase === 'draft-player-pick' && game.currentPicker === 'player'
@@ -850,7 +867,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
   const isRecyclePicking = isPreBattleReady && Boolean(preBattle.recycleSelection?.side === 'player')
   const isWaitingForPlayerChoice = isPreBattleReady && (playerPreBattleView.cards.length > 0 || isRecyclePicking)
   const choosingTabletopType = Boolean(settings.tabletop && isPreBattleReady
-    && !preBattle.pendingResolution && !preBattle.armedPlayerCopyUid && !isRecyclePicking && !opponentPreparing
+    && !preBattle.pendingResolution && !preBattle.playerPendingDiscard && !preBattle.armedPlayerCopyUid && !isRecyclePicking && !opponentPreparing
     && playerPreBattleView.cards.length === 0 && tabletopChoice.types.length > 1)
   const highlightedPreBattleIds = useMemo(() => {
     const ids = [
@@ -1332,6 +1349,9 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     resolvePlayerRecyclePick,
     closePreBattleInfoOverlay,
     armedPlayerCopyUid: preBattle.armedPlayerCopyUid,
+    pendingPreparationDiscard: preBattle.playerPendingDiscard,
+    discardPreparationCard: (uid) => dispatch({ type: 'DISCARD_PLAYER_PREPARATION_CARD', uid }),
+    finishPreparationDiscard: () => dispatch({ type: 'FINISH_PLAYER_PREPARATION_DISCARD' }),
     recycleSelectionCards,
     isRecyclePicking,
     cancelPlayerRecyclePick,

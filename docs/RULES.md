@@ -1,5 +1,7 @@
 # Gameplay rules
 
+**2026-11-03:** Optional **Abilities+NewCards** mode adds From Nothing, Draw 2 / Discard 2, Shield Ultimate (3 shields), and Discard for Damage to current Abilities main. Available for Draft and Discard; original Abilities is unchanged. See [new-card rules](ABILITIES_NEW_CARDS.md).
+
 **2026-10-25, current Abilities v11:** Choose from the largest original typed contributions; if none deal damage, choose any faction, including at zero power. One of Each deals neutral product damage and contributes no Robot attack unit. With Dragon as main faction, total original power7+ (neutral and other-faction damage included) adds one Dragon stat, recalculating attacks exactly once without changing faction eligibility. Apply all bonuses/effects before shields: max(0,recomputed power+Perfect Balance−enemy shields). Each shield costs Critter1/Robot2/Dragon0. Perfect Balance remains+3 and may be completely blocked. Threshold/Prototype/digital rules retain their separate behavior.
 
 **2026-10-24, current Abilities:** Bite adds 2 flat power without stats. Devour (`devour`) gives 2 power per Dragon stat, like the separate unchanged Dragon Ultimate (`dragon_ulti`), but no longer offers Dragon as a main faction unless Dragon is a largest contribution. Ordinary contribution ties still allow a faction choice. Threshold, hidden Prototype and digital Battle retain their prior behavior. Every help/rules sheet has a Copy rules button with mode-specific plain text, including card descriptions; clipboard failure offers selectable text.

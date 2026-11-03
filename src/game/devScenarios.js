@@ -2,6 +2,10 @@ import { getExpandedCoreDeck } from './cards.js'
 import { chooseTabletopType, getTabletopProfile } from './tabletop.js'
 
 const SCENARIOS = {
+  'new-cards': {
+    player: ['no_stats_to_2', 'draw_2_discard_2', 'discard_for_damage', 'shield_ulti', 'robot_attack'],
+    opponent: ['robot1', 'robot_attack', 'shield2', 'critter1', 'dragon1'],
+  },
   'shield-bonus-blocked': {
     player: ['robot1', 'robot_attack', 'shield2', 'critter1', 'dragon1'],
     opponent: ['shield2', 'shield2', 'bite', 'critter1', 'dragon1'],
@@ -49,6 +53,11 @@ const SCENARIOS = {
   tie: {
     player: ['robot_dragon', 'robot_attack', 'dragons_breath', 'shield2', 'critter1'],
     opponent: ['rabbit2', 'swarm', 'shield2', 'dragon1', 'robot1'],
+  },
+  // Equal totals: the Critter main faction wins the tie (Abilities).
+  'critter-tie': {
+    player: ['robot_critter', 'robot_ulti', 'robot_critter', 'murder_rabbit', 'critter1'],
+    opponent: ['bite', 'joker', 'dragon_ulti', 'joker', 'dragon1'],
   },
   preparation: {
     player: ['draw_2_extra', 'copy_card_in_hand', 'dragon2', 'dragons_breath', 'recycle_card'],

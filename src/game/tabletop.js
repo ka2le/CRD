@@ -9,7 +9,11 @@ const ULTIMATES = new Set(['murder_rabbit', 'robot_ulti', 'dragon_ulti', 'devour
 //   threshold – one bonus per main faction: Critters 1+ → +2, Robots 4+ → +3, Dragons 8+ → +4.
 //   abilities-prototype – original Adapt / Perfect Balance / Overwhelming; no Shortcut, 2× or
 //   Critter + Robot + Dragon cards in the deck.
-export const TABLETOP_RULES = ['threshold', 'abilities-prototype', 'abilities-main']
+export const TABLETOP_RULES = ['threshold', 'abilities-prototype', 'abilities-main', 'abilities-new-cards']
+export function isMainAbilityRules(rules) {
+  return rules === 'abilities-main' || rules === 'abilities-new-cards'
+}
+
 const ABILITIES_EXCLUDED_IDS = new Set(['double_dmg', 'shortcut', 'any_off_each'])
 
 // Generic tabletop and abilities aliases always mean the active main rules.
@@ -17,6 +21,7 @@ const ABILITIES_EXCLUDED_IDS = new Set(['double_dmg', 'shortcut', 'any_off_each'
 export function normalizeTabletopRules(value) {
   if (!value) return false
   if (['abilities-prototype', 'abilities-v1', 'old-abilities'].includes(value)) return 'abilities-prototype'
+  if (value === 'abilities-new-cards') return value
   if (value === 'threshold') return 'threshold'
   return 'abilities-main'
 }
@@ -29,8 +34,8 @@ export function normalizePlayableTabletopRules(value) {
 
 export function isCardInTabletopRules(card, rules) {
   const normalized = normalizeTabletopRules(rules)
-  if (normalized === 'abilities-main' && card.id === 'chameleon') return false
-  return !(['abilities-prototype', 'abilities-main'].includes(normalized) && ABILITIES_EXCLUDED_IDS.has(card.id))
+  if (isMainAbilityRules(normalized) && card.id === 'chameleon') return false
+  return !(['abilities-prototype', 'abilities-main', 'abilities-new-cards'].includes(normalized) && ABILITIES_EXCLUDED_IDS.has(card.id))
 }
 
 // Tabletop cards carry their rule set, so any hand knows how it is scored.
@@ -42,8 +47,8 @@ export function getHandTabletopRules(hand = []) {
 export function toTabletopCard(card, rules = 'abilities-main') {
   const effect = { ...card.effect }
   if (effect.dmgType) effect.dmg = ULTIMATES.has(card.id) ? 2 : 1
-  if (card.id === 'bite') effect.dmg = normalizeTabletopRules(rules) === 'abilities-main' ? 2 : 1
-  if (effect.shield) effect.shield = normalizeTabletopRules(rules) === 'abilities-main' ? MAIN_ABILITY_RULES.shieldValue : 1
+  if (card.id === 'bite') effect.dmg = isMainAbilityRules(normalizeTabletopRules(rules)) ? 2 : 1
+  if (effect.shield && card.id !== 'shield_ulti') effect.shield = isMainAbilityRules(normalizeTabletopRules(rules)) ? MAIN_ABILITY_RULES.shieldValue : 1
   return { ...card, tabletop: normalizeTabletopRules(rules) || 'abilities-main', cd: 0, effect }
 }
 
@@ -70,7 +75,7 @@ function adaptCard(card) {
 export const ROBOT_ULTI_ATTACK_COUNT = 2
 
 export function countRobotAttacks(cards, stats = getHandStats(cards)) {
-  const oneOfEachHits = getHandTabletopRules(cards) !== 'abilities-main' && stats.critter * stats.robot * stats.dragon > 0
+  const oneOfEachHits = !isMainAbilityRules(getHandTabletopRules(cards)) && stats.critter * stats.robot * stats.dragon > 0
   return cards.reduce((sum, card) => {
     if (card.id === 'robot_ulti') return sum + ROBOT_ULTI_ATTACK_COUNT
     if (card.effect?.dmgType === 'robot' || (card.id === 'one_off_each' && oneOfEachHits)) return sum + 1
@@ -105,7 +110,7 @@ export function getTabletopProfile(hand = []) {
   if (profileCache.has(hand)) return profileCache.get(hand)
   const rules = getHandTabletopRules(hand)
   const profile = rules === 'abilities-prototype' ? getPrototypeAbilitiesProfile(hand)
-    : rules === 'abilities-main' ? getMainAbilitiesProfile(hand) : { ...computeProfile(hand), rules }
+    : isMainAbilityRules(rules) ? getMainAbilitiesProfile(hand) : { ...computeProfile(hand), rules }
   profileCache.set(hand, profile)
   return profile
 }
@@ -198,7 +203,7 @@ function getMainAbilitiesPlanProfile({ cards, reconfigured }) {
   const profile = computeProfile(cards)
   const dragonBase = profile.contributions.dragon
   const dragonThresholdPower = profile.base
-  const original = { ...profile, rules: 'abilities-main', reconfigured, dragonBase, dragonThresholdPower, overwhelming: false }
+  const original = { ...profile, rules: getHandTabletopRules(cards), reconfigured, dragonBase, dragonThresholdPower, overwhelming: false }
   if (!profile.types.includes('dragon') || dragonThresholdPower < MAIN_ABILITY_RULES.overwhelmingAt) return original
   // Choose the faction from the original contributions. The reward cannot
   // change eligibility or trigger itself again, and belongs only to Dragons.
@@ -255,9 +260,10 @@ function computeProfile(hand = [], extraStats = {}) {
   for (const card of hand) {
     let power = 0
     // Current Abilities treats the product as neutral damage and no Robot attack.
-    const type = card.effect?.dmgType ?? (rules !== 'abilities-main' && card.id === 'one_off_each' ? 'robot' : undefined)
+    const type = card.effect?.dmgType ?? (!isMainAbilityRules(rules) && card.id === 'one_off_each' ? 'robot' : undefined)
     if (card.effect?.dmgType) power = (card.tabletopAttackUnits ?? (ULTIMATES.has(card.id) ? 2 : 1)) * stats[type]
-    else if (card.id === 'bite') power = rules === 'abilities-main' ? 2 : 1
+    else if (card.id === 'bite') power = isMainAbilityRules(rules) ? 2 : 1
+    else if (card.id === 'discard_for_damage') power = card.sacrificedPower ?? 0
     else if (card.id === 'shield_is_dmg') power = shields
     else if (card.id === 'one_off_each') power = stats.critter * stats.robot * stats.dragon
     else if (card.id === 'any_off_each') power = stats.critter + stats.robot + stats.dragon
@@ -272,10 +278,10 @@ function computeProfile(hand = [], extraStats = {}) {
   // With no typed damage, current Abilities permits every faction, even at zero.
   const dominantTypes = largest > 0
     ? TABLETOP_CLASSES.filter((type) => contributions[type] === largest)
-    : (rules === 'abilities-main' ? [...TABLETOP_CLASSES] : base > 0 ? ['robot'] : [])
+    : (isMainAbilityRules(rules) ? [...TABLETOP_CLASSES] : base > 0 ? ['robot'] : [])
   const types = hasChameleon ? [...TABLETOP_CLASSES] : [...dominantTypes]
   // Devour is a second Dragon ultimate in current Abilities, without a faction override.
-  if (rules !== 'abilities-main' && base > 0 && hand.some((card) => card.id === 'devour') && !types.includes('dragon')) types.push('dragon')
+  if (!isMainAbilityRules(rules) && base > 0 && hand.some((card) => card.id === 'devour') && !types.includes('dragon')) types.push('dragon')
   return { stats, shields, contributions, neutral, base, dominantTypes, types, attacks, bonusMultiplier, shortcuts, hasChameleon }
 }
 
@@ -300,11 +306,11 @@ export function scoreTabletopHand(hand, enemyShields = 0, damageType = null) {
   if (damageType && !profile.types.includes(damageType)) throw new Error('Invalid tabletop damage type')
   const type = damageType ?? profile.types[0] ?? null
   if (profile.typeProfiles) profile = profile.typeProfiles[type]
-  const shieldCosts = profile.rules === 'abilities-main' ? MAIN_ABILITY_SHIELD_COST : TABLETOP_SHIELD_COST
+  const shieldCosts = isMainAbilityRules(profile.rules) ? MAIN_ABILITY_SHIELD_COST : TABLETOP_SHIELD_COST
   const shieldPenalty = enemyShields * (shieldCosts[type] ?? 0)
   const blocked = Math.min(profile.base, shieldPenalty)
   const power = profile.base - blocked
-  if (profile.rules === 'abilities-main') {
+  if (isMainAbilityRules(profile.rules)) {
     // Study-only flat-bonus variant: subtract this hand's actual main-faction
     // shield penalty from Dragon contribution before testing the cutoff.
     const dragonThresholdPower = Math.max(0, profile.dragonThresholdPower - shieldPenalty)
@@ -336,9 +342,9 @@ export function scoreTabletopHand(hand, enemyShields = 0, damageType = null) {
 // AI commits from its own hand, before reveal, without consulting enemy shields.
 export function chooseTabletopType(hand) {
   const { types } = getTabletopProfile(hand)
-  const shieldCosts = getHandTabletopRules(hand) === 'abilities-main' ? MAIN_ABILITY_SHIELD_COST : TABLETOP_SHIELD_COST
+  const shieldCosts = isMainAbilityRules(getHandTabletopRules(hand)) ? MAIN_ABILITY_SHIELD_COST : TABLETOP_SHIELD_COST
   return [...types].sort((a, b) => scoreTabletopHand(hand, 0, b).score - scoreTabletopHand(hand, 0, a).score
-    || (getHandTabletopRules(hand) === 'abilities-main' ? Number(b === 'critter') - Number(a === 'critter') : 0)
+    || (isMainAbilityRules(getHandTabletopRules(hand)) ? Number(b === 'critter') - Number(a === 'critter') : 0)
     || shieldCosts[a] - shieldCosts[b])[0] ?? null
 }
 
@@ -365,7 +371,7 @@ export function getTabletopHandKey(hand) {
 export function getCardTabletopTypes(card, profile) {
   if (card.id === 'chameleon') return [...TABLETOP_CLASSES]
   const neutralOnly = Object.values(profile.contributions).every((power) => power === 0)
-  if (profile.rules === 'abilities-main' && (neutralOnly || card.id === 'one_off_each')) return [...profile.types]
+  if (isMainAbilityRules(profile.rules) && (neutralOnly || card.id === 'one_off_each')) return [...profile.types]
   return profile.types.filter((type) => card.stats?.includes(type) || card.effect?.dmgType === type
     || (type === 'robot' && card.id === 'one_off_each')
     || (type === 'robot' && neutralOnly && profile.attacks.some((attack) => attack.uid === card.uid && !attack.type)))

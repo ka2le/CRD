@@ -8,6 +8,7 @@ const BATTLE_RULES = [
   { value: false, label: 'Battle' },
   { value: 'threshold', label: 'Threshold' },
   { value: 'abilities-main', label: 'Abilities' },
+  { value: 'abilities-new-cards', label: 'Abilities+NewCards' },
 ]
 
 export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, settings, onUpdateSettings, battleAnimation = true, onBattleAnimation, onHelp, onScoreCard, onCollection, onTestDeck, onRoom, inRoom = false, canConfigure = true, humanOpponent = false }) {
@@ -137,7 +138,7 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
               aria-label="Opponent"
             >
               {humanOpponent ? <option value="human">Player in room</option> : null}
-              {getOpponentAiOptions(gameMode).map((option) => (
+              {getOpponentAiOptions(gameMode, settings.tabletop).map((option) => (
                 <option key={option.id} value={option.id}>{option.label}</option>
               ))}
             </select>

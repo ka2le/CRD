@@ -15,6 +15,8 @@ export function createPreparationState(game) {
     opponentDiscard: [...(game.opponentDiscards ?? draftDiscard)],
     playerActivated: [],
     opponentActivated: [],
+    playerPendingDiscard: null,
+    opponentPendingDiscard: null,
     playerFinished: false,
     opponentFinished: false,
     playerDrawnCount: 0,
@@ -31,6 +33,15 @@ export function getPreparationActions(state, side = 'player') {
   assertSide(side)
   if (state[`${side}Finished`]) return []
   const hand = state[`${side}Hand`]
+  const pending = state[`${side}PendingDiscard`]
+  if (pending) {
+    const base = { sourceUid: pending.sourceUid, cardId: pending.cardId }
+    return [
+      ...hand.filter((card) => card.uid !== pending.sourceUid)
+        .map((card) => ({ type: 'discard-preparation', ...base, targetUid: card.uid })),
+      ...(pending.remaining === null ? [{ type: 'finish-preparation-discard', ...base }] : []),
+    ]
+  }
   const discard = state[`${side}Discard`] ?? []
   const actions = []
   for (const card of getActivatablePreBattleCards(hand, state[`${side}Activated`])) {
@@ -62,9 +73,33 @@ export function applyPreparationAction(state, side, action) {
 
   const handKey = `${side}Hand`
   const discardKey = `${side}Discard`
+  const pendingKey = `${side}PendingDiscard`
+  if (legal.type === 'finish-preparation-discard') return { ...state, [pendingKey]: null }
+  if (legal.type === 'discard-preparation') {
+    const pending = state[pendingKey]
+    const target = state[handKey].find((card) => card.uid === legal.targetUid)
+    const remaining = pending.remaining === null ? null : pending.remaining - 1
+    const hand = state[handKey].filter((card) => card.uid !== target.uid).map((card) => (
+      card.uid === pending.sourceUid && pending.cardId === 'discard_for_damage'
+        ? { ...card, sacrificedPower: (card.sacrificedPower ?? 0) + 1 } : card
+    ))
+    return { ...state, [handKey]: hand, [discardKey]: [...state[discardKey], target],
+      [pendingKey]: remaining === 0 ? null : { ...pending, remaining } }
+  }
   const activatedKey = `${side}Activated`
   const activated = [...(state[activatedKey] ?? []), legal.sourceUid]
   if (legal.type === 'skip-preparation') return { ...state, [activatedKey]: activated }
+
+  if (legal.cardId === 'draw_2_discard_2' || legal.cardId === 'discard_for_damage') {
+    const drawing = legal.cardId === 'draw_2_discard_2'
+    const drawn = drawing ? state.deck.slice(0, 2) : []
+    const hand = [...state[handKey], ...drawn]
+    const remaining = drawing ? Math.min(2, hand.length - 1) : null
+    return { ...state, [handKey]: hand, [activatedKey]: activated,
+      deck: state.deck.slice(drawn.length),
+      [`${side}DrawnCount`]: (state[`${side}DrawnCount`] ?? 0) + drawn.length,
+      [pendingKey]: remaining === 0 ? null : { sourceUid: legal.sourceUid, cardId: legal.cardId, remaining } }
+  }
 
   let result
   if (legal.cardId === 'recycle_card') {

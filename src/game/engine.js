@@ -28,6 +28,10 @@ export function getCardStats(card) {
 }
 
 export function getHandStats(hand) {
+  if (hand.some((card) => card.tabletop === 'abilities-new-cards' && card.id === 'no_stats_to_2')
+    && !hand.some((card) => card.type === 'stat')) {
+    return { robot: 2, critter: 2, dragon: 2 }
+  }
   return hand.reduce((acc, card) => {
     const cardStats = getCardStats(card)
 

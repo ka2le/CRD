@@ -1,3 +1,4 @@
+import { isMainAbilityRules } from '../../game/tabletop'
 import { useMemo, useState } from 'react'
 import './HelpSheet.css'
 import Sheet from './Sheet'
@@ -149,7 +150,7 @@ function AbilitiesMainHelp({ rules }) {
           <span className="help__op">=</span>
           <span className="help__term"><span className="help__chip help__chip--score"><GameIcon name="star" /></span><small>score</small></span>
         </div>
-        <p className="help__caption">Each Shield card gives {MAIN_ABILITY_RULES.shieldValue} shield. Subtract enemy shield points after effects and bonuses, stopping at zero. Critters and Robots lose 1 power per point; Dragons are immune. Shield is Damage adds power equal to your shield points.</p>
+        <p className="help__caption">Ordinary Shield cards give {MAIN_ABILITY_RULES.shieldValue} shield.{rules === 'abilities-new-cards' ? ' Shield Ultimate gives 3.' : ''} Subtract enemy shield points after effects and bonuses, stopping at zero. Critters and Robots lose 1 power per point; Dragons are immune. Shield is Damage adds power equal to your shield points.</p>
       </section>
 
       <section className="help__block">
@@ -188,7 +189,8 @@ function RulesHelp({ open, onClose, tabletop }) {
       setCopyStatus('Select and copy the rules below.')
     }
   }
-  const abilitiesMain = tabletop === 'abilities-main'
+  const newCards = tabletop === 'abilities-new-cards'
+  const abilitiesMain = isMainAbilityRules(tabletop)
   const shieldCosts = abilitiesMain ? MAIN_ABILITY_SHIELD_COST : TABLETOP_SHIELD_COST
   return (
     <Sheet open={open} onClose={onClose} title={<SvgIcon name="help" />}>
@@ -198,6 +200,7 @@ function RulesHelp({ open, onClose, tabletop }) {
           <span role="status">{copyStatus}</span>
         </div>
         {copyStatus === 'Select and copy the rules below.' ? <textarea aria-label="Rules to copy" readOnly value={rulesText} onFocus={(event) => event.target.select()} rows={10} /> : null}
+          {newCards ? <div className="help__fact"><span><strong>Abilities+NewCards</strong> uses Abilities rules plus four cards: From Nothing supplies 2 of every stat when you have no stat cards (does not stack); Shield Ultimate gives 3 shield points; Draw 2 / Discard 2 draws first, then requires two other discards; Discard for Damage lets you discard other cards for 1 neutral power each. Copies need their own sacrifices. Both discard effects happen during preparation.</span></div> : null}
         {abilitiesMain ? <AbilitiesMainHelp rules={tabletop} /> : tabletop ? <section className="help__block help__facts">
           <div className="help__fact"><GameIcon name="damage" /><span>Each ordinary attack gives 1 power per matching stat. Add all attacks.</span></div>
           <div className="help__fact"><GameIcon name="star" /><span>Your largest class contribution is your main damage type. If tied, tap a highlighted card before battle. Neutral-only power uses Robot.</span></div>

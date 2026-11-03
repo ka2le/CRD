@@ -110,6 +110,7 @@ export function applyRoomAction(state, seat, action) {
     const game = resolveOpponentDraftPick({ ...state.game, pendingOpponentPickUid: action.uid }, { includeRecentMoves: false })
     return settleSession({ ...state, game, preBattle: createPreparationState(game) })
   } else if (action.type === 'START_BATTLE') {
+    if (view.preBattle.playerPendingDiscard) throw new Error('Finish discarding before battle')
     if (view.settings.tabletop && getTabletopChoice(view.preBattle).needsChoice) {
       // Battle skips unused specials and exposes the normal faction picker.
       view = { ...view, preBattle: { ...view.preBattle, playerActivated: view.preBattle.playerHand.map((card) => card.uid),

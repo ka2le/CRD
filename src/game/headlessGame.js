@@ -13,7 +13,7 @@ export const HEADLESS_PROTOCOL_VERSION = 2
 export const HEADLESS_RULES_VERSION = 'digital-21-50-preparation-v2'
 const rulesVersion = (config) => {
   const rules = normalizeTabletopRules(config.tabletop)
-  return rules ? `tabletop-single-score-${rules === 'abilities-main' ? 'v13' : 'v5'}-${rules}` : HEADLESS_RULES_VERSION
+  return rules ? `tabletop-single-score-${rules === 'abilities-new-cards' ? 'v1' : rules === 'abilities-main' ? 'v13' : 'v5'}-${rules}` : HEADLESS_RULES_VERSION
 }
 const SIDES = ['player', 'opponent']
 const otherSide = (side) => side === 'player' ? 'opponent' : 'player'
@@ -23,6 +23,7 @@ function summarizeCard(card) {
     uid: card.uid, id: card.id, name: card.name, type: card.type,
     stats: [...(card.stats ?? [])], effect: { ...(card.effect ?? {}) }, cd: card.cd ?? null,
     ...(card.tabletop ? { tabletop: card.tabletop } : {}),
+    ...(card.sacrificedPower !== undefined ? { sacrificedPower: card.sacrificedPower } : {}),
   }
 }
 
@@ -62,7 +63,7 @@ export function getHeadlessSpec(config = {}) {
       .sort((a, b) => a.uid < b.uid ? -1 : (a.uid > b.uid ? 1 : 0)),
     maxHandCards,
     maxLegalActions: Math.max(32, 1 + maxHandCards * (maxHandCards + 1)),
-    actionTypes: ['draft-pick', 'discard', 'prepare', 'skip-preparation', 'finish-preparation'],
+    actionTypes: ['draft-pick', 'discard', 'prepare', 'skip-preparation', 'finish-preparation', 'discard-preparation', 'finish-preparation-discard'],
   }
 }
 
@@ -294,6 +295,7 @@ export function encodeObservation(state, side = state.config.control === 'both' 
       ? game.deck.length - preparation[`${side}DrawnCount`] : (preparation?.deck ?? game.deck).length,
     deckCountIsExact: !preparation || state.terminal,
     playerHand: hand.map(summarizeCard),
+    pendingDiscard: preparation?.[`${side}PendingDiscard`] ?? null,
     activatedUids: [...(preparation?.[`${side}Activated`] ?? [])],
     opponentHandCount: knownEnemy.length,
     opponentHand: opponentHand.map(summarizeCard),

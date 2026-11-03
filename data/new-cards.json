@@ -1,0 +1,72 @@
+{
+  "cards": [
+    {
+      "id": "no_stats_to_2",
+      "name": "From Nothing",
+      "copies": 1,
+      "type": "action",
+      "stats": [],
+      "effect": {},
+      "cd": 0,
+      "images": [
+        "https://cdn.midjourney.com/98e1b5b8-4db0-4bc7-b345-ccaa8d52e2af/0_0.png"
+      ],
+      "customEffect": [
+        "0",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/arrow2.png",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/star.png",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/star.png"
+      ]
+    },
+    {
+      "id": "draw_2_discard_2",
+      "name": "Draw 2 / Discard 2",
+      "copies": 1,
+      "type": "action",
+      "stats": [],
+      "effect": {},
+      "cd": 0,
+      "images": [
+        "https://cdn.midjourney.com/dcdbb743-a2fa-4d98-b166-3cea3c7a4c8e/0_3.png"
+      ],
+      "customEffect": [
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/card_add.png",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/card_add.png",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/extra_icons/card_subtract.png",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/extra_icons/card_subtract.png"
+      ]
+    },
+    {
+      "id": "shield_ulti",
+      "name": "Shield Ultimate",
+      "copies": 1,
+      "type": "action",
+      "stats": [],
+      "effect": {
+        "shield": 3
+      },
+      "cd": 0,
+      "images": [
+        "https://cdn.midjourney.com/1617f771-5d18-4091-bbbe-97f2652171f9/0_0.png"
+      ]
+    },
+    {
+      "id": "discard_for_damage",
+      "name": "Discard for Damage",
+      "copies": 1,
+      "type": "action",
+      "stats": [],
+      "effect": {},
+      "cd": 0,
+      "images": [
+        "https://cdn.midjourney.com/d36bc28c-3a37-408c-8bae-fda77593860c/0_2.png"
+      ],
+      "customEffect": [
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/extra_icons/cards_return.png",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/extra_icons/card_subtract.png",
+        "*",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/suit_hearts_broken.png"
+      ]
+    }
+  ]
+}

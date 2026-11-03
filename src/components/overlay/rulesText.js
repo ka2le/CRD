@@ -1,3 +1,4 @@
+import { isMainAbilityRules } from '../../game/tabletop'
 import { getCoreCards } from '../../game/cards'
 import { getCardSummary } from '../card/cardMeta'
 import { MAIN_ABILITY_RULES, MAIN_ABILITY_SHIELD_COST, TABLETOP_SHIELD_COST, TABLETOP_THRESHOLDS, PERFECT_BALANCE_BONUS, toTabletopCard } from '../../game/tabletop'
@@ -5,9 +6,9 @@ import { MAIN_ABILITY_RULES, MAIN_ABILITY_SHIELD_COST, TABLETOP_SHIELD_COST, TAB
 // Plain text includes the meaning of the illustrated rules, rather than losing icons
 // when copying the sheet's DOM text. Card descriptions use the same source as inspection.
 export function getRulesText(rules = false) {
-  const main = rules === 'abilities-main'
+  const main = isMainAbilityRules(rules)
   const prototype = rules === 'abilities-prototype'
-  const title = main ? 'Abilities' : prototype ? 'Abilities Prototype' : rules ? 'Threshold' : 'Battle'
+  const title = rules === 'abilities-new-cards' ? 'Abilities+NewCards' : main ? 'Abilities' : prototype ? 'Abilities Prototype' : rules ? 'Threshold' : 'Battle'
   const lines = [`Critters Robots Dragons — ${title}`, '',
     'Draft: pick 1 of 5, opponent picks 1, the rest are discarded. Five packs.',
     'Discard mode: five cards, two redraws.',
@@ -29,7 +30,7 @@ export function getRulesText(rules = false) {
         'Power − enemy shields + bonus = score. Higher score wins; equal scores tie.')
     }
     if (main) lines.push('Devour and Dragon Ultimate each give 2 power per Dragon stat. Devour does not grant a main faction choice.')
-    if (main) lines.push(`Each Shield card gives ${MAIN_ABILITY_RULES.shieldValue} shield points. Shields block Critter and Robot power equally; Dragons are immune. Shield is Damage adds power equal to your shield points, while your shields still block.`)
+    if (main) lines.push(`Ordinary Shield cards give ${MAIN_ABILITY_RULES.shieldValue} shield points.${rules === 'abilities-new-cards' ? ' Shield Ultimate gives 3.' : ''} Shields block Critter and Robot power equally; Dragons are immune. Shield is Damage adds power equal to your shield points, while your shields still block.`)
   } else {
     lines.push('Attacks fire when the round is a multiple of their cooldown. Damage = attack damage * matching stats.',
       'Ordinary Critter attacks: 1 damage per stat every round. Robot: 2 every 2 rounds. Dragon: 3 every 3 rounds.',

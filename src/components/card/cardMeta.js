@@ -1,3 +1,4 @@
+import { isMainAbilityRules } from '../../game/tabletop'
 import { getHandAverageDamage } from '../../game/cardEvaluator'
 import { isPreBattleActivatableCard } from '../../game/preBattle'
 import { TABLETOP_SHIELD_COST, MAIN_ABILITY_SHIELD_COST } from '../../game/tabletop'
@@ -51,26 +52,31 @@ const SPECIAL_TEXT = {
   shield2: 'Blocks 2 damage this round.',
   bite: '3 damage, no stats needed.',
   extra_turn: 'Not in play yet.',
-  no_stats_to_2: 'Not in play yet.',
+  no_stats_to_2: 'With no stat cards in your hand, start with 2 of every stat. Does not stack. Overwhelming can add its extra Dragon stat.',
+  draw_2_discard_2: 'Draw 2 cards, then discard 2 other cards from your hand. This card stays. Finish discarding before using another special.',
+  discard_for_damage: 'Discard any number of other cards during this activation. Gain 1 neutral power per card discarded. Copies start at 0 and need their own discards.',
 }
 
 const TABLETOP_TEXT = {
+  no_stats_to_2: SPECIAL_TEXT.no_stats_to_2,
+  shield_ulti: '3 shield points. Blocks 3 power from Critters or Robots after bonuses. Dragons are immune.',
+  discard_for_damage: (card) => `${SPECIAL_TEXT.discard_for_damage} Current power: ${card.sacrificedPower ?? 0}.`,
   shortcut: 'Grants your main faction bonus even below its threshold, after shields. Requires positive power. Adds no base power. Threshold rules only.',
   chameleon: 'Choose Critter, Robot or Dragon as your main faction before battle. Its bonus and shield vulnerability apply to your whole hand. Adds no stats or base power.',
-  bite: (card) => `Adds ${card.tabletop === 'abilities-main' ? 2 : 1} power, no stats needed.`,
+  bite: (card) => `Adds ${isMainAbilityRules(card.tabletop) ? 2 : 1} power, no stats needed.`,
   double_dmg: 'Doubles your main faction bonus after shields. Works with any faction. Copies stack: *2, *4, *8. Threshold rules only.',
-  devour: (card) => card.tabletop === 'abilities-main'
+  devour: (card) => isMainAbilityRules(card.tabletop)
     ? '2 power per Dragon stat, like Dragon Ultimate.'
     : '2 power per Dragon stat. You may choose Dragon as your main damage type.',
   // Shield costs differ per rule set; the card carries its rules.
   shield2: (card) => {
-    const cost = card.tabletop === 'abilities-main' ? MAIN_ABILITY_SHIELD_COST : TABLETOP_SHIELD_COST
+    const cost = isMainAbilityRules(card.tabletop) ? MAIN_ABILITY_SHIELD_COST : TABLETOP_SHIELD_COST
     const points = card.effect?.shield ?? 1
-    if (card.tabletop === 'abilities-main') return `${points} shields. Blocks ${points} power from Critters or Robots after bonuses. Dragons are immune.`
-    return `${points} shield${points === 1 ? '' : 's'}. Each shield point reduces enemy Critter power by ${cost.critter}, Robot by ${cost.robot}, Dragon by ${cost.dragon}, ${card.tabletop === 'abilities-main' ? 'after all bonuses and effects' : 'before bonuses'}.`
+    if (isMainAbilityRules(card.tabletop)) return `${points} shields. Blocks ${points} power from Critters or Robots after bonuses. Dragons are immune.`
+    return `${points} shield${points === 1 ? '' : 's'}. Each shield point reduces enemy Critter power by ${cost.critter}, Robot by ${cost.robot}, Dragon by ${cost.dragon}, ${isMainAbilityRules(card.tabletop) ? 'after all bonuses and effects' : 'before bonuses'}.`
   },
   shield_is_dmg: 'Adds 1 power per shield point in your hand. Your shields still block.',
-  one_off_each: (card) => card.tabletop === 'abilities-main'
+  one_off_each: (card) => isMainAbilityRules(card.tabletop)
     ? 'Neutral power = Critter * Robot * Dragon stats. Does not count as a Robot attack for Perfect Balance. Choose among tied main factions; with no typed damage, choose any faction.'
     : 'Robot power = Critter * Robot * Dragon stats. Counts as a Robot attack if it deals damage.',
   any_off_each: 'Power = Critter + Robot + Dragon stats.',
@@ -90,7 +96,9 @@ export function getCardSummary(card) {
     return { timing: 'Stat', text: `${counts.join(', ')}. Powers matching attacks.` }
   }
 
-  const timing = card.tabletop && card.effect?.shield ? 'Tabletop shield'
+  const timing = isPreBattleActivatableCard(card) ? 'Before battle'
+    : card.id === 'no_stats_to_2' && card.tabletop === 'abilities-new-cards' ? 'Passive stats'
+    : card.tabletop && card.effect?.shield ? 'Tabletop shield'
     : card.tabletop && (card.effect?.dmg || TABLETOP_TEXT[card.id]) ? 'Tabletop power' : getTimingLabel(card.cd)
   const tabletopText = card.tabletop ? TABLETOP_TEXT[card.id] : null
   if (tabletopText) return { timing, text: typeof tabletopText === 'function' ? tabletopText(card) : tabletopText }

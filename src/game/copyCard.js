@@ -27,6 +27,7 @@ export function applyCopySelection(hand = [], sourceUid = null, targetUid = null
 
     return {
       ...targetCard,
+      ...(targetCard.id === 'discard_for_damage' ? { sacrificedPower: 0 } : {}),
       uid: `${sourceCard.uid}__copy__${targetCard.uid}`,
       copiedFromUid: targetCard.uid,
       copyOverlayImage: sourceCard.images?.[sourceCard.imageIndex ?? 0] ?? sourceCard.images?.[0] ?? null,

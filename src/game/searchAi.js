@@ -285,7 +285,9 @@ export function preparationView(preparation, game, side = 'opponent') {
     const physical = isCopiedCard(card)
       ? (card.sourceCopyUid && definitions.has(card.copySourceCardId)
         ? { ...definitions.get(card.copySourceCardId), uid: card.sourceCopyUid, imageIndex: 0 } : null)
-      : plainCard(card)
+      : tabletop === 'abilities-new-cards' && definitions.has(card.id)
+        ? { ...definitions.get(card.id), uid: card.uid, imageIndex: card.imageIndex ?? 0 }
+        : plainCard(card)
     if (physical && !known.has(physical.uid)) unseen.set(physical.uid, physical)
   }
   return {
@@ -294,6 +296,7 @@ export function preparationView(preparation, game, side = 'opponent') {
     ownHand: plainCards(preparation[`${side}Hand`]),
     ownDiscard: plainCards(preparation[`${side}Discard`]),
     ownActivated: [...(preparation[`${side}Activated`] ?? [])],
+    ownPendingDiscard: preparation[`${side}PendingDiscard`] ?? null,
     enemyPublicHand,
     enemyHandCount: game[`${enemy}Hand`].length,
     enemyPublicPile,
@@ -318,6 +321,7 @@ function samplePreparationWorld(view, rng) {
       deck: unseen,
       [`${side}Hand`]: view.ownHand, [`${side}Discard`]: view.ownDiscard,
       [`${side}Activated`]: view.ownActivated, [`${side}Finished`]: false, [`${side}DrawnCount`]: 0,
+      [`${side}PendingDiscard`]: view.ownPendingDiscard,
       [`${enemy}Hand`]: enemyHand, [`${enemy}Discard`]: view.enemyPublicPile,
       [`${enemy}Activated`]: [], [`${enemy}Finished`]: false, [`${enemy}DrawnCount`]: 0,
     },
@@ -350,12 +354,13 @@ export function searchSidePreparation(preparation, game, side = 'opponent', opti
   const steps = []
   for (let guard = 0; guard < 64 && !current[`${side}Finished`]; guard += 1) {
     const actions = getPreparationActions(current, side)
-    if (actions.length <= 1) break
+    if (actions.length <= 1 && !current[`${side}PendingDiscard`]) break
     const seed = Number.isSafeInteger(options.seed) ? options.seed + guard * 7919 : undefined
     const result = searchPreparationDecision(current, game, side, { ...options, seed })
     steps.push({ action: result.action, samples: result.samples, elapsedMs: result.elapsedMs })
     current = applyPreparationAction(current, side, result.action)
   }
+  while (current[`${side}PendingDiscard`]) current = applyPreparationAction(current, side, pickPreparationAction(current, side))
   return { preparation: current, steps }
 }
 

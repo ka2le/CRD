@@ -1,3 +1,4 @@
+import { isMainAbilityRules } from '../../game/tabletop'
 import { GameIcon } from '../ui/GameIcon'
 import './TabletopScore.css'
 import { PROTOTYPE_ABILITY_RULES, MAIN_ABILITY_RULES } from '../../game/tabletop'
@@ -5,7 +6,7 @@ import { PROTOTYPE_ABILITY_RULES, MAIN_ABILITY_RULES } from '../../game/tabletop
 export function TabletopFormula({ score, label }) {
   const hasCalculation = score.blocked > 0 || score.bonus > 0
   const prototype = score.rules === 'abilities-prototype'
-  const main = score.rules === 'abilities-main'
+  const main = isMainAbilityRules(score.rules)
   const bonusTitle = prototype || (main && MAIN_ABILITY_RULES.perfectBalance)
     ? `Perfect Balance: +${score.bonus} ${main ? 'before shields' : 'after shields'}`
     : `${score.baseBonus} faction bonus${score.shortcuts > 0 ? ` (Shortcut: ${score.naturalBonus} → ${score.baseBonus})` : ''}${score.bonusMultiplier > 1 ? ` * ${score.bonusMultiplier}` : ''} after shields`

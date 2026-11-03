@@ -1,5 +1,6 @@
 import cardsData from '../../data/cards.json' with { type: 'json' }
 import tabletopCardsData from '../../data/tabletop-cards.json' with { type: 'json' }
+import newCardsData from '../../data/new-cards.json' with { type: 'json' }
 import { toTabletopCard, normalizeTabletopRules, isCardInTabletopRules } from './tabletop.js'
 
 export const CORE_CARD_IDS = new Set([
@@ -38,7 +39,8 @@ export function getCoreCards(options = {}) {
   const core = cardsData.cards.filter((card) => CORE_CARD_IDS.has(card.id))
   const rules = normalizeTabletopRules(options.tabletop)
   if (!rules) return core
-  return [...core, ...tabletopCardsData.cards].filter((card) => isCardInTabletopRules(card, rules))
+  return [...core, ...tabletopCardsData.cards, ...(rules === 'abilities-new-cards' ? newCardsData.cards : [])]
+    .filter((card) => isCardInTabletopRules(card, rules))
 }
 
 function getExpandedCopies(card, wildDeck = false) {

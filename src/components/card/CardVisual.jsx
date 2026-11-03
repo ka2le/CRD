@@ -240,6 +240,12 @@ export default function CardVisual({ card, hidden = false, charge = null }) {
         <div className="card-visual__shade" />
         {card.type === 'stat' ? <CardStatColumn card={card} /> : null}
         {card.type === 'action' ? <CardEffectRow card={card} /> : null}
+        {card.id === 'discard_for_damage' && card.sacrificedPower > 0 ? (
+          <div className="card-visual__overlay card-visual__stored-power" aria-label={`${card.sacrificedPower} stored power`}>
+            <TextToken value={card.sacrificedPower} />
+            <IconToken src={DISPLAY_ICONS.dmg} alt="power" />
+          </div>
+        ) : null}
         {!card.tabletop ? <CardCooldown card={card} charge={charge} /> : null}
       </div>
     </div>

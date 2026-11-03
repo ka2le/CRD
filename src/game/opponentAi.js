@@ -17,8 +17,8 @@ export const OPPONENT_AI_OPTIONS = [
   { id: 'david', name: 'DavidBot', label: 'DavidBot (Very Hard)' },
 ]
 
-export function getOpponentAiOptions(mode) {
-  return OPPONENT_AI_OPTIONS.filter(option => mode === 'five-hand-discard' ? !['dan', 'felix'].includes(option.id) : option.id !== 'david')
+export function getOpponentAiOptions(mode, tabletop = false) {
+  return OPPONENT_AI_OPTIONS.filter(option => tabletop !== 'abilities-new-cards' || !['dan', 'felix', 'david'].includes(option.id)).filter(option => mode === 'five-hand-discard' ? !['dan', 'felix'].includes(option.id) : option.id !== 'david')
 }
 
 export const DEFAULT_OPPONENT_AI = 'dan'
@@ -32,7 +32,8 @@ export function normalizeOpponentAi(value) {
 export function normalizeOpponentSettings(current, patch = {}) {
   const next = { ...current, ...patch }
   const active = current.opponentAi ?? (current.gameMode === 'five-hand-discard' ? current.discardOpponentAi : current.draftOpponentAi)
-  const selected = normalizeOpponentAi(Object.hasOwn(patch, 'opponentAi') ? patch.opponentAi : active)
+  let selected = normalizeOpponentAi(Object.hasOwn(patch, 'opponentAi') ? patch.opponentAi : active)
+  if (next.tabletop === 'abilities-new-cards' && ['dan', 'felix', 'david'].includes(selected)) selected = 'shallow'
   const linked = selected === 'dan' || selected === 'david'
   const keepFelix = !Object.hasOwn(patch, 'opponentAi') && current.draftOpponentAi === 'felix' && selected === 'david'
   next.discardOpponentAi = linked || selected === 'felix' ? 'david' : selected
@@ -78,7 +79,7 @@ export const BOT_SEARCH_PROFILES = {
   },
 }
 const PREPARATION_KEYS = ['playerHand', 'opponentHand', 'deck', 'playerDiscard', 'opponentDiscard',
-  'playerActivated', 'opponentActivated', 'playerFinished', 'opponentFinished', 'playerDrawnCount', 'opponentDrawnCount']
+  'playerActivated', 'opponentActivated', 'playerPendingDiscard', 'opponentPendingDiscard', 'playerFinished', 'opponentFinished', 'playerDrawnCount', 'opponentDrawnCount']
 const WORKER_TIMEOUT_MS = 5000
 
 let worker = null
@@ -195,6 +196,7 @@ function snapshotPreparation(preBattle) {
 function opponentPreparationPatch(preparation) {
   return {
     opponentHand: preparation.opponentHand,
+    opponentPendingDiscard: preparation.opponentPendingDiscard,
     opponentDiscard: preparation.opponentDiscard,
     opponentActivated: preparation.opponentActivated,
     opponentFinished: preparation.opponentFinished,

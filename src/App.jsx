@@ -1,3 +1,4 @@
+import PreparationDiscardSheet from './components/overlay/PreparationDiscardSheet'
 import { useMemo, useState } from 'react'
 import { CardMotionProvider, useCardMotion } from './components/animation/CardMotionContext'
 import ImagePreloader from './components/card/ImagePreloader'
@@ -535,6 +536,9 @@ function AppContent() {
         onClose={cancelPlayerRecyclePick}
         contextHand={playerHand}
       />
+
+      <PreparationDiscardSheet pending={isPreBattleReady && !session.onlineBlocked ? session.pendingPreparationDiscard : null}
+        hand={playerHand} onDiscard={session.discardPreparationCard} onFinish={session.finishPreparationDiscard} />
 
       <TestDeckSheet
         open={testDeckAvailable && deckView === 'test'}

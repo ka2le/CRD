@@ -1,3 +1,4 @@
+import { isMainAbilityRules } from './tabletop.js'
 import {
   TABLETOP_CLASSES, MAIN_ABILITY_SHIELD_COST, TABLETOP_SHIELD_COST, ROBOT_ULTI_ATTACK_COUNT,
   MAIN_ABILITY_RULES, getTabletopBaseProfile,
@@ -10,7 +11,7 @@ import {
 export const RESOLUTION_SIDES = ['player', 'opponent']
 
 export function canAnimateTabletopResolution(result) {
-  return Boolean(result?.mode === 'tabletop' && ['abilities-main', 'threshold'].includes(result.player?.rules)
+  return Boolean(result?.mode === 'tabletop' && ['abilities-main', 'abilities-new-cards', 'threshold'].includes(result.player?.rules)
     && result.player.rules === result.opponent?.rules)
 }
 
@@ -23,7 +24,7 @@ function emptyDamage() {
 }
 
 function buildSide(hand, score, enemyHand) {
-  const main = score.rules === 'abilities-main'
+  const main = isMainAbilityRules(score.rules)
   const base = getTabletopBaseProfile(hand)
 
   // Stat pips, card by card and faction by faction.
@@ -31,7 +32,9 @@ function buildSide(hand, score, enemyHand) {
     type,
     total: base.stats[type],
     cards: hand.filter((card) => card.type === 'stat' && card.stats?.includes(type))
-      .map((card) => ({ uid: card.uid, count: card.stats.filter((stat) => stat === type).length })),
+      .map((card) => ({ uid: card.uid, count: card.stats.filter((stat) => stat === type).length }))
+      .concat(hand.some((card) => card.type === 'stat') || !hand.some((card) => card.id === 'no_stats_to_2' && card.tabletop === 'abilities-new-cards') ? []
+        : [{ uid: hand.find((card) => card.id === 'no_stats_to_2').uid, count: 2 }]),
   }))
 
   // Typed attacks fire once per matching stat; each firing adds the card's hearts.
@@ -109,7 +112,7 @@ export function buildTabletopResolutionPlan(result) {
   if (!canAnimateTabletopResolution(result)) return null
   return {
     rules: result.player.rules,
-    bonusFirst: result.player.rules === 'abilities-main',
+    bonusFirst: isMainAbilityRules(result.player.rules),
     player: buildSide(result.playerHand, result.player, result.opponentHand),
     opponent: buildSide(result.opponentHand, result.opponent, result.playerHand),
     winner: result.winner,
