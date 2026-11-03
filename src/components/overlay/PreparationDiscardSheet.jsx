@@ -11,9 +11,9 @@ export default function PreparationDiscardSheet({ pending, hand, onDiscard, onFi
   return <Sheet open={Boolean(pending)} accent="var(--special)"
     title={damage ? `Discard for Damage · ${source?.sacrificedPower ?? 0} power` : `Discard ${pending?.remaining ?? 0} more`}>
     <p>{damage ? 'Discard any other cards for +1 power each. Each choice is final; finish when you are ready.'
-      : 'Your two cards have been drawn. Choose other cards to discard before using another special.'}</p>
+      : 'Your two cards have been drawn. Choose cards to discard, including this card, before using another special.'}</p>
     <div ref={measureRef} className="sheet-cards" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, '--card-w': `${cardWidth}px` }}>
-      {hand.filter((card) => card.uid !== pending?.sourceUid).map((card) => <div key={card.uid} className="sheet-cards__slot">
+      {hand.filter((card) => !damage || card.uid !== pending?.sourceUid).map((card) => <div key={card.uid} className="sheet-cards__slot">
         <CardButton card={card} onToggle={onDiscard} targetable inspectContextHand={hand} />
       </div>)}
     </div>

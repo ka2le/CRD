@@ -58,14 +58,14 @@ test('statless replacement is all-or-nothing, nonstacking, with normal Balance a
   assert.equal(finalLedgerSide(plan.player).total, 12)
 })
 
-test('draw then discard is compulsory, private, source protected, and can restore Robot balance', () => {
+test('draw then discard is compulsory, private, allows discarding itself, and can restore Robot balance', () => {
   let s = prep(hand('robot2','robot_ulti','draw_2_discard_2'), hand('robot1','dragon1'))
   s = activate(s, 'draw_2_discard_2')
   assert.equal(s.playerHand.length, 5)
   assert.equal(s.playerDrawnCount, 2)
   assert(getPreparationActions(s).every(a => a.type === 'discard-preparation'))
   assert.throws(() => applyPreparationAction(s,'player',{type:'finish-preparation'}), /Illegal/)
-  assert.throws(() => discard(s,'draw_2_discard_2'), /Illegal/)
+  assert.equal(discard(s,'draw_2_discard_2').playerPendingDiscard.remaining, 1)
   s = discard(s,'robot1'); s = discard(s,'dragon1')
   assert.equal(s.playerPendingDiscard, null)
   assert.equal(s.playerDiscard.length, 2)
@@ -100,11 +100,14 @@ test('Copy starts uncharged; Recycle returns sacrificed cards without losing sto
   assert.equal(s.playerPendingDiscard.sourceUid, copy.uid)
 })
 
-test('exhausted decks require only available other cards; zero sacrifice is legal', () => {
+test('exhausted decks require only available cards; zero sacrifice is legal', () => {
   let s = activate(prep(hand('draw_2_discard_2')), 'draw_2_discard_2')
+  assert.equal(s.playerPendingDiscard.remaining, 1)
+  s = discard(s,'draw_2_discard_2')
   assert.equal(s.playerPendingDiscard, null)
   s = activate(prep(hand('draw_2_discard_2'),hand('robot1')), 'draw_2_discard_2')
-  assert.equal(s.playerPendingDiscard.remaining, 1)
+  assert.equal(s.playerPendingDiscard.remaining, 2)
+  s = discard(s,'draw_2_discard_2')
   s = discard(s,'robot1')
   assert.equal(s.playerPendingDiscard,null)
   s = finish(activate(prep(hand('discard_for_damage')), 'discard_for_damage'))

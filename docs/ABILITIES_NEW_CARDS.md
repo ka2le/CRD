@@ -7,7 +7,7 @@ The Regular deck has **73 cards**, including one of each addition. Wild has **10
 | Card | Rule |
 | --- | --- |
 | From Nothing (`no_stats_to_2`) | With no stat cards in your final hand, your starting stats are 2 Critter, 2 Robot, and 2 Dragon. Multiple copies do not stack. Overwhelming can add its normal extra Dragon stat. Any stat card disables the replacement, even if it belongs to another faction. |
-| Draw 2 / Discard 2 (`draw_2_discard_2`) | During preparation, draw up to 2 available cards, then discard 2 other cards. Keep the source. Choose after seeing the draws; finish discarding before any other preparation action or Battle. If fewer than 2 other cards exist, discard all available other cards. |
+| Draw 2 / Discard 2 (`draw_2_discard_2`) | During preparation, draw up to 2 available cards, then discard 2 cards, which may include this card. Select cards directly in your regular hand after seeing the draws, then Accept at the bottom right. Cancel returns the drawn cards to the top of the deck and leaves the ability unused. Finish discarding before any other preparation action or Battle. If fewer than 2 cards exist, discard all available cards. |
 | Shield Ultimate (`shield_ulti`) | 3 shield points. Blocks Critters and Robots; Dragons remain immune. Supplies 3 power to each Shield Is Damage. |
 | Discard for Damage (`discard_for_damage`) | Once during preparation, discard any number of other cards, one at a time, then finish. Each sacrificed card adds 1 stored neutral power to this card. Zero sacrifices are allowed. Only cards discarded by this activation count. |
 

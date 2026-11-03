@@ -224,6 +224,10 @@ function AppContent() {
   const opponentLost = damageFlash?.opponent ?? 0
   const playerLost = damageFlash?.player ?? 0
 
+  const drawDiscardPending = isPreBattleReady && session.pendingPreparationDiscard?.cardId === 'draw_2_discard_2'
+    ? session.pendingPreparationDiscard : null
+  const drawDiscardSelected = drawDiscardPending?.selectedIds ?? []
+
   function handlePrimaryAction() {
     if (discardPhase) submitDiscard()
     else startBattle()
@@ -260,7 +264,16 @@ function AppContent() {
 
   let primaryAction = null
   if (layout === 'focus') {
-    if (opponentDiscarding) {
+    if (drawDiscardPending) {
+      primaryAction = <div className="table__discard-actions">
+        <button type="button" className="ui-button table__action" disabled={session.onlineBlocked} onClick={session.cancelPreparationDiscard}>Cancel</button>
+        <button type="button" className="ui-button ui-button--primary table__action"
+          disabled={session.onlineBlocked || drawDiscardSelected.length !== drawDiscardPending.remaining}
+          onClick={session.submitPreparationDiscard}>
+          <SvgIcon name="check" /><span>Accept {drawDiscardSelected.length}/{drawDiscardPending.remaining}</span>
+        </button>
+      </div>
+    } else if (opponentDiscarding) {
       primaryAction = (
         <button type="button" className="ui-button ui-button--primary table__action" disabled>
           <GameIcon name="redraw" />
@@ -316,7 +329,8 @@ function AppContent() {
   const chameleonIds = settings.tabletop && isPreBattleReady && !opponentPreparing
     ? playerHand.filter((card) => card.id === 'chameleon').map((card) => card.uid) : []
   function handlePlayerCardClick(uid) {
-    if (discardPhase) toggleSelected(uid)
+    if (drawDiscardPending) session.togglePreparationDiscard(uid)
+    else if (discardPhase) toggleSelected(uid)
     else if (!armedPlayerCopyUid && !isRecyclePicking && (chameleonIds.includes(uid) || choosingTabletopType)) choosePlayerTabletopType(uid)
     else if (isWaitingForPlayerChoice) activatePlayerPreBattleCard(uid)
   }
@@ -327,10 +341,10 @@ function AppContent() {
     motionSection: 'player-hand',
     suppressedIds: battleStarted ? [] : (suppressedHandCardIds?.player ?? []),
     onToggle: playerInteractive ? handlePlayerCardClick : undefined,
-    cardsDisabled: !playerInteractive || opponentPreparing || !(discardPhase || isWaitingForPlayerChoice || choosingTabletopType || chameleonIds.length),
-    discardIds: discardPhase ? selectedIds : [],
+    cardsDisabled: !playerInteractive || opponentPreparing || !(drawDiscardPending || discardPhase || isWaitingForPlayerChoice || choosingTabletopType || chameleonIds.length),
+    discardIds: drawDiscardPending ? drawDiscardSelected : discardPhase ? selectedIds : [],
     selectedIds: isPreBattleReady && armedPlayerCopyUid ? [armedPlayerCopyUid] : (isPreBattleReady && tabletopSelectedCardUid ? [tabletopSelectedCardUid] : []),
-    readyIds: isPreBattleReady ? [...activatablePreBattleIds, ...chameleonIds] : [],
+    readyIds: isPreBattleReady && !drawDiscardPending ? [...activatablePreBattleIds, ...chameleonIds] : [],
     targetableIds: choosingTabletopType ? playerHand.filter((card) => getCardTabletopTypes(card, tabletopChoice).length).map((card) => card.uid) : (isPreBattleReady ? copyCandidateIds : []),
     dimmedIds: choosingTabletopType ? playerHand.filter((card) => !getCardTabletopTypes(card, tabletopChoice).length).map((card) => card.uid) : [],
     activeCardIds: battleStarted ? (battlePlayback?.playerTriggeredIds ?? []) : [],
@@ -537,7 +551,7 @@ function AppContent() {
         contextHand={playerHand}
       />
 
-      <PreparationDiscardSheet pending={isPreBattleReady && !session.onlineBlocked ? session.pendingPreparationDiscard : null}
+      <PreparationDiscardSheet pending={isPreBattleReady && !session.onlineBlocked && !drawDiscardPending ? session.pendingPreparationDiscard : null}
         hand={playerHand} onDiscard={session.discardPreparationCard} onFinish={session.finishPreparationDiscard} />
 
       <TestDeckSheet
