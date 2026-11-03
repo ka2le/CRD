@@ -91,6 +91,7 @@ export default function SideRail({
   shield = 0,
   blocked = 0,
   turn = false,
+  turnLabel = null,
   winner = null,
   crowded = false,
   identity = null,
@@ -111,6 +112,10 @@ export default function SideRail({
       ].filter(Boolean).join(' ')}
     >
       {identity ? <div className="side-rail__identity">{identity}</div> : null}
+      {turnLabel ? <div className="side-rail__turn" role="status" aria-live="polite" aria-atomic="true">
+        {turn ? <span className="side-rail__turn-direction" aria-hidden="true">{side === 'player' ? '↓' : '↑'}</span> : null}
+        <strong>{turnLabel}</strong>
+      </div> : null}
       <span className="side-rail__marker" aria-hidden="true" />
       <StatChips stats={stats} compact={inBattle} />
       {inBattle ? (

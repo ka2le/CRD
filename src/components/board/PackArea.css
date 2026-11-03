@@ -4,58 +4,10 @@
   height: 100%;
   min-height: 0;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 8px;
-}
-
-.pack-area__cards {
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  display: grid;
   place-items: center;
 }
 
-/* A readable turn callout stays above the cards, with space reserved at every phase. */
-.pack-area__turn {
-  --turn-color: var(--t1);
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  justify-self: center;
-  max-width: 100%;
-  min-height: 38px;
-  padding: 6px 16px;
-  border: 1px solid var(--b2);
-  border-radius: 6px;
-  background: var(--surface-lo);
-  color: var(--turn-color);
-  line-height: 1.3;
-}
-
-.pack-area--turn-player .pack-area__turn { --turn-color: var(--brass-hi); }
-.pack-area--turn-opponent .pack-area__turn { --turn-color: #efb1b7; }
-
-.pack-area--turn-player .pack-area__turn,
-.pack-area--turn-opponent .pack-area__turn {
-  border-color: var(--turn-color);
-  background: color-mix(in srgb, var(--turn-color) 12%, var(--surface-lo));
-}
-
-.pack-area__turn-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: clamp(0.85rem, 2.5vw, 1rem);
-  font-weight: 800;
-}
-
-.pack-area__turn-direction { flex: 0 0 auto; font-size: 1.2rem; font-weight: 800; }
-.pack-area__turn-action { flex: 0 0 auto; border-left: 1px solid var(--b2); padding-left: 10px; font-size: 0.75rem; color: var(--t0); }
-
-/* Directional colour reinforces the label without covering the cards. */
+/* Turn light: a soft wash toward whoever is picking. */
 .pack-area::before {
   content: '';
   position: absolute;
@@ -97,10 +49,4 @@
   inset: 4%;
   border-radius: calc(var(--card-w) * var(--card-round, 0.035));
   border: 1px dashed rgba(214, 190, 140, 0.1);
-}
-
-@media (orientation: landscape) and (max-height: 520px) {
-  .pack-area { gap: 3px; }
-  .pack-area__turn { min-height: 28px; padding: 2px 12px; }
-  .pack-area__turn-label { font-size: 0.8rem; }
 }

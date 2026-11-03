@@ -370,6 +370,7 @@ function AppContent() {
           shield={battleStarted ? (battlePlayback?.opponentShield ?? 0) : 0}
           blocked={damageFlash?.opponentBlocked ?? 0}
           turn={layout === 'draft' ? draftTurn === 'opponent' : opponentThinking}
+          turnLabel={layout === 'draft' && draftTurn === 'opponent' ? draftTurnLabel : null}
           winner={winner}
         >
           <EmoteBubble emote={emoteSide === 'opponent' ? emote : null} side="opponent" />
@@ -421,7 +422,6 @@ function AppContent() {
               playerHand={playerHand}
               dealDelayMs={dealLeadMs}
               turn={draftTurn}
-              turnLabel={draftTurnLabel}
             />
           ) : null}
           {layout === 'focus' ? (
@@ -486,6 +486,7 @@ function AppContent() {
           shield={battleStarted ? (battlePlayback?.playerShield ?? 0) : 0}
           blocked={damageFlash?.playerBlocked ?? 0}
           turn={layout === 'draft' ? draftTurn === 'player' : playerTurn}
+          turnLabel={layout === 'draft' && draftTurn !== 'opponent' ? draftTurnLabel : null}
           winner={winner}
           crowded={Boolean(primaryAction)}
         >
