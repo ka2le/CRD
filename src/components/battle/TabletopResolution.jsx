@@ -6,7 +6,7 @@ import { buildTabletopResolutionPlan, emptyLedgerSide, finalLedgerSide } from '.
 import { createResolutionRunner } from './tabletopResolutionRunner'
 
 const FACTIONS = ['critter', 'robot', 'dragon']
-// Opponent on top, you at the bottom: each row sits next to its own hand.
+// Opponent first: left in the wide strip, top when narrow screens wrap.
 const ROW_ORDER = ['opponent', 'player']
 const FAST_SPEED = 2.5
 
@@ -47,7 +47,7 @@ function LedgerRow({ side, name, plan, state, focus, current, stage, winner, cro
 
   return (
     <div className={['ttr-row', `ttr-row--${side}`, outcome ? `is-${outcome}` : '',
-      current ? (current === side ? 'is-current' : 'is-waiting') : ''].filter(Boolean).join(' ')}>
+      current ? (current === side ? 'is-current' : 'is-waiting') : ''].filter(Boolean).join(' ')} aria-label={name}>
       <span className="ttr-row__name">{name}</span>
       <div className="ttr-row__cells">
         {FACTIONS.map((type) => {
@@ -151,7 +151,10 @@ export default function TabletopResolution({ result, animate = true, finished = 
       </div>
       <div className="ttr__controls">
         {finished ? (
-          <button type="button" className="ui-button ttr__result" onClick={onShowResult}>{resultLabel}</button>
+          <button type="button" className="ui-button ttr__result" title={resultLabel} aria-label={resultLabel} onClick={onShowResult}>
+            <span className="ttr__result-label">{resultLabel}</span>
+            <span className="ttr__result-icon"><SvgIcon name="eye" /></span>
+          </button>
         ) : (
           <>
             <button type="button" className={['ui-button ui-button--icon', speed > 1 ? 'ttr__speed--on' : ''].filter(Boolean).join(' ')}

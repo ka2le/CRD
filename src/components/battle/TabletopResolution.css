@@ -1,29 +1,32 @@
-/* Tabletop resolution ledger: one row per player between the hands. */
+/* Wide, shallow score strip leaves the battle hands room to grow. */
 .ttr {
   --ttr-neutral: #d7dbe1;
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 10px;
-  padding: 4px 6px;
+  gap: 6px;
+  padding: 2px 0;
+  min-width: 0;
 }
 
 .ttr__rows {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
   gap: 4px;
-  justify-self: center;
-  /* Include spacing and icons in the enlargement; reserve real layout space. */
-  zoom: 1.45;
+  min-width: 0;
+  width: 100%;
 }
 
 .ttr-row {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(3.5em, 7em) auto auto;
+  flex: 1 1 max-content;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 10px;
-  padding: 3px 10px 3px 12px;
+  gap: 6px;
+  padding: 4px 8px 4px 10px;
   border-radius: 9px;
   background: rgba(8, 13, 23, 0.9);
   border: 1px solid var(--b0);
@@ -44,6 +47,7 @@
 .ttr-row--opponent::before { background: var(--opponent); }
 
 .ttr-row__name {
+  display: none;
   overflow: hidden;
   color: var(--t1);
   font-size: 0.78rem;
@@ -54,7 +58,8 @@
 
 .ttr-row__cells {
   display: flex;
-  gap: 6px;
+  align-items: center;
+  gap: 3px;
 }
 
 .ttr-cell {
@@ -64,13 +69,13 @@
   display: inline-grid;
   grid-auto-flow: column;
   align-items: center;
-  gap: 5px;
-  padding: 3px 7px;
+  gap: 3px;
+  padding: 3px 4px;
   border: 1px solid transparent;
   border-radius: 7px;
   background: rgba(255, 255, 255, 0.025);
   font-family: var(--mono);
-  font-size: 1.1rem;
+  font-size: clamp(0.8rem, 1.15vw, 1rem);
   line-height: 1.2;
   transition: opacity 0.25s ease, border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
 }
@@ -99,8 +104,8 @@
   align-items: center;
   gap: 2px;
   justify-content: flex-end;
-  min-width: calc(2ch + 0.8em + 9px);
-  padding-left: 6px;
+  min-width: calc(1ch + 0.8em + 2px);
+  padding-left: 3px;
   border-left: 1px solid var(--b1);
   color: var(--t0);
 }
@@ -142,9 +147,9 @@
 .ttr-sum {
   display: inline-flex;
   align-items: center;
-  gap: 0.4em;
+  gap: 0.2em;
   font-family: var(--mono);
-  font-size: 1.1rem;
+  font-size: clamp(0.8rem, 1.15vw, 1rem);
   white-space: nowrap;
 }
 
@@ -165,7 +170,7 @@
 
 .ttr-sum__total {
   justify-content: flex-end;
-  min-width: 2.9em;
+  min-width: 2.2em;
   color: var(--brass);
   font-size: 1.15em;
   font-weight: 500;
@@ -205,8 +210,13 @@
 
 .ttr__controls {
   display: inline-flex;
-  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  width: 76px;
 }
+
+.ttr__controls .ui-button--icon { min-width: 36px; min-height: 36px; }
 
 .ttr__speed--on {
   color: var(--player);
@@ -214,7 +224,20 @@
   background: rgba(214, 190, 140, 0.1);
 }
 
-.ttr__result { animation: ttr-pop 0.4s var(--ease-spring); }
+.ttr__result-icon { display: none; }
+
+.ttr__result {
+  animation: ttr-pop 0.4s var(--ease-spring);
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  padding: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.7rem;
+}
 
 .ttr__fx {
   position: fixed;
@@ -306,31 +329,18 @@
   to { transform: scale(1); opacity: 1; }
 }
 
-@media (max-width: 1400px) {
-  .ttr { gap: 6px; padding: 2px; }
-  .ttr-row { grid-template-columns: auto auto; gap: 6px; padding: 3px 6px 3px 10px; }
-  .ttr-row__name { display: none; }
-  .ttr-row__cells { gap: 3px; }
-  .ttr-cell { grid-template-columns: auto auto; grid-auto-flow: row; column-gap: 3px; row-gap: 0; padding: 2px 4px; font-size: 0.8rem; }
-  .ttr-cell__icon { grid-row: span 2; }
-  .ttr-cell__dmg { min-width: calc(2ch + 0.8em + 2px); padding-left: 0; border-left: 0; font-size: 0.9em; }
-  .ttr-cell--neutral { grid-template-columns: auto; }
-  .ttr-sum { gap: 0.2em; font-size: 0.8rem; }
-  .ttr__controls { flex-direction: column; gap: 4px; }
-  .ttr__controls .ui-button--icon { min-width: 36px; min-height: 36px; }
-  .ttr__result { max-width: 6.5em; padding: 6px; font-size: 0.68rem; white-space: normal; }
-}
-
-@media (max-width: 800px) {
-  .ttr { grid-template-columns: minmax(0, 1fr); }
-  .ttr__controls { flex-direction: row; justify-content: center; }
-  .ttr__result { max-width: none; }
-}
-
+/* Narrow phones keep each player's equation inline, with controls alongside. */
 @media (max-width: 640px) {
-  .ttr__rows { justify-self: stretch; zoom: 1.2; }
-  .ttr-row { grid-template-columns: minmax(0, 1fr); justify-items: center; }
-  .ttr-row__cells { justify-content: center; }
+  .ttr { gap: 4px; }
+  .ttr__rows { flex-direction: column; }
+  .ttr-row { gap: 3px; padding: 3px 5px 3px 9px; }
+  .ttr-row__cells { gap: 1px; }
+  .ttr-cell { gap: 2px; padding: 3px 2px; font-size: 0.68rem; }
+  .ttr-cell__dmg { padding-left: 2px; }
+  .ttr-sum { gap: 0.15em; font-size: 0.68rem; }
+  .ttr__controls { width: 36px; flex-direction: column; }
+  .ttr__result-label { display: none; }
+  .ttr__result-icon { display: inline-flex; font-size: 1.1rem; }
   .ttr-banner { font-size: 2.3rem; }
   .ttr-banner--pill { font-size: 1.6rem; }
   .ttr-banner--crown .g-icon { font-size: 3.4rem; }

@@ -607,8 +607,8 @@ export function sessionReducer(state, action) {
           playerDiscard: result.playerDiscard,
           playerActivated: result.playerActivated,
           playerDrawnCount: result.playerDrawnCount,
-          playerPendingDiscard: result.playerPendingDiscard?.cardId === 'draw_2_discard_2'
-            ? { ...result.playerPendingDiscard, initialRemaining: result.playerPendingDiscard.remaining,
+          playerPendingDiscard: result.playerPendingDiscard
+            ? { ...result.playerPendingDiscard, initialRemaining: result.playerPendingDiscard.remaining, initialHandSize: result.playerHand.length,
               drawnUids: result.playerHand.filter((card) => !current.playerHand.some((old) => old.uid === card.uid)).map((card) => card.uid) }
             : result.playerPendingDiscard,
           armedPlayerCopyUid: null,
@@ -625,16 +625,17 @@ export function sessionReducer(state, action) {
     case 'CANCEL_PLAYER_PREPARATION_DISCARD': {
       const current = state.preBattle
       const pending = current.playerPendingDiscard
-      if (state.battleStarted || current.playerFinished || pending?.cardId !== 'draw_2_discard_2') return state
+      if (state.battleStarted || current.playerFinished || !pending) return state
+      const damage = pending.cardId === 'discard_for_damage'
       const selected = pending.selectedIds ?? []
       if (action.type === 'TOGGLE_PREPARATION_DISCARD') {
-        if (!current.playerHand.some((card) => card.uid === action.uid)) return state
+        if (!current.playerHand.some((card) => card.uid === action.uid) || (damage && action.uid === pending.sourceUid)) return state
         const next = selected.includes(action.uid) ? selected.filter((uid) => uid !== action.uid)
-          : selected.length < pending.remaining ? [...selected, action.uid] : selected
+          : damage || selected.length < pending.remaining ? [...selected, action.uid] : selected
         return createTransitionResult(state, { preBattle: { ...current, playerPendingDiscard: { ...pending, selectedIds: next } } })
       }
       if (action.type === 'CANCEL_PLAYER_PREPARATION_DISCARD') {
-        if (!pending.drawnUids || pending.remaining !== pending.initialRemaining) return state
+        if (!pending.drawnUids || pending.remaining !== pending.initialRemaining || current.playerHand.length !== pending.initialHandSize) return state
         const drawn = pending.drawnUids.map((uid) => current.playerHand.find((card) => card.uid === uid))
         if (drawn.some((card) => !card)) return state
         return createTransitionResult(state, { preBattle: { ...current,
@@ -645,11 +646,12 @@ export function sessionReducer(state, action) {
           playerPendingDiscard: null,
         } })
       }
-      if (selected.length !== pending.remaining || !selected.every((uid) => current.playerHand.some((card) => card.uid === uid))) return state
+      if ((!damage && selected.length !== pending.remaining) || !selected.every((uid) => current.playerHand.some((card) => card.uid === uid) && (!damage || uid !== pending.sourceUid))) return state
       let result = current
       for (const targetUid of selected) result = applyPreparationAction(result, 'player', {
         type: 'discard-preparation', sourceUid: pending.sourceUid, targetUid,
       })
+      if (damage) result = applyPreparationAction(result, 'player', { type: 'finish-preparation-discard', sourceUid: pending.sourceUid })
       return createTransitionResult(state, { preBattle: { ...result, tabletopChoice: null, activationTick: current.activationTick + 1 } })
     }
 
@@ -1389,8 +1391,6 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     togglePreparationDiscard: (uid) => dispatch({ type: 'TOGGLE_PREPARATION_DISCARD', uid }),
     submitPreparationDiscard: () => dispatch({ type: 'SUBMIT_PREPARATION_DISCARD' }),
     cancelPreparationDiscard: () => dispatch({ type: 'CANCEL_PLAYER_PREPARATION_DISCARD' }),
-    discardPreparationCard: (uid) => dispatch({ type: 'DISCARD_PLAYER_PREPARATION_CARD', uid }),
-    finishPreparationDiscard: () => dispatch({ type: 'FINISH_PLAYER_PREPARATION_DISCARD' }),
     recycleSelectionCards,
     isRecyclePicking,
     cancelPlayerRecyclePick,
