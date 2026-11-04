@@ -1,4 +1,4 @@
-/* Wide, shallow score strip leaves the battle hands room to grow. */
+/* Two stacked player bars, each keeping its values on one line. */
 .ttr {
   --ttr-neutral: #d7dbe1;
   position: relative;
@@ -11,17 +11,17 @@
 }
 
 .ttr__rows {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: 4px;
   min-width: 0;
-  width: 100%;
+  width: max-content;
+  max-width: 100%;
+  justify-self: center;
 }
 
 .ttr-row {
   position: relative;
   display: grid;
-  flex: 1 1 max-content;
   min-width: 0;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
@@ -332,7 +332,6 @@
 /* Narrow phones keep each player's equation inline, with controls alongside. */
 @media (max-width: 640px) {
   .ttr { gap: 4px; }
-  .ttr__rows { flex-direction: column; }
   .ttr-row { gap: 3px; padding: 3px 5px 3px 9px; }
   .ttr-row__cells { gap: 1px; }
   .ttr-cell { gap: 2px; padding: 3px 2px; font-size: 0.68rem; }

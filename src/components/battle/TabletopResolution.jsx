@@ -6,7 +6,7 @@ import { buildTabletopResolutionPlan, emptyLedgerSide, finalLedgerSide } from '.
 import { createResolutionRunner } from './tabletopResolutionRunner'
 
 const FACTIONS = ['critter', 'robot', 'dragon']
-// Opponent first: left in the wide strip, top when narrow screens wrap.
+// Each player keeps a separate row: opponent above, player below.
 const ROW_ORDER = ['opponent', 'player']
 const FAST_SPEED = 2.5
 
