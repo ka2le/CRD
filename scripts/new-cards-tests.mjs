@@ -85,6 +85,22 @@ test('sacrifices repair Balance and statless hands; spent source cannot activate
   assert.deepEqual(getHandStats(s.playerHand), { critter:2, robot:2, dragon:2 })
 })
 
+test('Discard for Damage can discard itself and ends its activation with no damage', () => {
+  for (const side of ['player', 'opponent']) for (const charged of [false, true]) {
+    let s = createPreparationState({ playerHand: hand('discard_for_damage','robot1'), opponentHand: hand('discard_for_damage','robot1') })
+    const sourceUid = s[`${side}Hand`][0].uid
+    s = applyPreparationAction(s, side, { type: 'prepare', sourceUid })
+    if (charged) s = applyPreparationAction(s, side, { type: 'discard-preparation', sourceUid, targetUid: s[`${side}Hand`][1].uid })
+    assert(getPreparationActions(s, side).some(a => a.type === 'discard-preparation' && a.targetUid === sourceUid))
+    s = applyPreparationAction(s, side, { type: 'discard-preparation', sourceUid, targetUid: sourceUid })
+    assert.equal(s[`${side}PendingDiscard`], null)
+    assert(!s[`${side}Hand`].some(c => c.uid === sourceUid))
+    assert(s[`${side}Discard`].some(c => c.uid === sourceUid))
+    assert.equal(getTabletopProfile(s[`${side}Hand`]).base, 0)
+    assert(getPreparationActions(s, side).some(a => a.type === 'finish-preparation'))
+  }
+})
+
 test('Copy starts uncharged; Recycle returns sacrificed cards without losing stored power', () => {
   let s = prep(hand('discard_for_damage','robot1','copy_card_in_hand','recycle_card'))
   s = finish(discard(activate(s,'discard_for_damage'),'robot1'))
@@ -156,6 +172,30 @@ test('browser and both room seats enforce pending choices, persist them, and exp
     assert(getRulesText(rules).includes('Draw 2 / Discard 2'))
     assert.equal(normalizeOpponentSettings({gameMode:'draft',opponentAi:'dan'},{tabletop:rules}).opponentAi,'shallow')
     assert.deepEqual(getOpponentAiOptions('five-hand-discard',rules).map(x=>x.id),['rules','shallow','search'])
+    for (const seat of ['host','guest']) for (const batch of [false,true]) {
+      const game={mode:'draft',phase:'battle-ready',playerHand:hand('discard_for_damage','robot1','bite'),opponentHand:hand('discard_for_damage','robot1','bite'),deck:[],draftDiscard:[]}
+      let s={settings:{tabletop:rules,opponentAi:'rules'},game,preBattle:createPreparationState(game),otherUi:{},battleStarted:false,dealId:1,gameSessionKey:0}
+      let view=room.seatView(s,seat)
+      const sourceUid=view.preBattle.playerHand[0].uid
+      const otherUid=view.preBattle.playerHand[1].uid
+      s=room.applyRoomAction(s,seat,{type:'ACTIVATE_PLAYER_PRE_BATTLE_CARD',uid:sourceUid})
+      if (batch) {
+        // Select the source first: submitting must still discard every selected card.
+        for (const uid of [sourceUid,otherUid]) s=room.applyRoomAction(s,seat,{type:'TOGGLE_PREPARATION_DISCARD',uid})
+        view=room.seatView(s,seat)
+        assert.deepEqual(view.preBattle.playerPendingDiscard.selectedIds,[sourceUid,otherUid])
+        s=JSON.parse(JSON.stringify(s))
+        s=room.applyRoomAction(s,seat,{type:'SUBMIT_PREPARATION_DISCARD'})
+      } else {
+        s=room.applyRoomAction(s,seat,{type:'DISCARD_PLAYER_PREPARATION_CARD',uid:otherUid})
+        s=room.applyRoomAction(s,seat,{type:'DISCARD_PLAYER_PREPARATION_CARD',uid:sourceUid})
+      }
+      view=room.seatView(s,seat)
+      assert.equal(view.preBattle.playerPendingDiscard,null)
+      assert.deepEqual(view.preBattle.playerHand.map(c=>c.id),['bite'])
+      assert.equal(view.preBattle.playerDiscard.length,2)
+      assert.equal(getTabletopProfile(view.preBattle.playerHand).base,2)
+    }
     for (const seat of ['host','guest']) {
       const game={mode:'draft',phase:'battle-ready',playerHand:hand('draw_2_discard_2','robot2','robot_ulti'),opponentHand:hand('draw_2_discard_2','robot2','robot_ulti'),deck:hand('robot1','dragon1'),draftDiscard:[]}
       let s={settings:{tabletop:rules,opponentAi:'rules'},game,preBattle:createPreparationState(game),otherUi:{},battleStarted:false,dealId:1,gameSessionKey:0}

@@ -269,7 +269,7 @@ function AppContent() {
         <button type="button" className="ui-button ui-button--primary table__action"
           disabled={session.onlineBlocked || (!damageDiscard && preparationDiscardSelected.length !== preparationDiscardPending.remaining)}
           onClick={session.submitPreparationDiscard}>
-          <SvgIcon name="check" /><span>Accept {preparationDiscardSelected.length}{!damageDiscard ? `/${preparationDiscardPending.remaining}` : null}</span>
+          <SvgIcon name="check" /><span>Accept {damageDiscard && preparationDiscardSelected.includes(preparationDiscardPending.sourceUid) ? 0 : preparationDiscardSelected.length}{!damageDiscard ? `/${preparationDiscardPending.remaining}` : null}</span>
           {damageDiscard ? <GameIcon name="damage" /> : null}
         </button>
       </div>
@@ -346,7 +346,7 @@ function AppContent() {
     selectedIds: isPreBattleReady && armedPlayerCopyUid ? [armedPlayerCopyUid] : (isPreBattleReady && tabletopSelectedCardUid ? [tabletopSelectedCardUid] : []),
     readyIds: isPreBattleReady && !preparationDiscardPending ? [...activatablePreBattleIds, ...chameleonIds] : [],
     targetableIds: choosingTabletopType ? playerHand.filter((card) => getCardTabletopTypes(card, tabletopChoice).length).map((card) => card.uid) : (isPreBattleReady ? copyCandidateIds : []),
-    dimmedIds: damageDiscard ? [preparationDiscardPending.sourceUid] : choosingTabletopType ? playerHand.filter((card) => !getCardTabletopTypes(card, tabletopChoice).length).map((card) => card.uid) : [],
+    dimmedIds: choosingTabletopType ? playerHand.filter((card) => !getCardTabletopTypes(card, tabletopChoice).length).map((card) => card.uid) : [],
     activeCardIds: battleStarted ? (battlePlayback?.playerTriggeredIds ?? []) : [],
     activationKey: battleStarted ? (battlePlayback?.activationTick ?? 0) : 0,
     battleValuesById: playerBattleValues,

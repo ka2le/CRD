@@ -54,7 +54,7 @@ const SPECIAL_TEXT = {
   extra_turn: 'Not in play yet.',
   no_stats_to_2: 'With no stat cards in your hand, start with 2 of every stat. Does not stack. Overwhelming can add its extra Dragon stat.',
   draw_2_discard_2: 'Draw 2 cards, then discard 2 cards from your hand. You may discard this card. Finish discarding before using another special.',
-  discard_for_damage: 'Discard any number of other cards during this activation. Gain 1 neutral power per card discarded. Copies start at 0 and need their own discards.',
+  discard_for_damage: 'Discard any number of cards during this activation. Gain 1 neutral power per card discarded. You may discard this card too; it then deals no damage. Copies start at 0 and need their own discards.',
 }
 
 const TABLETOP_TEXT = {

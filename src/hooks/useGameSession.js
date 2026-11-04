@@ -629,7 +629,7 @@ export function sessionReducer(state, action) {
       const damage = pending.cardId === 'discard_for_damage'
       const selected = pending.selectedIds ?? []
       if (action.type === 'TOGGLE_PREPARATION_DISCARD') {
-        if (!current.playerHand.some((card) => card.uid === action.uid) || (damage && action.uid === pending.sourceUid)) return state
+        if (!current.playerHand.some((card) => card.uid === action.uid)) return state
         const next = selected.includes(action.uid) ? selected.filter((uid) => uid !== action.uid)
           : damage || selected.length < pending.remaining ? [...selected, action.uid] : selected
         return createTransitionResult(state, { preBattle: { ...current, playerPendingDiscard: { ...pending, selectedIds: next } } })
@@ -646,12 +646,14 @@ export function sessionReducer(state, action) {
           playerPendingDiscard: null,
         } })
       }
-      if ((!damage && selected.length !== pending.remaining) || !selected.every((uid) => current.playerHand.some((card) => card.uid === uid) && (!damage || uid !== pending.sourceUid))) return state
+      if ((!damage && selected.length !== pending.remaining) || !selected.every((uid) => current.playerHand.some((card) => card.uid === uid))) return state
+      // Resolve the source last so every selected sacrifice is discarded before its activation ends.
+      const targets = damage ? [...selected].sort((a, b) => Number(a === pending.sourceUid) - Number(b === pending.sourceUid)) : selected
       let result = current
-      for (const targetUid of selected) result = applyPreparationAction(result, 'player', {
+      for (const targetUid of targets) result = applyPreparationAction(result, 'player', {
         type: 'discard-preparation', sourceUid: pending.sourceUid, targetUid,
       })
-      if (damage) result = applyPreparationAction(result, 'player', { type: 'finish-preparation-discard', sourceUid: pending.sourceUid })
+      if (damage && result.playerPendingDiscard) result = applyPreparationAction(result, 'player', { type: 'finish-preparation-discard', sourceUid: pending.sourceUid })
       return createTransitionResult(state, { preBattle: { ...result, tabletopChoice: null, activationTick: current.activationTick + 1 } })
     }
 
@@ -660,7 +662,7 @@ export function sessionReducer(state, action) {
       const current = state.preBattle
       const pending = current.playerPendingDiscard
       if (!pending || state.battleStarted || current.playerFinished) return state
-      if (action.type === 'DISCARD_PLAYER_PREPARATION_CARD' && (!current.playerHand.some((card) => card.uid === action.uid) || (pending.cardId === 'discard_for_damage' && action.uid === pending.sourceUid))) return state
+      if (action.type === 'DISCARD_PLAYER_PREPARATION_CARD' && !current.playerHand.some((card) => card.uid === action.uid)) return state
       if (action.type === 'FINISH_PLAYER_PREPARATION_DISCARD' && pending.remaining !== null) return state
       const result = applyPreparationAction(current, 'player', {
         type: action.type === 'DISCARD_PLAYER_PREPARATION_CARD' ? 'discard-preparation' : 'finish-preparation-discard',

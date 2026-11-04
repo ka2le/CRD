@@ -115,7 +115,7 @@ test('all rules sheets render Copy rules and export readable mode-specific rules
         assert.match(text, /Devour does not grant a main faction choice/)
         assert.match(text, /Critter main faction wins equal scores/)
         assert.match(text, /1 Critter power, 1 Robot power or 0 Dragon power/)
-        assert.match(text, /Each Shield card gives 2 shield points/)
+        assert.match(text, /Ordinary Shield cards give 2 shield points/)
         assert.doesNotMatch(text, /You may choose Dragon/)
         const bite = toTabletopCard(definitions.get('bite'), rules)
         const art = renderToStaticMarkup(createElement(CardVisual, { card: bite }))
@@ -321,11 +321,12 @@ test('session gates type choice, invalidates it after hand changes, preserves pr
     const { sessionReducer } = await server.ssrLoadModule('/src/hooks/useGameSession.js')
     for (const name of DEV_SCENARIO_NAMES) {
       for (const mode of ['draft', 'discard']) {
+        const rules = name === 'new-cards' ? 'abilities-new-cards' : 'threshold'
         const initial = { settings: {}, battleInstance: 0, gameSessionKey: 0, dealId: 0 }
-        const prepared = sessionReducer(initial, { type: 'LOAD_DEV_SCENARIO', payload: createDevScenario({ name, mode, rules: 'threshold' }) })
+        const prepared = sessionReducer(initial, { type: 'LOAD_DEV_SCENARIO', payload: createDevScenario({ name, mode, rules }) })
         assert.equal(prepared.game.phase, 'battle-ready')
         assert.equal(prepared.battleStarted, false)
-        const result = sessionReducer(initial, { type: 'LOAD_DEV_SCENARIO', payload: createDevScenario({ name, mode, result: true, rules: 'threshold' }) })
+        const result = sessionReducer(initial, { type: 'LOAD_DEV_SCENARIO', payload: createDevScenario({ name, mode, result: true, rules }) })
         assert.equal(result.battleStarted, true)
         assert.equal(result.preBattle.opponentFinished, true)
         assert.doesNotThrow(() => resolveTabletopBattle(result.preBattle.playerHand, result.preBattle.opponentHand, {

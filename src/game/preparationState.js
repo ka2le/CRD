@@ -37,8 +37,7 @@ export function getPreparationActions(state, side = 'player') {
   if (pending) {
     const base = { sourceUid: pending.sourceUid, cardId: pending.cardId }
     return [
-      ...hand.filter((card) => pending.cardId === 'draw_2_discard_2' || card.uid !== pending.sourceUid)
-        .map((card) => ({ type: 'discard-preparation', ...base, targetUid: card.uid })),
+      ...hand.map((card) => ({ type: 'discard-preparation', ...base, targetUid: card.uid })),
       ...(pending.remaining === null ? [{ type: 'finish-preparation-discard', ...base }] : []),
     ]
   }
@@ -84,7 +83,8 @@ export function applyPreparationAction(state, side, action) {
         ? { ...card, sacrificedPower: (card.sacrificedPower ?? 0) + 1 } : card
     ))
     return { ...state, [handKey]: hand, [discardKey]: [...state[discardKey], target],
-      [pendingKey]: remaining === 0 ? null : { ...pending, remaining } }
+      [pendingKey]: remaining === 0 || (pending.cardId === 'discard_for_damage' && target.uid === pending.sourceUid)
+        ? null : { ...pending, remaining } }
   }
   const activatedKey = `${side}Activated`
   const activated = [...(state[activatedKey] ?? []), legal.sourceUid]
