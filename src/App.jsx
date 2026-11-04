@@ -265,7 +265,7 @@ function AppContent() {
   if (layout === 'focus') {
     if (preparationDiscardPending) {
       primaryAction = <div className="table__discard-actions">
-        <button type="button" className="ui-button table__action" disabled={session.onlineBlocked} onClick={session.cancelPreparationDiscard}>Cancel</button>
+        {damageDiscard ? <button type="button" className="ui-button table__action" disabled={session.onlineBlocked} onClick={session.cancelPreparationDiscard}>Cancel</button> : null}
         <button type="button" className="ui-button ui-button--primary table__action"
           disabled={session.onlineBlocked || (!damageDiscard && preparationDiscardSelected.length !== preparationDiscardPending.remaining)}
           onClick={session.submitPreparationDiscard}>

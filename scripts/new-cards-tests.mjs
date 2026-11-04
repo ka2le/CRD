@@ -206,11 +206,17 @@ test('browser and both room seats enforce pending choices, persist them, and exp
       assert.equal(view.preBattle.opponentPendingDiscard,null)
       assert.throws(()=>room.applyRoomAction(s,seat,{type:'START_BATTLE'}),/Finish discarding/)
       assert.equal(sessionReducer(view,{type:'START_BATTLE'}),view)
+      // Revealed draws are committed: local and room cancellation cannot undo them.
+      assert.equal(sessionReducer(view,{type:'CANCEL_PLAYER_PREPARATION_DISCARD'}),view)
+      const committed=structuredClone(s)
+      s=room.applyRoomAction(s,seat,{type:'CANCEL_PLAYER_PREPARATION_DISCARD'})
+      assert.deepEqual(s,committed)
       s=JSON.parse(JSON.stringify(s))
       for (const id of ['robot1','dragon1']) {
         view=room.seatView(s,seat)
-        s=room.applyRoomAction(s,seat,{type:'DISCARD_PLAYER_PREPARATION_CARD',uid:view.preBattle.playerHand.find(c=>c.id===id).uid})
+        s=room.applyRoomAction(s,seat,{type:'TOGGLE_PREPARATION_DISCARD',uid:view.preBattle.playerHand.find(c=>c.id===id).uid})
       }
+      s=room.applyRoomAction(s,seat,{type:'SUBMIT_PREPARATION_DISCARD'})
       view=room.seatView(s,seat)
       assert.equal(view.preBattle.playerPendingDiscard,null)
       assert.equal(view.preBattle.playerDiscard.length,2)

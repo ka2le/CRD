@@ -635,6 +635,7 @@ export function sessionReducer(state, action) {
         return createTransitionResult(state, { preBattle: { ...current, playerPendingDiscard: { ...pending, selectedIds: next } } })
       }
       if (action.type === 'CANCEL_PLAYER_PREPARATION_DISCARD') {
+        if (!damage) return state
         if (!pending.drawnUids || pending.remaining !== pending.initialRemaining || current.playerHand.length !== pending.initialHandSize) return state
         const drawn = pending.drawnUids.map((uid) => current.playerHand.find((card) => card.uid === uid))
         if (drawn.some((card) => !card)) return state
