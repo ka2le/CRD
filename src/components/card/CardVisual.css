@@ -183,6 +183,16 @@
   padding: 0 0.9cqw;
 }
 
+/* Exclusive faction alternatives and two damage icons fit on one printed row. */
+.card-visual__overlay--specialist .card-visual__icon-token {
+  width: 12cqw;
+}
+
+.card-visual__overlay--specialist .card-visual__text-token {
+  font-size: 8cqw;
+  padding: 0 0.6cqw;
+}
+
 .card-visual__overlay--cooldown .card-visual__icon-token {
   width: 12.5cqw;
 }

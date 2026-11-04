@@ -19,13 +19,14 @@ const activate = (s, id) => applyPreparationAction(s, 'player', { type: 'prepare
 const discard = (s, id) => applyPreparationAction(s, 'player', { type: 'discard-preparation', sourceUid: s.playerPendingDiscard.sourceUid, targetUid: s.playerHand.find(c => c.id === id).uid })
 const finish = s => applyPreparationAction(s, 'player', { type: 'finish-preparation-discard', sourceUid: s.playerPendingDiscard.sourceUid })
 
-test('new mode has four exclusive cards, one regular / three Wild copies; old decks stay intact', () => {
+test('new mode has five exclusive cards, one regular / three Wild copies; old decks stay intact', () => {
   assert.equal(normalizePlayableTabletopRules(rules), rules)
-  assert.equal(catalog.length, 73)
-  assert.equal(getExpandedCoreDeck({ tabletop: rules, wildDeck: true }).length, 109)
-  const added = ['no_stats_to_2', 'draw_2_discard_2', 'shield_ulti', 'discard_for_damage']
+  assert.equal(catalog.length, 74)
+  assert.equal(getExpandedCoreDeck({ tabletop: rules, wildDeck: true }).length, 112)
+  const added = ['no_stats_to_2', 'draw_2_discard_2', 'shield_ulti', 'discard_for_damage', 'single_faction_2']
   for (const id of added) {
     assert.equal(catalog.filter(c => c.id === id).length, 1)
+    assert.equal(getExpandedCoreDeck({ tabletop: rules, wildDeck: true }).filter(c => c.id === id).length, 3)
     for (const mode of [false, 'abilities-main', 'threshold', 'abilities-prototype']) assert(!getCoreCards({ tabletop: mode }).some(c => c.id === id))
   }
   assert(!catalog.some(c => ['chameleon', 'shortcut', 'any_off_each', 'double_dmg'].includes(c.id)))
@@ -42,6 +43,56 @@ test('3 shields block Critters and Robots, Dragons stay immune, shield damage an
   let s = prep(hand('shield_ulti', 'copy_card_in_hand', 'shield_is_dmg'))
   s = applyPreparationAction(s, 'player', { type:'prepare', sourceUid:s.playerHand[1].uid, targetUid:s.playerHand[0].uid })
   assert.equal(getTabletopProfile(s.playerHand).base, 6)
+})
+
+test('Specialist doubles only one stat faction, with multiple cards and pips allowed', () => {
+  for (const [type, one, two] of [['critter','critter1','rabbit2'], ['robot','robot1','robot2'], ['dragon','dragon1','dragon2']]) {
+    for (const stats of [[one], [two], [one,two]]) {
+      const h = hand('single_faction_2', ...stats)
+      const profile = getTabletopProfile(h)
+      assert.equal(profile.contributions[type], 2 * getHandStats(h)[type])
+      assert.deepEqual(profile.types, [type])
+      assert.equal(profile.attacks[0].type, type)
+      const result = resolveTabletopBattle(h, hand('bite'), {playerType:type,opponentType:'critter'})
+      const side = buildTabletopResolutionPlan(result).player
+      assert.equal(side.pulses.find(p => p.type === type).cards[0].units, 2)
+      assert.equal(side.direct.length, 0)
+      assert.equal(finalLedgerSide(side).total, result.player.score)
+    }
+  }
+  for (const ids of [[], ['robot_critter'], ['robot1','critter1'], ['dragon1','robot1'], ['critter1','dragon1'], ['joker'], ['robot1','critter1','dragon1'], ['no_stats_to_2']]) {
+    const h = hand('single_faction_2', ...ids)
+    assert.equal(getTabletopProfile(h).base, 0)
+    assert.equal(getTabletopProfile(h).robotAttacks, 0)
+  }
+})
+
+test('Specialist counts as two faction attacks for Balance, Copy and Overwhelming', () => {
+  const robot = hand('single_faction_2','robot2')
+  const score = scoreTabletopHand(robot, 2, 'robot')
+  assert.equal(score.base, 4)
+  assert.equal(score.robotAttacks, 2)
+  assert.equal(score.balanced, true)
+  assert.equal(score.score, 5)
+  const result = resolveTabletopBattle(robot, hand('shield2','bite'), {playerType:'robot',opponentType:'critter'})
+  const side = buildTabletopResolutionPlan(result).player
+  assert.deepEqual(side.balance.attackUnits, [{uid:robot[0].uid,units:2}])
+  assert.equal(finalLedgerSide(side).total, result.player.score)
+
+  let s = prep(hand('single_faction_2','robot2','copy_card_in_hand'))
+  s = applyPreparationAction(s,'player',{type:'prepare',sourceUid:s.playerHand[2].uid,targetUid:s.playerHand[0].uid})
+  assert.equal(getTabletopProfile(s.playerHand).base, 8)
+  assert.equal(getTabletopProfile(s.playerHand).robotAttacks, 4)
+  assert.equal(getTabletopProfile(s.playerHand).balanced, false)
+
+  const dragon = hand('single_faction_2','dragon2','dragon2')
+  const d = scoreTabletopHand(dragon, 20, 'dragon')
+  assert.equal(d.overwhelming, true)
+  assert.equal(d.stats.dragon, 5)
+  assert.equal(d.score, 10)
+  const plan = buildTabletopResolutionPlan(resolveTabletopBattle(dragon, hand('bite'), {playerType:'dragon',opponentType:'critter'}))
+  assert.deepEqual(plan.player.overwhelming.deltas, [{uid:dragon[0].uid,type:'dragon',delta:2}])
+  assert.equal(finalLedgerSide(plan.player).total, 10)
 })
 
 test('statless replacement is all-or-nothing, nonstacking, with normal Balance and Overwhelming', () => {
@@ -166,10 +217,16 @@ test('browser and both room seats enforce pending choices, persist them, and exp
   try {
     const {sessionReducer}=await vite.ssrLoadModule('/src/hooks/useGameSession.js')
     const {getRulesText}=await vite.ssrLoadModule('/src/components/overlay/rulesText.js')
+    const {getCardSummary,getCardGroup}=await vite.ssrLoadModule('/src/components/card/cardMeta.js')
     const {normalizeOpponentSettings,getOpponentAiOptions}=await vite.ssrLoadModule('/src/game/opponentAi.js')
     const room=await vite.ssrLoadModule('/src/network/roomGame.js')
     assert(getRulesText(rules).includes('Abilities+NewCards'))
     assert(getRulesText(rules).includes('Draw 2 / Discard 2'))
+    const specialist = card('single_faction_2')
+    assert.equal(getCardSummary(specialist).timing,'Tabletop power')
+    assert.equal(getCardGroup(specialist),'attack')
+    assert(getCardSummary(specialist).text.includes('exactly one faction'))
+    assert(getRulesText(rules).includes(`Specialist: Tabletop power. ${getCardSummary(specialist).text}`))
     assert.equal(normalizeOpponentSettings({gameMode:'draft',opponentAi:'dan'},{tabletop:rules}).opponentAi,'shallow')
     assert.deepEqual(getOpponentAiOptions('five-hand-discard',rules).map(x=>x.id),['rules','shallow','search'])
     for (const seat of ['host','guest']) for (const batch of [false,true]) {

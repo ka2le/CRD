@@ -6,7 +6,9 @@ import { createServer } from 'vite'
 
 const digital = JSON.parse(await readFile(new URL('../data/cards.json', import.meta.url)))
 const tabletop = JSON.parse(await readFile(new URL('../data/tabletop-cards.json', import.meta.url)))
-const cards = [...digital.cards, ...tabletop.cards.map((card) => ({ ...card, tabletop: true }))]
+const newCards = JSON.parse(await readFile(new URL('../data/new-cards.json', import.meta.url)))
+const cards = [...digital.cards, ...tabletop.cards.map((card) => ({ ...card, tabletop: true })),
+  ...newCards.cards.map((card) => ({ ...card, tabletop: 'abilities-new-cards' }))]
 for (const base of ['/', '/CRD/']) {
   const server = await createServer({ base, server: { middlewareMode: true }, appType: 'custom' })
   try {

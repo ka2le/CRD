@@ -2,6 +2,10 @@ import { getExpandedCoreDeck } from './cards.js'
 import { chooseTabletopType, getTabletopProfile } from './tabletop.js'
 
 const SCENARIOS = {
+  specialist: {
+    player: ['single_faction_2', 'robot2', 'robot1', 'copy_card_in_hand', 'robot_attack'],
+    opponent: ['single_faction_2', 'robot_critter', 'shield_ulti', 'critter1', 'swarm'],
+  },
   'new-cards': {
     player: ['no_stats_to_2', 'draw_2_discard_2', 'discard_for_damage', 'shield_ulti', 'robot_attack'],
     opponent: ['robot1', 'robot_attack', 'shield2', 'critter1', 'dragon1'],

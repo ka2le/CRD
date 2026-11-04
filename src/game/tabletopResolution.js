@@ -16,7 +16,13 @@ export function canAnimateTabletopResolution(result) {
 }
 
 function attackUnits(card) {
+  if (card.id === 'single_faction_2') return 2
   return card.tabletopAttackUnits ?? card.effect?.dmg ?? 1
+}
+
+function isTypedAttack(card, type, profile) {
+  return card.effect?.dmgType === type || (card.id === 'single_faction_2'
+    && profile.attacks.some((attack) => attack.uid === card.uid && attack.type === type))
 }
 
 function emptyDamage() {
@@ -41,7 +47,7 @@ function buildSide(hand, score, enemyHand) {
   const pulses = TABLETOP_CLASSES.map((type) => ({
     type,
     stats: base.stats[type],
-    cards: hand.filter((card) => card.effect?.dmgType === type).map((card) => ({ uid: card.uid, units: attackUnits(card) })),
+    cards: hand.filter((card) => isTypedAttack(card, type, base)).map((card) => ({ uid: card.uid, units: attackUnits(card) })),
   }))
   const pulsed = new Set(pulses.flatMap((pulse) => pulse.cards.map((card) => card.uid)))
   // Everything else (Bite, shield power, stat products) lands as one value.
@@ -69,8 +75,8 @@ function buildSide(hand, score, enemyHand) {
       count: score.robotAttacks,
       bonus: score.bonus,
       statPips: stats.find((entry) => entry.type === 'robot').cards,
-      attackUnits: hand.filter((card) => card.effect?.dmgType === 'robot')
-        .map((card) => ({ uid: card.uid, units: card.id === 'robot_ulti' ? ROBOT_ULTI_ATTACK_COUNT : 1 })),
+      attackUnits: hand.filter((card) => isTypedAttack(card, 'robot', base))
+        .map((card) => ({ uid: card.uid, units: card.id === 'robot_ulti' ? ROBOT_ULTI_ATTACK_COUNT : attackUnits(card) })),
     }
   }
 

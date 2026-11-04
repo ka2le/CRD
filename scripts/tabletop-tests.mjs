@@ -321,7 +321,7 @@ test('session gates type choice, invalidates it after hand changes, preserves pr
     const { sessionReducer } = await server.ssrLoadModule('/src/hooks/useGameSession.js')
     for (const name of DEV_SCENARIO_NAMES) {
       for (const mode of ['draft', 'discard']) {
-        const rules = name === 'new-cards' ? 'abilities-new-cards' : 'threshold'
+        const rules = ['new-cards', 'specialist'].includes(name) ? 'abilities-new-cards' : 'threshold'
         const initial = { settings: {}, battleInstance: 0, gameSessionKey: 0, dealId: 0 }
         const prepared = sessionReducer(initial, { type: 'LOAD_DEV_SCENARIO', payload: createDevScenario({ name, mode, rules }) })
         assert.equal(prepared.game.phase, 'battle-ready')
@@ -333,7 +333,7 @@ test('session gates type choice, invalidates it after hand changes, preserves pr
           playerType: getTabletopChoice(result.preBattle).selectedType,
         }))
         const physicalIds = [...result.game.playerHand, ...result.game.opponentHand, ...result.game.deck].map((entry) => entry.uid)
-        assert.equal(new Set(physicalIds).size, 109)
+        assert.equal(new Set(physicalIds).size, rules === 'abilities-new-cards' ? 112 : 109)
       }
     }
     assert.throws(() => createDevScenario({ name: 'tie', playerType: 'critter' }), /Invalid main damage type/)

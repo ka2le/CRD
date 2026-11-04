@@ -1,6 +1,28 @@
 {
   "cards": [
     {
+      "id": "single_faction_2",
+      "name": "Specialist",
+      "copies": 1,
+      "type": "action",
+      "stats": [],
+      "effect": {},
+      "cd": 0,
+      "images": [
+        "https://cdn.midjourney.com/6aa0e29c-c0d9-482d-9180-07c3e06a2d66/0_0.png"
+      ],
+      "customEffect": [
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/rabbit.png",
+        "|",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/robot_sharp.png",
+        "|",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/dragon.png",
+        "*",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/suit_hearts_broken.png",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/suit_hearts_broken.png"
+      ]
+    },
+    {
       "id": "no_stats_to_2",
       "name": "From Nothing",
       "copies": 1,

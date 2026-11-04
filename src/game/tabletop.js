@@ -74,9 +74,15 @@ function adaptCard(card) {
 // only when it deals damage (at least one stat of each faction).
 export const ROBOT_ULTI_ATTACK_COUNT = 2
 
+function singleStatType(stats) {
+  const types = TABLETOP_CLASSES.filter((type) => stats[type] > 0)
+  return types.length === 1 ? types[0] : null
+}
+
 export function countRobotAttacks(cards, stats = getHandStats(cards)) {
   const oneOfEachHits = !isMainAbilityRules(getHandTabletopRules(cards)) && stats.critter * stats.robot * stats.dragon > 0
   return cards.reduce((sum, card) => {
+    if (card.id === 'single_faction_2') return sum + (singleStatType(stats) === 'robot' ? 2 : 0)
     if (card.id === 'robot_ulti') return sum + ROBOT_ULTI_ATTACK_COUNT
     if (card.effect?.dmgType === 'robot' || (card.id === 'one_off_each' && oneOfEachHits)) return sum + 1
     return sum
@@ -260,8 +266,10 @@ function computeProfile(hand = [], extraStats = {}) {
   for (const card of hand) {
     let power = 0
     // Current Abilities treats the product as neutral damage and no Robot attack.
-    const type = card.effect?.dmgType ?? (!isMainAbilityRules(rules) && card.id === 'one_off_each' ? 'robot' : undefined)
-    if (card.effect?.dmgType) power = (card.tabletopAttackUnits ?? (ULTIMATES.has(card.id) ? 2 : 1)) * stats[type]
+    const type = card.id === 'single_faction_2' ? singleStatType(stats)
+      : card.effect?.dmgType ?? (!isMainAbilityRules(rules) && card.id === 'one_off_each' ? 'robot' : undefined)
+    if (card.id === 'single_faction_2') power = type ? 2 * stats[type] : 0
+    else if (card.effect?.dmgType) power = (card.tabletopAttackUnits ?? (ULTIMATES.has(card.id) ? 2 : 1)) * stats[type]
     else if (card.id === 'bite') power = isMainAbilityRules(rules) ? 2 : 1
     else if (card.id === 'discard_for_damage') power = card.sacrificedPower ?? 0
     else if (card.id === 'shield_is_dmg') power = shields

@@ -593,6 +593,22 @@
       "width": 550,
       "height": 768
     },
+    "https://cdn.midjourney.com/6aa0e29c-c0d9-482d-9180-07c3e06a2d66/0_0.png": {
+      "role": "art",
+      "original": "assets/originals/1f01ea9efb0c01adb557.png",
+      "path": "images/art/1f01ea9efb0c01adb557-c2d7fa63cc6e264ea099.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "6aa93237e823e4d0d7d81d2cd64e11c705be0164caaca1bff670850bb742cb6d",
+      "outputSha256": "6c50af29948429b4a1eb002d2b76a19020846c4547595b3ccc7ec1ca3d8729f7",
+      "originalBytes": 8642828,
+      "bytes": 71244,
+      "width": 550,
+      "height": 768
+    },
     "https://cdn.midjourney.com/6d8979f0-5a43-4613-9b57-04caef84ca98/0_0.png": {
       "role": "art",
       "original": "assets/originals/166ecdb2f5a951b312fe.png",

@@ -4,7 +4,7 @@ import { isPreBattleActivatableCard } from '../../game/preBattle'
 import { TABLETOP_SHIELD_COST, MAIN_ABILITY_SHIELD_COST } from '../../game/tabletop'
 
 const CLASS_ORDER = ['critter', 'robot', 'dragon']
-const ALL_CLASS_IDS = new Set(['one_off_each', 'any_off_each', 'joker'])
+const ALL_CLASS_IDS = new Set(['one_off_each', 'any_off_each', 'single_faction_2', 'joker'])
 
 // Visual "families" used for frame colour and glow.
 export function getCardAccents(card) {
@@ -58,6 +58,7 @@ const SPECIAL_TEXT = {
 }
 
 const TABLETOP_TEXT = {
+  single_faction_2: 'With stats in exactly one faction, adds 2 power per stat of that faction. Multiple stat cards and points are allowed. With no stats or stats in two or three factions, adds nothing. Counts as two attacks of the powered faction, including for Perfect Balance. Overwhelming can add its extra Dragon stat.',
   no_stats_to_2: SPECIAL_TEXT.no_stats_to_2,
   shield_ulti: '3 shield points. Blocks 3 power from Critters or Robots after bonuses. Dragons are immune.',
   discard_for_damage: (card) => `${SPECIAL_TEXT.discard_for_damage} Current power: ${card.sacrificedPower ?? 0}.`,
@@ -148,6 +149,6 @@ export const CARD_GROUPS = [
 
 export function getCardGroup(card) {
   if (card.type === 'stat') return 'stat'
-  if (card.effect?.dmgType || ((card.cd ?? 0) > 0 && card.effect?.dmg)) return 'attack'
+  if (card.id === 'single_faction_2' || card.effect?.dmgType || ((card.cd ?? 0) > 0 && card.effect?.dmg)) return 'attack'
   return 'special'
 }

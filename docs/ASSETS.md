@@ -20,6 +20,8 @@ Output filenames include a source/settings digest so changed conversions get new
 
 ## Import and rebuild
 
+Specialist uses the creator-supplied Midjourney image `6aa0e29c-c0d9-482d-9180-07c3e06a2d66/0_0.png`. The byte-for-byte original is preserved at `assets/originals/1f01ea9efb0c01adb557.png` (8,642,828 bytes). The game serves `public/images/art/1f01ea9efb0c01adb557-c2d7fa63cc6e264ea099.webp` at 550×768 and 71,244 bytes, using the standard quality-82 pipeline. SHA-256 checksums and source mapping are recorded in the image manifest.
+
 ```powershell
 npm install
 npm run assets:prepare
