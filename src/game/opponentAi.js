@@ -25,6 +25,7 @@ export function getOpponentAiOptions(mode, tabletop = false) {
 export const DEFAULT_OPPONENT_AI = 'dan'
 
 export function normalizeOpponentAi(value) {
+  if (value === 'local') return value
   return OPPONENT_AI_OPTIONS.some((option) => option.id === value) ? value : DEFAULT_OPPONENT_AI
 }
 

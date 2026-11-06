@@ -9,6 +9,7 @@ import {
   revealNextDraftPack,
 } from '../game/draftMode'
 import useDraftFlowEffects from './useDraftFlowEffects'
+import { initializeLocalMultiplayer, isLocalMultiplayer, localMultiplayerView, reduceLocalMultiplayer } from '../game/localMultiplayer.js'
 import { startDraftPickFlight } from './draftMotion'
 import {
   getActivatablePreBattleCards,
@@ -866,13 +867,19 @@ export function sessionReducer(state, action) {
   }
 }
 
+export function localSessionReducer(state, action) {
+  return reduceLocalMultiplayer(state, action, sessionReducer)
+}
+
 export default function useGameSession({ animateCardMove, getAnchorRect, maskSlot, unmaskSlot, timing = {}, room = null }) {
   const sessionTiming = createSessionTiming(timing)
-  const [localSession, localDispatch] = useReducer(sessionReducer, undefined, createInitialSessionState)
+  const [localSession, localDispatch] = useReducer(localSessionReducer, undefined,
+    () => initializeLocalMultiplayer(createInitialSessionState(), true))
   const [aiFeedback, setAiFeedback] = useState(null)
   const [aiRetry, setAiRetry] = useState(0)
   const online = Boolean(room?.session)
-  const session = room?.session ?? localSession
+  const localMultiplayer = !online && isLocalMultiplayer(localSession)
+  const session = room?.session ?? localMultiplayerView(localSession)
   const dispatch = online ? room.dispatch : localDispatch
   const onlineDiscardSubmitted = online && Boolean(session.discardReady?.[room.record?.role])
   const onlineBlocked = online && (onlineDiscardSubmitted || room.record?.role === 'viewer' || room.busy || room.blocked || (room.record?.role !== 'host'
@@ -904,8 +911,8 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
 
   const discardPhase = game.mode === 'five-hand-discard' && game.phase.startsWith('player-discard')
   const opponentDiscarding = game.mode === 'five-hand-discard' && game.phase.startsWith('opponent-discard')
-  const awaitingDiscardDecision = !online && opponentDiscarding
-  const searchOpponent = !online && usesSearchOpponent(settings)
+  const awaitingDiscardDecision = !online && !localMultiplayer && opponentDiscarding
+  const searchOpponent = !online && !localMultiplayer && usesSearchOpponent(settings)
   const dealId = session.dealId
   const awaitingSearchDraftPick = searchOpponent && game.mode === 'draft'
     && game.phase === 'draft-opponent-thinking' && !game.pendingOpponentPickUid
@@ -914,7 +921,9 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
   const canStartBattle = !onlineBlocked && !battleStarted && game.phase === 'battle-ready' && !preBattle.pendingResolution && !preBattle.playerPendingDiscard && !opponentPreparing
   const pendingDraftPickUid = game.pendingOpponentPickUid ?? null
   const draftActivationTick = pendingDraftPickUid ? `${pendingDraftPickUid}-${game.phase}-${game.playerHand.length}-${game.opponentHand.length}` : 'draft-idle'
-  const canPickDraftCard = !onlineBlocked && game.phase === 'draft-player-pick' && game.currentPicker === 'player'
+  const canPickDraftCard = !onlineBlocked && (
+    (game.phase === 'draft-player-pick' && game.currentPicker === 'player')
+    || (localMultiplayer && game.phase === 'draft-opponent-thinking' && game.currentPicker === 'opponent'))
 
   const playerPreBattleView = useMemo(() => getPlayerPreBattleView(preBattle), [preBattle])
   const tabletopChoice = useMemo(() => getTabletopChoice(preBattle), [preBattle])
@@ -1335,7 +1344,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
   }, [online, opponentSearchKey, aiRetry])
 
   useDraftFlowEffects({
-    game: online ? { ...game, mode: 'network-managed' } : game,
+    game: online || localMultiplayer ? { ...game, mode: 'network-managed' } : game,
     waitingForOpponentPick: awaitingSearchDraftPick,
     resolveOpponentDraftPick: resolveOpponentDraftPickAction,
     commitDraftDiscard: commitDraftDiscardAction,
@@ -1358,9 +1367,14 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
       ? aiFeedback : awaitingDiscardDecision && aiFeedback?.key === opponentDecisionKey ? aiFeedback : null,
     retryOpponentAi: () => { setAiFeedback(null); setAiRetry((count) => count + 1) },
     online,
+    localMultiplayer,
+    localPlay: localMultiplayer ? localSession.localPlay : null,
+    revealLocalTurn: () => localDispatch({ type: 'LOCAL_REVEAL' }),
+    toggleLocalShowAll: () => localDispatch({ type: 'LOCAL_SHOW_ALL' }),
+    renameLocalPlayer: (seat, name) => localDispatch({ type: 'LOCAL_RENAME', seat, name }),
     onlineBlocked,
     onlineDiscardSubmitted,
-    opponentTabletopType: online ? getTabletopChoice({ ...preBattle, playerHand: preBattle.opponentHand,
+    opponentTabletopType: online || localMultiplayer ? getTabletopChoice({ ...preBattle, playerHand: preBattle.opponentHand,
       tabletopChoice: session.otherUi?.tabletopChoice }).selectedType : null,
     settings,
     gameMode,

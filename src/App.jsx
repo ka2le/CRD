@@ -14,6 +14,7 @@ import TabletopResolution from './components/battle/TabletopResolution'
 import useBattleAnimationSetting from './hooks/useBattleAnimationSetting'
 import { canAnimateTabletopResolution } from './game/tabletopResolution'
 import InfoOverlay from './components/overlay/InfoOverlay'
+import LocalHandoff from './components/overlay/LocalHandoff'
 import CardInspectProvider from './components/overlay/CardInspect'
 import PileSheet from './components/overlay/PileSheet'
 import HelpSheet from './components/overlay/HelpSheet'
@@ -37,6 +38,7 @@ import { getHandStats } from './game/engine'
 import { getHandAverageDamage } from './game/cardEvaluator'
 import { getCardTabletopTypes } from './game/tabletop'
 import { getOpponentAiName } from './game/opponentAi'
+import { getLocalDisplaySeat, localPlayerName } from './game/localMultiplayer'
 
 const BATTLE_HEALTH = 21
 const RESULT_LABELS = { player: 'Victory', opponent: 'Defeat', tie: 'Draw' }
@@ -156,7 +158,7 @@ function AppContent() {
   // Deck browser: 'collection' (every card in the game) or 'test' (testing: the live deck/zones).
   const [deckView, setDeckView] = useState(null)
 
-  const testDeckAvailable = Boolean(settings.testing && !battleStarted)
+  const testDeckAvailable = Boolean(settings.testing && !battleStarted && !session.localMultiplayer)
 
   const layout = battleStarted
     ? 'battle'
@@ -169,7 +171,10 @@ function AppContent() {
   const playerAverage = useMemo(() => getHandAverageDamage(playerHand), [playerHand])
   const opponentAverage = useMemo(() => getHandAverageDamage(opponentHand), [opponentHand])
 
-  const opponentHidden = game.mode === 'five-hand-discard' && !settings.showOpponentCards && !battleStarted
+  const privateLocalTurn = session.localMultiplayer && !battleStarted && !session.localPlay.showAll
+    && (game.mode === 'five-hand-discard' || game.phase === 'battle-ready')
+  const localHandoff = Boolean(session.localPlay?.handoff)
+  const opponentHidden = localHandoff || privateLocalTurn || (game.mode === 'five-hand-discard' && !settings.showOpponentCards && !battleStarted)
   const opponentThinking = (game.mode === 'draft' && game.phase === 'draft-opponent-thinking') || opponentDiscarding
     || opponentPreparing
   const playerTurn = !session.onlineBlocked && (layout === 'draft' ? canPickDraftCard : layout === 'focus')
@@ -181,16 +186,20 @@ function AppContent() {
   const guestSeat = room.record?.role === 'guest'
   const ownMember = session.online ? (guestSeat ? roster?.guest : roster?.host) : null
   const rivalMember = session.online ? (guestSeat ? roster?.host : roster?.guest) : null
-  const playerName = ownMember?.name ?? room.profile.name
-  const opponentName = rivalMember?.name ?? (session.online ? 'Player two' : getOpponentAiName(settings.opponentAi))
+  const localSeat = session.localPlay?.seat
+  const displayLocalSeat = session.localMultiplayer ? getLocalDisplaySeat(session.rawSession) : localSeat
+  const rivalLocalSeat = displayLocalSeat === 'host' ? 'guest' : 'host'
+  const playerName = session.localMultiplayer ? localPlayerName(session.rawSession, displayLocalSeat) : ownMember?.name ?? room.profile.name
+  const opponentName = session.localMultiplayer ? localPlayerName(session.rawSession, rivalLocalSeat)
+    : rivalMember?.name ?? (session.online ? 'Player two' : getOpponentAiName(settings.opponentAi))
   const draftTurn = game.phase === 'draft-player-pick' && (canPickDraftCard || spectating)
     ? 'player' : game.phase === 'draft-opponent-thinking' ? 'opponent' : null
   const draftTurnLabel = draftTurn === 'player'
-    ? (spectating ? `${playerName}'s turn` : 'Your turn')
+    ? (spectating || session.localMultiplayer ? `${playerName}'s turn` : 'Your turn')
     : draftTurn === 'opponent' ? `${opponentName}'s turn`
       : game.phase === 'draft-player-pick' ? 'Waiting to connect' : 'Next pack'
   const winnerName = winner === 'player' ? playerName : winner === 'opponent' ? opponentName : ''
-  const resultLabel = winner === 'tie' ? 'Draw' : winnerName ? `${spectating ? '' : `${RESULT_LABELS[winner]} · `}${winnerName} wins` : ''
+  const resultLabel = winner === 'tie' ? 'Draw' : winnerName ? `${spectating || session.localMultiplayer ? '' : `${RESULT_LABELS[winner]} · `}${winnerName} wins` : ''
   function winsFor(member) {
     if (!member) return null
     const score = room.record?.scores?.[member.id] ?? 0
@@ -204,10 +213,12 @@ function AppContent() {
   const bottomIdentity = <>
     <PlayerIdentity name={playerName} wins={winsFor(ownMember)}
       connected={!session.online || (room.connection === 'connected' && Boolean(ownMember?.connected))}
-      editable={!spectating} onRename={(name) => room.client.rename(name)} />
+      editable={!spectating} label={session.localMultiplayer ? 'Player name' : undefined}
+      onRename={(name) => session.localMultiplayer ? session.renameLocalPlayer(displayLocalSeat, name) : room.client.rename(name)} />
     {seated ? <EmotePicker onSend={(id) => room.client.sendEmote(id)} disabled={room.connection !== 'connected'} /> : null}
   </>
   const topIdentity = <PlayerIdentity name={opponentName} wins={winsFor(rivalMember)}
+    editable={session.localMultiplayer} label="Player name" onRename={(name) => session.renameLocalPlayer(rivalLocalSeat, name)}
     connected={!session.online || (room.connection === 'connected' && Boolean(rivalMember?.connected))} />
   const dealLeadMs = game.mode === 'draft' ? (game.packNumber === 1 ? SHUFFLE_LEAD_MS : 0) : SHUFFLE_LEAD_MS
 
@@ -252,17 +263,17 @@ function AppContent() {
       <Pile
         kind="discard"
         sections={DISCARD_SECTIONS}
-        count={discardCards?.length ?? 0}
-        topCard={discardCards?.[discardCards.length - 1] ?? null}
+        count={privateLocalTurn ? 0 : discardCards?.length ?? 0}
+        topCard={privateLocalTurn ? null : discardCards?.[discardCards.length - 1] ?? null}
         pulse={game.phase === 'draft-pack-clearing'}
-        onOpen={() => setPileOpen(true)}
+        onOpen={privateLocalTurn ? undefined : () => setPileOpen(true)}
         label="Discard pile"
       />
     </div>
   )
 
   let primaryAction = null
-  if (layout === 'focus') {
+  if (layout === 'focus' && !localHandoff) {
     if (preparationDiscardPending) {
       primaryAction = <div className="table__discard-actions">
         {damageDiscard ? <button type="button" className="ui-button table__action" disabled={session.onlineBlocked} onClick={session.cancelPreparationDiscard}>Cancel</button> : null}
@@ -297,7 +308,7 @@ function AppContent() {
           disabled={!canStartBattle || isRecyclePicking || (choosingTabletopType && tabletopChoice.needsChoice)}
         >
           <SvgIcon name="swords" />
-          <span>{choosingTabletopType && tabletopChoice.needsChoice ? 'Choose type' : (opponentPreparing ? 'Waiting' : 'Battle')}</span>
+          <span>{choosingTabletopType && tabletopChoice.needsChoice ? 'Choose type' : (opponentPreparing ? 'Waiting' : session.localMultiplayer ? 'Ready' : 'Battle')}</span>
         </button>
       )
     }
@@ -308,7 +319,7 @@ function AppContent() {
     : <Pips total={2} current={discardPhase ? game.playerDiscardsUsed + 1 : (opponentDiscarding ? game.playerDiscardsUsed : 3)} done={opponentDiscarding ? game.playerDiscardsUsed - 1 : game.playerDiscardsUsed} />
 
   const opponentHandProps = {
-    hand: opponentHand,
+    hand: privateLocalTurn && isPreBattleReady ? game.opponentHand : opponentHand,
     side: 'opponent',
     hidden: opponentHidden,
     motionSection: 'opponent-hand',
@@ -319,8 +330,8 @@ function AppContent() {
     battleRound,
     defeated: winner === 'player' && !resultDismissed,
     cardsDisabled: true,
-    animateOnMount: !game.devScenario,
-    enterFromSection: game.devScenario ? null : 'draw-deck',
+    animateOnMount: !game.devScenario && !session.localMultiplayer,
+    enterFromSection: game.devScenario || session.localMultiplayer ? null : 'draw-deck',
     enterBaseDelayMs: dealLeadMs + 300,
     inspectContextHand: opponentHand,
   }
@@ -337,23 +348,24 @@ function AppContent() {
   const factionPickerCard = playerHand.find((card) => card.uid === tabletopTypeCardUid)
   const playerHandProps = {
     hand: playerHand,
+    hidden: localHandoff,
     side: 'player',
     motionSection: 'player-hand',
     suppressedIds: battleStarted ? [] : (suppressedHandCardIds?.player ?? []),
-    onToggle: playerInteractive ? handlePlayerCardClick : undefined,
-    cardsDisabled: !playerInteractive || opponentPreparing || !(preparationDiscardPending || discardPhase || isWaitingForPlayerChoice || choosingTabletopType || chameleonIds.length),
-    discardIds: preparationDiscardPending ? preparationDiscardSelected : discardPhase ? selectedIds : [],
-    selectedIds: isPreBattleReady && armedPlayerCopyUid ? [armedPlayerCopyUid] : (isPreBattleReady && tabletopSelectedCardUid ? [tabletopSelectedCardUid] : []),
-    readyIds: isPreBattleReady && !preparationDiscardPending ? [...activatablePreBattleIds, ...chameleonIds] : [],
-    targetableIds: choosingTabletopType ? playerHand.filter((card) => getCardTabletopTypes(card, tabletopChoice).length).map((card) => card.uid) : (isPreBattleReady ? copyCandidateIds : []),
-    dimmedIds: choosingTabletopType ? playerHand.filter((card) => !getCardTabletopTypes(card, tabletopChoice).length).map((card) => card.uid) : [],
+    onToggle: playerInteractive && !localHandoff ? handlePlayerCardClick : undefined,
+    cardsDisabled: localHandoff || !playerInteractive || opponentPreparing || !(preparationDiscardPending || discardPhase || isWaitingForPlayerChoice || choosingTabletopType || chameleonIds.length),
+    discardIds: localHandoff ? [] : preparationDiscardPending ? preparationDiscardSelected : discardPhase ? selectedIds : [],
+    selectedIds: localHandoff ? [] : isPreBattleReady && armedPlayerCopyUid ? [armedPlayerCopyUid] : (isPreBattleReady && tabletopSelectedCardUid ? [tabletopSelectedCardUid] : []),
+    readyIds: !localHandoff && isPreBattleReady && !preparationDiscardPending ? [...activatablePreBattleIds, ...chameleonIds] : [],
+    targetableIds: localHandoff ? [] : choosingTabletopType ? playerHand.filter((card) => getCardTabletopTypes(card, tabletopChoice).length).map((card) => card.uid) : (isPreBattleReady ? copyCandidateIds : []),
+    dimmedIds: !localHandoff && choosingTabletopType ? playerHand.filter((card) => !getCardTabletopTypes(card, tabletopChoice).length).map((card) => card.uid) : [],
     activeCardIds: battleStarted ? (battlePlayback?.playerTriggeredIds ?? []) : [],
     activationKey: battleStarted ? (battlePlayback?.activationTick ?? 0) : 0,
     battleValuesById: playerBattleValues,
     battleRound,
     defeated: winner === 'opponent' && !resultDismissed,
-    animateOnMount: !game.devScenario,
-    enterFromSection: game.devScenario ? null : 'draw-deck',
+    animateOnMount: !game.devScenario && !session.localMultiplayer,
+    enterFromSection: game.devScenario || session.localMultiplayer ? null : 'draw-deck',
     enterBaseDelayMs: dealLeadMs,
   }
 
@@ -363,6 +375,7 @@ function AppContent() {
       style={{ '--impact-ms': `${impactMs}ms`, '--burst-ms': `${Math.max(600, impactMs + 200)}ms` }}
     >
       <ImagePreloader />
+      <div className="local-table-content">
       {room.entry ? <RoomEntry key={room.entry.key} room={room} /> : null}
       {roomStatus && !roomSheetOpen ? <button type="button" className={`room-status${room.error ? ' room-status--error' : room.presence?.pending?.length ? ' room-status--request' : ''}`} onClick={() => setRoomOpen(true)}>
         {roomStatus}
@@ -377,6 +390,7 @@ function AppContent() {
           side="opponent"
           identity={topIdentity}
           stats={opponentHidden ? {} : opponentStats}
+          hideStats={opponentHidden}
           average={layout === 'battle' || opponentHidden ? null : opponentAverage}
           tabletop={settings.tabletop}
           health={battleStarted && !settings.tabletop ? (battlePlayback?.opponentHealth ?? BATTLE_HEALTH) : null}
@@ -390,7 +404,11 @@ function AppContent() {
         >
           <EmoteBubble emote={emoteSide === 'opponent' ? emote : null} side="opponent" />
           {layout !== 'battle' ? phasePips : null}
-          <RoomButtons room={room} onOpenRoom={() => setRoomOpen(true)} />
+          {!session.localMultiplayer ? <RoomButtons room={room} onOpenRoom={() => setRoomOpen(true)} /> : null}
+          {session.localMultiplayer && layout === 'focus' ? <button type="button" className="ui-button local-visibility"
+            onClick={session.toggleLocalShowAll} aria-pressed={session.localPlay.showAll}>
+            <SvgIcon name="eye" /><span>{session.localPlay.showAll ? 'Hide' : 'Show all'}</span>
+          </button> : null}
           <ScreenMenu
             onNewGame={handleNewGame}
             gameMode={gameMode}
@@ -425,6 +443,11 @@ function AppContent() {
         </div>
 
         <div className="table__zone table__zone--center">
+          {session.localMultiplayer && layout === 'draft' ? <div className="local-turn-notice" role="status"
+            key={`${dealId}-${game.packNumber}-${game.picksThisPack}-${localSeat}`}>
+            <GameIcon name="copy" /><span>{draftTurn === 'opponent' ? opponentName : playerName}’s turn</span>
+          </div> : null}
+          {localHandoff ? <LocalHandoff name={playerName} onReveal={session.revealLocalTurn} /> : null}
           {!game.devScenario ? <ShuffleIntro key={dealId} /> : null}
           {layout === 'draft' ? (
             <PackArea
@@ -434,7 +457,7 @@ function AppContent() {
               canPick={canPickDraftCard}
               eyedUid={opponentThinking ? pendingDraftPickUid : null}
               eyedDelayMs={game.picksThisPack === 0 ? getPackDealMs(game.draftRow.length, game.packNumber === 1) : 250}
-              playerHand={playerHand}
+              playerHand={session.localMultiplayer && draftTurn === 'opponent' ? opponentHand : playerHand}
               dealDelayMs={dealLeadMs}
               turn={draftTurn}
             />
@@ -442,7 +465,7 @@ function AppContent() {
           {layout === 'focus' ? (
             <HandArea key="player-focus" {...playerHandProps} layout="grid" />
           ) : null}
-          {choosingTabletopType ? (
+          {choosingTabletopType && !localHandoff ? (
             <div className="tabletop-choice" role="status">
               {tabletopChoice.selectedType ? <span className="tabletop-choice__selected">Main type <GameIcon name={tabletopChoice.selectedType} /></span> : <span>Choose your main damage type: tap a highlighted card</span>}
             </div>
@@ -493,7 +516,8 @@ function AppContent() {
           side="player"
           identity={bottomIdentity}
           stats={playerStats}
-          average={layout === 'battle' ? null : playerAverage}
+          hideStats={localHandoff}
+          average={layout === 'battle' || localHandoff ? null : playerAverage}
           tabletop={settings.tabletop}
           health={battleStarted && !settings.tabletop ? (battlePlayback?.playerHealth ?? BATTLE_HEALTH) : null}
           lost={playerLost}
@@ -529,7 +553,7 @@ function AppContent() {
         battleResult={battleResult}
         playerName={playerName}
         opponentName={opponentName}
-        spectating={spectating}
+        spectating={spectating || session.localMultiplayer}
         newGameLabel={session.online && room.record?.role !== 'host' ? 'Room controls' : 'Play again'}
         onNewGame={handleNewGame}
         onReplayPreparation={session.replayPreparation}
@@ -537,14 +561,14 @@ function AppContent() {
       />
 
       <PileSheet
-        open={pileOpen && !isRecyclePicking}
+        open={pileOpen && !isRecyclePicking && !privateLocalTurn}
         cards={discardCards ?? []}
         onClose={() => setPileOpen(false)}
         contextHand={playerHand}
       />
 
       <PileSheet
-        open={isRecyclePicking}
+        open={isRecyclePicking && !localHandoff}
         cards={recycleSelectionCards}
         onPick={resolvePlayerRecyclePick}
         onClose={cancelPlayerRecyclePick}
@@ -564,7 +588,7 @@ function AppContent() {
 
       <HelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} tabletop={settings.tabletop} />
       <RoomSheet open={roomSheetOpen} onClose={closeRoomSheet} room={room} />
-      <FactionPicker open={Boolean(isPreBattleReady && factionPickerCard)}
+      <FactionPicker open={Boolean(isPreBattleReady && factionPickerCard && !localHandoff)}
         types={factionPickerCard ? getCardTabletopTypes(factionPickerCard, tabletopChoice) : []}
         selectedType={tabletopChoice.selectedType}
         onChoose={(type) => choosePlayerTabletopType(tabletopTypeCardUid, type)}
@@ -579,11 +603,12 @@ function AppContent() {
       />
 
       <InfoOverlay
-        visible={Boolean(recycleOverlay)}
+        visible={Boolean(recycleOverlay && !localHandoff)}
         title={recycleOverlay?.title ?? 'Notice'}
         message={recycleOverlay?.message ?? ''}
         onClose={closePreBattleInfoOverlay}
       />
+      </div>
     </div>
   )
 }

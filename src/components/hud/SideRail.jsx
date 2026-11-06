@@ -82,6 +82,7 @@ function HealthBar({ health, max, lost = 0, tick, side }) {
 export default function SideRail({
   side = 'player',
   stats,
+  hideStats = false,
   average = null,
   tabletop = false,
   health = null,
@@ -117,7 +118,7 @@ export default function SideRail({
         <strong>{turnLabel}</strong>
       </div> : null}
       <span className="side-rail__marker" aria-hidden="true" />
-      <StatChips stats={stats} compact={inBattle} />
+      {!hideStats ? <StatChips stats={stats} compact={inBattle} /> : null}
       {inBattle ? (
         <div className="side-rail__vitals">
           <HealthBar health={health} max={maxHealth} lost={lost} tick={hitTick} side={side} />

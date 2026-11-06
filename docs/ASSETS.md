@@ -48,6 +48,6 @@ npm run assets:prepare
 - `public/crd-icon.svg`: social preview.
 - `public/site.webmanifest`: install/display metadata.
 
-The service worker fetches installation metadata from the network without caching it. Cache version v2 removes the earlier cache that could retain an obsolete manifest and app identity indefinitely. Keep manifest requests out of the general asset cache.
+The production build generates a complete offline cache list covering the app shell, scripts, AI workers, artwork, icons, fonts and manifest. Each build has a content-derived cache version. An update installs completely before activating after existing app windows close, so the HTML and workers stay on the same build. Manifest changes are included in the next build rather than kept indefinitely in a fixed cache.
 
-These SVGs remain vector files. Google Fonts in `src/index.css` remains a separate remote font dependency.
+These SVGs remain vector files. Fonts are served locally from `public/fonts/`, with their SIL Open Font License notices, and work offline.

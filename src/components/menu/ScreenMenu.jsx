@@ -115,7 +115,7 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
             <input
               type="checkbox"
               checked={Boolean(settings.testing)}
-              disabled={humanOpponent}
+              disabled={humanOpponent || settings.opponentAi === 'local'}
               onChange={(event) => onUpdateSettings({ testing: event.target.checked })}
             />
             <span className="screen-menu__switch" aria-hidden="true" />
@@ -148,13 +148,15 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
             <select
               value={humanOpponent ? 'human' : settings.opponentAi}
               disabled={humanOpponent}
-              onChange={(event) => run(() => onUpdateSettings({ opponentAi: event.target.value }))}
+              onChange={(event) => run(() => onUpdateSettings({ opponentAi: event.target.value,
+                ...(event.target.value === 'local' ? { testing: false } : {}) }))}
               aria-label="Opponent"
             >
               {humanOpponent ? <option value="human">Player in room</option> : null}
               {getOpponentAiOptions(gameMode, settings.tabletop).map((option) => (
                 <option key={option.id} value={option.id}>{option.label}</option>
               ))}
+              <option value="local">2 players · same screen</option>
             </select>
             <span className="screen-menu__select-chevron" aria-hidden="true" />
           </label>

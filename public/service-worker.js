@@ -1,38 +1,28 @@
 const APP_BASE_URL = new URL('./', self.registration.scope)
 const APP_SCOPE = APP_BASE_URL.pathname
-const CACHE_PREFIX = 'crd-pwa:/CRD/:'
-const CACHE_NAME = `${CACHE_PREFIX}v2`
+const CACHE_PREFIX = `crd-pwa:${APP_SCOPE}:`
+const CACHE_NAME = `${CACHE_PREFIX}__CRD_BUILD_VERSION__`
 const APP_SHELL = APP_BASE_URL.href
-const STATIC_ASSETS = [
-  'favicon.svg',
-  'favicon.ico',
-  'apple-touch-icon.png',
-  'icon-192.png',
-  'icon-512.png',
-  'icon-maskable-512.png',
-]
+// Filled by Vite after bundling, including AI workers, all art and all icons.
+const PRECACHE_ASSETS = /* __CRD_PRECACHE__ */ []
 
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME)
-    const response = await fetch(APP_SHELL, { cache: 'reload' })
-    if (!response.ok) throw new Error(`Unable to cache CRD app shell: ${response.status}`)
-
-    await cache.put(APP_SHELL, response.clone())
-    const html = await response.text()
-    const buildAssets = [...html.matchAll(/(?:src|href)="([^"]+\.(?:js|css))"/g)]
-      .map((match) => new URL(match[1], self.registration.scope).href)
-    const staticUrls = STATIC_ASSETS.map((asset) => new URL(asset, APP_BASE_URL).href)
-    await cache.addAll([...staticUrls, ...buildAssets])
-    await self.skipWaiting()
+    // Installation is atomic: a partial download never replaces the usable app.
+    await cache.addAll(PRECACHE_ASSETS.map((asset) => new Request(new URL(asset, APP_BASE_URL), { cache: 'reload' })))
+    const shell = await cache.match(new URL('index.html', APP_BASE_URL))
+    if (!shell) throw new Error('Offline app shell is missing')
+    await cache.put(APP_SHELL, shell)
+    // Activate after existing games close, keeping each page and its workers on
+    // the same build even when an update arrives midway through a game.
   })())
 })
 
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
-    const cacheNames = await caches.keys()
-    await Promise.all(cacheNames
-      .filter((name) => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME)
+    const names = await caches.keys()
+    await Promise.all(names.filter((name) => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME)
       .map((name) => caches.delete(name)))
     await self.clients.claim()
   })())
@@ -43,35 +33,15 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url)
   if (request.method !== 'GET' || url.origin !== self.location.origin || !url.pathname.startsWith(APP_SCOPE)) return
 
-  // Installation metadata must refresh when the server changes app identity or scope.
-  if (url.pathname === new URL('site.webmanifest', APP_BASE_URL).pathname) {
-    event.respondWith(fetch(request, { cache: 'no-store' }))
-    return
-  }
-
-  if (request.mode === 'navigate') {
-    event.respondWith((async () => {
-      const cache = await caches.open(CACHE_NAME)
-      try {
-        const response = await fetch(request)
-        if (response.ok) await cache.put(request, response.clone())
-        return response
-      } catch {
-        return await cache.match(request) ?? await cache.match(APP_SHELL)
-      }
-    })())
-    return
-  }
-
+  // Serve one complete build. Network-first HTML can otherwise point at new
+  // scripts that were never saved before the device went offline.
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME)
-    const cached = await cache.match(request)
+    if (request.mode === 'navigate') return await cache.match(APP_SHELL) ?? fetch(request)
+    // Module/CSS requests can carry a different Origin header from installation
+    // fetches. These same-origin build assets are identical across that Vary.
+    const cached = await cache.match(request, { ignoreVary: true })
     if (cached) return cached
-
-    const response = await fetch(request)
-    if (response.ok) {
-      await cache.put(request, response.clone())
-    }
-    return response
+    return fetch(request)
   })())
 })
