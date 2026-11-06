@@ -5,6 +5,7 @@ import { makeAdapter } from './felixEffects.js'
 import { createFelixPolicy } from './felixHandEvaluator.js'
 import { chooseDanDecision } from './danBot.js'
 import { chooseOpponentFirstFifth, supportsOpponentFirst } from './opponentFirstPreparation.js'
+import { isFelixNcGame, chooseFelixNcDecision } from './felixNcBot.js'
 
 export const FELIX_BOT_VERSION = 'felix-draft-effects12345-240k-v1'
 export const FELIX_INFERENCE_STAGES = Object.freeze([1, 2, 3, 4, 5])
@@ -15,13 +16,17 @@ export const FELIX_CHECKPOINT_SHA256 = model.checkpoint_sha256
 export const felixAdapter = makeAdapter(tt, cards,
   { totalThreshold: true, dragonOnly: true, blockBonus: true })
 export const felixPolicy = createFelixPolicy(model, felixAdapter)
+export const expandedFelixAdapter = makeAdapter(tt, cards,
+  { totalThreshold: true, dragonOnly: true, blockBonus: true }, { tabletop: 'abilities-new-cards' })
 
 export function chooseFelixDecision(game, side = 'opponent', options = {}) {
   if (game.mode !== 'draft') throw Error('FelixBot plays Draft only')
+  if (isFelixNcGame(game)) return chooseFelixNcDecision(game, side)
   const pick = game[`${side}Hand`].length + 1
   const enemy = side === 'player' ? 'opponent' : 'player'
+  const adapter = felixAdapter
   const supported = [...game[`${side}Hand`], ...game[`${enemy}Hand`], ...game.draftRow]
-    .every(c => c.tabletop === 'abilities-main' && felixAdapter.definitions.has(c.id))
+    .every(c => c.tabletop === 'abilities-main' && adapter.definitions.has(c.id))
   if (FELIX_INFERENCE_STAGES.includes(pick) && supported) {
     return { ...felixPolicy.choose(game, side), version: FELIX_BOT_VERSION, modelVersion: FELIX_MODEL_VERSION }
   }

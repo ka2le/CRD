@@ -30,7 +30,7 @@ export function getRulesText(rules = false) {
         'Power − enemy shields + bonus = score. Higher score wins; equal scores tie.')
     }
     if (main) lines.push('Devour and Dragon Ultimate each give 2 power per Dragon stat. Devour does not grant a main faction choice.')
-    if (main) lines.push(`Ordinary Shield cards give ${MAIN_ABILITY_RULES.shieldValue} shield points.${rules === 'abilities-new-cards' ? ' Shield Ultimate gives 3.' : ''} Shields block Critter and Robot power equally; Dragons are immune. Shield is Damage adds power equal to your shield points, while your shields still block.`)
+    if (main) lines.push(`Ordinary Shield cards give ${MAIN_ABILITY_RULES.shieldValue} shield points.${rules === 'abilities-new-cards' ? ' Critter Guard adds one Critter stat and one shield point.' : ''} Shields block Critter and Robot power equally; Dragons are immune. Shield is Damage multiplies your shield points into power, while your shields still block.`)
   } else {
     lines.push('Attacks fire when the round is a multiple of their cooldown. Damage = attack damage * matching stats.',
       'Ordinary Critter attacks: 1 damage per stat every round. Robot: 2 every 2 rounds. Dragon: 3 every 3 rounds.',

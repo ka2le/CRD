@@ -35,12 +35,17 @@ export const CORE_CARD_IDS = new Set([
 
 // options.tabletop: false (digital), 'abilities-main' (also true / 'abilities'),
 // 'threshold', or explicit hidden 'abilities-prototype'.
+const NC_COPY_ADJUSTMENTS = { swarm: 1, dragons_breath: -1, dragon1: -1, robot_attack: 1 }
+
 export function getCoreCards(options = {}) {
   const core = cardsData.cards.filter((card) => CORE_CARD_IDS.has(card.id))
   const rules = normalizeTabletopRules(options.tabletop)
   if (!rules) return core
   return [...core, ...tabletopCardsData.cards, ...(rules === 'abilities-new-cards' ? newCardsData.cards : [])]
-    .filter((card) => isCardInTabletopRules(card, rules))
+    .filter((card) => !card.disabled && isCardInTabletopRules(card, rules))
+    .map((card) => rules === 'abilities-new-cards'
+      ? { ...card, copies: card.copies + (NC_COPY_ADJUSTMENTS[card.id] ?? 0) }
+      : card)
 }
 
 function getExpandedCopies(card, wildDeck = false) {

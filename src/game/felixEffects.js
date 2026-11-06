@@ -20,14 +20,17 @@ export function descriptor(card) {
   else if(card.id==='draw_all_new_1'){v[11]=1;v[12]=1}
   else if(card.id==='copy_card_in_hand')v[13]=1
   else if(card.id==='recycle_card')v[14]=1
+  // New active mechanics have no learned feature slot. Keep them physical but
+  // do not pretend Draw/Discard is the old, strictly stronger Draw 2 effect.
+  else if(['single_faction_2','no_stats_to_2','draw_2_discard_2','discard_for_damage'].includes(card.id))v[6]=card.sacrificedPower??0
   else assert.ok(v.slice(0,8).some(Boolean),'Unsupported mechanic: '+card.id)
   v[15]=1;assert.ok(v.every(Number.isFinite));return v
 }
 const sum=xs=>xs.reduce((a,b)=>a+b,0)
 const add=xs=>Array.from({length:C},(_,j)=>sum(xs.map(v=>v[j])))
 const lex=(a,b)=>{for(let i=0;i<a.length;i++)if(a[i]!==b[i])return a[i]-b[i];return 0}
-export function makeAdapter(tt,cards,semantics) {
-  const catalog=cards.getExpandedCoreDeck({wildDeck:false,tabletop:'abilities-main'})
+export function makeAdapter(tt,cards,semantics,{tabletop='abilities-main'}={}) {
+  const catalog=cards.getExpandedCoreDeck({wildDeck:false,tabletop})
   const definitions=new Map(catalog.map(c=>[c.id,c])),e=c=>descriptor(c)
   const productRobot=tt.getTabletopProfile(['critter1','robot1','dragon1','one_off_each'].map(id=>definitions.get(id))).contributions.robot>0
   const zeroAll=tt.getTabletopProfile([]).types.length===3
@@ -38,6 +41,15 @@ export function makeAdapter(tt,cards,semantics) {
   const r=[...FACTIONS.map(f=>tt.MAIN_ABILITY_SHIELD_COST[f]),e(definitions.get('shield2'))[7],tt.MAIN_ABILITY_RULES.overwhelmingAt,tt.MAIN_ABILITY_RULES.overwhelmingBonus??0,Number(tt.MAIN_ABILITY_RULES.overwhelmingExtraStat),Number(tt.MAIN_ABILITY_RULES.perfectBalance),tt.MAIN_ABILITY_RULES.balanceBonus??tt.PERFECT_BALANCE_BONUS,tt.ROBOT_ULTI_ATTACK_COUNT,Number(productRobot),Number(zeroAll),Number(totalThreshold),Number(dragonOnly),Number(blockBonus),1,1,1,1,1,1,1]
   assert.equal(r.length,R);assert.ok(r.every(Number.isFinite))
   const deck=add(catalog.map(e)).map(v=>v/catalog.length)
+  function handDescriptors(hand){
+    const vs=hand.map(e)
+    if(tabletop!=='abilities-new-cards')return vs
+    const replacement=hand.findIndex(c=>c.id==='no_stats_to_2')
+    if(replacement>=0&&!hand.some(c=>c.type==='stat'))for(let i=0;i<3;i++)vs[replacement][i]=2
+    const stats=add(vs).slice(0,3),types=stats.flatMap((n,i)=>n>0?[i]:[])
+    if(types.length===1)hand.forEach((c,i)=>{if(c.id==='single_faction_2')vs[i][3+types[0]]=2})
+    return vs
+  }
   function profile(vs,enemyShields=0) {
     const a=add(vs),stats=a.slice(0,3),shields=a[7],units=a.slice(3,6)
     const product=stats[0]*stats[1]*stats[2]*a[8]
@@ -74,11 +86,11 @@ export function makeAdapter(tt,cards,semantics) {
   }
   function encode(own,enemy){
     assert.ok(own.length===enemy.length&&own.length>=1&&own.length<=5)
-    const a=own.map(e),b=enemy.map(e),x=[...hand(a,add(b)[7]),...hand(b,add(a)[7]),...r,...deck,own.length,5-own.length]
+    const a=handDescriptors(own),b=handDescriptors(enemy),x=[...hand(a,add(b)[7]),...hand(b,add(a)[7]),...r,...deck,own.length,5-own.length]
     assert.equal(x.length,D);assert.ok(x.every(Number.isFinite));return x
   }
   function oracle(own,enemy){
-    const p=profile(own.map(e),sum(enemy.map(c=>e(c)[7]))),q=tt.getTabletopProfile(own)
+    const p=profile(handDescriptors(own),sum(enemy.map(c=>e(c)[7]))),q=tt.getTabletopProfile(own)
     assert.deepEqual(p.types,FACTIONS.map(t=>Number(q.types.includes(t))))
     assert.equal(p.shields,q.shields);assert.equal(p.base,q.base)
     assert.deepEqual(p.stats,FACTIONS.map(t=>q.stats[t]));assert.deepEqual(p.contrib,FACTIONS.map(t=>q.contributions[t]));assert.equal(p.neutral,q.neutral)
@@ -86,6 +98,6 @@ export function makeAdapter(tt,cards,semantics) {
     for(let i=0;i<3;i++)if(p.types[i]){assert.equal(p.scores0[i],tt.scoreTabletopHand(own,0,FACTIONS[i]).score);assert.equal(p.scores[i],tt.scoreTabletopHand(own,p===null?0:sum(enemy.map(c=>e(c)[7])),FACTIONS[i]).score)}
     assert.equal(p.chosen,FACTIONS.indexOf(tt.chooseTabletopType(own)))
   }
-  return {encode,oracle,rules:r,deck,definitions,catalog,descriptor:e,profile}
+  return {encode,oracle,rules:r,deck,definitions,catalog,descriptor:e,handDescriptors,profile}
 }
 export const swap=x=>[...x.slice(S,2*S),...x.slice(0,S),...x.slice(2*S)]

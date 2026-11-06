@@ -201,7 +201,7 @@
       "type": "action",
       "images": [
         "https://cdn.midjourney.com/100679fa-50af-4fad-9a8b-8ad4623f9e65/0_0.png",
-        "https://cdn.midjourney.com/07af1083-7432-4477-b298-3c0089e8afba/0_0.png",
+        "https://cdn.midjourney.com/1617f771-5d18-4091-bbbe-97f2652171f9/0_0.png",
         "https://cdn.midjourney.com/50b2849d-0a6f-42f0-b581-7a6070c6b179/0_0.png"
       ],
       "stats": [],
@@ -308,8 +308,7 @@
       "copies": 1,
       "type": "action",
       "images": [
-        "https://cdn.midjourney.com/fb1b75c0-6c43-4113-ac31-609460817987/0_0.png",
-        "https://cdn.midjourney.com/8260e31b-2fdc-4a51-80f2-33f0802abcd1/0_0.png"
+        "assets/originals/dragon-double/dragon_ulti.webp"
       ],
       "stats": [],
       "effect": {
@@ -325,7 +324,7 @@
       "copies": 1,
       "type": "action",
       "images": [
-        "https://cdn.midjourney.com/c7a44b73-5293-44f6-8b2b-c394b99b223e/0_0.png"
+        "assets/originals/dragon-double/devour.webp"
       ],
       "stats": [],
       "effect": {
@@ -434,7 +433,8 @@
         "https://cdn.midjourney.com/18e6a0a5-1134-4351-b020-7a0b57162756/0_3.png",
         "https://cdn.midjourney.com/ace6742e-f77e-42cd-b31a-811ebef29bc9/0_0.png",
         "https://cdn.midjourney.com/39ed468e-94a3-45b6-ada0-285d7d0e11ba/0_0.png",
-        "https://cdn.midjourney.com/bf1e13ea-254c-41e4-aa2c-d02d8812427a/0_0.png"
+        "https://cdn.midjourney.com/bf1e13ea-254c-41e4-aa2c-d02d8812427a/0_0.png",
+        "https://cdn.midjourney.com/d8c6c0a2-795a-4339-b284-494315bb80ce/0_1.png"
       ],
       "stats": [],
       "effect": {
@@ -473,7 +473,8 @@
         "https://cdn.midjourney.com/ef1a2d8f-b2b9-4e80-9dff-390439a77d73/0_0.png",
         "https://cdn.midjourney.com/d0ab3f46-1a6d-4292-8fdd-bcf7863fb886/0_0.png",
         "https://cdn.midjourney.com/2f1865c9-4a26-49a4-84a6-578ec5c7d011/0_0.png",
-        "assets/originals/robot-attack/robot-attack-7-rescaled.png"
+        "assets/originals/robot-attack/robot-attack-7-rescaled.png",
+        "https://cdn.midjourney.com/cae50a09-1779-4e01-8f56-2d72fba63e59/0_3.png"
       ],
       "stats": [],
       "effect": {

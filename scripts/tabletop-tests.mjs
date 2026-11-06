@@ -333,7 +333,7 @@ test('session gates type choice, invalidates it after hand changes, preserves pr
           playerType: getTabletopChoice(result.preBattle).selectedType,
         }))
         const physicalIds = [...result.game.playerHand, ...result.game.opponentHand, ...result.game.deck].map((entry) => entry.uid)
-        assert.equal(new Set(physicalIds).size, rules === 'abilities-new-cards' ? 112 : 109)
+        assert.equal(new Set(physicalIds).size, 109)
       }
     }
     assert.throws(() => createDevScenario({ name: 'tie', playerType: 'critter' }), /Invalid main damage type/)

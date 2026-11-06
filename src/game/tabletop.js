@@ -48,7 +48,7 @@ export function toTabletopCard(card, rules = 'abilities-main') {
   const effect = { ...card.effect }
   if (effect.dmgType) effect.dmg = ULTIMATES.has(card.id) ? 2 : 1
   if (card.id === 'bite') effect.dmg = isMainAbilityRules(normalizeTabletopRules(rules)) ? 2 : 1
-  if (effect.shield && card.id !== 'shield_ulti') effect.shield = isMainAbilityRules(normalizeTabletopRules(rules)) ? MAIN_ABILITY_RULES.shieldValue : 1
+  if (effect.shield && !['shield_ulti', 'critter_shield'].includes(card.id)) effect.shield = isMainAbilityRules(normalizeTabletopRules(rules)) ? MAIN_ABILITY_RULES.shieldValue : 1
   return { ...card, tabletop: normalizeTabletopRules(rules) || 'abilities-main', cd: 0, effect }
 }
 

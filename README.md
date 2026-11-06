@@ -2,6 +2,8 @@
 
 **Current naming:** UI **Abilities** = code **`abilities-main`** (formerly v2). The original is **Abilities Prototype** / `abilities-prototype`, retained but hidden. Generic abilities/tabletop tests use main; prototype testing needs an explicit request. See [ruleset naming policy](docs/RULESET_NAMES.md).
 
+**New-card baseline:** 73-card Regular / 109-card Wild pool, with From Nothing and Shield Ultimate hidden for now and Dragon immunity retained. Selecting **Felix** automatically uses the qualified FelixNC in Abilities+NewCards Draft, and the existing Felix elsewhere. See the [balance decision and integration report](docs/NC_BALANCE_DECISION_20261105.md).
+
 **CRD** is the working digital version of **Critters Robots Dragons**, a 2-player drafting and battle card game.
 
 Current build:

@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createServer } from 'vite'
+import additions from '../data/new-cards.json' with { type: 'json' }
 import { getExpandedCoreDeck, getCoreCards } from '../src/game/cards.js'
 import { getHandStats } from '../src/game/engine.js'
 import { getTabletopProfile, scoreTabletopHand, resolveTabletopBattle, normalizePlayableTabletopRules } from '../src/game/tabletop.js'
@@ -12,22 +13,48 @@ import { createHeadlessGame, stepHeadlessGame, chooseHeadlessBaselineAction, enc
 const rules = 'abilities-new-cards'
 let serial = 0
 const catalog = getExpandedCoreDeck({ tabletop: rules })
-const card = id => ({ ...catalog.find(c => c.id === id), uid: `${id}-test-${serial++}` })
+const card = id => ({ ...(catalog.find(c => c.id === id) ?? { ...additions.cards.find(c => c.id === id), tabletop: rules }), uid: `${id}-test-${serial++}` })
 const hand = (...ids) => ids.map(card)
 const prep = (cards, deck = []) => createPreparationState({ playerHand: cards, opponentHand: hand('bite'), deck })
 const activate = (s, id) => applyPreparationAction(s, 'player', { type: 'prepare', sourceUid: s.playerHand.find(c => c.id === id).uid })
 const discard = (s, id) => applyPreparationAction(s, 'player', { type: 'discard-preparation', sourceUid: s.playerPendingDiscard.sourceUid, targetUid: s.playerHand.find(c => c.id === id).uid })
 const finish = s => applyPreparationAction(s, 'player', { type: 'finish-preparation-discard', sourceUid: s.playerPendingDiscard.sourceUid })
 
-test('new mode has five exclusive cards, one regular / three Wild copies; old decks stay intact', () => {
+test('revised NC pool keeps both Dragon ultimates and Critter Guard supplies a real stat plus one shield', () => {
+  assert.equal(catalog.filter(c => c.id === 'swarm').length, 9)
+  assert.equal(catalog.filter(c => c.id === 'dragons_breath').length, 7)
+  assert.equal(catalog.filter(c => c.id === 'dragon1').length, 5)
+  assert.equal(catalog.filter(c => c.id === 'robot_attack').length, 8)
+  assert.equal(catalog.filter(c => c.id === 'shield_ulti').length, 0)
+  for (const id of ['devour', 'dragon_ulti']) {
+    assert.equal(catalog.filter(c => c.id === id).length, 1)
+    assert.equal(card(id).effect.dmg, 2)
+  }
+  const h = hand('critter_shield', 'swarm', 'shield_is_dmg')
+  assert.deepEqual(getHandStats(h), { critter: 1, robot: 0, dragon: 0 })
+  assert.equal(getTabletopProfile(h).shields, 1)
+  assert.equal(getTabletopProfile(h).base, 2)
+  assert.deepEqual(getHandStats(hand('no_stats_to_2', 'critter_shield')), { critter: 1, robot: 0, dragon: 0 })
+  const main = getExpandedCoreDeck({ tabletop: 'abilities-main' })
+  assert.equal(main.filter(c => c.id === 'swarm').length, 8)
+  assert.equal(main.filter(c => c.id === 'dragons_breath').length, 8)
+  assert.equal(main.filter(c => c.id === 'dragon1').length, 6)
+  assert.equal(main.filter(c => c.id === 'robot_attack').length, 7)
+})
+
+test('NC has four enabled additions; disabled definitions remain available for restoration', () => {
   assert.equal(normalizePlayableTabletopRules(rules), rules)
-  assert.equal(catalog.length, 74)
-  assert.equal(getExpandedCoreDeck({ tabletop: rules, wildDeck: true }).length, 112)
-  const added = ['no_stats_to_2', 'draw_2_discard_2', 'shield_ulti', 'discard_for_damage', 'single_faction_2']
+  assert.equal(catalog.length, 73)
+  assert.equal(getExpandedCoreDeck({ tabletop: rules, wildDeck: true }).length, 109)
+  const added = [ 'draw_2_discard_2', 'critter_shield', 'discard_for_damage', 'single_faction_2']
   for (const id of added) {
     assert.equal(catalog.filter(c => c.id === id).length, 1)
     assert.equal(getExpandedCoreDeck({ tabletop: rules, wildDeck: true }).filter(c => c.id === id).length, 3)
     for (const mode of [false, 'abilities-main', 'threshold', 'abilities-prototype']) assert(!getCoreCards({ tabletop: mode }).some(c => c.id === id))
+  }
+  for (const id of ['no_stats_to_2', 'shield_ulti']) {
+    assert(additions.cards.find(c => c.id === id)?.disabled)
+    assert(!getCoreCards({ tabletop: rules }).some(c => c.id === id))
   }
   assert(!catalog.some(c => ['chameleon', 'shortcut', 'any_off_each', 'double_dmg'].includes(c.id)))
   assert.equal(getExpandedCoreDeck({ tabletop: 'abilities-main' }).length, 69)
@@ -224,7 +251,7 @@ test('browser and both room seats enforce pending choices, persist them, and exp
     assert(getRulesText(rules).includes('Draw 2 / Discard 2'))
     const specialist = card('single_faction_2')
     assert.equal(getCardSummary(specialist).timing,'Tabletop power')
-    assert.equal(getCardGroup(specialist),'attack')
+    assert.equal(getCardGroup(specialist),'special')
     assert(getCardSummary(specialist).text.includes('exactly one faction'))
     assert(getRulesText(rules).includes(`Specialist: Tabletop power. ${getCardSummary(specialist).text}`))
     assert.equal(normalizeOpponentSettings({gameMode:'draft',opponentAi:'dan'},{tabletop:rules}).opponentAi,'shallow')

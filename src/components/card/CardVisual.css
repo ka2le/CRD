@@ -145,6 +145,27 @@
   height: 0;
 }
 
+.card-visual__formula-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2cqw;
+}
+
+.card-visual__formula-row {
+  display: flex;
+  align-items: center;
+  height: 15.5cqw;
+}
+
+.card-visual__formula-row .card-visual__text-token {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15.5cqw;
+  height: 15.5cqw;
+  padding: 0;
+}
+
 .card-visual__stat-column,
 .card-visual__cooldown-column {
   display: flex;

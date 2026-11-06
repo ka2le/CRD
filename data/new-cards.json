@@ -25,6 +25,7 @@
     {
       "id": "no_stats_to_2",
       "name": "From Nothing",
+      "disabled": true,
       "copies": 1,
       "type": "action",
       "stats": [],
@@ -36,8 +37,15 @@
       "customEffect": [
         "0",
         "https://ka2le.github.io/chatgpt-apps3/images/mp/arrow2.png",
-        "https://ka2le.github.io/chatgpt-apps3/images/mp/star.png",
-        "https://ka2le.github.io/chatgpt-apps3/images/mp/star.png"
+        "<br>",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/rabbit.png",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/rabbit.png",
+        "<br>",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/robot_sharp.png",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/robot_sharp.png",
+        "<br>",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/dragon.png",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/dragon.png"
       ]
     },
     {
@@ -70,6 +78,23 @@
       "cd": 0,
       "images": [
         "https://cdn.midjourney.com/1617f771-5d18-4091-bbbe-97f2652171f9/0_0.png"
+      ],
+      "disabled": true
+    },
+    {
+      "id": "critter_shield",
+      "name": "Critter Guard",
+      "copies": 1,
+      "type": "stat",
+      "stats": [
+        "critter"
+      ],
+      "effect": {
+        "shield": 1
+      },
+      "cd": 0,
+      "images": [
+        "https://cdn.midjourney.com/07af1083-7432-4477-b298-3c0089e8afba/0_0.png"
       ]
     },
     {

@@ -1,6 +1,38 @@
 {
   "version": 1,
   "images": {
+    "assets/originals/dragon-double/devour.webp": {
+      "role": "art",
+      "original": "assets/originals/dragon-double/devour.webp",
+      "path": "images/art/cfbfb8a630b4d18fd841-d65770960c842a7cedbb.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "bd0c748165eda6598010e20ed5848e10b99ede70283db16346e867a00464c4a3",
+      "outputSha256": "d0bdecbbdfd229ee98c351ffeed0bcdcd95a539f13809db1c30928a7e79f3d54",
+      "originalBytes": 51914,
+      "bytes": 49258,
+      "width": 550,
+      "height": 768
+    },
+    "assets/originals/dragon-double/dragon_ulti.webp": {
+      "role": "art",
+      "original": "assets/originals/dragon-double/dragon_ulti.webp",
+      "path": "images/art/56922845a04c54038397-fa69eaf3554df3a96e0b.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "5773e3d7d7fcd1e18cb5ae0bc23d0da5d76a7bfc8547842861f5fa28150f186d",
+      "outputSha256": "20dcef2d12d6331842738662a2f349e0cb217af519867975a90a0ca9514091b7",
+      "originalBytes": 29682,
+      "bytes": 28162,
+      "width": 550,
+      "height": 768
+    },
     "assets/originals/robot-attack/robot-attack-7-rescaled.png": {
       "role": "art",
       "original": "assets/originals/robot-attack/robot-attack-7-rescaled.png",
@@ -673,22 +705,6 @@
       "width": 550,
       "height": 768
     },
-    "https://cdn.midjourney.com/8260e31b-2fdc-4a51-80f2-33f0802abcd1/0_0.png": {
-      "role": "art",
-      "original": "assets/originals/1630995485996e905790.png",
-      "path": "images/art/1630995485996e905790-e46e291478d2edc5ea7d.webp",
-      "settings": {
-        "maxSize": 768,
-        "quality": 82,
-        "effort": 6
-      },
-      "sourceSha256": "60c6d8eee6bec58ed5a66e6d6b3084b6fe11a60bf27bc2813bb5cc054f2ea0d7",
-      "outputSha256": "869e871b7294f20e8021b41b76bbbd56c09a572ef3f2aae6961530f80ab9bb48",
-      "originalBytes": 8296546,
-      "bytes": 40396,
-      "width": 550,
-      "height": 768
-    },
     "https://cdn.midjourney.com/86e89b45-c8fe-4bb1-a43c-79e185a984c4/0_0.png": {
       "role": "art",
       "original": "assets/originals/28f3b416bfa97ab83c35.png",
@@ -993,19 +1009,19 @@
       "width": 550,
       "height": 768
     },
-    "https://cdn.midjourney.com/c7a44b73-5293-44f6-8b2b-c394b99b223e/0_0.png": {
+    "https://cdn.midjourney.com/cae50a09-1779-4e01-8f56-2d72fba63e59/0_3.png": {
       "role": "art",
-      "original": "assets/originals/457aeedef59ee0735035.png",
-      "path": "images/art/457aeedef59ee0735035-21f68a7db9bd5aa083e9.webp",
+      "original": "assets/originals/b4764e77f2cf58583599.png",
+      "path": "images/art/b4764e77f2cf58583599-8c7a8aaab837890f87f0.webp",
       "settings": {
         "maxSize": 768,
         "quality": 82,
         "effort": 6
       },
-      "sourceSha256": "8fd9ccbe49cbe2b94425b8f4b0a5e9e37d28a5cb5772621f9e005993dcd4373c",
-      "outputSha256": "bd0c748165eda6598010e20ed5848e10b99ede70283db16346e867a00464c4a3",
-      "originalBytes": 9058789,
-      "bytes": 51914,
+      "sourceSha256": "df1d8128e56fc8a8cbd6e718b523e86098c7999b922a577a3804509d674dc06e",
+      "outputSha256": "b526b4675afadf6669251572c740884945eaef748af92504a61d5761183c6952",
+      "originalBytes": 2084945,
+      "bytes": 62170,
       "width": 550,
       "height": 768
     },
@@ -1086,6 +1102,22 @@
       "outputSha256": "9ce7c304f081976e60d8d2e4762d6472eefc8ed80b87e16602aece0a9bcc3e44",
       "originalBytes": 1694975,
       "bytes": 52092,
+      "width": 550,
+      "height": 768
+    },
+    "https://cdn.midjourney.com/d8c6c0a2-795a-4339-b284-494315bb80ce/0_1.png": {
+      "role": "art",
+      "original": "assets/originals/add443f29b2779abc1a9.png",
+      "path": "images/art/add443f29b2779abc1a9-c0034854dcfa05e77369.webp",
+      "settings": {
+        "maxSize": 768,
+        "quality": 82,
+        "effort": 6
+      },
+      "sourceSha256": "fe264057a6a09f06beaad341aaa1a1e46cc67889d19934791f1fe6694f54fce4",
+      "outputSha256": "3485a19edbe9a2191e42cd52b437971e3ec52fcb82112cca74b9791af9f85094",
+      "originalBytes": 2010478,
+      "bytes": 70528,
       "width": 550,
       "height": 768
     },
@@ -1278,22 +1310,6 @@
       "outputSha256": "f0084cd478edf44a710d66545a3b5dfe8e2ff2428a5fab3b82cb0b2acb163d24",
       "originalBytes": 7498843,
       "bytes": 45468,
-      "width": 550,
-      "height": 768
-    },
-    "https://cdn.midjourney.com/fb1b75c0-6c43-4113-ac31-609460817987/0_0.png": {
-      "role": "art",
-      "original": "assets/originals/94e5126e8dff6abf01af.png",
-      "path": "images/art/94e5126e8dff6abf01af-a638d16c8aa6f2ca0b6a.webp",
-      "settings": {
-        "maxSize": 768,
-        "quality": 82,
-        "effort": 6
-      },
-      "sourceSha256": "dfc6d074a847faae7728aa3aea9b10928596f07ea37ddeb8c1f5a8aa9a4bc8f0",
-      "outputSha256": "5773e3d7d7fcd1e18cb5ae0bc23d0da5d76a7bfc8547842861f5fa28150f186d",
-      "originalBytes": 7681861,
-      "bytes": 29682,
       "width": 550,
       "height": 768
     },

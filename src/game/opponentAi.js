@@ -5,6 +5,7 @@ import { completeOpponentPreBattle } from './preBattle.js'
 import { requestDavidAction } from './davidBotClient.js'
 import { chooseDanDecision } from './danBot.js'
 import { chooseFelixDecision } from './felixBot.js'
+import { getFelixPreparationOptions } from './felixNcBot.js'
 import { completeFastPreparation } from './fastPreparation.js'
 
 // Ids stay 'rules' / 'search' so saved settings keep working; the names are what players see.
@@ -13,12 +14,12 @@ export const OPPONENT_AI_OPTIONS = [
   { id: 'shallow', name: 'IngaBot', label: 'IngaBot (Medium)' },
   { id: 'search', name: 'SvenBot', label: 'SvenBot (Hard)' },
   { id: 'dan', name: 'DanBot', label: 'DanBot (Hard)' },
-  { id: 'felix', name: 'FelixBot', label: 'FelixBot (Hard)' },
+  { id: 'felix', name: 'Felix', label: 'Felix (Hard)' },
   { id: 'david', name: 'DavidBot', label: 'DavidBot (Very Hard)' },
 ]
 
 export function getOpponentAiOptions(mode, tabletop = false) {
-  return OPPONENT_AI_OPTIONS.filter(option => tabletop !== 'abilities-new-cards' || !['dan', 'felix', 'david'].includes(option.id)).filter(option => mode === 'five-hand-discard' ? !['dan', 'felix'].includes(option.id) : option.id !== 'david')
+  return OPPONENT_AI_OPTIONS.filter(option => tabletop !== 'abilities-new-cards' || !['dan', 'david'].includes(option.id)).filter(option => mode === 'five-hand-discard' ? !['dan', 'felix'].includes(option.id) : option.id !== 'david')
 }
 
 export const DEFAULT_OPPONENT_AI = 'dan'
@@ -33,12 +34,19 @@ export function normalizeOpponentSettings(current, patch = {}) {
   const next = { ...current, ...patch }
   const active = current.opponentAi ?? (current.gameMode === 'five-hand-discard' ? current.discardOpponentAi : current.draftOpponentAi)
   let selected = normalizeOpponentAi(Object.hasOwn(patch, 'opponentAi') ? patch.opponentAi : active)
-  if (next.tabletop === 'abilities-new-cards' && ['dan', 'felix', 'david'].includes(selected)) selected = 'shallow'
+  const explicitSelection = Object.hasOwn(patch, 'opponentAi')
+  if (!explicitSelection && next.gameMode !== 'five-hand-discard' && current.draftOpponentAi === 'felix' &&
+      (selected === 'david' || (current.tabletop === 'abilities-new-cards' && current.gameMode === 'five-hand-discard'))) selected = 'felix'
+  if (next.tabletop === 'abilities-new-cards' && ['dan', 'david'].includes(selected)) selected = 'shallow'
   const linked = selected === 'dan' || selected === 'david'
   const keepFelix = !Object.hasOwn(patch, 'opponentAi') && current.draftOpponentAi === 'felix' && selected === 'david'
   next.discardOpponentAi = linked || selected === 'felix' ? 'david' : selected
   next.draftOpponentAi = keepFelix ? 'felix' : linked ? 'dan' : selected
   next.opponentAi = next.gameMode === 'five-hand-discard' ? next.discardOpponentAi : next.draftOpponentAi
+  if (next.tabletop === 'abilities-new-cards' && next.opponentAi === 'david') {
+    next.discardOpponentAi = 'shallow'
+    next.opponentAi = 'shallow'
+  }
   return next
 }
 
@@ -222,7 +230,7 @@ function inlinePreparation(preparation, game, profile) {
 export function requestOpponentPreparation(preBattle, game, bot = 'search') {
   if (bot === 'dan' || bot === 'felix' || bot === 'david') {
     const preparation = snapshotPreparation(preBattle)
-    const options = bot === 'felix' ? { discardSixLookup: false } : {}
+    const options = bot === 'felix' ? getFelixPreparationOptions(game) : {}
     return requestFromWorker(game, { kind: 'fast-preparation', preparation, game: snapshotGame(game), side: 'opponent', options })
       .catch(() => completeFastPreparation(preparation, game, 'opponent', options).then(r => r.preparation))
       .then(opponentPreparationPatch)

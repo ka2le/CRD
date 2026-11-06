@@ -5,8 +5,7 @@ import CardButton from '../card/CardButton'
 import { useCardInspect } from './inspectContext'
 import { SvgIcon } from '../ui/GameIcon'
 import { CARD_GROUPS as GROUPS, getCardGroup as getGroup } from '../card/cardMeta'
-import { getCoreCards } from '../../game/cards'
-import { toTabletopCard } from '../../game/tabletop'
+import { getExpandedCoreDeck } from '../../game/cards'
 import { useElementSize } from '../../hooks/useFitLayout'
 import DeckViewTabs from './DeckViewTabs'
 
@@ -20,12 +19,7 @@ function classRank(card) {
   return first * 10 + classes.length
 }
 
-function getCopies(card, wildDeck) {
-  if (!wildDeck) return card.copies
-  return card.copies > 1 ? card.copies : 3
-}
-
-// Every unique card in the core deck, grouped; tap one to read about it.
+// Every physical copy in the selected deck, grouped; tap one to read about it.
 export default function CollectionSheet({ open, onClose, onSwitch = null, tabletop = false, wildDeck = false }) {
   const inspect = useCardInspect()
   const [measureRef, size] = useElementSize()
@@ -34,16 +28,15 @@ export default function CollectionSheet({ open, onClose, onSwitch = null, tablet
   const cardWidth = size.width ? Math.floor((size.width - ((columns - 1) * 8)) / columns) : 100
 
   const groups = useMemo(() => {
-    // One entry per artwork, so every illustration of a card is shown.
-    const cards = getCoreCards({ tabletop }).flatMap((card) => {
-      const base = tabletop ? toTabletopCard(card, tabletop) : card
-      const imageCount = Math.max(card.images?.length ?? 1, 1)
-      return Array.from({ length: imageCount }, (_, imageIndex) => ({
-        ...base,
-        uid: `collection__${card.id}__${imageIndex}`,
-        imageIndex,
-        collectionCopies: imageIndex === 0 ? getCopies(card, wildDeck) : null,
-      }))
+    // Use the same copies and artwork rotation as dealing the actual deck.
+    const deck = getExpandedCoreDeck({ tabletop, wildDeck })
+    const copies = new Map()
+    for (const card of deck) copies.set(card.id, (copies.get(card.id) ?? 0) + 1)
+    const seen = new Set()
+    const cards = deck.map((card) => {
+      const collectionCopies = seen.has(card.id) ? null : copies.get(card.id)
+      seen.add(card.id)
+      return { ...card, uid: `collection__${card.uid}`, collectionCopies }
     })
     return GROUPS.map((group) => ({
       ...group,

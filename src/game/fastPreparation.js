@@ -86,7 +86,8 @@ export async function chooseFastPreparation(state, options = {}) {
     state.preparation[`${state.actor}Discard`]?.some(c => c.id === 'draw_all_new_1' &&
     state.preparation[`${state.actor}Activated`]?.includes(c.uid)))
   const model = await preparationOpponentModel(state)
-  const result = core.choose(state, { ...FAST_PREPARATION_PROFILE, discardAllAlreadyUsed: used, ...options, opponentModel: model })
+  const expanded = settings(state).tabletop === 'abilities-new-cards'
+  const result = core.choose(state, { ...FAST_PREPARATION_PROFILE, ...(expanded ? { timeBudgetMs: 250 } : {}), discardAllAlreadyUsed: used, ...options, opponentModel: model })
   return { ...result, version: FAST_PREPARATION_VERSION, ...(model?.audit ? { opponentPrior: model.audit } : {}) }
 }
 

@@ -18,7 +18,7 @@ export function weightedDraws(deck, requested, limit = 16, exact = false) {
 }
 
 export function createProbabilityPreparation({ search, prep, rules, tt }) {
-  const mechanics = c => JSON.stringify([c.id, c.stats, c.effect, c.tabletopAttackUnits ?? null, c.tabletop ?? null])
+  const mechanics = c => JSON.stringify([c.id, c.stats, c.effect, c.tabletopAttackUnits ?? null, c.tabletop ?? null, c.sacrificedPower ?? 0])
   const better = (a, b) => a.utility > b.utility + 1e-10 ||
     (Math.abs(a.utility - b.utility) <= 1e-10 && a.margin > b.margin + 1e-10)
   function choose(state, { chanceLimit = 16, exactChance = false, maxDepth = 8,
@@ -50,11 +50,13 @@ export function createProbabilityPreparation({ search, prep, rules, tt }) {
       const key = counts.join(','); unknownCache.set(deck, key); return key
     }
     const keyOf = (p, unknown) => cardKey(p.playerHand, p.playerActivated) + '/' +
-      cardKey(p.playerDiscard, p.playerActivated) + '/' + unknownKey(unknown) + '/' + Number(p.playerFinished)
+      cardKey(p.playerDiscard, p.playerActivated) + '/' + unknownKey(unknown) + '/' + Number(p.playerFinished) + '/' +
+      JSON.stringify(p.playerPendingDiscard)
     const leafCache = new Map(), memo = new Map(), distributions = new Map(), traceEdges = []
     const root = prep.createPreparationState({ playerHand: v.ownHand, opponentHand: v.enemyPublicHand ?? [],
       playerDiscards: v.ownDiscard, opponentDiscards: v.enemyPublicPile, deck: [] })
     root.playerActivated = [...v.ownActivated]
+    root.playerPendingDiscard = v.ownPendingDiscard
     function leaf(p, usedDiscardAll) {
       const key = cardKey(p.playerHand) + '/' + Number(usedDiscardAll); metrics.leafQueries++
       if (cache && leafCache.has(key)) { metrics.leafCacheHits++; return leafCache.get(key) }
@@ -82,7 +84,7 @@ export function createProbabilityPreparation({ search, prep, rules, tt }) {
       check()
       if (p.playerFinished) return leaf(p, usedDiscardAll)
       const legal = prep.getPreparationActions(p, 'player')
-      if (legal.length === 1) return leaf(p, usedDiscardAll)
+      if (legal.length === 1 && legal[0].type === 'finish-preparation') return leaf(p, usedDiscardAll)
       if (depth === 0) { frontier++; return { ...leaf(p, usedDiscardAll), truncated: true } }
       const key = keyOf(p, unknown) + ':' + depth + ':' + Number(usedDiscardAll)
       if (cache && memo.has(key)) { metrics.memoHits++; return memo.get(key) }
@@ -98,7 +100,7 @@ export function createProbabilityPreparation({ search, prep, rules, tt }) {
     }
     function actionValue(p, unknown, depth, action, usedDiscardAll) {
       metrics.actionEdges++
-      const requested = action.type !== 'prepare' ? 0 : action.cardId === 'draw_2_extra' ? 2 :
+      const requested = action.type !== 'prepare' ? 0 : ['draw_2_extra','draw_2_discard_2'].includes(action.cardId) ? 2 :
         action.cardId === 'draw_all_new_1' ? p.playerHand.length + 1 : 0
       const distributionKey = unknownKey(unknown) + ':' + requested
       if (!distributions.has(distributionKey)) distributions.set(distributionKey, weightedDraws(unknown, requested, chanceLimit, exactChance))

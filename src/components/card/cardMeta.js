@@ -60,7 +60,8 @@ const SPECIAL_TEXT = {
 const TABLETOP_TEXT = {
   single_faction_2: 'With stats in exactly one faction, adds 2 power per stat of that faction. Multiple stat cards and points are allowed. With no stats or stats in two or three factions, adds nothing. Counts as two attacks of the powered faction, including for Perfect Balance. Overwhelming can add its extra Dragon stat.',
   no_stats_to_2: SPECIAL_TEXT.no_stats_to_2,
-  shield_ulti: '3 shield points. Blocks 3 power from Critters or Robots after bonuses. Dragons are immune.',
+  shield_ulti: '3 shield points. Dragons are immune.',
+  critter_shield: 'Adds one Critter stat and one shield point. Counts as a stat card for From Nothing.',
   discard_for_damage: (card) => `${SPECIAL_TEXT.discard_for_damage} Current power: ${card.sacrificedPower ?? 0}.`,
   shortcut: 'Grants your main faction bonus even below its threshold, after shields. Requires positive power. Adds no base power. Threshold rules only.',
   chameleon: 'Choose Critter, Robot or Dragon as your main faction before battle. Its bonus and shield vulnerability apply to your whole hand. Adds no stats or base power.',
@@ -89,6 +90,7 @@ function capitalize(value) {
 
 export function getCardSummary(card) {
   if (!card) return { timing: '', text: '' }
+  if (card.id === 'critter_shield') return { timing: 'Passive special', text: TABLETOP_TEXT.critter_shield }
   if (card.type === 'stat') {
     const counts = CLASS_ORDER
       .map((key) => [key, (card.stats ?? []).filter((stat) => stat === key).length])
@@ -148,7 +150,9 @@ export const CARD_GROUPS = [
 ]
 
 export function getCardGroup(card) {
+  if (card.id === 'critter_shield') return 'special'
   if (card.type === 'stat') return 'stat'
+  if (card.id === 'single_faction_2') return 'special'
   if (card.id === 'single_faction_2' || card.effect?.dmgType || ((card.cd ?? 0) > 0 && card.effect?.dmg)) return 'attack'
   return 'special'
 }

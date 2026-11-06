@@ -80,13 +80,20 @@ const COMPACT_EFFECT_IDS = new Set(['one_off_each', 'any_off_each', 'single_fact
 function CardEffectRow({ card }) {
   const hasStructuredEffect = Boolean(card.effect?.dmg || card.effect?.shield)
   let tokens = hasStructuredEffect ? getEffectTokens(card) : getCustomEffectTokens(card)
+  if (card.id === 'critter_shield') {
+    tokens = [
+      { type: 'icon', value: getStatIcon('critter'), alt: 'Critter stat' },
+      { type: 'line-break' },
+      { type: 'icon', value: DISPLAY_ICONS.shield, alt: 'shield' },
+    ]
+  }
   if (card.tabletop && card.id === 'double_dmg') {
     tokens = [
       { type: 'text', value: '2*' }, { type: 'icon', value: DISPLAY_ICONS.star, alt: 'faction bonus' },
     ]
   }
-  if (card.tabletop && card.id === 'shield_is_dmg') {
-    tokens = [{ type: 'icon', value: DISPLAY_ICONS.shield, alt: 'own shields' }, { type: 'text', value: '=' }, { type: 'icon', value: DISPLAY_ICONS.dmg, alt: 'power' }]
+  if (card.id === 'shield_is_dmg') {
+    tokens = [{ type: 'icon', value: DISPLAY_ICONS.shield, alt: 'own shields' }, { type: 'text', value: '*' }, { type: 'icon', value: DISPLAY_ICONS.dmg, alt: 'power' }]
   }
   if (card.tabletop && card.id === 'shortcut') {
     // Two up arrows: count the bonus two tiers higher.
@@ -102,11 +109,19 @@ function CardEffectRow({ card }) {
 
   const compact = COMPACT_EFFECT_IDS.has(card.id)
   if (compact) tokens = tokens.filter((token) => token.type !== 'line-break')
+  const stacked = card.id === 'critter_shield' || card.id === 'no_stats_to_2'
+  const rows = [[]]
+  for (const token of tokens) {
+    if (token.type === 'line-break') rows.push([])
+    else rows[rows.length - 1].push(token)
+  }
 
   return (
     <div className={['card-visual__overlay', 'card-visual__overlay--effect', compact ? 'card-visual__overlay--compact' : '', card.id === 'single_faction_2' ? 'card-visual__overlay--specialist' : ''].filter(Boolean).join(' ')}>
-      <div className="card-visual__token-row">
-        {tokens.map((token, index) => renderToken(token, index))}
+      <div className={stacked ? 'card-visual__formula-rows' : 'card-visual__token-row'}>
+        {stacked ? rows.map((row, index) => (
+          <div className="card-visual__formula-row" key={index}>{row.map(renderToken)}</div>
+        )) : tokens.map((token, index) => renderToken(token, index))}
       </div>
     </div>
   )
@@ -238,8 +253,8 @@ export default function CardVisual({ card, hidden = false, charge = null }) {
           <CopyGlitch src={getImageUrl(card.copyOverlayImage)} />
         ) : null}
         <div className="card-visual__shade" />
-        {card.type === 'stat' ? <CardStatColumn card={card} /> : null}
-        {card.type === 'action' ? <CardEffectRow card={card} /> : null}
+        {(card.type === 'stat' || card.stats?.length) && card.id !== 'critter_shield' ? <CardStatColumn card={card} /> : null}
+        {card.type === 'action' || card.effect?.shield ? <CardEffectRow card={card} /> : null}
         {card.id === 'discard_for_damage' && card.sacrificedPower > 0 ? (
           <div className="card-visual__overlay card-visual__stored-power" aria-label={`${card.sacrificedPower} stored power`}>
             <TextToken value={card.sacrificedPower} />
