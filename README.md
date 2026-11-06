@@ -4,6 +4,8 @@
 
 **New-card baseline:** 73-card Regular / 109-card Wild pool, with From Nothing and Shield Ultimate hidden for now and Dragon immunity retained. Selecting **Felix** automatically uses the qualified FelixNC in Abilities+NewCards Draft, and the existing Felix elsewhere. See the [balance decision and integration report](docs/NC_BALANCE_DECISION_20261105.md).
 
+**Play settings:** normal play uses Abilities+NewCards with the Regular deck. Enable Testing near the top of the menu to access battle-rule choices, opponent-card visibility, Wild deck and the test deck.
+
 **CRD** is the working digital version of **Critters Robots Dragons**, a 2-player drafting and battle card game.
 
 Current build:

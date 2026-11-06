@@ -111,23 +111,37 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
             </button>
           </div>
 
-          <div className="screen-menu__group">
-            <span className="screen-menu__select-label">Battle</span>
-            <div className="screen-menu__segmented" role="radiogroup" aria-label="Battle rules">
-              {BATTLE_RULES.map(({ value, label }) => (
-                <button
-                  key={label}
-                  type="button"
-                  role="radio"
-                  aria-checked={(settings.tabletop || false) === value}
-                  className={(settings.tabletop || false) === value ? 'is-on' : ''}
-                  onClick={() => run(() => (settings.tabletop || false) !== value && onUpdateSettings({ tabletop: value }))}
-                >
-                  <span>{label}</span>
-                </button>
-              ))}
+          <label className="screen-menu__toggle">
+            <input
+              type="checkbox"
+              checked={Boolean(settings.testing)}
+              disabled={humanOpponent}
+              onChange={(event) => onUpdateSettings({ testing: event.target.checked })}
+            />
+            <span className="screen-menu__switch" aria-hidden="true" />
+            <SvgIcon name="flask" />
+            <span>Testing</span>
+          </label>
+
+          {settings.testing ? (
+            <div className="screen-menu__group">
+              <span className="screen-menu__select-label">Battle</span>
+              <div className="screen-menu__segmented" role="radiogroup" aria-label="Battle rules">
+                {BATTLE_RULES.map(({ value, label }) => (
+                  <button
+                    key={label}
+                    type="button"
+                    role="radio"
+                    aria-checked={(settings.tabletop || false) === value}
+                    className={(settings.tabletop || false) === value ? 'is-on' : ''}
+                    onClick={() => run(() => (settings.tabletop || false) !== value && onUpdateSettings({ tabletop: value }))}
+                  >
+                    <span>{label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          ) : null}
 
           <label className="screen-menu__select">
             <span className="screen-menu__select-label">Opponent</span>
@@ -145,39 +159,31 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
             <span className="screen-menu__select-chevron" aria-hidden="true" />
           </label>
 
-          <label className="screen-menu__toggle">
-            <input
-              type="checkbox"
-              checked={settings.showOpponentCards}
-              onChange={(event) => onUpdateSettings({ showOpponentCards: event.target.checked })}
-            />
-            <span className="screen-menu__switch" aria-hidden="true" />
-            <SvgIcon name="eye" />
-            <span>Opponent cards</span>
-          </label>
+          {settings.testing ? (
+            <>
+              <label className="screen-menu__toggle">
+                <input
+                  type="checkbox"
+                  checked={settings.showOpponentCards}
+                  onChange={(event) => onUpdateSettings({ showOpponentCards: event.target.checked })}
+                />
+                <span className="screen-menu__switch" aria-hidden="true" />
+                <SvgIcon name="eye" />
+                <span>Opponent cards</span>
+              </label>
 
-          <label className="screen-menu__toggle">
-            <input
-              type="checkbox"
-              checked={settings.wildDeck}
-              onChange={(event) => onUpdateSettings({ wildDeck: event.target.checked })}
-            />
-            <span className="screen-menu__switch" aria-hidden="true" />
-            <GameIcon name="star" />
-            <span>Wild deck</span>
-          </label>
-
-          <label className="screen-menu__toggle">
-            <input
-              type="checkbox"
-              checked={Boolean(settings.testing)}
-              disabled={humanOpponent}
-              onChange={(event) => onUpdateSettings({ testing: event.target.checked })}
-            />
-            <span className="screen-menu__switch" aria-hidden="true" />
-            <SvgIcon name="flask" />
-            <span>Testing</span>
-          </label>
+              <label className="screen-menu__toggle">
+                <input
+                  type="checkbox"
+                  checked={settings.wildDeck}
+                  onChange={(event) => onUpdateSettings({ wildDeck: event.target.checked })}
+                />
+                <span className="screen-menu__switch" aria-hidden="true" />
+                <GameIcon name="star" />
+                <span>Wild deck</span>
+              </label>
+            </>
+          ) : null}
 
           {settings.testing ? (
             <button type="button" className="screen-menu__item" onClick={() => run(onTestDeck)}>

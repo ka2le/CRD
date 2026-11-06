@@ -1,5 +1,7 @@
 # UI and animation design
 
+Normal play uses NC and the Regular deck. The Testing switch appears before the Battle section. Battle-rule choices, opponent-card visibility, Wild deck and Test deck appear only with Testing enabled. Turning Testing off restores the normal rules, redealing only if the effective setup changes. Older non-testing saved setups migrate to NC; new online rooms also use normal NC settings.
+
 > Naming policy (2026-10-22): **Abilities = `abilities-main`** (formerly Abilities v2). The original is **Abilities Prototype** (`abilities-prototype`), hidden and excluded from balance testing unless explicitly requested. Generic tabletop requests mean main; Threshold must be named explicitly. Historical raw IDs/paths remain unchanged. See [ruleset naming policy](RULESET_NAMES.md).
 
 2026-10-21: the top and bottom rails are now edge-to-edge bars (square ends, one border towards the table, safe-area padding inside); only the play zones keep the side inset and the 1500px max width. Tapping the deck opens the Collection (every card in the game); with Testing on it opens the Test deck, and both sheets show a Collection ⇄ Test deck switch (arrow keys or Tab flip). After a battle, the eye (watch the table) no longer greys out the loser's cards; with Testing on a rewind button (result panel and dock) replays the deal from the start of preparation with the same hands and deck order. Online rooms add emotes (see `MULTIPLAYER.md`).

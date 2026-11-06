@@ -373,7 +373,7 @@ test('session gates type choice, invalidates it after hand changes, preserves pr
       assert.equal(started.battleStarted, true)
       assert.equal(started.preBattle.opponentHand.length, 4)
       assert.equal(started.preBattle.deck.length, 0)
-      const reset = sessionReducer(started, { type: 'UPDATE_SETTINGS', patch: { tabletop: false } })
+      const reset = sessionReducer(started, { type: 'UPDATE_SETTINGS', patch: { testing: true, tabletop: false } })
       assert.equal(reset.battleStarted, false)
       assert(!reset.game.deck.some((entry) => entry.tabletop))
       assert.equal(getTabletopChoice(reset.preBattle).selectedType, null)

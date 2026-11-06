@@ -33,7 +33,7 @@ const DEFAULT_SETTINGS = {
   gameMode: 'draft',
   showOpponentCards: true,
   wildDeck: false,
-  tabletop: 'abilities-main',
+  tabletop: 'abilities-new-cards',
   testing: false,
   opponentAi: DEFAULT_OPPONENT_AI,
 }
@@ -59,21 +59,32 @@ function createSessionTiming(overrides = {}) {
   }
 }
 
+export function normalizePlaySettings(settings, patch = {}) {
+  const testing = Boolean(patch.testing ?? settings.testing)
+  const next = normalizeOpponentSettings(settings, {
+    ...patch,
+    testing,
+    ...(!testing ? { tabletop: 'abilities-new-cards', wildDeck: false, showOpponentCards: true } : {}),
+  })
+  next.tabletop = normalizePlayableTabletopRules(next.tabletop)
+  return next
+}
+
 function loadStoredSettings() {
-  if (typeof window === 'undefined') return DEFAULT_SETTINGS
+  if (typeof window === 'undefined') return normalizePlaySettings(DEFAULT_SETTINGS)
 
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return DEFAULT_SETTINGS
+    if (!raw) return normalizePlaySettings(DEFAULT_SETTINGS)
 
     const parsed = JSON.parse(raw)
-    return normalizeOpponentSettings({
+    return normalizePlaySettings({
       ...DEFAULT_SETTINGS,
       ...parsed,
       tabletop: normalizePlayableTabletopRules(parsed.tabletop ?? DEFAULT_SETTINGS.tabletop),
     })
   } catch {
-    return DEFAULT_SETTINGS
+    return normalizePlaySettings(DEFAULT_SETTINGS)
   }
 }
 
@@ -201,10 +212,14 @@ function createInitialSessionState() {
     if (!hasScenario && saved?.version === 1 && compatibleGameVersion(saved.rulesVersion) && !saved.state?.game?.concurrentOpponent && saved.state?.game?.deck && saved.state?.preBattle?.deck) {
       let restored = saved.state
       if (restored.preBattle.pendingResolution) restored = sessionReducer(restored, { type: 'RESOLVE_PRE_BATTLE_PENDING_DRAW_ALL_NEW_1' })
-      return { ...restored, lastTransition: null, pendingPlayerDraftPickAnimation: null,
-        settings: normalizeOpponentSettings(restored.settings, { gameMode: restored.gameMode }),
-        suppressedHandCardIds: { player: [], opponent: [] },
-        preBattle: { ...restored.preBattle, pendingAnimation: null, pendingResolution: null } }
+      const settings = normalizePlaySettings(restored.settings, { gameMode: restored.gameMode })
+      // Redeal an old test setup instead of concealing its rules behind the normal menu.
+      if (settings.tabletop === restored.settings.tabletop && settings.wildDeck === restored.settings.wildDeck) {
+        return { ...restored, lastTransition: null, pendingPlayerDraftPickAnimation: null,
+          settings,
+          suppressedHandCardIds: { player: [], opponent: [] },
+          preBattle: { ...restored.preBattle, pendingAnimation: null, pendingResolution: null } }
+      }
     }
   } catch { /* First visit, unavailable storage or an obsolete saved game. */ }
   const settings = loadStoredSettings()
@@ -292,7 +307,7 @@ export function sessionReducer(state, action) {
       if (result) preBattle = { ...preBattle, playerFinished: true, opponentFinished: true }
       const next = {
         ...state, game, preBattle, gameMode: game.mode,
-        settings: normalizeOpponentSettings(state.settings, { gameMode: game.mode, tabletop: game.playerHand[0]?.tabletop || 'abilities-main', wildDeck: true }),
+        settings: normalizeOpponentSettings(state.settings, { gameMode: game.mode, tabletop: game.playerHand[0]?.tabletop || 'abilities-main', wildDeck: true, testing: true }),
         selectedIds: [], battleStarted: false, battleLogOpen: false,
         battleInstance: state.battleInstance + 1, gameSessionKey: state.gameSessionKey + 1, dealId: state.dealId + 1,
         lastTransition: null, pendingPlayerDraftPickAnimation: null, suppressedHandCardIds: { player: [], opponent: [] },
@@ -817,10 +832,10 @@ export function sessionReducer(state, action) {
       })
 
     case 'UPDATE_SETTINGS': {
-      const nextSettings = normalizeOpponentSettings(state.settings, action.patch)
-      nextSettings.tabletop = normalizePlayableTabletopRules(nextSettings.tabletop)
+      const nextSettings = normalizePlaySettings(state.settings, action.patch)
+      const changedKeys = Object.keys(nextSettings).filter((key) => nextSettings[key] !== state.settings[key])
 
-      if (Object.keys(action.patch).every((key) => NON_RESETTING_SETTINGS.includes(key))) {
+      if (changedKeys.every((key) => NON_RESETTING_SETTINGS.includes(key))) {
         return { ...state, settings: nextSettings }
       }
 

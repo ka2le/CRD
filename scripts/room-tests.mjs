@@ -45,10 +45,22 @@ function client(role, state, storage = memoryStorage()) {
   return { instance, sent, storage }
 }
 
-test('both seats complete Draft and Discard with digital and all three tabletop rules', () => {
+test('new rooms start with normal NC rules and the Regular deck', () => {
+  for (const mode of ['draft', 'five-hand-discard']) {
+    const state = gameApi.startRoomGame(initial(mode, 'threshold'))
+    assert.equal(state.settings.tabletop, 'abilities-new-cards')
+    assert.equal(state.settings.wildDeck, false)
+    assert.equal(state.settings.testing, false)
+    const cards = [...state.game.deck, ...state.game.playerHand, ...state.game.opponentHand, ...(state.game.draftRow ?? [])]
+    assert.equal(cards.length, 73)
+    assert(cards.every(c => c.tabletop === 'abilities-new-cards'))
+  }
+})
+
+test('existing rooms finish Draft and Discard with digital and all three tabletop rules', () => {
   for (const mode of ['draft', 'five-hand-discard']) for (const tabletop of [false, 'threshold', 'abilities-prototype', 'abilities-main']) {
     for (let seed = 0; seed < 8; seed += 1) {
-      let state = gameApi.startRoomGame(initial(mode, tabletop, seed))
+      let state = gameApi.settleSession(initial(mode, tabletop, seed))
       while (state.game.phase !== 'battle-ready') {
         const seat = mode === 'draft' ? (state.game.phase === 'draft-player-pick' ? 'host' : 'guest') : state.discardReady?.host ? 'guest' : 'host'
         const view = gameApi.seatView(state, seat)

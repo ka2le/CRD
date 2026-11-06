@@ -54,7 +54,7 @@ for (const tabletop of [false, 'threshold', 'abilities-main', 'abilities-prototy
 }
 
 test('Dan and David are linked; common opponents persist across modes and reload', () => {
-  assert.equal(getOpponentAiOptions('draft').length, 4)
+  assert.equal(getOpponentAiOptions('draft').length, 5)
   assert.equal(getOpponentAiOptions('five-hand-discard').at(-1).label, 'DavidBot (Very Hard)')
   let s = normalizeOpponentSettings({ gameMode: 'five-hand-discard', opponentAi: 'rules' }, { opponentAi: 'david' })
   s = normalizeOpponentSettings(s, { gameMode: 'draft' })
@@ -75,7 +75,7 @@ test('real settings reducer preserves David across UPDATE_SETTINGS and RESET_GAM
   const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' })
   try {
     const { sessionReducer } = await server.ssrLoadModule('/src/hooks/useGameSession.js')
-    let s = { settings: { gameMode: 'five-hand-discard', opponentAi: 'david' }, gameMode: 'five-hand-discard',
+    let s = { settings: { gameMode: 'five-hand-discard', opponentAi: 'david', testing: true }, gameMode: 'five-hand-discard',
       game: createHeadlessGame({ mode: 'five-hand-discard' }).game, nextDraftStartingPicker: 'player',
       battleInstance: 0, gameSessionKey: 0, dealId: 1 }
     s = sessionReducer(s, { type: 'UPDATE_SETTINGS', patch: { gameMode: 'draft' } })
