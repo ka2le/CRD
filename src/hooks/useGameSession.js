@@ -1349,7 +1349,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     requestOpponentLineup(game.opponentPool).then(lineup => {
       if (!cancelled) dispatch({ type: 'SET_OPPONENT_LINEUP', lineup, decisionKey: opponentDecisionKey })
     }).catch(() => {
-      if (!cancelled) setAiFeedback({ key: opponentDecisionKey, error: 'Sven20Cards could not finish arranging its hands. Please retry.' })
+      if (!cancelled) setAiFeedback({ key: opponentDecisionKey, error: 'Sven could not finish arranging its hands. Please retry.' })
     })
     return () => { cancelled = true }
   // The decision key changes exactly when a new decision starts.

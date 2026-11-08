@@ -22,8 +22,8 @@ export const OPPONENT_AI_OPTIONS = [
 ]
 
 export const TESTING_OPPONENT_AI_OPTIONS = [
-  { id: 'felix-nc-secret', name: 'FelixNCSecret', label: 'FelixNCSecret' },
-  { id: 'sven-20cards', name: 'Sven20Cards', label: 'Sven20Cards' },
+  { ...OPPONENT_AI_OPTIONS.find(option => option.id === 'felix'), id: 'felix-nc-secret' },
+  { ...OPPONENT_AI_OPTIONS.find(option => option.id === 'search'), id: 'sven-20cards' },
 ]
 
 export function getOpponentAiOptions(mode, tabletop = false, { secretCard = false } = {}) {

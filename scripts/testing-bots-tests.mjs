@@ -115,8 +115,8 @@ test('new opponents appear only in their supported menu contexts and survive sto
   assert.equal(sessionApi.normalizePlaySettings(settings, { testing: false }).opponentAi, 'search')
   const discard = normalizeOpponentSettings({ gameMode: 'draft', tabletop: 'abilities-new-cards', opponentAi: 'felix' }, { gameMode: 'five-hand-discard' })
   assert.equal(normalizeOpponentSettings(discard, { gameMode: '20cards' }).opponentAi, 'sven-20cards')
-  assert.equal(getOpponentAiName('felix-nc-secret'), 'FelixNCSecret')
-  assert.equal(getOpponentAiName('sven-20cards'), 'Sven20Cards')
+  assert.equal(getOpponentAiName('felix-nc-secret'), getOpponentAiName('felix'))
+  assert.equal(getOpponentAiName('sven-20cards'), getOpponentAiName('search'))
 })
 
 test('lineup locking waits for Sven, rejects stale/invalid replies, then prepares the selected lane', () => {
