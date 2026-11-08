@@ -338,17 +338,21 @@ export function sessionReducer(state, action) {
       const game = lockLineup({ ...state.game, opponentLineup: action.lineup }, 'opponent')
       return game.opponentLocked ? { ...state, game, preBattle: createPreBattleState(game) } : state
     }
+    case 'SEE_THIRD_ROUND':
     case 'NEXT_MATCH_ROUND': {
-      if (state.game.mode !== '20cards' || !state.battleStarted) return state
+      if (state.game.mode !== '20cards' || !state.battleStarted || state.game.roundIndex >= 2) return state
+      const optionalRound = action.type === 'SEE_THIRD_ROUND'
+      if (optionalRound && state.game.roundIndex !== 1) return state
       const prep = state.preBattle
       const winner = state.settings.tabletop
         ? resolveTabletopBattle(prep.playerHand, prep.opponentHand, { playerType: getTabletopChoice(prep).selectedType,
           opponentType: action.opponentType }).winner
         : simulateBattle(prep.playerHand, prep.opponentHand, { deck: prep.deck }).winner
       const roundResults = [...state.game.roundResults, winner]
-      if (twentyCardsScore(roundResults).complete) return state
+      const complete = twentyCardsScore(roundResults).complete
+      if (optionalRound ? !complete : complete) return state
       const mergeSeen = cards => [...new Map(cards.map(card => [card.uid, card])).values()]
-      const game = beginTwentyCardsRound({ ...state.game, roundIndex: state.game.roundIndex + 1, roundResults,
+      const game = beginTwentyCardsRound({ ...state.game, roundIndex: state.game.roundIndex + 1, roundResults, optionalRound,
         discardPile: prep.playerDiscard,
         revealedCards: mergeSeen([...(state.game.revealedCards ?? []), ...prep.playerHand, ...prep.opponentHand]),
         playerSeenCards: mergeSeen([...(state.game.playerSeenCards ?? []), ...prep.playerHand, ...prep.playerDiscard]),
@@ -1467,6 +1471,8 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     placeLineupCard: (uid, slot) => dispatch({ type: 'PLACE_LINEUP_CARD', uid, slot }),
     lockLineup: () => dispatch({ type: 'LOCK_LINEUP' }),
     nextMatchRound: () => dispatch({ type: 'NEXT_MATCH_ROUND', opponentType: online || localMultiplayer
+      ? getTabletopChoice({ ...preBattle, playerHand: preBattle.opponentHand, tabletopChoice: session.otherUi?.tabletopChoice }).selectedType : null }),
+    seeThirdRound: () => dispatch({ type: 'SEE_THIRD_ROUND', opponentType: online || localMultiplayer
       ? getTabletopChoice({ ...preBattle, playerHand: preBattle.opponentHand, tabletopChoice: session.otherUi?.tabletopChoice }).selectedType : null }),
     opponentAiFeedback: aiFeedback?.error && [opponentDecisionKey, opponentSearchKey].includes(aiFeedback.key)
       ? aiFeedback : awaitingDiscardDecision && aiFeedback?.key === opponentDecisionKey ? aiFeedback : null,

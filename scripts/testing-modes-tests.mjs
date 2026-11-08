@@ -1,5 +1,7 @@
 import test, { before, after } from 'node:test'
 import assert from 'node:assert/strict'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { createServer } from 'vite'
 import { createDraftGame, applyDraftPick, resolveOpponentDraftPick, commitDraftDiscard, revealNextDraftPack } from '../src/game/draftMode.js'
 import { createTwentyCardsGame, placeLineupCard, lockLineup, chooseBotLineup, twentyCardsScore } from '../src/game/twentyCards.js'
@@ -274,6 +276,68 @@ test('match scoring requires two wins and draws after three rounds without a two
   assert.equal(twentyCardsScore(['player', 'opponent', 'tie']).winner, 'tie')
   assert.equal(twentyCardsScore(['tie', 'tie', 'opponent']).winner, 'tie')
   assert.equal(twentyCardsScore(['tie', 'tie', 'tie']).winner, 'tie')
+})
+
+test('a finished two-round match optionally plays round three with its original hands, deck and shared pile', () => {
+  const game = twentyDiscardFixture()
+  const deck = getExpandedCoreDeck({ tabletop: 'abilities-new-cards' })
+  const winningHand = ['robot2', 'robot_attack'].map(id => deck.find(card => card.id === id))
+  for (const winner of ['player', 'opponent']) {
+    const prep = { ...createPreparationState(game), playerHand: winner === 'player' ? winningHand : [],
+      opponentHand: winner === 'opponent' ? winningHand : [],
+      playerActivated: ['old-activation'], opponentActivated: ['old-activation'] }
+    prep.tabletopChoice = { type: 'robot', handKey: prep.playerHand.map(card => card.uid).join('|') }
+    const state = { ...session(game), game: { ...game, roundIndex: 1, roundResults: [winner] },
+      preBattle: prep, battleStarted: true,
+      otherUi: { tabletopChoice: { type: 'robot', handKey: prep.opponentHand.map(card => card.uid).join('|') } } }
+    assert.equal(api.sessionReducer(state, { type: 'NEXT_MATCH_ROUND', opponentType: 'robot' }), state)
+    const split = { ...state, game: { ...state.game, roundResults: [winner === 'player' ? 'opponent' : 'player'] } }
+    assert.equal(api.sessionReducer(split, { type: 'SEE_THIRD_ROUND', opponentType: 'robot' }), split)
+    const regularThird = api.sessionReducer(split, { type: 'NEXT_MATCH_ROUND', opponentType: 'robot' })
+    assert.equal(regularThird.game.roundIndex, 2)
+    assert.equal(regularThird.game.optionalRound, false)
+    const next = api.sessionReducer(state, { type: 'SEE_THIRD_ROUND', opponentType: 'robot' })
+    assert.equal(next.game.roundIndex, 2)
+    assert.equal(next.game.optionalRound, true)
+    assert.equal(next.battleStarted, false)
+    assert.deepEqual(next.game.roundResults, [winner, winner])
+    assert.deepEqual(next.preBattle.playerHand.map(card => card.uid), game.playerLineup.slice(10, 15))
+    assert.deepEqual(next.preBattle.opponentHand.map(card => card.uid), game.opponentLineup.slice(10, 15))
+    assert.deepEqual(next.preBattle.deck, prep.deck)
+    assert.deepEqual(next.preBattle.playerDiscard, prep.playerDiscard)
+    assert.deepEqual(next.preBattle.opponentDiscard, prep.playerDiscard)
+    assert.deepEqual(next.preBattle.playerActivated, [])
+    assert.deepEqual(next.preBattle.opponentActivated, [])
+    const restored = JSON.parse(JSON.stringify(next))
+    assert.equal(twentyCardsScore(restored.game.roundResults).winner, winner)
+    assert.equal(api.sessionReducer(restored, { type: 'SEE_THIRD_ROUND' }), restored)
+    const finished = { ...restored, battleStarted: true }
+    assert.equal(api.sessionReducer(finished, { type: 'SEE_THIRD_ROUND' }), finished)
+    assert.equal(api.sessionReducer(finished, { type: 'NEXT_MATCH_ROUND' }), finished)
+    const human = local.initializeLocalMultiplayer({ ...state, settings: { ...state.settings, opponentAi: 'local' } })
+    const humanNext = api.localSessionReducer(human, { type: 'SEE_THIRD_ROUND' })
+    assert.equal(humanNext.game.roundIndex, 2)
+    assert.equal(humanNext.game.optionalRound, true)
+    assert.equal(twentyCardsScore(humanNext.game.roundResults).winner, winner)
+  }
+  const unfinished = { ...session(game), battleStarted: true }
+  assert.equal(api.sessionReducer(unfinished, { type: 'SEE_THIRD_ROUND' }), unfinished)
+})
+
+test('the result offers See round 3, then shows its battle outcome separately from the final match winner', async () => {
+  const { default: Overlay } = await vite.ssrLoadModule('/src/components/battle/BattleOverlay.jsx')
+  const props = { visible: true, playerName: 'Alice', opponentName: 'Bob',
+    battlePlayback: { playerTotalDamageDealt: 5, opponentTotalDamageDealt: 0, round: 1 },
+    battleResult: { winner: 'player' }, matchScore: twentyCardsScore(['player', 'player']) }
+  const html = renderToStaticMarkup(createElement(Overlay, { ...props, onSeeThirdRound: () => {} }))
+  assert.match(html, /See round 3/)
+  assert.match(html, /Play again/)
+  const optional = renderToStaticMarkup(createElement(Overlay, { ...props, optionalRound: true, battleResult: { winner: 'opponent' } }))
+  assert.match(optional, /Defeat/)
+  assert.match(optional, /Bob wins/)
+  assert.match(optional, /Round 3 · Match won by Alice/)
+  assert.match(optional, /2 – 0/)
+  assert.doesNotMatch(optional, /See round 3/)
 })
 
 test('same-screen private choices require handoffs, persist locks and flip lane ownership correctly', () => {

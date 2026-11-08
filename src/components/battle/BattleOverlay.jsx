@@ -8,10 +8,10 @@ const RESULT_COPY = {
   tie: { title: 'Draw', tone: 'tie' },
 }
 
-export default function BattleOverlay({ battlePlayback, battleResult, onNewGame, onReplayPreparation = null, onClose, visible, playerName = 'You', opponentName = 'Opponent', spectating = false, newGameLabel = 'Play again', matchScore = null }) {
+export default function BattleOverlay({ battlePlayback, battleResult, onNewGame, onReplayPreparation = null, onClose, visible, playerName = 'You', opponentName = 'Opponent', spectating = false, newGameLabel = 'Play again', matchScore = null, optionalRound = false, onSeeThirdRound = null }) {
   if (!visible || !battlePlayback || !battleResult) return null
 
-  const resultWinner = matchScore?.complete ? matchScore.winner : battleResult.winner
+  const resultWinner = matchScore?.complete && !optionalRound ? matchScore.winner : battleResult.winner
   const copy = RESULT_COPY[resultWinner] ?? RESULT_COPY.tie
   const playerDealt = battlePlayback.playerTotalDamageDealt
   const opponentDealt = battlePlayback.opponentTotalDamageDealt
@@ -24,7 +24,7 @@ export default function BattleOverlay({ battlePlayback, battleResult, onNewGame,
       <div className="battle-result__panel" onClick={(event) => event.stopPropagation()}>
         <div className="battle-result__rays" aria-hidden="true" />
         <h2 className="battle-result__title">{spectating && winnerName ? `${winnerName} wins` : copy.title}</h2>
-        {matchScore ? <p className="match-score">{matchScore.complete ? 'Match' : 'Round'} · {matchScore.player} – {matchScore.opponent}</p> : null}
+        {matchScore ? <p className="match-score">{optionalRound ? `Round 3 · Match won by ${matchScore.winner === 'player' ? playerName : opponentName}` : matchScore.complete ? 'Match' : 'Round'} · {matchScore.player} – {matchScore.opponent}</p> : null}
         {winnerName && !spectating ? <p className="battle-result__winner">{winnerName} wins</p> : null}
 
         {tabletop ? (
@@ -66,6 +66,11 @@ export default function BattleOverlay({ battlePlayback, battleResult, onNewGame,
             <button type="button" className="ui-button ui-button--icon battle-result__view" onClick={onReplayPreparation}
               aria-label="Replay from preparation" title="Replay from preparation (testing)">
               <SvgIcon name="rewind" />
+            </button>
+          ) : null}
+          {onSeeThirdRound ? (
+            <button type="button" className="ui-button battle-result__again" onClick={onSeeThirdRound}>
+              <SvgIcon name="eye" />See round 3
             </button>
           ) : null}
           <button type="button" className="ui-button ui-button--primary battle-result__again" onClick={onNewGame}>

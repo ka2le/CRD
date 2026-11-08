@@ -83,13 +83,14 @@ export function reduceLocalMultiplayer(state, action, reduceSession) {
     return advanceLocalTurn(next, enteringPreparation && state.game.mode === 'draft', enteringPreparation)
   }
   if (local && ['RESOLVE_OPPONENT_DRAFT_PICK', 'APPLY_OPPONENT_DISCARD'].includes(action.type)) return state
-  const next = reduceSession(state, local && action.type === 'NEXT_MATCH_ROUND'
+  const continuingRound = ['NEXT_MATCH_ROUND', 'SEE_THIRD_ROUND'].includes(action.type)
+  const next = reduceSession(state, local && continuingRound
     ? { ...action, opponentType: getTabletopChoice({ ...state.preBattle, playerHand: state.preBattle.opponentHand,
       tabletopChoice: state.otherUi?.tabletopChoice }).selectedType } : action)
   if (!isLocalMultiplayer(next)) return next.localPlay ? { ...next, localPlay: null } : next
   return next.dealId !== state.dealId || !next.localPlay
     ? initializeLocalMultiplayer({ ...next, localPlay: null, otherUi: {}, otherSelectedIds: [], discardReady: {} })
-    : action.type === 'NEXT_MATCH_ROUND' && next !== state ? advanceLocalTurn(next, true, true) : next
+    : continuingRound && next !== state ? advanceLocalTurn(next, true, true) : next
 }
 
 export function getLocalDisplaySeat(state) {

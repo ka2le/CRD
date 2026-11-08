@@ -186,8 +186,9 @@ function AppContent() {
   const resultDismissed = dismissedResultKey === battleKey
   const winner = battleFinished ? battleResult?.winner : null
   const matchScore = game.mode === '20cards' ? twentyCardsScore([...game.roundResults,
-    ...(battleFinished && battleResult ? [battleResult.winner] : [])]) : null
+    ...(battleFinished && battleResult && !game.optionalRound ? [battleResult.winner] : [])]) : null
   const nextRoundAvailable = matchScore && battleFinished && !matchScore.complete
+  const thirdRoundAvailable = matchScore?.complete && battleFinished && game.roundIndex === 1
   function handleMatchContinue() {
     if (nextRoundAvailable) session.nextMatchRound()
     else handleNewGame()
@@ -562,6 +563,11 @@ function AppContent() {
               <SvgIcon name="rewind" />
             </button>
           ) : null}
+          {thirdRoundAvailable && (!session.online || room.record?.role === 'host') ? (
+            <button type="button" className="ui-button table__action" onClick={session.seeThirdRound}>
+              <SvgIcon name="eye" /><span>See round 3</span>
+            </button>
+          ) : null}
           {battleFinished && (!session.online || room.record?.role === 'host') ? (
             <button type="button" className="ui-button ui-button--primary table__action" onClick={handleMatchContinue}>
               <SvgIcon name="replay" />
@@ -581,6 +587,8 @@ function AppContent() {
         newGameLabel={nextRoundAvailable ? `Round ${game.roundIndex + 2}` : session.online && room.record?.role !== 'host' ? 'Room controls' : 'Play again'}
         onNewGame={handleMatchContinue}
         matchScore={matchScore}
+        optionalRound={game.optionalRound}
+        onSeeThirdRound={thirdRoundAvailable ? session.seeThirdRound : null}
         onReplayPreparation={session.replayPreparation}
         onClose={() => setDismissedResultKey(battleKey)}
       />
