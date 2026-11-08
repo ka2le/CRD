@@ -58,7 +58,10 @@ try {
   await page.goto(`${url}?offline-cold-start=1`)
   console.log('Cold-started offline with the HTTP cache cleared')
   await page.getByRole('button', { name: 'Open menu', exact: true }).waitFor()
-  assert.equal(await page.evaluate(() => navigator.onLine), false)
+  assert(await page.evaluate(async () => {
+    try { await fetch('./offline-network-probe', { cache: 'no-store' }); return false }
+    catch { return true }
+  }), 'uncached network requests fail during the offline cold start')
   const readState = () => page.evaluate(() => JSON.parse(localStorage.getItem('crd-local-game-v1')).state)
   const menu = () => page.getByRole('button', { name: 'Open menu', exact: true }).click()
   const chooseOpponent = async (id) => {

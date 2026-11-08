@@ -6,6 +6,18 @@ const APP_SHELL = APP_BASE_URL.href
 // Filled by Vite after bundling, including AI workers, all art and all icons.
 const PRECACHE_ASSETS = /* __CRD_PRECACHE__ */ []
 
+async function removeOldCaches() {
+  const names = await caches.keys()
+  await Promise.all(names.filter((name) => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME)
+    .map((name) => caches.delete(name)))
+}
+
+async function cleanAfterNavigation(event) {
+  const clients = await self.clients.matchAll({ type: 'window' })
+  const navigating = [event.clientId, event.replacesClientId, event.resultingClientId].filter(Boolean)
+  if (!clients.some((client) => !navigating.includes(client.id))) await removeOldCaches()
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME)
@@ -14,17 +26,26 @@ self.addEventListener('install', (event) => {
     const shell = await cache.match(new URL('index.html', APP_BASE_URL))
     if (!shell) throw new Error('Offline app shell is missing')
     await cache.put(APP_SHELL, shell)
-    // Activate after existing games close, keeping each page and its workers on
-    // the same build even when an update arrives midway through a game.
+    // Existing pages keep running their loaded code. Retain their cached assets
+    // below so an old AI worker can still start after this update activates.
+    await self.skipWaiting()
   })())
 })
 
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
-    const names = await caches.keys()
-    await Promise.all(names.filter((name) => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME)
-      .map((name) => caches.delete(name)))
     await self.clients.claim()
+    const clients = await self.clients.matchAll({ type: 'window' })
+    if (!clients.length) await removeOldCaches()
+    // Opt-in recovery for pages loaded by the original cache-first worker.
+    // Only this explicit update link reloads; other active games are untouched.
+    for (const client of clients) {
+      const url = new URL(client.url)
+      if (url.searchParams.get('update') !== '1') continue
+      url.searchParams.delete('update')
+      // Navigation can wait for activation; awaiting it here would deadlock.
+      client.navigate(url.href).catch(() => {})
+    }
   })())
 })
 
@@ -33,8 +54,9 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url)
   if (request.method !== 'GET' || url.origin !== self.location.origin || !url.pathname.startsWith(APP_SCOPE)) return
 
-  // Serve one complete build. Network-first HTML can otherwise point at new
-  // scripts that were never saved before the device went offline.
+  // Navigations use the latest completely installed build. Open pages may still
+  // request their old content-hashed scripts/workers, including while offline.
+  if (request.mode === 'navigate') event.waitUntil(cleanAfterNavigation(event))
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME)
     if (request.mode === 'navigate') return await cache.match(APP_SHELL) ?? fetch(request)
@@ -42,6 +64,11 @@ self.addEventListener('fetch', (event) => {
     // fetches. These same-origin build assets are identical across that Vary.
     const cached = await cache.match(request, { ignoreVary: true })
     if (cached) return cached
+    for (const name of (await caches.keys()).reverse()) {
+      if (name === CACHE_NAME || !name.startsWith(CACHE_PREFIX)) continue
+      const previous = await (await caches.open(name)).match(request, { ignoreVary: true })
+      if (previous) return previous
+    }
     return fetch(request)
   })())
 })

@@ -24,8 +24,16 @@ as soon as both players are ready, with no additional confirmations.
 The installed PWA supports local and AI play offline after its first complete
 online installation. Production builds precache every playable asset, including
 AI workers and local fonts. Online rooms still require connectivity. Updates
-activate after all existing app windows/tabs close, preserving a consistent
-build throughout an active game. Browser storage must remain available.
+activate only after their complete offline download succeeds. Reloading
+loads the latest installed build even while another game tab remains open. Those
+open games keep running their loaded code, and their older cached AI workers stay
+available offline until the older pages close. A navigation with no other open
+game pages clears superseded caches. Browser storage must remain available.
+
+If an older installed version keeps showing an outdated menu, open
+`https://ka2le.github.io/CRD/?update=1` while online. This explicit recovery link
+reloads that page after the new offline build installs, preserving the saved game
+and leaving other game windows alone.
 
 Verify with `npm run build`, `npm run lint`, and
 `node --test scripts/pwa-tests.mjs scripts/local-multiplayer-tests.mjs scripts/play-menu-tests.mjs scripts/room-tests.mjs`.

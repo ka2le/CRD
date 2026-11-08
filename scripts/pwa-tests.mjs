@@ -7,11 +7,12 @@ import vm from 'node:vm'
 const directory = resolve(process.env.CRD_BUILD_DIR || 'dist')
 const source = await readFile(resolve(directory, 'service-worker.js'), 'utf8')
 
-function worker(scope = '/CRD/', failInstall = false) {
+function worker(scope = '/CRD/', failInstall = false, windowClients = []) {
   const handlers = new Map()
   const stores = new Map()
   const deleted = []
   let claimed = false
+  let skipped = false
   const url = (request) => typeof request === 'string' ? request : request.url ?? request.href
   const origin = 'https://game.example'
   const cache = () => {
@@ -39,15 +40,20 @@ function worker(scope = '/CRD/', failInstall = false) {
       async delete(name) { deleted.push(name); return stores.delete(name) },
     },
     self: { registration: { scope: `${origin}${scope}` }, location: { origin },
-      clients: { async claim() { claimed = true } },
-      skipWaiting() { throw new Error('Must not replace an active build midway through a game') },
+      clients: { async claim() { claimed = true }, async matchAll() { return windowClients } },
+      async skipWaiting() { skipped = true },
       addEventListener(type, handler) { handlers.set(type, handler) } },
     fetch() { throw new Error('Network is offline') },
   }
   vm.runInNewContext(`${source}\nglobalThis.buildAssets = PRECACHE_ASSETS; globalThis.cacheName = CACHE_NAME`, context)
   const run = (type) => { let promise; handlers.get(type)({ waitUntil(value) { promise = value } }); return promise }
-  const fetch = (request) => { let promise; handlers.get('fetch')({ request, respondWith(value) { promise = value } }); return promise }
-  return { ...context, stores, deleted, run, fetch, claimed: () => claimed }
+  const fetch = (request, clientIds = {}) => {
+    let promise
+    const pending = []
+    handlers.get('fetch')({ request, ...clientIds, respondWith(value) { promise = value }, waitUntil(value) { pending.push(value) } })
+    return promise && Promise.all([promise, ...pending]).then(([response]) => response)
+  }
+  return { ...context, stores, deleted, run, fetch, claimed: () => claimed, skipped: () => skipped }
 }
 
 test('build precaches every emitted asset, including both workers and local fonts', async () => {
@@ -93,14 +99,48 @@ test('failed update preserves the active cache; successful activation clears onl
   assert(runtime.stores.has('crd-pwa:/CRD/:old-build'))
   assert.deepEqual(runtime.deleted, [])
   assert.equal(runtime.claimed(), false)
+  assert.equal(runtime.skipped(), false)
   const success = worker()
   await success.caches.open('crd-pwa:/CRD/:old-build')
   await success.caches.open('crd-pwa:/:unrelated-app')
   await success.run('install')
+  assert(success.skipped())
   assert.deepEqual(success.deleted, [])
   await success.run('activate')
   assert.deepEqual(success.deleted, ['crd-pwa:/CRD/:old-build'])
   assert(success.stores.has('crd-pwa:/:unrelated-app'))
   assert(success.stores.has(success.cacheName))
   assert(success.claimed())
+})
+
+test('reload gets the new shell while other open games retain their offline AI workers', async () => {
+  const clients = [{ id: 'old-game', url: 'https://game.example/CRD/' }]
+  const runtime = worker('/CRD/', false, clients)
+  const previous = await runtime.caches.open('crd-pwa:/CRD/:old-build')
+  await previous.put('https://game.example/CRD/assets/old-worker.js', new Response('old AI worker'))
+  await runtime.caches.open('crd-pwa:/:unrelated-app')
+  await runtime.run('install')
+  await runtime.run('activate')
+  assert(runtime.skipped())
+  assert.deepEqual(runtime.deleted, [])
+  const resource = await runtime.fetch({ url: 'https://game.example/CRD/assets/old-worker.js', method: 'GET',
+    headers: new Headers({ Origin: 'https://game.example' }) })
+  assert.equal(await resource.text(), 'old AI worker')
+  const navigation = { url: 'https://game.example/CRD/', method: 'GET', mode: 'navigate' }
+  assert((await (await runtime.fetch(navigation, { resultingClientId: 'new-game' })).text()).includes('<div id="root"></div>'))
+  assert.deepEqual(runtime.deleted, [])
+  await runtime.fetch(navigation, { replacesClientId: 'old-game', resultingClientId: 'new-game' })
+  assert.deepEqual(runtime.deleted, ['crd-pwa:/CRD/:old-build'])
+  assert(runtime.stores.has('crd-pwa:/:unrelated-app'))
+})
+
+test('only an explicit update link reloads an already open page during activation', async () => {
+  const navigated = []
+  const runtime = worker('/CRD/', false, [
+    { id: 'playing', url: 'https://game.example/CRD/', async navigate() { throw new Error('Active game reloaded') } },
+    { id: 'updating', url: 'https://game.example/CRD/?update=1&resume=1#room', async navigate(url) { navigated.push(url) } },
+  ])
+  await runtime.run('install')
+  await runtime.run('activate')
+  assert.deepEqual(navigated, ['https://game.example/CRD/?resume=1#room'])
 })
