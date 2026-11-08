@@ -6,7 +6,7 @@ export const emptyLineup = () => Array(15).fill(null)
 export function createTwentyCardsGame(options = {}) {
   const deck = options.deck ? [...options.deck] : buildShuffledDeck(options)
   if (deck.length < 40) throw new Error('20Cards needs at least 40 cards')
-  return { mode: '20cards', phase: 'lineup', deck: deck.slice(40),
+  return { mode: '20cards', phase: 'lineup', deck: deck.slice(40), sharedDiscardVersion: 1, discardPile: [],
     poolOptions: { tabletop: options.tabletop ?? false, wildDeck: Boolean(options.wildDeck), monsterDeck: options.monsterDeck },
     playerPool: deck.slice(0, 20), opponentPool: deck.slice(20, 40),
     playerLineup: emptyLineup(), opponentLineup: emptyLineup(),
@@ -53,7 +53,9 @@ export function lockLineup(game, side) {
   const lineup = game[`${side}Lineup`]
   if (lineup.length !== 15 || new Set(lineup).size !== 15 || lineup.some(uid => !game[`${side}Pool`].some(card => card.uid === uid))) return game
   const next = { ...game, [`${side}Locked`]: true }
-  return next.playerLocked && next.opponentLocked ? beginTwentyCardsRound(next) : next
+  if (!next.playerLocked || !next.opponentLocked) return next
+  const unused = side => next[`${side}Pool`].filter(card => !next[`${side}Lineup`].includes(card.uid))
+  return beginTwentyCardsRound({ ...next, discardPile: [...unused('player'), ...unused('opponent')] })
 }
 
 export function twentyCardsScore(results) {

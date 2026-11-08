@@ -2,7 +2,7 @@ import test, { before, after } from 'node:test'
 import assert from 'node:assert/strict'
 import { createServer } from 'vite'
 import { createDraftGame, applyDraftPick, resolveOpponentDraftPick, commitDraftDiscard, revealNextDraftPack } from '../src/game/draftMode.js'
-import { createTwentyCardsGame, chooseBotLineup } from '../src/game/twentyCards.js'
+import { createTwentyCardsGame, chooseBotLineup, lockLineup } from '../src/game/twentyCards.js'
 import { getExpandedCoreDeck, createSeededRng } from '../src/game/cards.js'
 import { createPreparationState, getPreparationActions, applyPreparationAction } from '../src/game/preparationState.js'
 import { chooseFelixNcDecision, FELIX_NC_CHECKPOINT_SHA256 } from '../src/game/felixNcBot.js'
@@ -148,6 +148,20 @@ test('preparation observations use only the public recipe, actor knowledge and p
   const seen = expected.preparation.deck[0]
   game.opponentSeenCards = [seen]
   assert(!testingPreparationObservation(preparation, game, 'opponent').preparation.deck.some(card => card.uid === seen.uid))
+})
+
+test('Sven sees the shared 20Cards pile as public Recycle targets, never as unknown draws', async () => {
+  let game = createTwentyCardsGame({ tabletop: 'abilities-new-cards', seed: 42 })
+  game = { ...game, playerLineup: game.playerPool.slice(0, 15).map(card => card.uid), opponentLineup: game.opponentPool.slice(0, 15).map(card => card.uid) }
+  game = lockLineup(lockLineup(game, 'player'), 'opponent')
+  const prep = createPreparationState(game)
+  const observation = testingPreparationObservation(prep, game, 'opponent')
+  assert.equal(observation.preparation.sharedDiscard, true)
+  assert.deepEqual(observation.preparation.opponentDiscard, game.discardPile)
+  const discarded = new Set(game.discardPile.map(card => card.uid))
+  assert(observation.preparation.deck.every(card => !discarded.has(card.uid)))
+  const patch = await requestOpponentPreparation({ ...prep, opponentActivated: prep.opponentHand.map(card => card.uid) }, game, 'sven-20cards')
+  assert.deepEqual(patch.opponentDiscard, game.discardPile)
 })
 
 test('FelixNCSecret and Sven20Cards choose private-invariant legal preparation and finish mandatory effects', async () => {

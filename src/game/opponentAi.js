@@ -105,6 +105,7 @@ export const BOT_SEARCH_PROFILES = {
   },
 }
 const PREPARATION_KEYS = ['playerHand', 'opponentHand', 'deck', 'playerDiscard', 'opponentDiscard',
+  'sharedDiscard',
   'playerActivated', 'opponentActivated', 'playerPendingDiscard', 'opponentPendingDiscard', 'playerFinished', 'opponentFinished', 'playerDrawnCount', 'opponentDrawnCount']
 const WORKER_TIMEOUT_MS = 5000
 
@@ -275,7 +276,7 @@ function inlinePreparation(preparation, game, profile) {
  */
 export function requestOpponentPreparation(preBattle, game, bot = 'search') {
   if (bot === 'felix-nc-secret' || bot === 'sven-20cards') {
-    const preparation = { ...snapshotPreparation(preBattle), playerHand: [], playerDiscard: [],
+    const preparation = { ...snapshotPreparation(preBattle), playerHand: [], playerDiscard: preBattle.sharedDiscard ? preBattle.opponentDiscard : [],
       playerActivated: [], playerPendingDiscard: null, playerFinished: false }
     const publicGame = snapshotTestingPreparationGame(game)
     return requestFromWorker(null, { kind: 'testing-preparation', preparation, game: publicGame, side: 'opponent', bot })

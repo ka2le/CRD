@@ -274,8 +274,8 @@ const isCopiedCard = (card) => Boolean(card.isCopiedCard) || card.uid.includes('
 export function preparationView(preparation, game, side = 'opponent') {
   const enemy = otherSide(side)
   const enemyPublicHand = game.mode === 'draft' ? plainCards(game[`${enemy}Hand`]) : null
-  const enemyPublicPile = plainCards(game.mode === 'draft' ? (game.draftDiscard ?? [])
-    : (game[`${enemy}Discards`] ?? game.draftDiscard ?? []))
+  const enemyPublicPile = plainCards(preparation.sharedDiscard ? preparation[`${side}Discard`]
+    : game.mode === 'draft' ? (game.draftDiscard ?? []) : (game[`${enemy}Discards`] ?? game.draftDiscard ?? []))
   const known = new Set([
     ...preparation[`${side}Hand`], ...preparation[`${side}Discard`],
     ...(enemyPublicHand ?? []), ...enemyPublicPile,
@@ -296,6 +296,7 @@ export function preparationView(preparation, game, side = 'opponent') {
   }
   return {
     mode: game.mode,
+    ...(preparation.sharedDiscard ? { sharedDiscard: true } : {}),
     side,
     ownHand: plainCards(preparation[`${side}Hand`]),
     ownDiscard: plainCards(preparation[`${side}Discard`]),
@@ -322,6 +323,7 @@ function samplePreparationWorld(view, rng) {
   return {
     ...makeState(game, side),
     preparation: {
+      ...(view.sharedDiscard ? { sharedDiscard: true } : {}),
       deck: unseen,
       [`${side}Hand`]: view.ownHand, [`${side}Discard`]: view.ownDiscard,
       [`${side}Activated`]: view.ownActivated, [`${side}Finished`]: false, [`${side}DrawnCount`]: 0,

@@ -8,13 +8,16 @@ import {
 
 export function createPreparationState(game) {
   const draftDiscard = game.draftDiscard ?? []
+  const shared = game.mode === '20cards'
+  const discardPile = shared ? [...(game.discardPile ?? [])] : null
   return {
+    ...(shared ? { sharedDiscard: true } : {}),
     playerHand: [...game.playerHand],
     opponentHand: [...game.opponentHand],
     deck: [...(game.deck ?? [])],
     // Preserve the browser's existing per-side pool semantics.
-    playerDiscard: [...(game.playerDiscards ?? draftDiscard)],
-    opponentDiscard: [...(game.opponentDiscards ?? draftDiscard)],
+    playerDiscard: discardPile ?? [...(game.playerDiscards ?? draftDiscard)],
+    opponentDiscard: discardPile ?? [...(game.opponentDiscards ?? draftDiscard)],
     playerActivated: [],
     opponentActivated: [],
     playerPendingDiscard: null,
@@ -24,6 +27,11 @@ export function createPreparationState(game) {
     playerDrawnCount: 0,
     opponentDrawnCount: 0,
   }
+}
+
+// 20Cards has one public pile; both seat-facing fields refer to that same pile.
+export function preparationDiscardPatch(state, side, cards) {
+  return state.sharedDiscard ? { playerDiscard: cards, opponentDiscard: cards } : { [`${side}Discard`]: cards }
 }
 
 function assertSide(side) {
@@ -86,7 +94,7 @@ export function applyPreparationAction(state, side, action) {
       card.uid === pending.sourceUid && pending.cardId === 'discard_for_damage'
         ? { ...card, sacrificedPower: (card.sacrificedPower ?? 0) + 1 } : card
     ))
-    return { ...state, [handKey]: hand, [discardKey]: [...state[discardKey], target],
+    return { ...state, [handKey]: hand, ...preparationDiscardPatch(state, side, [...state[discardKey], target]),
       [pendingKey]: remaining === 0 || (pending.cardId === 'discard_for_damage' && target.uid === pending.sourceUid)
         ? null : { ...pending, remaining } }
   }
@@ -133,7 +141,7 @@ export function applyPreparationAction(state, side, action) {
   return {
     ...state,
     [handKey]: result.hand,
-    [discardKey]: result.discard,
+    ...preparationDiscardPatch(state, side, result.discard),
     [activatedKey]: activated,
     [`${side}DrawnCount`]: (state[`${side}DrawnCount`] ?? 0) + state.deck.length - result.deck.length,
     deck: result.deck,

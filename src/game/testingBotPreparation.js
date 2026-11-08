@@ -16,7 +16,7 @@ export function testingPreparationObservation(preparation, game, side) {
   const ownPool = game.mode === '20cards' ? game[`${side}Pool`] : game[`${side}Hand`]
   const config = game.poolOptions ?? { tabletop: ownPool.find(card => card.tabletop)?.tabletop ?? false }
   const visibleEnemy = game.secretCard ? game[`${enemy}Hand`].filter(card => !card.secret) : []
-  const publicPile = game.secretCard ? game.draftDiscard : []
+  const publicPile = preparation.sharedDiscard ? preparation[`${side}Discard`] : game.secretCard ? game.draftDiscard : []
   const known = new Set([...ownPool, ...(game[`${side}SeenCards`] ?? []), ...(game.revealedCards ?? []),
     ...preparation[`${side}Hand`], ...preparation[`${side}Discard`], ...visibleEnemy, ...publicPile]
     .flatMap(card => [card.uid, card.sourceCopyUid].filter(Boolean)))
@@ -26,6 +26,7 @@ export function testingPreparationObservation(preparation, game, side) {
     [`${enemy}Hand`]: game.secretCard ? visibleEnemy : Array(5).fill(null),
     draftDiscard: publicPile, playerDiscards: [], opponentDiscards: [], deck: unknown }
   const publicPreparation = { ...prep.createPreparationState({ playerHand: [], opponentHand: [], deck: unknown }),
+    ...(preparation.sharedDiscard ? { sharedDiscard: true } : {}),
     [`${side}Hand`]: preparation[`${side}Hand`], [`${side}Discard`]: preparation[`${side}Discard`],
     [`${side}Activated`]: preparation[`${side}Activated`], [`${side}PendingDiscard`]: preparation[`${side}PendingDiscard`],
     [`${enemy}Hand`]: visibleEnemy, [`${enemy}Discard`]: publicPile }

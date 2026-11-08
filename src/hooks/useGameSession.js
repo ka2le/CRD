@@ -21,7 +21,7 @@ import {
   getPreBattleCopyCandidates,
   completeOpponentPreBattle,
 } from '../game/preBattle'
-import { applyPreparationAction, createPreparationState } from '../game/preparationState'
+import { applyPreparationAction, createPreparationState, preparationDiscardPatch } from '../game/preparationState'
 import { chooseDiscardIds } from '../game/cardEvaluator'
 import {
   DEFAULT_OPPONENT_AI, isSearchOpponentAi, normalizeOpponentSettings, requestOpponentPreparation, requestOpponentSearchAction, requestOpponentLineup,
@@ -237,7 +237,9 @@ function createInitialSessionState() {
       // Redeal an old test setup instead of concealing its rules behind the normal menu.
       // Older Secret Card saves threw away the opening leftovers; only a new
       // deal can supply the correct public discard pool without inventing cards.
+      // Older 20Cards saves also dropped discarded cards between rounds.
       if ((!restored.game.secretCard || restored.game.secretDiscardVersion === 1)
+        && (restored.game.mode !== '20cards' || restored.game.sharedDiscardVersion === 1)
         && settings.gameMode === restored.gameMode && Boolean(settings.secretCard) === Boolean(restored.settings.secretCard) && settings.tabletop === restored.settings.tabletop && settings.wildDeck === restored.settings.wildDeck) {
         return { ...restored, lastTransition: null, pendingPlayerDraftPickAnimation: null,
           settings,
@@ -347,6 +349,7 @@ export function sessionReducer(state, action) {
       if (twentyCardsScore(roundResults).complete) return state
       const mergeSeen = cards => [...new Map(cards.map(card => [card.uid, card])).values()]
       const game = beginTwentyCardsRound({ ...state.game, roundIndex: state.game.roundIndex + 1, roundResults,
+        discardPile: prep.playerDiscard,
         revealedCards: mergeSeen([...(state.game.revealedCards ?? []), ...prep.playerHand, ...prep.opponentHand]),
         playerSeenCards: mergeSeen([...(state.game.playerSeenCards ?? []), ...prep.playerHand, ...prep.playerDiscard]),
         opponentSeenCards: mergeSeen([...(state.game.opponentSeenCards ?? []), ...prep.opponentHand, ...prep.opponentDiscard]),
@@ -614,7 +617,7 @@ export function sessionReducer(state, action) {
             ...current,
             playerHand: result.playerHand,
             deck: result.deck,
-            playerDiscard: result.playerDiscard,
+            ...preparationDiscardPatch(current, 'player', result.playerDiscard),
             playerActivated: result.playerActivated,
             armedPlayerCopyUid: null,
             recycleSelection: null,
@@ -688,7 +691,7 @@ export function sessionReducer(state, action) {
           ...current,
           playerHand: result.playerHand,
           deck: result.deck,
-          playerDiscard: result.playerDiscard,
+          ...preparationDiscardPatch(current, 'player', result.playerDiscard),
           playerActivated: result.playerActivated,
           playerDrawnCount: result.playerDrawnCount,
           playerPendingDiscard: result.playerPendingDiscard
@@ -783,7 +786,7 @@ export function sessionReducer(state, action) {
         preBattle: {
           ...current,
           playerHand: result.playerHand,
-          playerDiscard: result.playerDiscard,
+          ...preparationDiscardPatch(current, 'player', result.playerDiscard),
           playerActivated: result.playerActivated,
           recycleSelection: null,
           activationTick: current.activationTick + 1,
@@ -812,7 +815,7 @@ export function sessionReducer(state, action) {
           ...current,
           playerHand: resolution.hand,
           deck: resolution.deck,
-          playerDiscard: resolution.discard,
+          ...preparationDiscardPatch(current, 'player', resolution.discard),
           playerDrawnCount: resolution.drawnCount,
           pendingAnimation: null,
           pendingResolution: null,
@@ -880,7 +883,8 @@ export function sessionReducer(state, action) {
       }
       if (action.opponentPreparation && action.decisionKey !== state.preBattle.opponentSearchKey) return state
       const preparedPreBattle = action.opponentPreparation
-        ? { ...state.preBattle, ...action.opponentPreparation, opponentSearchKey: null }
+        ? { ...state.preBattle, ...action.opponentPreparation,
+          ...preparationDiscardPatch(state.preBattle, 'opponent', action.opponentPreparation.opponentDiscard), opponentSearchKey: null }
         : completeOpponentPreBattle(state.preBattle)
       return createTransitionResult(state, {
         preBattle: preparedPreBattle,
@@ -1534,7 +1538,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     activatablePreBattleIds: playerPreBattleView.cards.map((card) => card.uid),
     copyCandidateIds: playerPreBattleView.armedCopyCard ? playerPreBattleView.copyCandidates.map((card) => card.uid) : [],
     isPreBattleReady,
-    discardCards: isPreBattleReady
+    discardCards: game.mode === '20cards' ? (game.phase === 'battle-ready' ? preBattle.playerDiscard : game.discardPile) : isPreBattleReady
       ? preBattle.playerDiscard
       : (game.mode === 'draft' ? game.draftDiscard : game.playerDiscards),
     resolvedPlayerHand,

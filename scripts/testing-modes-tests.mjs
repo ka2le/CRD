@@ -104,6 +104,112 @@ test('20Cards deals 20 each, moves and swaps unique cards, rejects invalid place
   assert.deepEqual(game.playerHand.map(card => card.uid), game.playerLineup.slice(0, 5))
 })
 
+test('20Cards publishes exactly ten unused cards only after both locks, for every pool and lock order', () => {
+  for (const tabletop of [false, 'abilities-new-cards', 'monsters']) for (const first of ['player', 'opponent']) {
+    let game = createTwentyCardsGame({ tabletop, seed: 12 })
+    game.playerLineup = game.playerPool.slice(0, 15).map(card => card.uid)
+    game.opponentLineup = game.opponentPool.slice(0, 15).map(card => card.uid)
+    game = lockLineup(game, first)
+    assert.deepEqual(game.discardPile, [])
+    game = lockLineup(JSON.parse(JSON.stringify(game)), first === 'player' ? 'opponent' : 'player')
+    const expected = [...game.playerPool.slice(15), ...game.opponentPool.slice(15)].map(card => card.uid)
+    assert.deepEqual(game.discardPile.map(card => card.uid), expected)
+    const active = [...game.deck, ...game.discardPile, ...game.playerPool.slice(0, 15), ...game.opponentPool.slice(0, 15)]
+    assert.equal(new Set(active.map(card => card.uid)).size, active.length)
+    const prep = createPreparationState(game)
+    assert.equal(prep.sharedDiscard, true)
+    assert.deepEqual(prep.playerDiscard, game.discardPile)
+    assert.deepEqual(prep.opponentDiscard, game.discardPile)
+  }
+})
+
+function twentyDiscardFixture() {
+  const remaining = getExpandedCoreDeck({ tabletop: 'abilities-new-cards' })
+  const take = id => remaining.splice(remaining.findIndex(card => card.id === id), 1)[0]
+  const own = ['draw_2_discard_2', 'discard_for_damage', 'draw_all_new_1', 'rabbit2', 'robot2'].map(take)
+  const enemy = ['recycle_card', 'copy_card_in_hand', 'dragon1', 'dragon1', 'robot1'].map(take)
+  let game = createTwentyCardsGame({ deck: [...own, ...remaining.splice(0, 15), ...enemy, ...remaining.splice(0, 15), ...remaining] })
+  game = { ...game, playerLineup: game.playerPool.slice(0, 15).map(card => card.uid), opponentLineup: game.opponentPool.slice(0, 15).map(card => card.uid) }
+  return lockLineup(lockLineup(game, 'player'), 'opponent')
+}
+
+test('20Cards shares prep discards and Recycle removals across both players and later rounds', () => {
+  const game = twentyDiscardFixture()
+  let prep = createPreparationState(game)
+  const source = id => prep.playerHand.find(card => card.id === id).uid
+  const draw = source('draw_2_discard_2'), damage = source('discard_for_damage'), redraw = source('draw_all_new_1')
+  const victims = prep.playerHand.slice(3).map(card => card.uid)
+  prep = applyPreparationAction(prep, 'player', { type: 'prepare', sourceUid: draw })
+  for (const targetUid of victims) prep = applyPreparationAction(prep, 'player', { type: 'discard-preparation', sourceUid: draw, targetUid })
+  assert.equal(prep.playerDiscard.length, 12)
+  assert.deepEqual(prep.opponentDiscard, prep.playerDiscard)
+  const recycle = prep.opponentHand.find(card => card.id === 'recycle_card').uid
+  prep = applyPreparationAction(JSON.parse(JSON.stringify(prep)), 'opponent', { type: 'prepare', sourceUid: recycle, targetUid: victims[0] })
+  assert(prep.opponentHand.some(card => card.uid === victims[0]))
+  assert(!prep.playerDiscard.some(card => card.uid === victims[0]))
+  assert.deepEqual(prep.opponentDiscard, prep.playerDiscard)
+  prep = applyPreparationAction(prep, 'player', { type: 'prepare', sourceUid: damage })
+  prep = applyPreparationAction(prep, 'player', { type: 'discard-preparation', sourceUid: damage, targetUid: draw })
+  prep = applyPreparationAction(prep, 'player', { type: 'finish-preparation-discard', sourceUid: damage })
+  const redrawn = prep.playerHand.map(card => card.uid), before = prep.playerDiscard.length
+  prep = applyPreparationAction(prep, 'player', { type: 'prepare', sourceUid: redraw })
+  assert.equal(prep.playerDiscard.length, before + redrawn.length)
+  assert(redrawn.every(uid => prep.opponentDiscard.some(card => card.uid === uid)))
+  assert.equal(new Set(prep.playerDiscard.map(card => card.uid)).size, prep.playerDiscard.length)
+  const future = [...game.playerPool, ...game.opponentPool].filter(card => [...game.playerLineup.slice(5), ...game.opponentLineup.slice(5)].includes(card.uid))
+  const physical = [...prep.playerHand, ...prep.opponentHand, ...prep.playerDiscard, ...prep.deck, ...future]
+  assert.equal(physical.length, 73)
+  assert.equal(new Set(physical.map(card => card.uid)).size, 73)
+  const state = { ...session(game), preBattle: prep, battleStarted: true }
+  state.settings.tabletop = false
+  const next = api.sessionReducer(JSON.parse(JSON.stringify(state)), { type: 'NEXT_MATCH_ROUND' })
+  assert.deepEqual(next.game.discardPile, prep.playerDiscard)
+  assert.deepEqual(next.preBattle.playerDiscard, prep.playerDiscard)
+  assert.deepEqual(next.preBattle.opponentDiscard, prep.playerDiscard)
+  assert.deepEqual(next.preBattle.playerHand.map(card => card.uid), game.playerLineup.slice(5, 10))
+  assert(!next.preBattle.playerDiscard.some(card => [...next.preBattle.playerHand, ...next.preBattle.opponentHand].some(held => held.uid === card.uid)))
+})
+
+test('20Cards lets either seat Recycle the other seat’s unused cards exactly once', () => {
+  const game = twentyDiscardFixture()
+  const recycle = game.opponentHand.find(card => card.id === 'recycle_card')
+  for (const side of ['player', 'opponent']) {
+    const enemy = side === 'player' ? 'opponent' : 'player'
+    const targetUid = game[`${enemy}Pool`][15].uid
+    let prep = createPreparationState({ ...game, [`${side}Hand`]: [recycle] })
+    assert(getPreparationActions(prep, side).some(action => action.targetUid === targetUid))
+    prep = applyPreparationAction(prep, side, { type: 'prepare', sourceUid: recycle.uid, targetUid })
+    assert(prep[`${side}Hand`].some(card => card.uid === targetUid))
+    assert(!prep.playerDiscard.some(card => card.uid === targetUid))
+    assert(!prep.opponentDiscard.some(card => card.uid === targetUid))
+  }
+  let state = rooms.applyRoomAction(session(game, 'local'), 'guest', { type: 'ACTIVATE_PLAYER_PRE_BATTLE_CARD', uid: recycle.uid })
+  state = rooms.applyRoomAction(state, 'guest', { type: 'RESOLVE_PLAYER_RECYCLE_PICK', uid: game.playerPool[15].uid })
+  assert.equal(state.preBattle.playerDiscard.length, 9)
+  assert.deepEqual(state.preBattle.playerDiscard, state.preBattle.opponentDiscard)
+  assert(state.preBattle.opponentHand.some(card => card.uid === game.playerPool[15].uid))
+})
+
+test('20Cards browser reducer commits redraw, Recycle and async bot pile changes to both seats', () => {
+  const game = twentyDiscardFixture()
+  let state = session(game, 'sven-20cards')
+  const redraw = game.playerHand.find(card => card.id === 'draw_all_new_1').uid
+  state = api.sessionReducer(state, { type: 'ACTIVATE_PLAYER_PRE_BATTLE_CARD', uid: redraw })
+  assert(state.preBattle.pendingResolution)
+  assert.equal(state.preBattle.playerDiscard.length, 10)
+  state = api.sessionReducer(state, { type: 'RESOLVE_PRE_BATTLE_PENDING_DRAW_ALL_NEW_1' })
+  assert.equal(state.preBattle.playerDiscard.length, 15)
+  assert.deepEqual(state.preBattle.opponentDiscard, state.preBattle.playerDiscard)
+  const [recycled, ...discard] = state.preBattle.opponentDiscard
+  state.settings.tabletop = false
+  state = api.sessionReducer(state, { type: 'START_BATTLE' })
+  state = api.sessionReducer(state, { type: 'START_BATTLE', decisionKey: state.preBattle.opponentSearchKey,
+    opponentPreparation: { opponentHand: [...state.preBattle.opponentHand, recycled], opponentDiscard: discard, opponentFinished: true, deck: state.preBattle.deck } })
+  assert.equal(state.battleStarted, true)
+  assert.equal(state.preBattle.playerDiscard.length, 14)
+  assert.deepEqual(state.preBattle.playerDiscard, state.preBattle.opponentDiscard)
+})
+
 test('special modes disappear when Testing is off and use only compatible opponents', () => {
   const settings = { gameMode: '20cards', testing: true, secretCard: true, tabletop: 'monsters', opponentAi: 'felix' }
   const normal = api.normalizePlaySettings(settings, { testing: false })
