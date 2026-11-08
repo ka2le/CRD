@@ -7,6 +7,9 @@ import { chooseDanDecision } from './danBot.js'
 import { chooseFelixDecision } from './felixBot.js'
 import { getFelixPreparationOptions } from './felixNcBot.js'
 import { completeFastPreparation } from './fastPreparation.js'
+import { chooseFelixNcSecretDecision } from './felixNcSecretBot.js'
+import { chooseSvenTwentyLineup } from './svenTwentyCards.js'
+import { completeTestingBotPreparation } from './testingBotPreparation.js'
 
 // Ids stay 'rules' / 'search' so saved settings keep working; the names are what players see.
 export const OPPONENT_AI_OPTIONS = [
@@ -18,7 +21,14 @@ export const OPPONENT_AI_OPTIONS = [
   { id: 'david', name: 'DavidBot', label: 'DavidBot (Very Hard)' },
 ]
 
-export function getOpponentAiOptions(mode, tabletop = false) {
+export const TESTING_OPPONENT_AI_OPTIONS = [
+  { id: 'felix-nc-secret', name: 'FelixNCSecret', label: 'FelixNCSecret' },
+  { id: 'sven-20cards', name: 'Sven20Cards', label: 'Sven20Cards' },
+]
+
+export function getOpponentAiOptions(mode, tabletop = false, { secretCard = false } = {}) {
+  if (mode === '20cards') return [OPPONENT_AI_OPTIONS[0], TESTING_OPPONENT_AI_OPTIONS[1]]
+  if (secretCard) return [OPPONENT_AI_OPTIONS[0], ...(tabletop === 'abilities-new-cards' ? [TESTING_OPPONENT_AI_OPTIONS[0]] : [])]
   return OPPONENT_AI_OPTIONS.filter(option => tabletop !== 'monsters' || ['rules', 'search'].includes(option.id)).filter(option => tabletop !== 'abilities-new-cards' || !['dan', 'david'].includes(option.id)).filter(option => mode === 'five-hand-discard' ? !['dan', 'felix'].includes(option.id) : option.id !== 'david')
 }
 
@@ -26,7 +36,7 @@ export const DEFAULT_OPPONENT_AI = 'dan'
 
 export function normalizeOpponentAi(value) {
   if (value === 'local') return value
-  return OPPONENT_AI_OPTIONS.some((option) => option.id === value) ? value : DEFAULT_OPPONENT_AI
+  return [...OPPONENT_AI_OPTIONS, ...TESTING_OPPONENT_AI_OPTIONS].some((option) => option.id === value) ? value : DEFAULT_OPPONENT_AI
 }
 
 // Dan/David are one linked choice; common bots (including Sven) follow the player
@@ -36,10 +46,16 @@ export function normalizeOpponentSettings(current, patch = {}) {
   const active = current.opponentAi ?? (current.gameMode === 'five-hand-discard' ? current.discardOpponentAi : current.draftOpponentAi)
   let selected = normalizeOpponentAi(Object.hasOwn(patch, 'opponentAi') ? patch.opponentAi : active)
   const explicitSelection = Object.hasOwn(patch, 'opponentAi')
-  if (!explicitSelection && next.gameMode !== 'five-hand-discard' && current.draftOpponentAi === 'felix' &&
+  if (!explicitSelection && next.gameMode === 'draft' && current.draftOpponentAi === 'felix' &&
       (selected === 'david' || (current.tabletop === 'abilities-new-cards' && current.gameMode === 'five-hand-discard'))) selected = 'felix'
+  if (selected === 'felix-nc-secret' && (!next.secretCard || next.tabletop !== 'abilities-new-cards')) selected = 'felix'
+  if (selected === 'sven-20cards' && next.gameMode !== '20cards') selected = 'search'
+  if (next.gameMode === '20cards' && isSearchOpponentAi(selected)) selected = 'sven-20cards'
+  if (next.secretCard && next.tabletop === 'abilities-new-cards' && selected === 'felix') selected = 'felix-nc-secret'
+  if ((next.secretCard || next.gameMode === '20cards') && selected !== 'local'
+    && !getOpponentAiOptions(next.gameMode, next.tabletop, { secretCard: next.secretCard }).some(option => option.id === selected)) selected = 'rules'
   if (next.tabletop === 'abilities-new-cards' && ['dan', 'david'].includes(selected)) selected = 'shallow'
-  if (next.tabletop === 'monsters' && !['local', 'rules', 'search'].includes(selected)) selected = 'rules'
+  if (next.tabletop === 'monsters' && !['local', 'rules', 'search', 'sven-20cards'].includes(selected)) selected = 'rules'
   const linked = selected === 'dan' || selected === 'david'
   const keepFelix = !Object.hasOwn(patch, 'opponentAi') && current.draftOpponentAi === 'felix' && selected === 'david'
   next.discardOpponentAi = linked || selected === 'felix' ? 'david' : selected
@@ -53,12 +69,12 @@ export function normalizeOpponentSettings(current, patch = {}) {
 }
 
 export function getOpponentAiName(id) {
-  return (OPPONENT_AI_OPTIONS.find((option) => option.id === id) ?? OPPONENT_AI_OPTIONS[0]).name
+  return ([...OPPONENT_AI_OPTIONS, ...TESTING_OPPONENT_AI_OPTIONS].find((option) => option.id === id) ?? OPPONENT_AI_OPTIONS[0]).name
 }
 
 // Bots that search (everything except RolfBot, which plays the Rules AI directly).
 export function isSearchOpponentAi(id) {
-  return id === 'dan' || id === 'felix' || id === 'david' || Boolean(BOT_SEARCH_PROFILES[id])
+  return ['dan', 'felix', 'david', 'felix-nc-secret', 'sven-20cards'].includes(id) || Boolean(BOT_SEARCH_PROFILES[id])
 }
 
 // Search budgets per bot. `decision` covers draft picks / discard passes, `preparation` each
@@ -182,6 +198,12 @@ function requestFromWorker(game, message) {
  * to the player for retry; a slow David turn must never silently become Sven.
  */
 export function requestOpponentSearchAction(game, bot = 'search', options = {}) {
+  if (bot === 'felix-nc-secret') {
+    return requestFromWorker(null, { game: snapshotSecretDraft(game), side: 'opponent', bot })
+      .catch(() => new Promise((resolve, reject) => setTimeout(() => {
+        try { resolve(chooseFelixNcSecretDecision(snapshotSecretDraft(game)).action) } catch (error) { reject(error) }
+      }, 0)))
+  }
   if (bot === 'david' && game.mode === 'five-hand-discard') return requestDavidAction(snapshotGame(game), options)
   if ((bot === 'dan' || bot === 'felix') && game.mode === 'draft') {
     const choose = bot === 'felix' ? chooseFelixDecision : chooseDanDecision
@@ -196,6 +218,28 @@ export function requestOpponentSearchAction(game, bot = 'search', options = {}) 
     // Yield first so a pending animation frame can paint before the inline search.
     setTimeout(() => resolve(inlineSearch(game, profile)), 0)
   }))
+}
+
+function snapshotSecretDraft(game) {
+  // The worker receives only the acting bot's cards and public opposing picks.
+  return { mode: game.mode, handSize: game.handSize, secretCard: game.secretCard, secretOpening: game.secretOpening,
+    draftRow: game.draftRow, opponentHand: game.opponentHand,
+    playerHand: game.secretOpening ? [] : game.playerHand.filter(card => !card.secret) }
+}
+
+function snapshotTestingPreparationGame(game) {
+  return { mode: game.mode, secretCard: game.secretCard, poolOptions: game.poolOptions,
+    opponentHand: game.opponentHand, opponentPool: game.opponentPool, opponentSeenCards: game.opponentSeenCards,
+    revealedCards: game.revealedCards, draftDiscard: game.draftDiscard ?? [],
+    playerHand: game.secretCard ? game.playerHand.filter(card => !card.secret) : [] }
+}
+
+export function requestOpponentLineup(pool, { seed = Math.floor(Math.random() * 0x7fffffff) } = {}) {
+  return requestFromWorker(null, { kind: '20cards-lineup', pool, options: { seed } })
+    .catch(() => new Promise((resolve, reject) => setTimeout(() => {
+      try { resolve(chooseSvenTwentyLineup(pool, { seed })) } catch (error) { reject(error) }
+    }, 0)))
+    .then(result => result.lineup)
 }
 
 // Only the shared preparation fields (no UI bookkeeping) cross into the worker.
@@ -230,6 +274,16 @@ function inlinePreparation(preparation, game, profile) {
  * Always resolves: worker → short main-thread search → Rules AI preparation.
  */
 export function requestOpponentPreparation(preBattle, game, bot = 'search') {
+  if (bot === 'felix-nc-secret' || bot === 'sven-20cards') {
+    const preparation = { ...snapshotPreparation(preBattle), playerHand: [], playerDiscard: [],
+      playerActivated: [], playerPendingDiscard: null, playerFinished: false }
+    const publicGame = snapshotTestingPreparationGame(game)
+    return requestFromWorker(null, { kind: 'testing-preparation', preparation, game: publicGame, side: 'opponent', bot })
+      .catch(() => new Promise((resolve, reject) => setTimeout(() => {
+        try { resolve(completeTestingBotPreparation(preparation, publicGame, 'opponent', bot).preparation) } catch (error) { reject(error) }
+      }, 0)))
+      .then(opponentPreparationPatch)
+  }
   if (bot === 'dan' || bot === 'felix' || bot === 'david') {
     const preparation = snapshotPreparation(preBattle)
     const options = bot === 'felix' ? getFelixPreparationOptions(game) : {}

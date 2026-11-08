@@ -65,6 +65,7 @@ export function createDraftGame({
     const playerSecretPack = markCards(deck.slice(0, 5), openingDraftAnimation)
     const opponentSecretPack = markCards(deck.slice(5, 10), openingDraftAnimation)
     return { mode: 'draft', secretCard: true, secretOpening: true, secretDiscardVersion: 1, handSize: startingHandSize(tabletop),
+      poolOptions: { tabletop, wildDeck, monsterDeck },
       packSize: tabletop === 'monsters' ? MONSTER_PACK_SIZE : 5,
       phase: 'draft-player-pick', currentPicker: 'player', firstPicker,
       deck: deck.slice(10), draftRow: playerSecretPack, playerSecretPack, opponentSecretPack,

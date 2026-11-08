@@ -165,7 +165,7 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
               aria-label="Opponent"
             >
               {humanOpponent ? <option value="human">Player in room</option> : null}
-              {getOpponentAiOptions(gameMode, settings.tabletop).filter(option => !(settings.secretCard || gameMode === '20cards') || option.id === 'rules').map((option) => (
+              {getOpponentAiOptions(gameMode, settings.tabletop, { secretCard: settings.secretCard }).map((option) => (
                 <option key={option.id} value={option.id}>{option.label}</option>
               ))}
               <option value="local">2 players · same screen</option>

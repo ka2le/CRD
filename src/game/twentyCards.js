@@ -7,6 +7,7 @@ export function createTwentyCardsGame(options = {}) {
   const deck = options.deck ? [...options.deck] : buildShuffledDeck(options)
   if (deck.length < 40) throw new Error('20Cards needs at least 40 cards')
   return { mode: '20cards', phase: 'lineup', deck: deck.slice(40),
+    poolOptions: { tabletop: options.tabletop ?? false, wildDeck: Boolean(options.wildDeck), monsterDeck: options.monsterDeck },
     playerPool: deck.slice(0, 20), opponentPool: deck.slice(20, 40),
     playerLineup: emptyLineup(), opponentLineup: emptyLineup(),
     playerLocked: false, opponentLocked: false, playerHand: [], opponentHand: [],

@@ -109,7 +109,7 @@ test('special modes disappear when Testing is off and use only compatible oppone
   const normal = api.normalizePlaySettings(settings, { testing: false })
   assert.equal(normal.gameMode, 'draft'); assert.equal(normal.secretCard, false)
   assert.equal(normal.tabletop, 'abilities-new-cards')
-  assert.equal(api.normalizePlaySettings(settings).opponentAi, 'rules')
+  assert.equal(api.normalizePlaySettings(settings).opponentAi, 'sven-20cards')
   assert.equal(api.normalizePlaySettings(settings, { opponentAi: 'local' }).opponentAi, 'local')
   assert.equal(api.normalizePlaySettings(settings).secretCard, false)
 })

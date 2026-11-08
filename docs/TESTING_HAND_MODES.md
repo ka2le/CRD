@@ -1,6 +1,6 @@
 # Secret Card and 20Cards
 
-Released on 2026-11-08. Both are experimental menu choices behind Testing. Normal Draft and Discard keep their existing rules. These variants currently support RolfBot and two players on the same screen; online rooms retain their normal setup.
+Released on 2026-11-08. Both are experimental menu choices behind Testing. Normal Draft and Discard keep their existing rules. They offer RolfBot and same-screen play, plus FelixNCSecret in NC Secret Card Draft and Sven20Cards in 20Cards. Online rooms retain their normal setup.
 
 ## Secret Card
 
@@ -10,11 +10,17 @@ An update from the earlier Secret Card rules redeals an old secret game on reloa
 
 Once both players have selected their secret card, the ordinary alternating draft resumes at pack two. Regular rules produce five cards per hand; Monsters still produces six, with six-card public packs after the private five-card opening choices. Same-screen play uses private handoffs for the opening choices, then its usual public table; only the active seat's secret is visible during public drafting.
 
+**FelixNCSecret** reuses the unchanged FelixNC checkpoint `e9b03e264b3e486fa93fb8f7a084a62b683540d405c7a57bcf8ce85d632958af`. The opening is exactly its normal actor-first five-card call. Subsequent picks keep its secret alongside all its public cards, omit the rival's secret, and pad that missing enemy feature slot with zeros to satisfy the frozen equal-length encoder. This deliberately optimistic transfer requires no retraining. The bot never reads the hidden identity or actual draw order when selecting a pick. Native preparation uses the same 12,000-node/depth-eight bound, seeing only the rival's public drafted cards and a draw distribution derived from the public deck recipe. Other rule sets, including six-card Monsters, do not offer this adapter.
+
 ## 20Cards
 
 The third hand-building mode appears beside Draft and Discard only while Testing is enabled. Deal twenty distinct cards to each player from one shuffled deck. Each player arranges fifteen of their own cards in three ordered lanes of five. Cards can be dragged using mouse or touch; tapping a card followed by a slot also works. Moving between filled lanes swaps cards. Replacing a filled slot from the pool returns its old card to the pool. A card can also return to the unused pool.
 
 All three lanes must be full and contain unique cards before Lock all three is enabled. Each player's lock is final. Neither specials nor any draws activate during lineup selection. Five unselected cards per player stay out of play, and all future lanes remain reserved. RolfBot builds its lanes using only its own twenty cards. Same-screen players arrange and lock their lineups behind private handoffs.
+
+**Sven20Cards** evaluates all 15,504 five-card combinations from its own twenty cards. A subset/complement search finds the best disjoint pair under the current hand evaluator: maximize the weaker of the two hands first, then their combined score. It selects the best remaining five-card hand as the third lane and randomly permutes the three lanes into rounds one through three. This searches combinations rather than shuffled-deck rollouts; it does not activate specials or peek at their future draws while building lanes. The worker receives only its own twenty-card pool. The ranking is a hand-strength heuristic, not a certified match-win probability.
+
+Sven20Cards uses bounded Sven preparation search in each actual round. Its unknown pool comes from the public deck recipe after subtracting its own twenty cards, its own observed draws/discards and previously revealed battle cards. It never reads the opponent's twenty-card pool, reserved lanes, private preparation or actual deck order to select an action. Only after choosing a legal activation does the official resolver draw from the real shared deck. Normal digital, tabletop and Monster pools are supported, always with five cards per 20Cards lane.
 
 After both locks, prepare and battle lane one, then lane two, and lane three if neither player has won twice. Each lane begins with exactly its original five assigned cards, fresh preparation flags and an empty discard pool. Preparation draws come from the shared undealt deck and consume it across rounds. Draws, transformations, discards and choices in one round cannot alter another reserved lane. Opponent hands stay hidden until that round's battle, regardless of the Opponent cards setting. Unplayed lanes are never revealed.
 
@@ -34,3 +40,5 @@ Monsters, Secret Card and each 20Cards round use the normal animated resolution:
 - `src/game/localMultiplayer.js` and `src/network/roomGame.js`: same-screen ownership, private handoffs and mirrored lane/results state.
 - `src/components/board/TwentyCardsBoard.jsx`: responsive lineup board, touch/mouse drag and tap placement.
 - `scripts/testing-modes-tests.mjs`: private packs, alternating continuation, locks, delayed special activation, reserved hands, deck consumption, round scoring and both same-screen variants.
+- `src/game/felixNcSecretBot.js`, `src/game/svenTwentyCards.js`, `src/game/testingBotPreparation.js`: frozen-model Secret adapter, exhaustive disjoint-pair lineup search and private-information preparation.
+- `scripts/testing-bots-tests.mjs`: original-model opening parity, all five adapted pick stages, hidden-information invariance, independent pair optimum, randomized lane order, menu normalization, worker payloads and mandatory preparation.

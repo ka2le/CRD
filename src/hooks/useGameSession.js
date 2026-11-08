@@ -24,7 +24,7 @@ import {
 import { applyPreparationAction, createPreparationState } from '../game/preparationState'
 import { chooseDiscardIds } from '../game/cardEvaluator'
 import {
-  DEFAULT_OPPONENT_AI, isSearchOpponentAi, normalizeOpponentSettings, requestOpponentPreparation, requestOpponentSearchAction,
+  DEFAULT_OPPONENT_AI, isSearchOpponentAi, normalizeOpponentSettings, requestOpponentPreparation, requestOpponentSearchAction, requestOpponentLineup,
 } from '../game/opponentAi'
 import { getTabletopChoice, getTabletopHandKey, getCardTabletopTypes, normalizeTabletopRules, normalizePlayableTabletopRules } from '../game/tabletop'
 import { createDevScenario, DEV_SCENARIO_NAMES } from '../game/devScenarios'
@@ -75,7 +75,6 @@ export function normalizePlaySettings(settings, patch = {}) {
   const next = normalizeOpponentSettings(settings, {
     ...patch,
     testing, gameMode, secretCard,
-    ...(specialMode && (patch.opponentAi ?? settings.opponentAi) !== 'local' ? { opponentAi: 'rules' } : {}),
     ...(!testing ? { tabletop: 'abilities-new-cards', wildDeck: false, showOpponentCards: true } : {}),
   })
   next.tabletop = normalizePlayableTabletopRules(next.tabletop)
@@ -122,6 +121,7 @@ function withOpponentAiTurn(game, settings) {
 
 // Identifies one opponent decision, so stale search results are ignored.
 export function getOpponentDecisionKey(dealId, game) {
+  if (game.mode === '20cards') return `${dealId}:20cards:${game.roundIndex}:lineup`
   if (game.mode === 'draft') return `${dealId}:draft:${game.packNumber}:${game.picksThisPack}`
   if (game.concurrentOpponent) return `${dealId}:david-discard:${game.opponentDiscardsUsed}`
   return `${dealId}:discard:${game.phase}`
@@ -324,10 +324,17 @@ export function sessionReducer(state, action) {
       if (state.game.mode !== '20cards') return state
       let game = lockLineup(state.game, 'player')
       if (game === state.game) return state
-      if (state.settings.opponentAi !== 'local' && !state.onlineHuman && !game.opponentLocked) {
+      if (!['local', 'sven-20cards'].includes(state.settings.opponentAi) && !state.onlineHuman && !game.opponentLocked) {
         game = lockLineup({ ...game, opponentLineup: chooseBotLineup(game.opponentPool) }, 'opponent')
       }
       return { ...state, game, preBattle: createPreBattleState(game) }
+    }
+    case 'SET_OPPONENT_LINEUP': {
+      if (state.settings.opponentAi !== 'sven-20cards' || state.game.mode !== '20cards'
+        || state.game.phase !== 'lineup' || !state.game.playerLocked || state.game.opponentLocked
+        || action.decisionKey !== getOpponentDecisionKey(state.dealId, state.game) || !Array.isArray(action.lineup)) return state
+      const game = lockLineup({ ...state.game, opponentLineup: action.lineup }, 'opponent')
+      return game.opponentLocked ? { ...state, game, preBattle: createPreBattleState(game) } : state
     }
     case 'NEXT_MATCH_ROUND': {
       if (state.game.mode !== '20cards' || !state.battleStarted) return state
@@ -338,7 +345,12 @@ export function sessionReducer(state, action) {
         : simulateBattle(prep.playerHand, prep.opponentHand, { deck: prep.deck }).winner
       const roundResults = [...state.game.roundResults, winner]
       if (twentyCardsScore(roundResults).complete) return state
-      const game = beginTwentyCardsRound({ ...state.game, roundIndex: state.game.roundIndex + 1, roundResults }, prep.deck)
+      const mergeSeen = cards => [...new Map(cards.map(card => [card.uid, card])).values()]
+      const game = beginTwentyCardsRound({ ...state.game, roundIndex: state.game.roundIndex + 1, roundResults,
+        revealedCards: mergeSeen([...(state.game.revealedCards ?? []), ...prep.playerHand, ...prep.opponentHand]),
+        playerSeenCards: mergeSeen([...(state.game.playerSeenCards ?? []), ...prep.playerHand, ...prep.playerDiscard]),
+        opponentSeenCards: mergeSeen([...(state.game.opponentSeenCards ?? []), ...prep.opponentHand, ...prep.opponentDiscard]),
+      }, prep.deck)
       return { ...state, game, preBattle: createPreBattleState(game), battleStarted: false, battleLogOpen: false,
         battleInstance: state.battleInstance + 1, gameSessionKey: state.gameSessionKey + 1,
         otherUi: {}, selectedIds: [], suppressedHandCardIds: { player: [], opponent: [] } }
@@ -986,6 +998,8 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
   const awaitingSearchDraftPick = searchOpponent && game.mode === 'draft'
     && game.phase === 'draft-opponent-thinking' && !game.pendingOpponentPickUid
   const opponentDecisionKey = getOpponentDecisionKey(dealId, game)
+  const awaitingLineupDecision = !online && !localMultiplayer && settings.opponentAi === 'sven-20cards'
+    && game.mode === '20cards' && game.phase === 'lineup' && game.playerLocked && !game.opponentLocked
   const opponentPreparing = (Boolean(preBattle.opponentSearchKey) || (online && preBattle.playerFinished)) && !battleStarted
   const canStartBattle = !onlineBlocked && !battleStarted && game.phase === 'battle-ready' && !preBattle.pendingResolution && !preBattle.playerPendingDiscard && !opponentPreparing
   const pendingDraftPickUid = game.pendingOpponentPickUid ?? null
@@ -1327,6 +1341,20 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     revealHandCard,
     scheduleTimeout,
   ])
+
+  // Sven arranges only its own pool off the UI thread after the player locks.
+  useEffect(() => {
+    if (!awaitingLineupDecision) return undefined
+    let cancelled = false
+    requestOpponentLineup(game.opponentPool).then(lineup => {
+      if (!cancelled) dispatch({ type: 'SET_OPPONENT_LINEUP', lineup, decisionKey: opponentDecisionKey })
+    }).catch(() => {
+      if (!cancelled) setAiFeedback({ key: opponentDecisionKey, error: 'Sven20Cards could not finish arranging its hands. Please retry.' })
+    })
+    return () => { cancelled = true }
+  // The decision key changes exactly when a new decision starts.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [awaitingLineupDecision, opponentDecisionKey, aiRetry])
 
   // Search AI draft pick: ask the worker, then hand the pick to the normal draft flow.
   useEffect(() => {
