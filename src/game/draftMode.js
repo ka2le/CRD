@@ -64,7 +64,7 @@ export function createDraftGame({
   if (secretCard) {
     const playerSecretPack = markCards(deck.slice(0, 5), openingDraftAnimation)
     const opponentSecretPack = markCards(deck.slice(5, 10), openingDraftAnimation)
-    return { mode: 'draft', secretCard: true, secretOpening: true, handSize: startingHandSize(tabletop),
+    return { mode: 'draft', secretCard: true, secretOpening: true, secretDiscardVersion: 1, handSize: startingHandSize(tabletop),
       packSize: tabletop === 'monsters' ? MONSTER_PACK_SIZE : 5,
       phase: 'draft-player-pick', currentPicker: 'player', firstPicker,
       deck: deck.slice(10), draftRow: playerSecretPack, playerSecretPack, opponentSecretPack,
@@ -227,10 +227,14 @@ export function resolveOpponentDraftPick(game, options = {}) {
 
 function pickSecretCard(game, side, card) {
   const next = { ...game, [`${side}Hand`]: [{ ...card, secret: true }],
-    [`${side}SecretPack`]: [], pendingOpponentPickUid: null, recentMoves: [] }
+    [`${side}SecretPack`]: game.draftRow.filter(entry => entry.uid !== card.uid),
+    pendingOpponentPickUid: null, recentMoves: [] }
   if (next.playerHand.length && next.opponentHand.length) {
-    // The secret choices replace the first pack; the normal draft then alternates.
-    return { ...next, secretOpening: false, draftRow: [], phase: 'draft-pack-dealing', currentPicker: null }
+    // Reveal both sets of leftovers together, after both secret picks are locked.
+    // This is the ordinary public discard pool, including for Recycle.
+    return { ...next, secretOpening: false, draftRow: [], phase: 'draft-pack-dealing', currentPicker: null,
+      draftDiscard: [...next.draftDiscard, ...markCards([...next.playerSecretPack, ...next.opponentSecretPack], 'discarded')],
+      playerSecretPack: [], opponentSecretPack: [] }
   }
   const other = side === 'player' ? 'opponent' : 'player'
   const row = next[`${other}SecretPack`]

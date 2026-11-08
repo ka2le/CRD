@@ -235,7 +235,10 @@ function createInitialSessionState() {
       if (restored.preBattle.pendingResolution) restored = sessionReducer(restored, { type: 'RESOLVE_PRE_BATTLE_PENDING_DRAW_ALL_NEW_1' })
       const settings = normalizePlaySettings(restored.settings, { gameMode: restored.gameMode })
       // Redeal an old test setup instead of concealing its rules behind the normal menu.
-      if (settings.gameMode === restored.gameMode && Boolean(settings.secretCard) === Boolean(restored.settings.secretCard) && settings.tabletop === restored.settings.tabletop && settings.wildDeck === restored.settings.wildDeck) {
+      // Older Secret Card saves threw away the opening leftovers; only a new
+      // deal can supply the correct public discard pool without inventing cards.
+      if ((!restored.game.secretCard || restored.game.secretDiscardVersion === 1)
+        && settings.gameMode === restored.gameMode && Boolean(settings.secretCard) === Boolean(restored.settings.secretCard) && settings.tabletop === restored.settings.tabletop && settings.wildDeck === restored.settings.wildDeck) {
         return { ...restored, lastTransition: null, pendingPlayerDraftPickAnimation: null,
           settings,
           suppressedHandCardIds: { player: [], opponent: [] },

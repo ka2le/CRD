@@ -4,7 +4,9 @@ Released on 2026-11-08. Both are experimental menu choices behind Testing. Norma
 
 ## Secret Card
 
-The toggle appears only with Testing enabled and Draft selected. Each player receives a separate private five-card opening pack and picks one. The other four cards leave play without entering the public discard pile. Both secret choices occupy the first hand slot and have a crossed-eye marker. The opponent's secret card stays face down through drafting and preparation, including when Opponent cards is on; stats and inspection context exclude that hidden card. Battle reveals it.
+The toggle appears only with Testing enabled and Draft selected. Each player receives a separate private five-card opening pack and picks one. Once both choices are locked, the four unpicked cards from each pack enter the public discard pile together. All eight are visible in the pile and available to either player's Recycle, alongside later normal draft discards. The two selected secret cards never enter that pile. Both secret choices occupy the first hand slot and have a crossed-eye marker. The opponent's secret card stays face down through drafting and preparation, including when Opponent cards is on; stats and inspection context exclude that hidden card. Battle reveals it.
+
+An update from the earlier Secret Card rules redeals an old secret game on reload because its opening leftovers were not retained. Other saved modes remain compatible.
 
 Once both players have selected their secret card, the ordinary alternating draft resumes at pack two. Regular rules produce five cards per hand; Monsters still produces six, with six-card public packs after the private five-card opening choices. Same-screen play uses private handoffs for the opening choices, then its usual public table; only the active seat's secret is visible during public drafting.
 

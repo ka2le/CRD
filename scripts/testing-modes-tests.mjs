@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { createServer } from 'vite'
 import { createDraftGame, applyDraftPick, resolveOpponentDraftPick, commitDraftDiscard, revealNextDraftPack } from '../src/game/draftMode.js'
 import { createTwentyCardsGame, placeLineupCard, lockLineup, chooseBotLineup, twentyCardsScore } from '../src/game/twentyCards.js'
-import { createPreparationState } from '../src/game/preparationState.js'
+import { createPreparationState, applyPreparationAction, getPreparationActions } from '../src/game/preparationState.js'
 import { getExpandedCoreDeck } from '../src/game/cards.js'
 import { simulateBattle } from '../src/game/engine.js'
 import { getTabletopChoice, resolveTabletopBattle } from '../src/game/tabletop.js'
@@ -26,17 +26,26 @@ function session(game, opponentAi = 'rules') {
 test('secret opening gives disjoint private packs, one secret each, then full alternating draft', () => {
   for (const tabletop of [false, 'abilities-new-cards', 'monsters']) for (const firstPicker of ['player', 'opponent']) {
     let game = createDraftGame({ tabletop, firstPicker, seed: 91, secretCard: true })
+    const deckSize = game.deck.length + 10
     const playerPack = game.playerSecretPack.map(card => card.uid)
     const opponentPack = game.opponentSecretPack.map(card => card.uid)
     assert.equal(playerPack.length, 5); assert.equal(opponentPack.length, 5)
     assert.equal(new Set([...playerPack, ...opponentPack]).size, 10)
     game = applyDraftPick(game, playerPack[0])
     assert.equal(game.playerHand[0].secret, true)
+    assert.equal(game.draftDiscard.length, 0, 'do not reveal leftovers before both picks')
+    assert.deepEqual(game.playerSecretPack.map(card => card.uid), playerPack.slice(1))
     assert.deepEqual(game.draftRow.map(card => card.uid), opponentPack)
+    game = JSON.parse(JSON.stringify(game)) // A refresh between private picks preserves leftovers.
     game = resolveOpponentDraftPick(game)
     assert.equal(game.opponentHand[0].secret, true)
     assert.equal(game.phase, 'draft-pack-dealing')
     const secretIds = [game.playerHand[0].uid, game.opponentHand[0].uid]
+    const openingDiscards = [...playerPack, ...opponentPack].filter(uid => !secretIds.includes(uid))
+    assert.deepEqual(game.draftDiscard.map(card => card.uid), openingDiscards)
+    assert.equal(game.draftDiscard.length, 8)
+    assert.equal(new Set(game.draftDiscard.map(card => card.uid)).size, 8)
+    assert.equal(game.playerSecretPack.length + game.opponentSecretPack.length, 0)
     game = revealNextDraftPack(game)
     assert.equal(game.firstPicker, firstPicker === 'player' ? 'opponent' : 'player')
     for (let actions = 0; game.phase !== 'battle-ready' && actions < 70; actions += 1) {
@@ -49,7 +58,27 @@ test('secret opening gives disjoint private packs, one secret each, then full al
     assert.equal(game.playerHand.length, tabletop === 'monsters' ? 6 : 5)
     assert.equal(game.opponentHand.length, game.playerHand.length)
     assert.deepEqual([game.playerHand[0].uid, game.opponentHand[0].uid], secretIds)
-    assert.equal(game.draftDiscard.some(card => [...playerPack, ...opponentPack].includes(card.uid)), false)
+    assert.deepEqual(game.draftDiscard.slice(0, 8).map(card => card.uid), openingDiscards)
+    assert.equal(game.draftDiscard.some(card => secretIds.includes(card.uid)), false)
+    const all = [...game.playerHand, ...game.opponentHand, ...game.draftDiscard, ...game.deck]
+    assert.equal(all.length, deckSize)
+    assert.equal(new Set(all.map(card => card.uid)).size, all.length)
+  }
+})
+
+test('both players can Recycle either secret opening pack’s unpicked cards', () => {
+  let game = createDraftGame({ tabletop: 'abilities-new-cards', seed: 91, secretCard: true })
+  const playerTarget = game.playerSecretPack[1].uid
+  const opponentTarget = game.opponentSecretPack[1].uid
+  game = applyDraftPick(game, game.draftRow[0].uid)
+  game = resolveOpponentDraftPick({ ...game, pendingOpponentPickUid: game.draftRow[0].uid })
+  const source = getExpandedCoreDeck({ tabletop: 'abilities-new-cards' }).find(card => card.id === 'recycle_card')
+  for (const [side, targetUid] of [['player', opponentTarget], ['opponent', playerTarget]]) {
+    let prep = createPreparationState({ ...game, [`${side}Hand`]: [source] })
+    assert(getPreparationActions(prep, side).some(action => action.type === 'prepare' && action.targetUid === targetUid))
+    prep = applyPreparationAction(prep, side, { type: 'prepare', sourceUid: source.uid, targetUid })
+    assert(prep[`${side}Hand`].some(card => card.uid === targetUid))
+    assert(!prep[`${side}Discard`].some(card => card.uid === targetUid))
   }
 })
 
@@ -168,12 +197,16 @@ test('same-screen Secret Card hides each opening pack behind a handoff, then res
   state = api.localSessionReducer(state, { type: 'LOCAL_REVEAL' })
   state = api.localSessionReducer(state, { type: 'PLAYER_DRAFT_PICK', uid: state.game.draftRow[0].uid })
   assert.equal(state.localPlay.seat, 'guest'); assert.equal(state.localPlay.handoff, true)
+  assert.equal(state.game.draftDiscard.length, 0)
   assert.equal(local.getLocalDisplaySeat(state), 'guest')
   state = api.localSessionReducer(state, { type: 'LOCAL_REVEAL' })
   state = api.localSessionReducer(state, { type: 'PLAYER_DRAFT_PICK', uid: state.game.draftRow[0].uid })
   assert.equal(state.game.secretOpening, false); assert.equal(state.localPlay.handoff, false)
   assert.equal(state.game.playerHand[0].secret, true); assert.equal(state.game.opponentHand[0].secret, true)
   assert.equal(state.game.packNumber, 2)
+  assert.equal(state.game.draftDiscard.length, 8)
+  assert.equal(state.preBattle.playerDiscard.length, 8)
+  assert.equal(state.preBattle.opponentDiscard.length, 8)
 })
 
 test('same-screen 20Cards completes three drawn rounds with reloads and forced preparation', () => {
