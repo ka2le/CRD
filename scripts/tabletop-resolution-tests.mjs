@@ -1,15 +1,21 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { resolveTabletopBattle, chooseTabletopType } from '../src/game/tabletop.js'
+import { resolveTabletopBattle, chooseTabletopType, isMainAbilityRules } from '../src/game/tabletop.js'
+import { createDraftGame, applyDraftPick, resolveOpponentDraftPick, commitDraftDiscard, revealNextDraftPack } from '../src/game/draftMode.js'
+import { createTwentyCardsGame, chooseBotLineup, lockLineup, beginTwentyCardsRound } from '../src/game/twentyCards.js'
+import { compatibleGameVersion } from '../src/network/gameCompatibility.js'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { createServer } from 'vite'
 import { createHeadlessGame, stepHeadlessGame, chooseHeadlessBaselineAction } from '../src/game/headlessGame.js'
 import { createDevScenario } from '../src/game/devScenarios.js'
 import { buildTabletopResolutionPlan, canAnimateTabletopResolution, finalLedgerSide, RESOLUTION_SIDES } from '../src/game/tabletopResolution.js'
 
 // Replays the plan the way the animation counts it and returns the final ledger numbers.
 function replay(side) {
-  const stats = { critter: 0, robot: 0, dragon: 0 }
+  const stats = Object.fromEntries(side.stats.map(entry => [entry.type, 0]))
   for (const entry of side.stats) for (const card of entry.cards) stats[entry.type] += card.count
-  const damage = { critter: 0, robot: 0, dragon: 0, neutral: 0 }
+  const damage = { ...Object.fromEntries(side.stats.map(entry => [entry.type, 0])), neutral: 0 }
   for (const pulse of side.pulses) for (let i = 0; i < pulse.stats; i++) for (const card of pulse.cards) damage[pulse.type] += card.units
   for (const attack of side.direct) damage[attack.type] += attack.power
   assert.deepEqual(stats, side.baseStats)
@@ -30,7 +36,7 @@ function replay(side) {
     assert.equal(units, side.balance.count)
     bonus += side.balance.bonus
   }
-  if (side.rules === 'abilities-main') {
+  if (isMainAbilityRules(side.rules)) {
     for (const uid of side.shields.cards) blocked = Math.min(base + bonus, blocked + side.shields.cost * side.shields.pointsByUid[uid])
   } else {
     for (const uid of side.shields.cards) blocked = Math.min(base, blocked + side.shields.cost * side.shields.pointsByUid[uid])
@@ -111,4 +117,70 @@ test('only current Abilities and Threshold battles are animated', () => {
   assert.equal(canAnimateTabletopResolution(result), false)
   assert.equal(buildTabletopResolutionPlan(result), null)
   assert.equal(canAnimateTabletopResolution({ mode: 'battle' }), false)
+})
+
+function verifyResolution(game) {
+  const result = resolveTabletopBattle(game.playerHand, game.opponentHand, {
+    playerType: chooseTabletopType(game.playerHand), opponentType: chooseTabletopType(game.opponentHand),
+  })
+  const before = JSON.stringify(result)
+  assert(canAnimateTabletopResolution(result))
+  const plan = buildTabletopResolutionPlan(result)
+  for (const side of RESOLUTION_SIDES) {
+    assert.equal(replay(plan[side]).total, result[side].score)
+    assert.equal(finalLedgerSide(plan[side]).total, result[side].score)
+  }
+  assert.equal(plan.winner, result.winner)
+  assert.equal(JSON.stringify(result), before, 'presentation must not alter combat')
+}
+
+test('Secret Card and every 20Cards lane use the standard resolution plan with NC and Monsters', () => {
+  for (const tabletop of ['abilities-new-cards', 'monsters']) {
+    let draft = createDraftGame({ tabletop, seed: 58, secretCard: true })
+    for (let steps = 0; draft.phase !== 'battle-ready' && steps < 80; steps++) {
+      if (draft.phase === 'draft-player-pick') draft = applyDraftPick(draft, draft.draftRow[0].uid)
+      else if (draft.phase === 'draft-opponent-thinking') draft = resolveOpponentDraftPick(draft)
+      else if (draft.phase === 'draft-pack-clearing') draft = commitDraftDiscard(draft)
+      else draft = revealNextDraftPack(draft)
+    }
+    assert.equal(draft.phase, 'battle-ready')
+    assert(draft.playerHand[0].secret && draft.opponentHand[0].secret)
+    verifyResolution(draft)
+    let match = createTwentyCardsGame({ tabletop, seed: 58 })
+    match = { ...match, playerLineup: chooseBotLineup(match.playerPool), opponentLineup: chooseBotLineup(match.opponentPool) }
+    match = lockLineup(lockLineup(match, 'player'), 'opponent')
+    for (let roundIndex = 0; roundIndex < 3; roundIndex++) verifyResolution(beginTwentyCardsRound({ ...match, roundIndex }))
+  }
+})
+
+test('discarding an entire NC or Monster hand still animates its zero count', () => {
+  for (const rules of ['abilities-new-cards', 'monsters']) for (const emptySide of RESOLUTION_SIDES) {
+    const { game } = createDevScenario({ name: rules === 'monsters' ? 'monsters' : 'new-cards', rules })
+    game[`${emptySide}Hand`] = []
+    verifyResolution(game)
+    const result = resolveTabletopBattle(game.playerHand, game.opponentHand, { playerType: chooseTabletopType(game.playerHand) })
+    assert.equal(buildTabletopResolutionPlan(result).rules, rules)
+  }
+})
+
+test('the animation-only release preserves the preceding saved games and rooms', () => {
+  assert(compatibleGameVersion('c2f132f0bf12af94', 'current'))
+  assert(compatibleGameVersion('c2f132f0bf12af94:rooms-2', 'current:rooms-2'))
+  assert.equal(compatibleGameVersion('unrelated-rules', 'current'), false)
+})
+
+test('completed and animation-off resolutions render the final ability-adjusted ledger', async () => {
+  const server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: 'custom' })
+  try {
+    const { default: Resolution } = await server.ssrLoadModule('/src/components/battle/TabletopResolution.jsx')
+    const { game } = createDevScenario({ name: 'bonuses' })
+    const result = resolveTabletopBattle(game.playerHand, game.opponentHand, { playerType: chooseTabletopType(game.playerHand) })
+    for (const props of [{ animate: true, finished: true }, { animate: false, finished: false }]) {
+      const html = renderToStaticMarkup(createElement(Resolution, { result, ...props }))
+      assert.match(html, /ttr--done/)
+      for (const side of RESOLUTION_SIDES) {
+        assert.match(html, new RegExp(`data-ttr="${side}-total[^"]*">${result[side].score}<`))
+      }
+    }
+  } finally { await server.close() }
 })

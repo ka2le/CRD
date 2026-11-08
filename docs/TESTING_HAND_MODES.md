@@ -20,6 +20,10 @@ Two wins end the match immediately. If neither player reaches two wins after the
 
 Turning Testing off clears Secret Card and returns 20Cards to ordinary NC Draft. A custom Monster recipe must have at least forty cards for either variant; undersized recipes revert to the default pool.
 
+## Battle resolution
+
+Monsters, Secret Card and each 20Cards round use the normal animated resolution: count stats and attacks, apply faction abilities and shields, then compare scores before showing the result. Fast forward and Skip to result work as in ordinary Draft. The menu's Battle animation setting applies to all modes and is on by default. Switching it off completes the current count immediately; switching it back on preserves that completed result, and subsequent battles animate again. Even a hand emptied by preparation receives an animated zero count. The animation repair preserves existing saved games and lineups.
+
 ## Implementation and checks
 
 - `src/game/twentyCards.js`: lineup validation, placement, locks, round hands, bot allocation and scoring.

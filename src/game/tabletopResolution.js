@@ -11,9 +11,17 @@ import {
 
 export const RESOLUTION_SIDES = ['player', 'opponent']
 
+function resolutionRules(result) {
+  if (result?.mode !== 'tabletop') return null
+  // An emptied hand has no card carrying its rules and the scorer defaults to
+  // main Abilities. Count its zeros alongside the surviving hand's rules.
+  const rules = result.playerHand?.length === 0 ? result.opponent?.rules : result.player?.rules
+  if (!['abilities-main', 'abilities-new-cards', 'monsters', 'threshold'].includes(rules)) return null
+  return RESOLUTION_SIDES.every(side => result[side]?.rules === rules || result[`${side}Hand`]?.length === 0) ? rules : null
+}
+
 export function canAnimateTabletopResolution(result) {
-  return Boolean(result?.mode === 'tabletop' && ['abilities-main', 'abilities-new-cards', 'monsters', 'threshold'].includes(result.player?.rules)
-    && result.player.rules === result.opponent?.rules)
+  return Boolean(resolutionRules(result))
 }
 
 function attackUnits(card) {
@@ -38,7 +46,7 @@ function buildSide(hand, score, enemyHand) {
   // Stat pips, card by card and faction by faction.
   const stats = classes.map((type) => ({
     type,
-    total: base.stats[type],
+    total: base.stats[type] ?? 0,
     cards: hand.filter((card) => card.type === 'stat' && card.stats?.includes(type))
       .map((card) => ({ uid: card.uid, count: card.stats.filter((stat) => stat === type).length }))
       .concat(hand.some((card) => card.type === 'stat') || type === 'monster' || !hand.some((card) => card.id === 'no_stats_to_2' && ['abilities-new-cards', 'monsters'].includes(card.tabletop)) ? []
@@ -48,7 +56,7 @@ function buildSide(hand, score, enemyHand) {
   // Typed attacks fire once per matching stat; each firing adds the card's hearts.
   const pulses = classes.map((type) => ({
     type,
-    stats: base.stats[type],
+    stats: base.stats[type] ?? 0,
     cards: hand.filter((card) => isTypedAttack(card, type, base)).map((card) => ({ uid: card.uid, units: attackUnits(card) })),
   }))
   const pulsed = new Set(pulses.flatMap((pulse) => pulse.cards.map((card) => card.uid)))
@@ -57,7 +65,7 @@ function buildSide(hand, score, enemyHand) {
     .map((attack) => ({ uid: attack.uid, type: attack.type ?? 'neutral', power: attack.power }))
 
   const baseDamage = emptyDamage()
-  for (const type of classes) baseDamage[type] = base.contributions[type]
+  for (const type of classes) baseDamage[type] = base.contributions[type] ?? 0
   baseDamage.neutral = base.neutral
 
   // Overwhelming: one extra Dragon stat re-powers Dragon attacks and stat products.
@@ -87,7 +95,7 @@ function buildSide(hand, score, enemyHand) {
   const pointsByUid = Object.fromEntries(enemyHand.filter((card) => card.effect?.shield > 0)
     .map((card) => [card.uid, card.effect.shield]))
   const finalDamage = emptyDamage()
-  for (const type of classes) finalDamage[type] = score.contributions[type]
+  for (const type of classes) finalDamage[type] = score.contributions[type] ?? 0
   finalDamage.neutral = score.neutral
 
   return {
@@ -97,7 +105,7 @@ function buildSide(hand, score, enemyHand) {
     stats,
     pulses,
     direct,
-    baseStats: { ...base.stats },
+    baseStats: Object.fromEntries(classes.map(type => [type, base.stats[type] ?? 0])),
     baseDamage,
     base: base.base,
     overwhelming,
@@ -106,7 +114,7 @@ function buildSide(hand, score, enemyHand) {
     thresholdBonus: main ? 0 : score.bonus,
     shields: { cards: shieldCards, pointsByUid, cost: score.damageType === 'monster' ? 1 : (costs[score.damageType] ?? 0), penalty: score.shieldPenalty, blocked: score.blocked },
     final: {
-      stats: { ...score.stats },
+      stats: Object.fromEntries(classes.map(type => [type, score.stats[type] ?? 0])),
       damage: finalDamage,
       base: score.base,
       bonus: score.bonus,
@@ -117,12 +125,13 @@ function buildSide(hand, score, enemyHand) {
 }
 
 export function buildTabletopResolutionPlan(result) {
-  if (!canAnimateTabletopResolution(result)) return null
+  const rules = resolutionRules(result)
+  if (!rules) return null
   return {
-    rules: result.player.rules,
-    bonusFirst: isMainAbilityRules(result.player.rules),
-    player: buildSide(result.playerHand, result.player, result.opponentHand),
-    opponent: buildSide(result.opponentHand, result.opponent, result.playerHand),
+    rules,
+    bonusFirst: isMainAbilityRules(rules),
+    player: buildSide(result.playerHand, { ...result.player, rules }, result.opponentHand),
+    opponent: buildSide(result.opponentHand, { ...result.opponent, rules }, result.playerHand),
     winner: result.winner,
     tiebreak: result.reason === 'critter-tiebreak' ? result.winner : null,
   }

@@ -106,8 +106,13 @@ export default function TabletopResolution({ result, animate = true, finished = 
   useEffect(() => { onFinishedRef.current = onFinished })
 
   useEffect(() => {
-    if (!animate) { settledRef.current = true; return undefined }
-    if (!plan || settledRef.current || !rootRef.current || !fxRef.current) return undefined
+    if (!plan) return undefined
+    if (!animate) {
+      settledRef.current = true
+      onFinishedRef.current?.()
+      return undefined
+    }
+    if (settledRef.current || !rootRef.current || !fxRef.current) return undefined
     const runner = createResolutionRunner({ root: rootRef.current, fx: fxRef.current, getSpeed: () => speedRef.current, update: setLedger })
     runnerRef.current = runner
     runner.start(plan).then((completed) => {
@@ -136,7 +141,7 @@ export default function TabletopResolution({ result, animate = true, finished = 
   }, [plan])
 
   if (!plan) return null
-  const shown = animate ? ledger : finalLedger
+  const shown = animate && !finished ? ledger : finalLedger
   const showNeutral = plan.player.final.damage.neutral > 0 || plan.opponent.final.damage.neutral > 0
   const names = { player: playerName, opponent: opponentName }
 
