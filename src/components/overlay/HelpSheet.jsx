@@ -189,7 +189,7 @@ function RulesHelp({ open, onClose, tabletop }) {
       setCopyStatus('Select and copy the rules below.')
     }
   }
-  const newCards = tabletop === 'abilities-new-cards'
+  const newCards = ['abilities-new-cards', 'monsters'].includes(tabletop)
   const abilitiesMain = isMainAbilityRules(tabletop)
   const shieldCosts = abilitiesMain ? MAIN_ABILITY_SHIELD_COST : TABLETOP_SHIELD_COST
   return (
@@ -200,6 +200,7 @@ function RulesHelp({ open, onClose, tabletop }) {
           <span role="status">{copyStatus}</span>
         </div>
         {copyStatus === 'Select and copy the rules below.' ? <textarea aria-label="Rules to copy" readOnly value={rulesText} onFocus={(event) => event.target.select()} rows={10} /> : null}
+          {tabletop === 'monsters' ? <div className="help__fact"><GameIcon name="monster" /><span><strong>Monsters</strong> adds a fourth faction with no faction bonus yet. Each enemy shield blocks 1 Monster power. Mixed attacks multiply Monster stats by the other printed faction and deal neutral power. Monster Draw / Discard uses your Monster stat count when activated. Transformation changes all current Monster stats into your choice of Critter, Robot or Dragon. In Testing, open Collection → Edit deck counts to change the pool and save a recipe. FelixM training comes later; RolfBot is available for now.</span></div> : null}
           {newCards ? <div className="help__fact"><span><strong>Abilities+NewCards</strong> uses Abilities rules plus four cards: Specialist gives 2 power per stat when your stats belong to exactly one faction; Critter Guard adds one Critter stat and one shield point; Draw 2 / Discard 2 draws first, then requires two discards, which can include itself; Discard for Damage lets you discard cards for 1 neutral power each. It may discard itself, then deals no damage. Copies need their own sacrifices. Both discard effects happen during preparation.</span></div> : null}
         {abilitiesMain ? <AbilitiesMainHelp rules={tabletop} /> : tabletop ? <section className="help__block help__facts">
           <div className="help__fact"><GameIcon name="damage" /><span>Each ordinary attack gives 1 power per matching stat. Add all attacks.</span></div>
@@ -262,11 +263,11 @@ function RulesHelp({ open, onClose, tabletop }) {
           </> : <div className="help__fact"><span className="help__chip help__chip--special"><GameIcon name="star" /></span><span>Use specials before battle, or press Battle to finish preparation.</span></div>}
           <div className="help__fact">
             <span className="help__chip"><GameIcon name="draw" /></span>
-            <span>Draft: pick 1 of 5, opponent picks 1, the rest are discarded. Five packs.</span>
+            <span>{tabletop === 'monsters' ? 'Draft: pick 1 of 6, opponent picks 1, the rest are discarded. Six packs; six picks each.' : 'Draft: pick 1 of 5, opponent picks 1, the rest are discarded. Five packs.'}</span>
           </div>
           <div className="help__fact">
             <span className="help__chip"><GameIcon name="redraw" /></span>
-            <span>Discard mode: five cards, two redraws.</span>
+            <span>{tabletop === 'monsters' ? 'Discard mode: six cards, two redraws back to six.' : 'Discard mode: five cards, two redraws.'}</span>
           </div>
           <div className="help__fact help__fact--tip">
             <span className="help__chip"><SvgIcon name="eye" /></span>

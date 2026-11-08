@@ -13,6 +13,7 @@
 // other seat's private hand or private preparation. Hidden cards are re-dealt
 // uniformly at random from everything it has not seen.
 import { createSeededRng, getCoreCards, shuffle } from './cards.js'
+import { startingHandSize } from './monsters.js'
 import { getLegalActions, stepHeadlessGame } from './headlessGame.js'
 import { chooseDiscardIds, pickBestCardForHand } from './cardEvaluator.js'
 import { pickPreparationAction } from './preBattle.js'
@@ -46,8 +47,9 @@ const byUid = (a, b) => (a.uid < b.uid ? -1 : (a.uid > b.uid ? 1 : 0))
 const shuffleHidden = (cards, rng) => shuffle(plainCards(cards).sort(byUid), { rng })
 
 function makeState(game, side) {
+  const tabletop = normalizeTabletopRules([...game.playerHand, ...game.opponentHand, ...game.deck, ...(game.draftRow ?? [])].find(card => card.tabletop)?.tabletop)
   return {
-    config: { mode: game.mode, wildDeck: true, control: 'both', revealOpponent: false },
+    config: { mode: game.mode, tabletop, wildDeck: true, control: 'both', revealOpponent: false },
     game,
     history: [],
     decisions: { player: 0, opponent: 0 },
@@ -62,6 +64,7 @@ function makeState(game, side) {
 function sampleDraftWorld(game, side, rng) {
   return makeState({
     mode: 'draft',
+    ...(game.handSize ? { handSize: game.handSize, packSize: game.packSize } : {}),
     phase: side === 'opponent' ? 'draft-opponent-thinking' : 'draft-player-pick',
     deck: shuffleHidden(game.deck, rng),
     draftRow: plainCards(game.draftRow),
@@ -85,6 +88,7 @@ function sampleDiscardWorld(game, side, rng) {
   const unseen = shuffleHidden([...enemyHand, ...game.deck], rng)
   return makeState({
     mode: 'five-hand-discard',
+    ...(game.handSize ? { handSize: game.handSize } : {}),
     phase: game.phase,
     deck: unseen.slice(enemyHand.length),
     [`${side}Hand`]: plainCards(game[`${side}Hand`]),
@@ -181,7 +185,7 @@ export function isSearchDecision(game, side = 'opponent') {
   if (!game) return false
   if (game.mode === 'draft') {
     return game.currentPicker === side && game.phase === `draft-${side === 'player' ? 'player-pick' : 'opponent-thinking'}`
-      && game.draftRow.length > 0 && game[`${side}Hand`].length < 5
+      && game.draftRow.length > 0 && game[`${side}Hand`].length < (game.handSize ?? startingHandSize())
   }
   if (game.mode === 'five-hand-discard') return game.phase.startsWith(`${side}-discard`)
   return false
@@ -278,14 +282,14 @@ export function preparationView(preparation, game, side = 'opponent') {
   ].map((card) => card.uid))
   const tabletop = normalizeTabletopRules([...preparation.playerHand, ...preparation.opponentHand, ...preparation.deck]
     .find((card) => card.tabletop)?.tabletop)
-  const definitions = new Map(getCoreCards({ tabletop }).map((card) => [card.id, tabletop ? toTabletopCard(card, tabletop) : card]))
+  const definitions = new Map(getCoreCards({ tabletop, includeDisabled: tabletop === 'monsters' }).map((card) => [card.id, tabletop ? toTabletopCard(card, tabletop) : card]))
   const unseen = new Map()
   for (const card of [...preparation.deck, ...preparation[`${enemy}Hand`], ...preparation[`${enemy}Discard`]]) {
     // A private copy turned a physical Copy card into another card: restore the physical card.
     const physical = isCopiedCard(card)
       ? (card.sourceCopyUid && definitions.has(card.copySourceCardId)
         ? { ...definitions.get(card.copySourceCardId), uid: card.sourceCopyUid, imageIndex: 0 } : null)
-      : tabletop === 'abilities-new-cards' && definitions.has(card.id)
+      : ['abilities-new-cards', 'monsters'].includes(tabletop) && definitions.has(card.id)
         ? { ...definitions.get(card.id), uid: card.uid, imageIndex: card.imageIndex ?? 0 }
         : plainCard(card)
     if (physical && !known.has(physical.uid)) unseen.set(physical.uid, physical)

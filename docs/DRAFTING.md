@@ -1,5 +1,7 @@
 # Hand-building modes
 
+Testing also offers **Secret Card**, a private opening-choice variant of Draft, and **20Cards**, three locked five-card lanes chosen from twenty private cards. See [TESTING_HAND_MODES.md](TESTING_HAND_MODES.md) for their rules, privacy and match flow.
+
 Both modes are implemented. Reviewed 2026-10-18 against the mode modules and `useGameSession.js`.
 
 ## Draft

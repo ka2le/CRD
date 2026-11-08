@@ -1,3 +1,4 @@
+import { startingHandSize } from './monsters.js'
 import { buildShuffledDeck } from './cards.js'
 import { chooseDiscardIds } from './cardEvaluator.js'
 
@@ -69,12 +70,14 @@ function resolveOpponentDiscardPass(game, options = {}) {
 export function createFiveHandDiscardGame(options = {}) {
   const deck = options.deck ? [...options.deck] : buildShuffledDeck(options)
 
-  const playerStart = drawCards(deck, 5)
+  const handSize = startingHandSize(options.tabletop)
+  const playerStart = drawCards(deck, handSize)
   const afterPlayer = playerStart.rest
-  const opponentStart = drawCards(afterPlayer, 5)
+  const opponentStart = drawCards(afterPlayer, handSize)
 
   return {
     mode: 'five-hand-discard',
+    ...(options.tabletop === 'monsters' ? { handSize } : {}),
     ...(options.concurrentOpponent ? { concurrentOpponent: true } : {}),
     phase: 'player-discard-1',
     deck: opponentStart.rest,

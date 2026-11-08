@@ -20,27 +20,27 @@ export function getCardStats(card) {
   if (card.type !== 'stat') return emptyStats()
 
   return (card.stats ?? []).reduce((acc, stat) => {
-    if (CLASS_ORDER.includes(stat)) {
-      acc[stat] += 1
+    if (CLASS_ORDER.includes(stat) || stat === 'monster') {
+      acc[stat] = (acc[stat] ?? 0) + 1
     }
     return acc
   }, emptyStats())
 }
 
 export function getHandStats(hand) {
-  if (hand.some((card) => card.tabletop === 'abilities-new-cards' && card.id === 'no_stats_to_2')
+  if (hand.some((card) => ['abilities-new-cards', 'monsters'].includes(card.tabletop) && card.id === 'no_stats_to_2')
     && !hand.some((card) => card.type === 'stat')) {
-    return { robot: 2, critter: 2, dragon: 2 }
+    return { robot: 2, critter: 2, dragon: 2, ...(hand.some(card => card.tabletop === 'monsters') ? { monster: 0 } : {}) }
   }
   return hand.reduce((acc, card) => {
     const cardStats = getCardStats(card)
 
-    CLASS_ORDER.forEach((className) => {
-      acc[className] += cardStats[className]
+    Object.keys(acc).forEach((className) => {
+      acc[className] += cardStats[className] ?? 0
     })
 
     return acc
-  }, emptyStats())
+  }, { ...emptyStats(), ...(hand.some(card => card.tabletop === 'monsters' || card.stats?.includes('monster')) ? { monster: 0 } : {}) })
 }
 
 export function doesCardTrigger(card, round) {

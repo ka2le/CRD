@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import './CollectionSheet.css'
+import MonsterDeckEditor from './MonsterDeckEditor'
 import Sheet from './Sheet'
 import CardButton from '../card/CardButton'
 import { useCardInspect } from './inspectContext'
@@ -9,7 +10,7 @@ import { getExpandedCoreDeck } from '../../game/cards'
 import { useElementSize } from '../../hooks/useFitLayout'
 import DeckViewTabs from './DeckViewTabs'
 
-const CLASS_ORDER = ['critter', 'robot', 'dragon']
+const CLASS_ORDER = ['critter', 'robot', 'dragon', 'monster']
 
 function classRank(card) {
   const classes = card.type === 'stat' ? (card.stats ?? []) : [card.effect?.dmgType].filter(Boolean)
@@ -20,16 +21,18 @@ function classRank(card) {
 }
 
 // Every physical copy in the selected deck, grouped; tap one to read about it.
-export default function CollectionSheet({ open, onClose, onSwitch = null, tabletop = false, wildDeck = false }) {
+export default function CollectionSheet({ open, onClose, onSwitch = null, tabletop = false, wildDeck = false, testing = false, monsterDeck, onUpdateSettings }) {
   const inspect = useCardInspect()
   const [measureRef, size] = useElementSize()
+  const [editing, setEditing] = useState(false)
+  const canEdit = tabletop === 'monsters' && testing && Boolean(onUpdateSettings)
   const [filter, setFilter] = useState('all')
   const columns = Math.max(3, Math.floor((size.width + 8) / 128))
   const cardWidth = size.width ? Math.floor((size.width - ((columns - 1) * 8)) / columns) : 100
 
   const groups = useMemo(() => {
     // Use the same copies and artwork rotation as dealing the actual deck.
-    const deck = getExpandedCoreDeck({ tabletop, wildDeck })
+    const deck = getExpandedCoreDeck({ tabletop, wildDeck, monsterDeck })
     const copies = new Map()
     for (const card of deck) copies.set(card.id, (copies.get(card.id) ?? 0) + 1)
     const seen = new Set()
@@ -47,7 +50,7 @@ export default function CollectionSheet({ open, onClose, onSwitch = null, tablet
           || a.id.localeCompare(b.id)
           || a.imageIndex - b.imageIndex),
     }))
-  }, [tabletop, wildDeck])
+  }, [tabletop, wildDeck, monsterDeck])
 
   const total = groups.reduce((sum, group) => sum + group.cards.length, 0)
   const visible = filter === 'all' ? groups : groups.filter((group) => group.key === filter)
@@ -66,6 +69,8 @@ export default function CollectionSheet({ open, onClose, onSwitch = null, tablet
         </>
       )}
     >
+      {canEdit ? <button type="button" className="ui-button monster-editor__toggle" aria-pressed={editing} onClick={() => setEditing(!editing)}>{editing ? 'View collection' : 'Edit deck counts'}</button> : null}
+      {canEdit && editing ? <MonsterDeckEditor key={`${wildDeck}-${JSON.stringify(monsterDeck)}`} monsterDeck={monsterDeck} wildDeck={wildDeck} onApply={onUpdateSettings} /> : <>
       <div className="collection__filters" role="tablist" aria-label="Card type">
         {[{ key: 'all', label: 'All' }, ...GROUPS].map((option) => (
           <button
@@ -106,6 +111,7 @@ export default function CollectionSheet({ open, onClose, onSwitch = null, tablet
           </section>
         ))}
       </div>
+      </>}
     </Sheet>
   )
 }

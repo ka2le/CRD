@@ -82,6 +82,7 @@
 
 .ttr-cell--critter { --c: var(--critter); --deep: var(--critter-deep); }
 .ttr-cell--robot { --c: var(--robot); --deep: var(--robot-deep); }
+.ttr-cell--monster { --c: var(--monster); --deep: var(--monster-deep); }
 .ttr-cell--dragon { --c: var(--dragon); --deep: var(--dragon-deep); }
 .ttr-cell--neutral { --c: var(--ttr-neutral); --deep: rgba(215, 219, 225, 0.1); }
 

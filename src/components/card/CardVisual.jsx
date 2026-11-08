@@ -50,7 +50,7 @@ function getEffectTokens(card) {
   if (effect.dmgType) {
     const icon = getStatIcon(effect.dmgType)
     if (icon) tokens.push({ type: 'icon', value: icon, alt: effect.dmgType })
-    tokens.push({ type: 'text', value: '*' })
+    tokens.push({ type: 'text', value: effect.dmgType === 'monster' ? '×' : '*' })
   }
 
   if (effect.dmg) {
@@ -75,7 +75,7 @@ function getEffectTokens(card) {
 
 // Long formula cards (Critter * Robot * Dragon, Critter + Robot + Dragon) get a
 // compact single-line row with slightly smaller icons instead of wrapping.
-const COMPACT_EFFECT_IDS = new Set(['one_off_each', 'any_off_each', 'single_faction_2'])
+const COMPACT_EFFECT_IDS = new Set(['monster_critter_dmg', 'monster_robot_dmg', 'monster_dragon_dmg', 'one_off_each', 'any_off_each', 'single_faction_2'])
 
 function CardEffectRow({ card }) {
   const hasStructuredEffect = Boolean(card.effect?.dmg || card.effect?.shield)
@@ -109,7 +109,7 @@ function CardEffectRow({ card }) {
 
   const compact = COMPACT_EFFECT_IDS.has(card.id)
   if (compact) tokens = tokens.filter((token) => token.type !== 'line-break')
-  const stacked = card.id === 'critter_shield' || card.id === 'no_stats_to_2'
+  const stacked = ['monster_draw_discard', 'monster_transform'].includes(card.id) || card.id === 'critter_shield' || card.id === 'no_stats_to_2'
   const rows = [[]]
   for (const token of tokens) {
     if (token.type === 'line-break') rows.push([])

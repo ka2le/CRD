@@ -202,7 +202,7 @@ export function createResolutionRunner({ root, fx, getSpeed, update }) {
 
   // ---------- ledger helpers ----------
   const add = (side, part, key, amount) => set((ledger) => ({ ...ledger,
-    [side]: { ...ledger[side], [part]: { ...ledger[side][part], [key]: ledger[side][part][key] + amount } } }))
+    [side]: { ...ledger[side], [part]: { ...ledger[side][part], [key]: (ledger[side][part][key] ?? 0) + amount } } }))
   const patch = (side, values) => set((ledger) => ({ ...ledger, [side]: { ...ledger[side], ...values(ledger[side]) } }))
   const focus = (side, type) => set((ledger) => ({ ...ledger, focus: side ? { side, type } : null }))
   // The row being counted is lit; the other waits dimmed.

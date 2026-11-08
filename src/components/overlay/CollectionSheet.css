@@ -90,3 +90,25 @@
   color: var(--t0);
   pointer-events: none;
 }
+
+.monster-editor__toggle { margin-bottom: 12px; }
+.monster-editor { display: grid; gap: 14px; }
+.monster-editor p { margin: 0; color: var(--t1); font-size: 0.84rem; line-height: 1.5; }
+.monster-editor__bar { position: sticky; top: -6px; z-index: 3; padding: 8px 0; background: var(--surface-hi); display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.monster-editor__bar > span { color: var(--t1); font-size: 0.8rem; }
+.monster-editor > .collection__filters { position: static; }
+.monster-editor__name input { flex-shrink: 0; }
+.monster-editor__cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(125px, 1fr)); gap: 18px 12px; }
+.monster-editor__card { display: grid; align-content: start; gap: 8px; min-width: 0; --card-w: 120px; }
+.monster-editor__card.is-off > .card { opacity: 0.38; }
+.monster-editor__name { display: flex; align-items: center; gap: 5px; font-size: 0.8rem; min-height: 2.5em; }
+.monster-editor__name input { accent-color: var(--monster); }
+.monster-editor__counter { display: grid; grid-template-columns: 32px 1fr 32px; gap: 2px; }
+.monster-editor__counter button, .monster-editor__counter input { min-width: 0; min-height: 36px; border: 1px solid var(--b1); border-radius: 5px; background: var(--surface-hi); color: var(--t0); text-align: center; }
+.monster-editor__counter button:disabled { opacity: 0.35; }
+.monster-editor__recipe { padding: 12px; border: 1px solid var(--b1); border-radius: 8px; }
+.monster-editor__recipe summary { cursor: pointer; color: var(--brass-hi); }
+.monster-editor__recipe p { margin-top: 10px; }
+.monster-editor__recipe textarea { width: 100%; resize: vertical; margin: 10px 0; font: 12px var(--mono); color: var(--t0); background: var(--surface-lo); border: 1px solid var(--b1); border-radius: 5px; padding: 10px; }
+.monster-editor__recipe .ui-button { margin: 4px 8px 0 0; }
+.monster-editor__recipe input[type=file] { max-width: 190px; }

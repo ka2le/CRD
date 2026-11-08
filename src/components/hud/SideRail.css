@@ -84,6 +84,7 @@
 
 .stat-chip--critter .g-icon { color: var(--critter); }
 .stat-chip--robot .g-icon { color: var(--robot); }
+.stat-chip--monster .g-icon { color: var(--monster); }
 .stat-chip--dragon .g-icon { color: var(--dragon); }
 
 .stat-chip--zero {

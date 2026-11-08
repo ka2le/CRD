@@ -1,17 +1,18 @@
+import { MONSTER_FACTIONS, MONSTER_PRODUCTS } from './monsters.js'
 import { getHandStats } from './engine.js'
 
 export const TABLETOP_CLASSES = ['critter', 'robot', 'dragon']
 export const TABLETOP_SHIELD_COST = { critter: 2, robot: 1, dragon: 0 }
 export const MAIN_ABILITY_SHIELD_COST = { critter: 1, robot: 1, dragon: 0 }
-const ULTIMATES = new Set(['murder_rabbit', 'robot_ulti', 'dragon_ulti', 'devour'])
+const ULTIMATES = new Set(['murder_rabbit', 'robot_ulti', 'dragon_ulti', 'devour', 'monster_ulti'])
 
 // Abilities means abilities-main. Prototype is retained only for explicit historical use.
 //   threshold – one bonus per main faction: Critters 1+ → +2, Robots 4+ → +3, Dragons 8+ → +4.
 //   abilities-prototype – original Adapt / Perfect Balance / Overwhelming; no Shortcut, 2× or
 //   Critter + Robot + Dragon cards in the deck.
-export const TABLETOP_RULES = ['threshold', 'abilities-prototype', 'abilities-main', 'abilities-new-cards']
+export const TABLETOP_RULES = ['threshold', 'abilities-prototype', 'abilities-main', 'abilities-new-cards', 'monsters']
 export function isMainAbilityRules(rules) {
-  return rules === 'abilities-main' || rules === 'abilities-new-cards'
+  return rules === 'abilities-main' || rules === 'abilities-new-cards' || rules === 'monsters'
 }
 
 const ABILITIES_EXCLUDED_IDS = new Set(['double_dmg', 'shortcut', 'any_off_each'])
@@ -21,7 +22,7 @@ const ABILITIES_EXCLUDED_IDS = new Set(['double_dmg', 'shortcut', 'any_off_each'
 export function normalizeTabletopRules(value) {
   if (!value) return false
   if (['abilities-prototype', 'abilities-v1', 'old-abilities'].includes(value)) return 'abilities-prototype'
-  if (value === 'abilities-new-cards') return value
+  if (value === 'abilities-new-cards' || value === 'monsters') return value
   if (value === 'threshold') return 'threshold'
   return 'abilities-main'
 }
@@ -35,7 +36,7 @@ export function normalizePlayableTabletopRules(value) {
 export function isCardInTabletopRules(card, rules) {
   const normalized = normalizeTabletopRules(rules)
   if (isMainAbilityRules(normalized) && card.id === 'chameleon') return false
-  return !(['abilities-prototype', 'abilities-main', 'abilities-new-cards'].includes(normalized) && ABILITIES_EXCLUDED_IDS.has(card.id))
+  return !(['abilities-prototype', 'abilities-main', 'abilities-new-cards', 'monsters'].includes(normalized) && ABILITIES_EXCLUDED_IDS.has(card.id))
 }
 
 // Tabletop cards carry their rule set, so any hand knows how it is scored.
@@ -75,7 +76,7 @@ function adaptCard(card) {
 export const ROBOT_ULTI_ATTACK_COUNT = 2
 
 function singleStatType(stats) {
-  const types = TABLETOP_CLASSES.filter((type) => stats[type] > 0)
+  const types = MONSTER_FACTIONS.filter((type) => stats[type] > 0)
   return types.length === 1 ? types[0] : null
 }
 
@@ -260,7 +261,8 @@ function computeProfile(hand = [], extraStats = {}) {
   const bonusMultiplier = 2 ** hand.filter((card) => card.id === 'double_dmg').length
   const shortcuts = hand.filter((card) => card.id === 'shortcut').length
   const hasChameleon = hand.some((card) => card.id === 'chameleon')
-  const contributions = { critter: 0, robot: 0, dragon: 0 }
+  const classes = rules === 'monsters' ? MONSTER_FACTIONS : TABLETOP_CLASSES
+  const contributions = Object.fromEntries(classes.map(type => [type, 0]))
   let neutral = 0
   const attacks = []
   for (const card of hand) {
@@ -273,6 +275,7 @@ function computeProfile(hand = [], extraStats = {}) {
     else if (card.id === 'bite') power = isMainAbilityRules(rules) ? 2 : 1
     else if (card.id === 'discard_for_damage') power = card.sacrificedPower ?? 0
     else if (card.id === 'shield_is_dmg') power = shields
+    else if (rules === 'monsters' && MONSTER_PRODUCTS[card.id]) power = stats[MONSTER_PRODUCTS[card.id]] * stats.monster
     else if (card.id === 'one_off_each') power = stats.critter * stats.robot * stats.dragon
     else if (card.id === 'any_off_each') power = stats.critter + stats.robot + stats.dragon
     if (power > 0) {
@@ -285,9 +288,9 @@ function computeProfile(hand = [], extraStats = {}) {
   const largest = Math.max(...Object.values(contributions))
   // With no typed damage, current Abilities permits every faction, even at zero.
   const dominantTypes = largest > 0
-    ? TABLETOP_CLASSES.filter((type) => contributions[type] === largest)
-    : (isMainAbilityRules(rules) ? [...TABLETOP_CLASSES] : base > 0 ? ['robot'] : [])
-  const types = hasChameleon ? [...TABLETOP_CLASSES] : [...dominantTypes]
+    ? classes.filter((type) => contributions[type] === largest)
+    : (isMainAbilityRules(rules) ? [...classes] : base > 0 ? ['robot'] : [])
+  const types = hasChameleon ? [...classes] : [...dominantTypes]
   // Devour is a second Dragon ultimate in current Abilities, without a faction override.
   if (!isMainAbilityRules(rules) && base > 0 && hand.some((card) => card.id === 'devour') && !types.includes('dragon')) types.push('dragon')
   return { stats, shields, contributions, neutral, base, dominantTypes, types, attacks, bonusMultiplier, shortcuts, hasChameleon }
@@ -315,7 +318,7 @@ export function scoreTabletopHand(hand, enemyShields = 0, damageType = null) {
   const type = damageType ?? profile.types[0] ?? null
   if (profile.typeProfiles) profile = profile.typeProfiles[type]
   const shieldCosts = isMainAbilityRules(profile.rules) ? MAIN_ABILITY_SHIELD_COST : TABLETOP_SHIELD_COST
-  const shieldPenalty = enemyShields * (shieldCosts[type] ?? 0)
+  const shieldPenalty = enemyShields * (type === 'monster' && profile.rules === 'monsters' ? 1 : (shieldCosts[type] ?? 0))
   const blocked = Math.min(profile.base, shieldPenalty)
   const power = profile.base - blocked
   if (isMainAbilityRules(profile.rules)) {
@@ -353,7 +356,7 @@ export function chooseTabletopType(hand) {
   const shieldCosts = isMainAbilityRules(getHandTabletopRules(hand)) ? MAIN_ABILITY_SHIELD_COST : TABLETOP_SHIELD_COST
   return [...types].sort((a, b) => scoreTabletopHand(hand, 0, b).score - scoreTabletopHand(hand, 0, a).score
     || (isMainAbilityRules(getHandTabletopRules(hand)) ? Number(b === 'critter') - Number(a === 'critter') : 0)
-    || shieldCosts[a] - shieldCosts[b])[0] ?? null
+    || (shieldCosts[a] ?? 1) - (shieldCosts[b] ?? 1))[0] ?? null
 }
 
 export function resolveTabletopBattle(playerHand, opponentHand, options = {}) {

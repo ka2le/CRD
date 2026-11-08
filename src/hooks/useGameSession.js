@@ -1,4 +1,9 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
+import { getCoreCards } from '../game/cards.js'
+import { createTwentyCardsGame, placeLineupCard, chooseBotLineup, lockLineup, beginTwentyCardsRound, twentyCardsScore } from '../game/twentyCards.js'
+import { simulateBattle } from '../game/engine.js'
+import { resolveTabletopBattle } from '../game/tabletop.js'
+import { normalizeMonsterDeck, monsterDeckRecipe, MIN_MONSTER_DECK } from '../game/monsters.js'
 import { compatibleGameVersion } from '../network/gameCompatibility.js'
 import { createFiveHandDiscardGame, applyDiscardPhase, applyOpponentDiscardPhase } from '../game/fiveHandDiscard'
 import {
@@ -36,6 +41,7 @@ const DEFAULT_SETTINGS = {
   wildDeck: false,
   tabletop: 'abilities-new-cards',
   testing: false,
+  secretCard: false,
   opponentAi: DEFAULT_OPPONENT_AI,
 }
 
@@ -62,12 +68,25 @@ function createSessionTiming(overrides = {}) {
 
 export function normalizePlaySettings(settings, patch = {}) {
   const testing = Boolean(patch.testing ?? settings.testing)
+  const mode = patch.gameMode ?? settings.gameMode ?? 'draft'
+  const gameMode = ['draft', 'five-hand-discard', '20cards'].includes(mode) && (testing || mode !== '20cards') ? mode : 'draft'
+  const secretCard = testing && gameMode === 'draft' && Boolean(patch.secretCard ?? settings.secretCard)
+  const specialMode = secretCard || gameMode === '20cards'
   const next = normalizeOpponentSettings(settings, {
     ...patch,
-    testing,
+    testing, gameMode, secretCard,
+    ...(specialMode && (patch.opponentAi ?? settings.opponentAi) !== 'local' ? { opponentAi: 'rules' } : {}),
     ...(!testing ? { tabletop: 'abilities-new-cards', wildDeck: false, showOpponentCards: true } : {}),
   })
   next.tabletop = normalizePlayableTabletopRules(next.tabletop)
+  if (next.monsterDeck !== undefined) {
+    const definitions = getCoreCards({ tabletop: 'monsters', includeDisabled: true })
+    const clean = normalizeMonsterDeck(next.monsterDeck, definitions)
+    const valid = monsterDeckRecipe(definitions, { monsterDeck: clean, wildDeck: next.wildDeck }).total >= MIN_MONSTER_DECK
+    const enoughForMode = !specialMode || monsterDeckRecipe(definitions, { monsterDeck: clean, wildDeck: next.wildDeck }).total >= 40
+    const counts = valid && enoughForMode ? clean : {}
+    if (JSON.stringify(counts) !== JSON.stringify(next.monsterDeck)) next.monsterDeck = counts
+  }
   return next
 }
 
@@ -109,8 +128,9 @@ export function getOpponentDecisionKey(dealId, game) {
 }
 
 function createGameForMode(mode, draftFirstPicker = 'player', settings = DEFAULT_SETTINGS) {
-  if (mode === 'five-hand-discard') return createFiveHandDiscardGame({ wildDeck: settings.wildDeck, tabletop: settings.tabletop })
-  return withOpponentAiTurn(createDraftGame({ firstPicker: draftFirstPicker, wildDeck: settings.wildDeck, tabletop: settings.tabletop }), settings)
+  if (mode === '20cards') return createTwentyCardsGame({ wildDeck: settings.wildDeck, tabletop: settings.tabletop, monsterDeck: settings.monsterDeck })
+  if (mode === 'five-hand-discard') return createFiveHandDiscardGame({ wildDeck: settings.wildDeck, tabletop: settings.tabletop, monsterDeck: settings.monsterDeck })
+  return withOpponentAiTurn(createDraftGame({ firstPicker: draftFirstPicker, secretCard: settings.testing && settings.secretCard, wildDeck: settings.wildDeck, tabletop: settings.tabletop, monsterDeck: settings.monsterDeck }), settings)
 }
 
 function getNextDraftStartingPicker(current) {
@@ -215,7 +235,7 @@ function createInitialSessionState() {
       if (restored.preBattle.pendingResolution) restored = sessionReducer(restored, { type: 'RESOLVE_PRE_BATTLE_PENDING_DRAW_ALL_NEW_1' })
       const settings = normalizePlaySettings(restored.settings, { gameMode: restored.gameMode })
       // Redeal an old test setup instead of concealing its rules behind the normal menu.
-      if (settings.tabletop === restored.settings.tabletop && settings.wildDeck === restored.settings.wildDeck) {
+      if (settings.gameMode === restored.gameMode && Boolean(settings.secretCard) === Boolean(restored.settings.secretCard) && settings.tabletop === restored.settings.tabletop && settings.wildDeck === restored.settings.wildDeck) {
         return { ...restored, lastTransition: null, pendingPlayerDraftPickAnimation: null,
           settings,
           suppressedHandCardIds: { player: [], opponent: [] },
@@ -261,10 +281,11 @@ function createInitialSessionState() {
 // (opponent turn, dealing, animations, battle).
 export function getTestEditTarget(state) {
   if (!state.settings?.testing || state.battleStarted) return null
+  if (state.game.mode === '20cards' || state.game.secretCard) return null
   const { game, preBattle } = state
   if (game.phase === 'battle-ready') {
     if (preBattle.pendingResolution || preBattle.pendingAnimation || preBattle.opponentSearchKey
-      || preBattle.recycleSelection || preBattle.playerPendingDiscard) return null
+      || preBattle.recycleSelection || preBattle.monsterTransformUid || preBattle.playerPendingDiscard) return null
     return 'preparation'
   }
   if (game.phase === 'draft-player-pick' || game.phase.startsWith('player-discard')) return 'game'
@@ -292,6 +313,33 @@ function applyTestEdit(state, edit) {
 
 export function sessionReducer(state, action) {
   switch (action.type) {
+    case 'PLACE_LINEUP_CARD': {
+      const game = placeLineupCard(state.game, 'player', action.uid, action.slot)
+      return game === state.game ? state : { ...state, game }
+    }
+    case 'LOCK_LINEUP': {
+      if (state.game.mode !== '20cards') return state
+      let game = lockLineup(state.game, 'player')
+      if (game === state.game) return state
+      if (state.settings.opponentAi !== 'local' && !state.onlineHuman && !game.opponentLocked) {
+        game = lockLineup({ ...game, opponentLineup: chooseBotLineup(game.opponentPool) }, 'opponent')
+      }
+      return { ...state, game, preBattle: createPreBattleState(game) }
+    }
+    case 'NEXT_MATCH_ROUND': {
+      if (state.game.mode !== '20cards' || !state.battleStarted) return state
+      const prep = state.preBattle
+      const winner = state.settings.tabletop
+        ? resolveTabletopBattle(prep.playerHand, prep.opponentHand, { playerType: getTabletopChoice(prep).selectedType,
+          opponentType: action.opponentType }).winner
+        : simulateBattle(prep.playerHand, prep.opponentHand, { deck: prep.deck }).winner
+      const roundResults = [...state.game.roundResults, winner]
+      if (twentyCardsScore(roundResults).complete) return state
+      const game = beginTwentyCardsRound({ ...state.game, roundIndex: state.game.roundIndex + 1, roundResults }, prep.deck)
+      return { ...state, game, preBattle: createPreBattleState(game), battleStarted: false, battleLogOpen: false,
+        battleInstance: state.battleInstance + 1, gameSessionKey: state.gameSessionKey + 1,
+        otherUi: {}, selectedIds: [], suppressedHandCardIds: { player: [], opponent: [] } }
+    }
     case 'TEST_SWAP_CARDS':
       return applyTestEdit(state, (container, keys) => swapTestCards(container, keys, action.uidA, action.uidB))
 
@@ -317,8 +365,8 @@ export function sessionReducer(state, action) {
     }
 
     case 'RESET_GAME': {
-      const nextMode = action.nextMode ?? state.gameMode
-      const nextSettings = normalizeOpponentSettings(state.settings, { gameMode: nextMode })
+      const nextSettings = normalizePlaySettings(state.settings, { gameMode: action.nextMode ?? state.gameMode })
+      const nextMode = nextSettings.gameMode
       const nextBattleInstance = state.battleInstance + 1
       const nextGameSessionKey = state.gameSessionKey + 1
 
@@ -487,7 +535,7 @@ export function sessionReducer(state, action) {
       return createTransitionResult(state, {
         game: nextGame,
         preBattle: createPreBattleState(nextGame),
-        suppressedHandCardIds: pickedUid ? {
+        suppressedHandCardIds: pickedUid && !state.game.secretOpening ? {
           ...state.suppressedHandCardIds,
           opponent: state.suppressedHandCardIds.opponent.includes(pickedUid)
             ? state.suppressedHandCardIds.opponent
@@ -562,6 +610,11 @@ export function sessionReducer(state, action) {
 
       if (!directCard) return state
 
+      if (directCard.id === 'monster_transform') {
+        return createTransitionResult(state, { preBattle: { ...current, monsterTransformUid: directCard.uid,
+          armedPlayerCopyUid: null, recycleSelection: null } })
+      }
+
       if (directCard.id === 'recycle_card') {
         if ((current.playerDiscard?.length ?? 0) <= 0) {
           return createTransitionResult(state, {
@@ -635,6 +688,18 @@ export function sessionReducer(state, action) {
         },
       })
     }
+
+    case 'CHOOSE_MONSTER_TRANSFORM': {
+      const current = state.preBattle
+      if (state.battleStarted || current.playerFinished || current.playerPendingDiscard || current.opponentSearchKey || !current.monsterTransformUid) return state
+      if (!['critter', 'robot', 'dragon'].includes(action.damageType)) return state
+      const source = getActivatablePreBattleCards(current.playerHand, current.playerActivated).find(card => card.uid === current.monsterTransformUid && card.id === 'monster_transform')
+      if (!source) return state
+      const result = applyPreparationAction(current, 'player', { type: 'prepare', sourceUid: source.uid, targetUid: action.damageType })
+      return createTransitionResult(state, { preBattle: { ...result, monsterTransformUid: null, tabletopChoice: null, activationTick: current.activationTick + 1 } })
+    }
+    case 'CANCEL_MONSTER_TRANSFORM':
+      return { ...state, preBattle: { ...state.preBattle, monsterTransformUid: null } }
 
     case 'TOGGLE_PREPARATION_DISCARD':
     case 'SUBMIT_PREPARATION_DISCARD':
@@ -770,7 +835,7 @@ export function sessionReducer(state, action) {
 
     case 'CHOOSE_TABLETOP_TYPE': {
       if (!state.settings?.tabletop || state.battleStarted || state.game.phase !== 'battle-ready'
-        || state.preBattle.pendingResolution || state.preBattle.playerPendingDiscard || state.preBattle.armedPlayerCopyUid || state.preBattle.recycleSelection
+        || state.preBattle.pendingResolution || state.preBattle.playerPendingDiscard || state.preBattle.armedPlayerCopyUid || state.preBattle.recycleSelection || state.preBattle.monsterTransformUid
         || state.preBattle.opponentSearchKey) return state
       const choice = getTabletopChoice(state.preBattle)
       const card = state.preBattle.playerHand.find((entry) => entry.uid === action.uid)
@@ -788,7 +853,7 @@ export function sessionReducer(state, action) {
       return { ...state, preBattle: { ...state.preBattle, tabletopTypeCardUid: null } }
 
     case 'START_BATTLE': {
-      if (state.battleStarted || state.game.phase !== 'battle-ready' || state.preBattle.pendingResolution || state.preBattle.playerPendingDiscard) return state
+      if (state.battleStarted || state.game.phase !== 'battle-ready' || state.preBattle.pendingResolution || state.preBattle.playerPendingDiscard || state.preBattle.monsterTransformUid) return state
       if (state.settings?.tabletop && getTabletopChoice(state.preBattle).needsChoice) {
         return { ...state, preBattle: { ...state.preBattle, playerFinished: true, armedPlayerCopyUid: null, recycleSelection: null } }
       }
@@ -815,6 +880,7 @@ export function sessionReducer(state, action) {
     // Testing: back to the start of preparation with the same hands and deck order.
     case 'CLOSE_BATTLE_OVERLAY':
     case 'REPLAY_PREPARATION':
+      if (state.game.mode === '20cards') return state
       if (action.type === 'REPLAY_PREPARATION' && (!state.settings?.testing || !state.battleStarted)) return state
       return createTransitionResult(state, {
         battleStarted: false,
@@ -1363,6 +1429,10 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
 
   return {
     rawSession: session,
+    placeLineupCard: (uid, slot) => dispatch({ type: 'PLACE_LINEUP_CARD', uid, slot }),
+    lockLineup: () => dispatch({ type: 'LOCK_LINEUP' }),
+    nextMatchRound: () => dispatch({ type: 'NEXT_MATCH_ROUND', opponentType: online || localMultiplayer
+      ? getTabletopChoice({ ...preBattle, playerHand: preBattle.opponentHand, tabletopChoice: session.otherUi?.tabletopChoice }).selectedType : null }),
     opponentAiFeedback: aiFeedback?.error && [opponentDecisionKey, opponentSearchKey].includes(aiFeedback.key)
       ? aiFeedback : awaitingDiscardDecision && aiFeedback?.key === opponentDecisionKey ? aiFeedback : null,
     retryOpponentAi: () => { setAiFeedback(null); setAiRetry((count) => count + 1) },
@@ -1395,6 +1465,9 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     choosingTabletopType,
     choosePlayerTabletopType,
     cancelTabletopTypeChoice,
+    monsterTransformUid: preBattle.monsterTransformUid,
+    chooseMonsterTransform: (damageType) => dispatch({ type: 'CHOOSE_MONSTER_TRANSFORM', damageType }),
+    cancelMonsterTransform: () => dispatch({ type: 'CANCEL_MONSTER_TRANSFORM' }),
     tabletopTypeCardUid: preBattle.tabletopTypeCardUid,
     tabletopSelectedCardUid: tabletopChoice.selectedType ? preBattle.tabletopChoice?.cardUid : null,
     deckCount: resolvedDeckCount,
@@ -1410,7 +1483,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     submitDiscard,
     handleDraftPick,
     closeBattleOverlay,
-    replayPreparation: settings.testing && !online ? replayPreparation : null,
+    replayPreparation: settings.testing && !online && game.mode !== '20cards' ? replayPreparation : null,
     startBattle,
     isWaitingForPlayerChoice,
     highlightedPreBattleIds,

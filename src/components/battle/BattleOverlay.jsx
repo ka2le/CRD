@@ -8,21 +8,23 @@ const RESULT_COPY = {
   tie: { title: 'Draw', tone: 'tie' },
 }
 
-export default function BattleOverlay({ battlePlayback, battleResult, onNewGame, onReplayPreparation = null, onClose, visible, playerName = 'You', opponentName = 'Opponent', spectating = false, newGameLabel = 'Play again' }) {
+export default function BattleOverlay({ battlePlayback, battleResult, onNewGame, onReplayPreparation = null, onClose, visible, playerName = 'You', opponentName = 'Opponent', spectating = false, newGameLabel = 'Play again', matchScore = null }) {
   if (!visible || !battlePlayback || !battleResult) return null
 
-  const copy = RESULT_COPY[battleResult.winner] ?? RESULT_COPY.tie
+  const resultWinner = matchScore?.complete ? matchScore.winner : battleResult.winner
+  const copy = RESULT_COPY[resultWinner] ?? RESULT_COPY.tie
   const playerDealt = battlePlayback.playerTotalDamageDealt
   const opponentDealt = battlePlayback.opponentTotalDamageDealt
   const maxDealt = Math.max(playerDealt, opponentDealt, 1)
   const tabletop = battleResult.mode === 'tabletop'
-  const winnerName = battleResult.winner === 'player' ? playerName : battleResult.winner === 'opponent' ? opponentName : null
+  const winnerName = resultWinner === 'player' ? playerName : resultWinner === 'opponent' ? opponentName : null
 
   return (
     <div className={`battle-result battle-result--${copy.tone}`} onClick={onClose}>
       <div className="battle-result__panel" onClick={(event) => event.stopPropagation()}>
         <div className="battle-result__rays" aria-hidden="true" />
         <h2 className="battle-result__title">{spectating && winnerName ? `${winnerName} wins` : copy.title}</h2>
+        {matchScore ? <p className="match-score">{matchScore.complete ? 'Match' : 'Round'} · {matchScore.player} – {matchScore.opponent}</p> : null}
         {winnerName && !spectating ? <p className="battle-result__winner">{winnerName} wins</p> : null}
 
         {tabletop ? (

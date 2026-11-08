@@ -8,6 +8,7 @@ const BATTLE_RULES = [
   { value: false, label: 'Battle' },
   { value: 'threshold', label: 'Threshold' },
   { value: 'abilities-main', label: 'Abilities' },
+  { value: 'monsters', label: 'Monsters' },
   { value: 'abilities-new-cards', label: 'Abilities+NewCards' },
 ]
 
@@ -109,19 +110,31 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
               <GameIcon name="redraw" />
               <span>Discard</span>
             </button>
+            {settings.testing ? <button type="button" role="radio" aria-checked={gameMode === '20cards'}
+              className={gameMode === '20cards' ? 'is-on' : ''}
+              onClick={() => run(() => gameMode !== '20cards' && onChangeGameMode('20cards'))}>
+              <GameIcon name="copy" /><span>20Cards</span>
+            </button> : null}
           </div>
 
           <label className="screen-menu__toggle">
             <input
               type="checkbox"
               checked={Boolean(settings.testing)}
-              disabled={humanOpponent || settings.opponentAi === 'local'}
+              disabled={humanOpponent}
               onChange={(event) => onUpdateSettings({ testing: event.target.checked })}
             />
             <span className="screen-menu__switch" aria-hidden="true" />
             <SvgIcon name="flask" />
             <span>Testing</span>
           </label>
+
+          {settings.testing && gameMode === 'draft' ? <label className="screen-menu__toggle">
+            <input type="checkbox" checked={Boolean(settings.secretCard)}
+              onChange={event => onUpdateSettings({ secretCard: event.target.checked })} />
+            <span className="screen-menu__switch" aria-hidden="true" />
+            <SvgIcon name="eye-off" /><span>Secret Card</span>
+          </label> : null}
 
           {settings.testing ? (
             <div className="screen-menu__group">
@@ -148,12 +161,11 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
             <select
               value={humanOpponent ? 'human' : settings.opponentAi}
               disabled={humanOpponent}
-              onChange={(event) => run(() => onUpdateSettings({ opponentAi: event.target.value,
-                ...(event.target.value === 'local' ? { testing: false } : {}) }))}
+              onChange={(event) => run(() => onUpdateSettings({ opponentAi: event.target.value }))}
               aria-label="Opponent"
             >
               {humanOpponent ? <option value="human">Player in room</option> : null}
-              {getOpponentAiOptions(gameMode, settings.tabletop).map((option) => (
+              {getOpponentAiOptions(gameMode, settings.tabletop).filter(option => !(settings.secretCard || gameMode === '20cards') || option.id === 'rules').map((option) => (
                 <option key={option.id} value={option.id}>{option.label}</option>
               ))}
               <option value="local">2 players · same screen</option>
@@ -187,7 +199,7 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
             </>
           ) : null}
 
-          {settings.testing ? (
+          {settings.testing && gameMode !== '20cards' && !settings.secretCard ? (
             <button type="button" className="screen-menu__item" onClick={() => run(onTestDeck)}>
               <SvgIcon name="flask" />
               <span>Test deck</span>

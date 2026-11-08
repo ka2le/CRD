@@ -46,12 +46,14 @@ function advanceLocalTurn(state, forceHandoff = false, skipForced = false) {
     if (next.preBattle.playerFinished && next.preBattle.opponentFinished) {
       next = { ...next, battleStarted: true, battleInstance: next.battleInstance + 1 }
     } else if (seatView(next, seat).preBattle.playerFinished) seat = otherSeat(seat)
+  } else if (next.game.mode === '20cards' && next.game.phase === 'lineup') {
+    if (next.game[seat === 'host' ? 'playerLocked' : 'opponentLocked']) seat = otherSeat(seat)
   } else if (next.game.mode === 'draft') {
     seat = next.game.currentPicker === 'opponent' ? 'guest' : 'host'
   } else if (next.discardReady?.[seat]) {
     seat = otherSeat(seat)
   }
-  const drafting = next.game.mode === 'draft' && next.game.phase !== 'battle-ready'
+  const drafting = next.game.mode === 'draft' && !next.game.secretOpening && next.game.phase !== 'battle-ready'
   return { ...next, localPlay: { ...next.localPlay, seat,
     handoff: !drafting && !next.battleStarted && !next.localPlay.showAll
       && (forceHandoff || seat !== state.localPlay.seat || state.localPlay.handoff) } }
@@ -72,8 +74,8 @@ export function reduceLocalMultiplayer(state, action, reduceSession) {
   }
   if (local && PLAYER_ACTIONS.has(action.type)) {
     if (state.localPlay.handoff || state.battleStarted) return state
-    const { type, uid, damageType } = action
-    const command = { type, ...(uid === undefined ? {} : { uid }), ...(damageType === undefined ? {} : { damageType }) }
+    const { type, uid, damageType, slot } = action
+    const command = { type, ...(uid === undefined ? {} : { uid }), ...(damageType === undefined ? {} : { damageType }), ...(slot === undefined ? {} : { slot }) }
     const next = applyRoomAction(state, state.localPlay.seat, command)
     // A public draft enters private preparation. During Discard, keep the hand
     // visible across consecutive steps owned by the same person.
@@ -81,16 +83,18 @@ export function reduceLocalMultiplayer(state, action, reduceSession) {
     return advanceLocalTurn(next, enteringPreparation && state.game.mode === 'draft', enteringPreparation)
   }
   if (local && ['RESOLVE_OPPONENT_DRAFT_PICK', 'APPLY_OPPONENT_DISCARD'].includes(action.type)) return state
-  const next = reduceSession(state, action)
+  const next = reduceSession(state, local && action.type === 'NEXT_MATCH_ROUND'
+    ? { ...action, opponentType: getTabletopChoice({ ...state.preBattle, playerHand: state.preBattle.opponentHand,
+      tabletopChoice: state.otherUi?.tabletopChoice }).selectedType } : action)
   if (!isLocalMultiplayer(next)) return next.localPlay ? { ...next, localPlay: null } : next
   return next.dealId !== state.dealId || !next.localPlay
     ? initializeLocalMultiplayer({ ...next, localPlay: null, otherUi: {}, otherSelectedIds: [], discardReady: {} })
-    : next
+    : action.type === 'NEXT_MATCH_ROUND' && next !== state ? advanceLocalTurn(next, true, true) : next
 }
 
 export function getLocalDisplaySeat(state) {
   // Public drafting has permanent table positions; private turns face the holder.
-  return state.game.mode === 'draft' && state.game.phase !== 'battle-ready' ? 'host' : state.localPlay.seat
+  return state.game.mode === 'draft' && !state.game.secretOpening && state.game.phase !== 'battle-ready' ? 'host' : state.localPlay.seat
 }
 
 export function localMultiplayerView(state) {

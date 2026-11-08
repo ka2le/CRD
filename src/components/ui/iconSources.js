@@ -4,6 +4,7 @@ const ICON_BASE = 'https://ka2le.github.io/chatgpt-apps3/images/mp/'
 
 export const ICON_SOURCES = {
   critter: `${ICON_BASE}rabbit.png`,
+  monster: `${ICON_BASE}monster2.png`,
   robot: `${ICON_BASE}robot_sharp.png`,
   dragon: `${ICON_BASE}dragon.png`,
   damage: `${ICON_BASE}suit_hearts_broken.png`,
@@ -18,7 +19,7 @@ export const ICON_SOURCES = {
   arrow: `${ICON_BASE}arrow2.png`,
 }
 
-export const CLASS_KEYS = ['critter', 'robot', 'dragon']
+export const CLASS_KEYS = ['critter', 'robot', 'dragon', 'monster']
 
 export function getIconUrl(name) {
   return getImageUrl(ICON_SOURCES[name])

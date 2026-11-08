@@ -6,7 +6,6 @@ import { computeGridFit, useElementSize } from '../../hooks/useFitLayout'
 import { formatDelta, getDamageDelta } from '../card/cardMeta'
 import { DEAL_STAGGER_MS } from '../../hooks/dealTiming'
 
-const PACK_SIZE = 5
 
 // Cards keep their slot when neighbours are picked, like a real table.
 function usePackSlots(packKey, row) {
@@ -25,6 +24,7 @@ function usePackSlots(packKey, row) {
 
 export default function PackArea({
   packKey,
+  packSize = 5,
   row = [],
   onPick,
   canPick = false,
@@ -39,10 +39,10 @@ export default function PackArea({
   const slotUids = usePackSlots(packKey, row)
   const byUid = new Map(row.map((card) => [card.uid, card]))
   const gap = size.width < 520 ? 6 : 12
-  const fit = computeGridFit({ width: size.width, height: size.height, count: PACK_SIZE, gap, maxCardHeight: 520 })
+  const fit = computeGridFit({ width: size.width, height: size.height, count: packSize, gap, maxCardHeight: 520 })
   const cardWidth = fit.cardWidth
   const maxWidth = (fit.cols * cardWidth) + ((fit.cols - 1) * gap) + 1
-  const slotCount = Math.max(PACK_SIZE, slotUids.length)
+  const slotCount = Math.max(packSize, slotUids.length)
 
   return (
     <section

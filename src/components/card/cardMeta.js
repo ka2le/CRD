@@ -3,7 +3,7 @@ import { getHandAverageDamage } from '../../game/cardEvaluator'
 import { isPreBattleActivatableCard } from '../../game/preBattle'
 import { TABLETOP_SHIELD_COST, MAIN_ABILITY_SHIELD_COST } from '../../game/tabletop'
 
-const CLASS_ORDER = ['critter', 'robot', 'dragon']
+const CLASS_ORDER = ['critter', 'robot', 'dragon', 'monster']
 const ALL_CLASS_IDS = new Set(['one_off_each', 'any_off_each', 'single_faction_2', 'joker'])
 
 // Visual "families" used for frame colour and glow.
@@ -13,7 +13,7 @@ export function getCardAccents(card) {
     const classes = CLASS_ORDER.filter((key) => card.stats?.includes(key))
     return classes.length ? classes : ['neutral']
   }
-  if (ALL_CLASS_IDS.has(card.id)) return [...CLASS_ORDER]
+  if (ALL_CLASS_IDS.has(card.id)) return CLASS_ORDER.filter(key => key !== 'monster' || (card.tabletop === 'monsters' && card.id === 'single_faction_2'))
   if (card.effect?.dmgType) return [card.effect.dmgType]
   if (card.effect?.shield || card.id === 'shield_is_dmg') return ['shield']
   if (card.tabletop && !isPreBattleActivatableCard(card)) return ['neutral']
@@ -41,6 +41,11 @@ export function getTimingLabel(cd) {
 }
 
 const SPECIAL_TEXT = {
+  monster_draw_discard: 'Draw one card per Monster stat, then discard that many cards. The count is fixed when activated; finish discarding before using another special. You may discard this card.',
+  monster_transform: 'Choose Critter, Robot or Dragon. All Monster stats currently in your hand become that faction for the rest of this game. Newly drawn Monster stats are unchanged.',
+  monster_critter_dmg: 'Neutral power = Critter stats × Monster stats.',
+  monster_robot_dmg: 'Neutral power = Robot stats × Monster stats. Does not count as a Robot attack for Perfect Balance.',
+  monster_dragon_dmg: 'Neutral power = Dragon stats × Monster stats.',
   recycle_card: 'Take one card back from the discard pile.',
   draw_all_new_1: 'Discard your whole hand, draw that many +1.',
   draw_2_extra: 'Draw two extra cards.',
@@ -58,7 +63,7 @@ const SPECIAL_TEXT = {
 }
 
 const TABLETOP_TEXT = {
-  single_faction_2: 'With stats in exactly one faction, adds 2 power per stat of that faction. Multiple stat cards and points are allowed. With no stats or stats in two or three factions, adds nothing. Counts as two attacks of the powered faction, including for Perfect Balance. Overwhelming can add its extra Dragon stat.',
+  single_faction_2: 'With stats in exactly one faction, adds 2 power per stat of that faction. Multiple stat cards and points are allowed. With no stats or stats in more than one faction, adds nothing. Counts as two attacks of the powered faction, including for Perfect Balance. Overwhelming can add its extra Dragon stat.',
   no_stats_to_2: SPECIAL_TEXT.no_stats_to_2,
   shield_ulti: '3 shield points. Dragons are immune.',
   critter_shield: 'Adds one Critter stat and one shield point. Counts as a stat card for From Nothing.',

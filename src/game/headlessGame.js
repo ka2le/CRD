@@ -1,3 +1,4 @@
+import { startingHandSize, MONSTER_PACK_SIZE } from './monsters.js'
 import {
   createDraftGame, applyDraftPick, resolveOpponentDraftPick, commitDraftDiscard, revealNextDraftPack,
 } from './draftMode.js'
@@ -13,6 +14,7 @@ export const HEADLESS_PROTOCOL_VERSION = 2
 export const HEADLESS_RULES_VERSION = 'digital-21-50-preparation-v2'
 const rulesVersion = (config) => {
   const rules = normalizeTabletopRules(config.tabletop)
+  if (rules === 'monsters') return 'monsters-v1'
   return rules ? `tabletop-single-score-${rules === 'abilities-new-cards' ? 'v6' : rules === 'abilities-main' ? 'v13' : 'v5'}-${rules}` : HEADLESS_RULES_VERSION
 }
 const SIDES = ['player', 'opponent']
@@ -30,7 +32,7 @@ function summarizeCard(card) {
 function configuredDeck(config) {
   if (config.deck === undefined) return null
   if (!Array.isArray(config.deck)) throw new Error('deck must be an array')
-  const definitions = new Map(getCoreCards({ tabletop: config.tabletop }).map((card) => [card.id, card]))
+  const definitions = new Map(getCoreCards({ tabletop: config.tabletop, includeDisabled: config.tabletop === 'monsters' }).map((card) => [card.id, card]))
   const seen = new Set()
   return config.deck.map((entry) => {
     if (!entry || typeof entry.uid !== 'string' || !entry.uid || seen.has(entry.uid)) {
@@ -44,8 +46,8 @@ function configuredDeck(config) {
 }
 
 export function getHeadlessSpec(config = {}) {
-  const pool = configuredDeck(config) ?? getExpandedCoreDeck({ wildDeck: config.wildDeck ?? true, tabletop: config.tabletop })
-  const definitions = getCoreCards({ tabletop: config.tabletop }).map((card) => config.tabletop ? toTabletopCard(card, config.tabletop) : card)
+  const pool = configuredDeck(config) ?? getExpandedCoreDeck({ wildDeck: config.wildDeck ?? true, tabletop: config.tabletop, monsterDeck: config.monsterDeck })
+  const definitions = getCoreCards({ tabletop: config.tabletop, includeDisabled: config.tabletop === 'monsters' }).map((card) => config.tabletop ? toTabletopCard(card, config.tabletop) : card)
   // A recycle adds one card; at most every original recycle and copy source can do so.
   const maxHandCards = pool.length + pool.filter((card) => (
     card.id === 'recycle_card' || card.id === 'copy_card_in_hand'
@@ -53,6 +55,7 @@ export function getHeadlessSpec(config = {}) {
   return {
     protocolVersion: HEADLESS_PROTOCOL_VERSION,
     rulesVersion: rulesVersion(config),
+    ...(config.tabletop === 'monsters' ? { handSize: startingHandSize(config.tabletop), packSize: MONSTER_PACK_SIZE } : {}),
     cardTypes: definitions.map((card) => ({
       id: card.id, type: card.type, stats: [...(card.stats ?? [])], effect: { ...(card.effect ?? {}) },
       cd: card.cd ?? null, copies: card.copies,
@@ -244,7 +247,7 @@ export function createHeadlessGame(config = {}) {
     }
   }
   const deck = configuredDeck(config)
-  if (deck && deck.length < (mode === 'draft' ? 25 : 10)) throw new Error('Injected deck too small for initial hand building')
+  if (deck && deck.length < startingHandSize(config.tabletop) * (mode === 'draft' ? (config.tabletop === 'monsters' ? MONSTER_PACK_SIZE : 5) : 2)) throw new Error('Injected deck too small for initial hand building')
   const options = { ...config, wildDeck: config.wildDeck ?? true, deck: deck ?? undefined }
   const game = mode === 'draft'
     ? createDraftGame({ ...options, includeRecentMoves: false, openingDraftAnimation: 'idle' })
@@ -302,6 +305,7 @@ export function encodeObservation(state, side = state.config.control === 'both' 
     opponentHandIsCurrent: !preparation || state.terminal,
     draftRow: (game.draftRow ?? []).map(summarizeCard),
     packNumber: game.packNumber ?? 0,
+    ...(game.handSize ? { handSize: game.handSize, packSize: game.packSize ?? null } : {}),
     picksThisPack: game.picksThisPack ?? 0,
     firstPicker: game.firstPicker ?? null,
     playerDiscardsUsed: game[`${side}DiscardsUsed`] ?? 0,

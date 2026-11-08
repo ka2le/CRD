@@ -17,13 +17,13 @@ function preloadImage(src) {
   image.addEventListener('error', markLoaded, { once: true })
 }
 
-export default function ImagePreloader() {
+export default function ImagePreloader({ tabletop = true }) {
   const imageUrls = useMemo(() => {
-    const cards = getExpandedCoreDeck({ tabletop: true })
+    const cards = getExpandedCoreDeck({ tabletop })
     // Card back first: it is on screen before any face is revealed.
     const backside = 'https://cdn.midjourney.com/210b3cd1-dec8-453e-8d1a-d967cea6e283/0_0.png'
     return Array.from(new Set([backside, ...cards.flatMap((card) => card.images ?? [])].map(getImageUrl).filter(Boolean)))
-  }, [])
+  }, [tabletop])
 
   useEffect(() => {
     imageUrls.forEach((src) => preloadImage(src))

@@ -1,3 +1,4 @@
+import { MONSTER_FACTIONS } from './monsters.js'
 import { isMainAbilityRules } from './tabletop.js'
 import {
   TABLETOP_CLASSES, MAIN_ABILITY_SHIELD_COST, TABLETOP_SHIELD_COST, ROBOT_ULTI_ATTACK_COUNT,
@@ -11,7 +12,7 @@ import {
 export const RESOLUTION_SIDES = ['player', 'opponent']
 
 export function canAnimateTabletopResolution(result) {
-  return Boolean(result?.mode === 'tabletop' && ['abilities-main', 'abilities-new-cards', 'threshold'].includes(result.player?.rules)
+  return Boolean(result?.mode === 'tabletop' && ['abilities-main', 'abilities-new-cards', 'monsters', 'threshold'].includes(result.player?.rules)
     && result.player.rules === result.opponent?.rules)
 }
 
@@ -32,19 +33,20 @@ function emptyDamage() {
 function buildSide(hand, score, enemyHand) {
   const main = isMainAbilityRules(score.rules)
   const base = getTabletopBaseProfile(hand)
+  const classes = score.rules === 'monsters' ? MONSTER_FACTIONS : TABLETOP_CLASSES
 
   // Stat pips, card by card and faction by faction.
-  const stats = TABLETOP_CLASSES.map((type) => ({
+  const stats = classes.map((type) => ({
     type,
     total: base.stats[type],
     cards: hand.filter((card) => card.type === 'stat' && card.stats?.includes(type))
       .map((card) => ({ uid: card.uid, count: card.stats.filter((stat) => stat === type).length }))
-      .concat(hand.some((card) => card.type === 'stat') || !hand.some((card) => card.id === 'no_stats_to_2' && card.tabletop === 'abilities-new-cards') ? []
+      .concat(hand.some((card) => card.type === 'stat') || type === 'monster' || !hand.some((card) => card.id === 'no_stats_to_2' && ['abilities-new-cards', 'monsters'].includes(card.tabletop)) ? []
         : [{ uid: hand.find((card) => card.id === 'no_stats_to_2').uid, count: 2 }]),
   }))
 
   // Typed attacks fire once per matching stat; each firing adds the card's hearts.
-  const pulses = TABLETOP_CLASSES.map((type) => ({
+  const pulses = classes.map((type) => ({
     type,
     stats: base.stats[type],
     cards: hand.filter((card) => isTypedAttack(card, type, base)).map((card) => ({ uid: card.uid, units: attackUnits(card) })),
@@ -55,7 +57,7 @@ function buildSide(hand, score, enemyHand) {
     .map((attack) => ({ uid: attack.uid, type: attack.type ?? 'neutral', power: attack.power }))
 
   const baseDamage = emptyDamage()
-  for (const type of TABLETOP_CLASSES) baseDamage[type] = base.contributions[type]
+  for (const type of classes) baseDamage[type] = base.contributions[type]
   baseDamage.neutral = base.neutral
 
   // Overwhelming: one extra Dragon stat re-powers Dragon attacks and stat products.
@@ -85,7 +87,7 @@ function buildSide(hand, score, enemyHand) {
   const pointsByUid = Object.fromEntries(enemyHand.filter((card) => card.effect?.shield > 0)
     .map((card) => [card.uid, card.effect.shield]))
   const finalDamage = emptyDamage()
-  for (const type of TABLETOP_CLASSES) finalDamage[type] = score.contributions[type]
+  for (const type of classes) finalDamage[type] = score.contributions[type]
   finalDamage.neutral = score.neutral
 
   return {
@@ -102,7 +104,7 @@ function buildSide(hand, score, enemyHand) {
     balance,
     // Threshold rules add the faction bonus after shields; main rules add abilities before them.
     thresholdBonus: main ? 0 : score.bonus,
-    shields: { cards: shieldCards, pointsByUid, cost: costs[score.damageType] ?? 0, penalty: score.shieldPenalty, blocked: score.blocked },
+    shields: { cards: shieldCards, pointsByUid, cost: score.damageType === 'monster' ? 1 : (costs[score.damageType] ?? 0), penalty: score.shieldPenalty, blocked: score.blocked },
     final: {
       stats: { ...score.stats },
       damage: finalDamage,

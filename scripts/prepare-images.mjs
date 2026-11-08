@@ -43,6 +43,7 @@ function collect(value, role = 'icon') {
 collect(await readJson(path.join(root, 'data/cards.json')))
 collect(await readJson(path.join(root, 'data/tabletop-cards.json')))
 collect(await readJson(path.join(root, 'data/new-cards.json')))
+collect(await readJson(path.join(root, 'data/monster-cards.json')))
 const iconDefinitions = await readFile(path.join(root, 'src/components/card/cardData.js'), 'utf8')
 for (const [url] of iconDefinitions.matchAll(/https:\/\/[^'"\s]+/g)) collect(url)
 

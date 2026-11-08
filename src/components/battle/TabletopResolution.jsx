@@ -50,7 +50,7 @@ function LedgerRow({ side, name, plan, state, focus, current, stage, winner, cro
       current ? (current === side ? 'is-current' : 'is-waiting') : ''].filter(Boolean).join(' ')} aria-label={name}>
       <span className="ttr-row__name">{name}</span>
       <div className="ttr-row__cells">
-        {FACTIONS.map((type) => {
+        {(plan.rules === 'monsters' ? [...FACTIONS, 'monster'] : FACTIONS).map((type) => {
           const isMain = mainType === type
           const isCrowned = crowned && type === 'critter'
           return (
@@ -61,8 +61,8 @@ function LedgerRow({ side, name, plan, state, focus, current, stage, winner, cro
               isCrowned ? 'is-crowned' : ''].filter(Boolean).join(' ')}>
               {isCrowned ? <Crown className="ttr-cell__crown" /> : null}
               <span className="ttr-cell__icon" data-ttr={`${side}-${type}-icon`}><GameIcon name={type} title={type} /></span>
-              <span className="ttr-cell__stat" data-ttr={`${side}-${type}-stat`}>{state.stats[type]}</span>
-              <span className="ttr-cell__dmg" data-ttr={`${side}-${type}-dmg`}>{state.damage[type]}<GameIcon name="damage" /></span>
+              <span className="ttr-cell__stat" data-ttr={`${side}-${type}-stat`}>{state.stats[type] ?? 0}</span>
+              <span className="ttr-cell__dmg" data-ttr={`${side}-${type}-dmg`}>{state.damage[type] ?? 0}<GameIcon name="damage" /></span>
             </span>
           )
         })}

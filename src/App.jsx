@@ -5,6 +5,8 @@ import './App.css'
 import HandArea from './components/hand/HandArea'
 import ScreenMenu from './components/menu/ScreenMenu'
 import PackArea from './components/board/PackArea'
+import TwentyCardsBoard from './components/board/TwentyCardsBoard'
+import { twentyCardsScore } from './game/twentyCards'
 import Pile from './components/board/Pile'
 import ShuffleIntro from './components/board/ShuffleIntro'
 import BattleArena from './components/battle/BattleArena'
@@ -158,29 +160,38 @@ function AppContent() {
   // Deck browser: 'collection' (every card in the game) or 'test' (testing: the live deck/zones).
   const [deckView, setDeckView] = useState(null)
 
-  const testDeckAvailable = Boolean(settings.testing && !battleStarted && !session.localMultiplayer)
+  const testDeckAvailable = Boolean(settings.testing && !battleStarted && !session.localMultiplayer && game.mode !== '20cards' && !game.secretCard)
+  const lineupPhase = game.mode === '20cards' && game.phase === 'lineup'
 
   const layout = battleStarted
     ? 'battle'
-    : (game.mode === 'draft' && game.phase !== 'battle-ready' ? 'draft' : 'focus')
+    : lineupPhase ? 'lineup' : (game.mode === 'draft' && game.phase !== 'battle-ready' ? 'draft' : 'focus')
 
   const playerHand = battleStarted ? (battlePlayback?.playerHand ?? resolvedPlayerHand) : resolvedPlayerHand
   const opponentHand = battleStarted ? (battlePlayback?.opponentHand ?? resolvedOpponentHand) : resolvedOpponentHand
   const playerStats = useMemo(() => getHandStats(playerHand), [playerHand])
-  const opponentStats = useMemo(() => getHandStats(opponentHand), [opponentHand])
+  const opponentVisibleHand = !battleStarted && game.secretCard ? opponentHand.filter(card => !card.secret) : opponentHand
+  const opponentStats = getHandStats(opponentVisibleHand)
   const playerAverage = useMemo(() => getHandAverageDamage(playerHand), [playerHand])
-  const opponentAverage = useMemo(() => getHandAverageDamage(opponentHand), [opponentHand])
+  const opponentAverage = getHandAverageDamage(opponentVisibleHand)
 
   const privateLocalTurn = session.localMultiplayer && !battleStarted && !session.localPlay.showAll
-    && (game.mode === 'five-hand-discard' || game.phase === 'battle-ready')
+    && (game.mode === 'five-hand-discard' || game.mode === '20cards' || game.secretOpening || game.phase === 'battle-ready')
   const localHandoff = Boolean(session.localPlay?.handoff)
-  const opponentHidden = localHandoff || privateLocalTurn || (game.mode === 'five-hand-discard' && !settings.showOpponentCards && !battleStarted)
+  const opponentHidden = localHandoff || privateLocalTurn || (!battleStarted && (game.mode === '20cards' || (game.mode === 'five-hand-discard' && !settings.showOpponentCards)))
   const opponentThinking = (game.mode === 'draft' && game.phase === 'draft-opponent-thinking') || opponentDiscarding
     || opponentPreparing
   const playerTurn = !session.onlineBlocked && (layout === 'draft' ? canPickDraftCard : layout === 'focus')
   const battleFinished = battleStarted && showBattleResult && !tabletopCounting
   const resultDismissed = dismissedResultKey === battleKey
   const winner = battleFinished ? battleResult?.winner : null
+  const matchScore = game.mode === '20cards' ? twentyCardsScore([...game.roundResults,
+    ...(battleFinished && battleResult ? [battleResult.winner] : [])]) : null
+  const nextRoundAvailable = matchScore && battleFinished && !matchScore.complete
+  function handleMatchContinue() {
+    if (nextRoundAvailable) session.nextMatchRound()
+    else handleNewGame()
+  }
   const roster = room.presence ?? room.record?.roster
   const spectating = session.online && room.record?.role === 'viewer'
   const guestSeat = room.record?.role === 'guest'
@@ -315,13 +326,16 @@ function AppContent() {
   }
 
   const phasePips = game.mode === 'draft'
-    ? <Pips total={5} current={game.phase === 'battle-ready' ? 6 : game.packNumber} done={game.phase === 'battle-ready' ? 5 : game.packNumber - 1} />
+    ? <Pips total={game.handSize ?? 5} current={game.phase === 'battle-ready' ? (game.handSize ?? 5) + 1 : game.packNumber} done={game.phase === 'battle-ready' ? (game.handSize ?? 5) : game.packNumber - 1} />
+    : game.mode === '20cards' ? <span className="match-score">Round {game.roundIndex + 1} · {matchScore.player} – {matchScore.opponent}</span>
     : <Pips total={2} current={discardPhase ? game.playerDiscardsUsed + 1 : (opponentDiscarding ? game.playerDiscardsUsed : 3)} done={opponentDiscarding ? game.playerDiscardsUsed - 1 : game.playerDiscardsUsed} />
 
   const opponentHandProps = {
     hand: privateLocalTurn && isPreBattleReady ? game.opponentHand : opponentHand,
     side: 'opponent',
     hidden: opponentHidden,
+    hiddenIds: !battleStarted && game.secretCard && !(session.localMultiplayer && !game.secretOpening && localSeat === 'guest') ? opponentHand.filter(card => card.secret).map(card => card.uid) : [],
+    secretIds: !battleStarted && game.secretCard ? opponentHand.filter(card => card.secret).map(card => card.uid) : [],
     motionSection: 'opponent-hand',
     suppressedIds: battleStarted ? [] : (suppressedHandCardIds?.opponent ?? []),
     activeCardIds: battleStarted ? (battlePlayback?.opponentTriggeredIds ?? []) : [],
@@ -333,7 +347,7 @@ function AppContent() {
     animateOnMount: !game.devScenario && !session.localMultiplayer,
     enterFromSection: game.devScenario || session.localMultiplayer ? null : 'draw-deck',
     enterBaseDelayMs: dealLeadMs + 300,
-    inspectContextHand: opponentHand,
+    inspectContextHand: opponentVisibleHand,
   }
 
   const playerInteractive = !battleStarted && !session.onlineBlocked && !opponentPreparing
@@ -347,8 +361,11 @@ function AppContent() {
   }
   const factionPickerCard = playerHand.find((card) => card.uid === tabletopTypeCardUid)
   const playerHandProps = {
+    slots: game.handSize ?? 5,
     hand: playerHand,
     hidden: localHandoff,
+    hiddenIds: !battleStarted && game.secretCard && session.localMultiplayer && !game.secretOpening && localSeat === 'guest' ? playerHand.filter(card => card.secret).map(card => card.uid) : [],
+    secretIds: !battleStarted && game.secretCard ? playerHand.filter(card => card.secret).map(card => card.uid) : [],
     side: 'player',
     motionSection: 'player-hand',
     suppressedIds: battleStarted ? [] : (suppressedHandCardIds?.player ?? []),
@@ -374,7 +391,7 @@ function AppContent() {
       className={['app-shell', `app-shell--${layout}`].join(' ')}
       style={{ '--impact-ms': `${impactMs}ms`, '--burst-ms': `${Math.max(600, impactMs + 200)}ms` }}
     >
-      <ImagePreloader />
+      <ImagePreloader tabletop={settings.tabletop} />
       <div className="local-table-content">
       {room.entry ? <RoomEntry key={room.entry.key} room={room} /> : null}
       {roomStatus && !roomSheetOpen ? <button type="button" className={`room-status${room.error ? ' room-status--error' : room.presence?.pending?.length ? ' room-status--request' : ''}`} onClick={() => setRoomOpen(true)}>
@@ -403,7 +420,7 @@ function AppContent() {
           winner={winner}
         >
           <EmoteBubble emote={emoteSide === 'opponent' ? emote : null} side="opponent" />
-          {layout !== 'battle' ? phasePips : null}
+          {layout !== 'battle' || matchScore ? phasePips : null}
           {!session.localMultiplayer ? <RoomButtons room={room} onOpenRoom={() => setRoomOpen(true)} /> : null}
           {session.localMultiplayer && layout === 'focus' ? <button type="button" className="ui-button local-visibility"
             onClick={session.toggleLocalShowAll} aria-pressed={session.localPlay.showAll}>
@@ -434,6 +451,7 @@ function AppContent() {
 
         <div className="table__zone table__zone--opponent">
           <HandArea
+            slots={game.handSize ?? 5}
             key={`opp-${layout === 'battle' ? 'grid' : 'row'}`}
             {...opponentHandProps}
             layout={layout === 'battle' ? 'grid' : 'row'}
@@ -449,9 +467,13 @@ function AppContent() {
           </div> : null}
           {localHandoff ? <LocalHandoff name={playerName} onReveal={session.revealLocalTurn} /> : null}
           {!game.devScenario ? <ShuffleIntro key={dealId} /> : null}
-          {layout === 'draft' ? (
+          {lineupPhase && !localHandoff ? <TwentyCardsBoard key={`${dealId}-${localSeat ?? 'solo'}`}
+            pool={game.playerPool} lineup={game.playerLineup} locked={game.playerLocked}
+            onPlace={session.placeLineupCard} onLock={session.lockLineup} /> : null}
+          {layout === 'draft' && !localHandoff && !(game.secretOpening && opponentThinking) ? (
             <PackArea
-              packKey={`${dealId}-${game.packNumber}`}
+              packKey={`${dealId}-${game.packNumber}-${game.secretOpening ? localSeat ?? 'secret' : 'public'}`}
+              packSize={game.secretOpening ? 5 : game.packSize ?? 5}
               row={game.draftRow}
               onPick={handleDraftPick}
               canPick={canPickDraftCard}
@@ -462,6 +484,7 @@ function AppContent() {
               turn={draftTurn}
             />
           ) : null}
+          {game.secretOpening && opponentThinking && !localHandoff ? <div className="secret-pick-wait" role="status"><SvgIcon name="eye-off" />Opponent choosing a secret card</div> : null}
           {layout === 'focus' ? (
             <HandArea key="player-focus" {...playerHandProps} layout="grid" />
           ) : null}
@@ -500,9 +523,10 @@ function AppContent() {
           ) : null}
         </div>
 
-        {layout !== 'focus' ? (
+        {layout !== 'focus' && layout !== 'lineup' ? (
           <div className="table__zone table__zone--player">
             <HandArea
+              slots={game.handSize ?? 5}
               key={`player-${layout}`}
               {...playerHandProps}
               layout={layout === 'battle' ? 'grid' : 'row'}
@@ -539,9 +563,9 @@ function AppContent() {
             </button>
           ) : null}
           {battleFinished && (!session.online || room.record?.role === 'host') ? (
-            <button type="button" className="ui-button ui-button--primary table__action" onClick={handleNewGame}>
+            <button type="button" className="ui-button ui-button--primary table__action" onClick={handleMatchContinue}>
               <SvgIcon name="replay" />
-              <span>Again</span>
+              <span>{nextRoundAvailable ? 'Next round' : 'Again'}</span>
             </button>
           ) : null}
         </SideRail>
@@ -554,8 +578,9 @@ function AppContent() {
         playerName={playerName}
         opponentName={opponentName}
         spectating={spectating || session.localMultiplayer}
-        newGameLabel={session.online && room.record?.role !== 'host' ? 'Room controls' : 'Play again'}
-        onNewGame={handleNewGame}
+        newGameLabel={nextRoundAvailable ? `Round ${game.roundIndex + 2}` : session.online && room.record?.role !== 'host' ? 'Room controls' : 'Play again'}
+        onNewGame={handleMatchContinue}
+        matchScore={matchScore}
         onReplayPreparation={session.replayPreparation}
         onClose={() => setDismissedResultKey(battleKey)}
       />
@@ -588,6 +613,9 @@ function AppContent() {
 
       <HelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} tabletop={settings.tabletop} />
       <RoomSheet open={roomSheetOpen} onClose={closeRoomSheet} room={room} />
+      <FactionPicker open={Boolean(isPreBattleReady && session.monsterTransformUid && !localHandoff)} title="Transform Monster stats into…"
+        types={['critter', 'robot', 'dragon']} selectedType={null}
+        onChoose={session.chooseMonsterTransform} onClose={session.cancelMonsterTransform} />
       <FactionPicker open={Boolean(isPreBattleReady && factionPickerCard && !localHandoff)}
         types={factionPickerCard ? getCardTabletopTypes(factionPickerCard, tabletopChoice) : []}
         selectedType={tabletopChoice.selectedType}
@@ -600,6 +628,9 @@ function AppContent() {
         onSwitch={testDeckAvailable ? setDeckView : null}
         tabletop={settings.tabletop}
         wildDeck={Boolean(settings.wildDeck)}
+        testing={settings.testing}
+        monsterDeck={settings.monsterDeck}
+        onUpdateSettings={updateSettings}
       />
 
       <InfoOverlay

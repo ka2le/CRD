@@ -7,3 +7,8 @@ Each Shield card supplies two shield points. Critter and Robot lose one power pe
 The reference-card layouts are retained and show -1 / -1 / 0. See docs/TABLETOP_MODE.md and docs/CARD_LIBRARY.md for the current rules.
 
 The browser uses optimized local WebP artwork. Full-resolution originals and private workspace notes are excluded from this public snapshot.
+
+
+## Testing modes release (2026-11-08)
+
+Testing includes Monsters, Secret Card Draft and 20Cards. Monsters adds the fourth faction, six-card hands and editable deck recipes. Secret Card uses private opening choices; 20Cards locks three five-card lanes before round preparation and requires two wins to win the match. These modes support the opponents listed in their menus and same-screen play; normal games and rooms keep NC. See `docs/MONSTERS.md` and `docs/TESTING_HAND_MODES.md`.

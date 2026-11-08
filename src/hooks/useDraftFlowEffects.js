@@ -58,6 +58,8 @@ export default function useDraftFlowEffects({
 
         resolveOpponentDraftPick()
 
+        if (game.secretOpening) return
+
         startDraftPickFlight({
           pickedCard,
           pickedUid,

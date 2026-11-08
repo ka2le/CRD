@@ -19,7 +19,7 @@ export function pickPreparationAction(state, side = 'opponent') {
       const activated = new Set(next[`${side}Activated`])
       // Spent specials carry no future preparation value.
       const hand = next[`${side}Hand`].map((card) => activated.has(card.uid)
-        && ['draw_2_extra', 'draw_2_discard_2', 'recycle_card', 'draw_all_new_1'].includes(card.id)
+        && ['monster_draw_discard', 'monster_transform', 'draw_2_extra', 'draw_2_discard_2', 'recycle_card', 'draw_all_new_1'].includes(card.id)
         ? { ...card, id: 'spent_special' } : card)
       let score = evaluateTabletopHand(hand)
       // Recognize the multi-discard path to a statless engine.
@@ -42,6 +42,9 @@ export function pickPreparationAction(state, side = 'opponent') {
   if (!source) return actions.find((action) => action.type === 'finish-preparation')
   const candidates = actions.filter((action) => action.type === 'prepare' && action.sourceUid === source.uid)
   if (!candidates.length) return actions.find((action) => action.type === 'skip-preparation' && action.sourceUid === source.uid)
+  if (source.id === 'monster_transform') return candidates.reduce((best, action) =>
+    evaluateTabletopHand(applyPreparationAction(state, side, action)[`${side}Hand`]) >
+    evaluateTabletopHand(applyPreparationAction(state, side, best)[`${side}Hand`]) ? action : best)
   if (!candidates[0].targetUid) return candidates[0]
   const hand = state[`${side}Hand`]
   const targets = source.id === 'recycle_card' ? state[`${side}Discard`] : hand

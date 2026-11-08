@@ -10,7 +10,7 @@ import { validAction } from './protocol.js'
 export const GAME_VERSION = `${import.meta.env.CRD_GAME_VERSION}:rooms-2`
 
 // Only the host executes these transitions. The guest receives a mirrored view.
-const UI_KEYS = ['armedPlayerCopyUid', 'recycleSelection', 'infoOverlay', 'tabletopChoice', 'tabletopTypeCardUid']
+const UI_KEYS = ['monsterTransformUid', 'armedPlayerCopyUid', 'recycleSelection', 'infoOverlay', 'tabletopChoice', 'tabletopTypeCardUid']
 function swapSides(value) {
   const result = { ...value }
   for (const key of Object.keys(value)) {
@@ -27,6 +27,7 @@ export function seatView(state, seat) {
   const game = swapSides(state.game)
   game.currentPicker = game.currentPicker === 'player' ? 'opponent' : game.currentPicker === 'opponent' ? 'player' : null
   game.firstPicker = game.firstPicker === 'player' ? 'opponent' : 'player'
+  if (game.roundResults) game.roundResults = game.roundResults.map(winner => winner === 'player' ? 'opponent' : winner === 'opponent' ? 'player' : winner)
   game.phase = game.phase.replace(/^player-discard/, 'TEMP-discard').replace(/^opponent-discard/, 'player-discard')
     .replace(/^TEMP-discard/, 'opponent-discard')
     .replace('draft-player-pick', 'TEMP-pick').replace('draft-opponent-thinking', 'draft-player-pick')
@@ -101,7 +102,9 @@ export function applyRoomAction(state, seat, action) {
   }
   let view = seatView(state, seat)
   const phase = view.game.phase
-  if (action.type === 'PLAYER_DRAFT_PICK') {
+  if (['PLACE_LINEUP_CARD', 'LOCK_LINEUP'].includes(action.type)) {
+    if (view.game.mode !== '20cards' || phase !== 'lineup' || view.game.playerLocked) throw new Error('Lineup is locked')
+  } else if (action.type === 'PLAYER_DRAFT_PICK') {
     if (phase !== 'draft-player-pick' || !view.game.draftRow.some((c) => c.uid === action.uid)) throw new Error('Not your draft turn')
   } else if (phase !== 'battle-ready' || view.battleStarted || view.preBattle.playerFinished) {
     throw new Error('Preparation is not available')
@@ -110,6 +113,7 @@ export function applyRoomAction(state, seat, action) {
     const game = resolveOpponentDraftPick({ ...state.game, pendingOpponentPickUid: action.uid }, { includeRecentMoves: false })
     return settleSession({ ...state, game, preBattle: createPreparationState(game) })
   } else if (action.type === 'START_BATTLE') {
+    if (view.preBattle.monsterTransformUid) throw new Error('Choose or cancel the transformation before battle')
     if (view.preBattle.playerPendingDiscard) throw new Error('Finish discarding before battle')
     if (view.settings.tabletop && getTabletopChoice(view.preBattle).needsChoice) {
       // Battle skips unused specials and exposes the normal faction picker.

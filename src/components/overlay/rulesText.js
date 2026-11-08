@@ -8,10 +8,10 @@ import { MAIN_ABILITY_RULES, MAIN_ABILITY_SHIELD_COST, TABLETOP_SHIELD_COST, TAB
 export function getRulesText(rules = false) {
   const main = isMainAbilityRules(rules)
   const prototype = rules === 'abilities-prototype'
-  const title = rules === 'abilities-new-cards' ? 'Abilities+NewCards' : main ? 'Abilities' : prototype ? 'Abilities Prototype' : rules ? 'Threshold' : 'Battle'
+  const title = rules === 'monsters' ? 'Monsters' : rules === 'abilities-new-cards' ? 'Abilities+NewCards' : main ? 'Abilities' : prototype ? 'Abilities Prototype' : rules ? 'Threshold' : 'Battle'
   const lines = [`Critters Robots Dragons — ${title}`, '',
-    'Draft: pick 1 of 5, opponent picks 1, the rest are discarded. Five packs.',
-    'Discard mode: five cards, two redraws.',
+    rules === 'monsters' ? 'Draft: pick 1 of 6, opponent picks 1, the rest are discarded. Six packs; six picks per player.' : 'Draft: pick 1 of 5, opponent picks 1, the rest are discarded. Five packs.',
+    rules === 'monsters' ? 'Discard mode: six cards, two redraws back to six.' : 'Discard mode: five cards, two redraws.',
     'Use specials before battle, or press Battle to finish preparation.', '']
   if (rules) {
     const cost = main ? MAIN_ABILITY_SHIELD_COST : TABLETOP_SHIELD_COST
@@ -37,6 +37,7 @@ export function getRulesText(rules = false) {
       'Shields block damage on the round they fire. Both sides attack simultaneously.',
       'Taking 21 damage means defeat. If both reach 21 at once, more total damage dealt wins; equal totals tie. No defeat by round 50 means a tie.')
   }
+  if (rules === 'monsters') lines.push('Monsters uses all four factions. Monsters have no faction bonus; each enemy shield removes 1 Monster power. Mixed Monster attacks deal neutral power equal to Monster stats times the other printed faction. Monster Transformation changes all current Monster stats to one chosen original faction; later draws are unchanged. The collection editor in Testing saves exact copy counts and a deck recipe.')
   lines.push('', 'Cards')
   for (const source of getCoreCards({ tabletop: rules })) {
     const card = rules ? toTabletopCard(source, rules) : source

@@ -6,7 +6,7 @@ export function evaluateTabletopHand(hand) {
   // Modest unfinished-engine value keeps stats/attacks useful before a pair exists.
   const potential = Object.entries(profile.stats).reduce((sum, [type, count]) => sum + Math.sqrt(count)
     + hand.filter((card) => card.effect?.dmgType === type).length * 0.6, 0)
-  const preparation = hand.reduce((sum, card) => sum + ({ draw_2_extra: 3, copy_card_in_hand: 3, recycle_card: 1.5, draw_all_new_1: 0.5, draw_2_discard_2: 1.5, discard_for_damage: 0.8 }[card.id] ?? 0), 0)
+  const preparation = hand.reduce((sum, card) => sum + ({ monster_draw_discard: (profile.stats.monster ?? 0) * 0.8, monster_transform: 1, draw_2_extra: 3, copy_card_in_hand: 3, recycle_card: 1.5, draw_all_new_1: 0.5, draw_2_discard_2: 1.5, discard_for_damage: 0.8 }[card.id] ?? 0), 0)
   return score * 10 + potential * 2 + profile.shields * 5 + preparation * 10
 }
 

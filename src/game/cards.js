@@ -1,5 +1,7 @@
 import cardsData from '../../data/cards.json' with { type: 'json' }
 import tabletopCardsData from '../../data/tabletop-cards.json' with { type: 'json' }
+import monsterCardsData from '../../data/monster-cards.json' with { type: 'json' }
+import { monsterCopies, MIN_MONSTER_DECK } from './monsters.js'
 import newCardsData from '../../data/new-cards.json' with { type: 'json' }
 import { toTabletopCard, normalizeTabletopRules, isCardInTabletopRules } from './tabletop.js'
 
@@ -41,9 +43,9 @@ export function getCoreCards(options = {}) {
   const core = cardsData.cards.filter((card) => CORE_CARD_IDS.has(card.id))
   const rules = normalizeTabletopRules(options.tabletop)
   if (!rules) return core
-  return [...core, ...tabletopCardsData.cards, ...(rules === 'abilities-new-cards' ? newCardsData.cards : [])]
-    .filter((card) => !card.disabled && isCardInTabletopRules(card, rules))
-    .map((card) => rules === 'abilities-new-cards'
+  return [...core, ...tabletopCardsData.cards, ...(['abilities-new-cards', 'monsters'].includes(rules) ? newCardsData.cards : []), ...(rules === 'monsters' ? monsterCardsData.cards : [])]
+    .filter((card) => (!card.disabled || (rules === 'monsters' && options.includeDisabled)) && isCardInTabletopRules(card, rules))
+    .map((card) => ['abilities-new-cards', 'monsters'].includes(rules)
       ? { ...card, copies: card.copies + (NC_COPY_ADJUSTMENTS[card.id] ?? 0) }
       : card)
 }
@@ -58,7 +60,7 @@ export function expandCardPool(cards, options = {}) {
   const { wildDeck = false } = options
 
   return cards.flatMap((card) =>
-    Array.from({ length: getExpandedCopies(card, wildDeck) }, (_, index) => ({
+    Array.from({ length: options.tabletop === 'monsters' ? monsterCopies(card, options) : getExpandedCopies(card, wildDeck) }, (_, index) => ({
       ...(options.tabletop ? toTabletopCard(card, options.tabletop) : card),
       uid: `${card.id}__${index + 1}`,
       imageIndex: index % Math.max(card.images?.length ?? 1, 1),
@@ -89,7 +91,7 @@ export function shuffle(array, options = {}) {
 }
 
 export function getExpandedCoreDeck(options = {}) {
-  return expandCardPool(getCoreCards(options), options)
+  return expandCardPool(getCoreCards({ ...options, includeDisabled: options.tabletop === 'monsters' }), options)
 }
 
 export function buildShuffledDeck(options = {}) {
@@ -97,5 +99,7 @@ export function buildShuffledDeck(options = {}) {
     ? options.rng
     : (options.seed !== undefined ? createSeededRng(options.seed) : Math.random)
 
-  return shuffle(getExpandedCoreDeck(options), { rng })
+  const deck = getExpandedCoreDeck(options)
+  if (options.tabletop === 'monsters' && deck.length < MIN_MONSTER_DECK) throw new Error(`Monsters needs at least ${MIN_MONSTER_DECK} cards`)
+  return shuffle(deck, { rng })
 }

@@ -5,6 +5,7 @@ const localIcons = (icons) => Object.fromEntries(
 )
 
 export const STAT_ICONS = localIcons({
+  monster: 'https://ka2le.github.io/chatgpt-apps3/images/mp/monster2.png',
   robot: 'https://ka2le.github.io/chatgpt-apps3/images/mp/robot_sharp.png',
   critter: 'https://ka2le.github.io/chatgpt-apps3/images/mp/rabbit.png',
   dragon: 'https://ka2le.github.io/chatgpt-apps3/images/mp/dragon.png',

@@ -19,7 +19,7 @@ export const OPPONENT_AI_OPTIONS = [
 ]
 
 export function getOpponentAiOptions(mode, tabletop = false) {
-  return OPPONENT_AI_OPTIONS.filter(option => tabletop !== 'abilities-new-cards' || !['dan', 'david'].includes(option.id)).filter(option => mode === 'five-hand-discard' ? !['dan', 'felix'].includes(option.id) : option.id !== 'david')
+  return OPPONENT_AI_OPTIONS.filter(option => tabletop !== 'monsters' || ['rules', 'search'].includes(option.id)).filter(option => tabletop !== 'abilities-new-cards' || !['dan', 'david'].includes(option.id)).filter(option => mode === 'five-hand-discard' ? !['dan', 'felix'].includes(option.id) : option.id !== 'david')
 }
 
 export const DEFAULT_OPPONENT_AI = 'dan'
@@ -39,6 +39,7 @@ export function normalizeOpponentSettings(current, patch = {}) {
   if (!explicitSelection && next.gameMode !== 'five-hand-discard' && current.draftOpponentAi === 'felix' &&
       (selected === 'david' || (current.tabletop === 'abilities-new-cards' && current.gameMode === 'five-hand-discard'))) selected = 'felix'
   if (next.tabletop === 'abilities-new-cards' && ['dan', 'david'].includes(selected)) selected = 'shallow'
+  if (next.tabletop === 'monsters' && !['local', 'rules', 'search'].includes(selected)) selected = 'rules'
   const linked = selected === 'dan' || selected === 'david'
   const keepFelix = !Object.hasOwn(patch, 'opponentAi') && current.draftOpponentAi === 'felix' && selected === 'david'
   next.discardOpponentAi = linked || selected === 'felix' ? 'david' : selected

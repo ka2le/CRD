@@ -101,7 +101,8 @@ export function createProbabilityPreparation({ search, prep, rules, tt }) {
     function actionValue(p, unknown, depth, action, usedDiscardAll) {
       metrics.actionEdges++
       const requested = action.type !== 'prepare' ? 0 : ['draw_2_extra','draw_2_discard_2'].includes(action.cardId) ? 2 :
-        action.cardId === 'draw_all_new_1' ? p.playerHand.length + 1 : 0
+        action.cardId === 'draw_all_new_1' ? p.playerHand.length + 1 :
+          action.cardId === 'monster_draw_discard' ? (tt.getTabletopBaseProfile(p.playerHand).stats.monster ?? 0) : 0
       const distributionKey = unknownKey(unknown) + ':' + requested
       if (!distributions.has(distributionKey)) distributions.set(distributionKey, weightedDraws(unknown, requested, chanceLimit, exactChance))
       const distribution = distributions.get(distributionKey)

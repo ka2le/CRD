@@ -259,3 +259,4 @@
   0%, 78% { opacity: 1; transform: translateX(-50%); }
   100% { opacity: 0; transform: translateX(-50%); }
 }
+.secret-pick-wait { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--brass-hi); }

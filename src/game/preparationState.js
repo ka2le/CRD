@@ -1,3 +1,5 @@
+import { getHandStats } from './engine.js'
+import { MONSTER_TRANSFORM_TARGETS } from './monsters.js'
 import {
   getActivatablePreBattleCards,
   getPreBattleCopyCandidates,
@@ -49,6 +51,8 @@ export function getPreparationActions(state, side = 'player') {
       for (const target of getPreBattleCopyCandidates(hand, card.uid)) {
         actions.push({ ...base, targetUid: target.uid })
       }
+    } else if (card.id === 'monster_transform') {
+      for (const type of MONSTER_TRANSFORM_TARGETS) actions.push({ ...base, targetUid: type })
     } else if (card.id === 'recycle_card') {
       for (const target of discard) actions.push({ ...base, targetUid: target.uid })
     } else {
@@ -90,11 +94,19 @@ export function applyPreparationAction(state, side, action) {
   const activated = [...(state[activatedKey] ?? []), legal.sourceUid]
   if (legal.type === 'skip-preparation') return { ...state, [activatedKey]: activated }
 
-  if (legal.cardId === 'draw_2_discard_2' || legal.cardId === 'discard_for_damage') {
-    const drawing = legal.cardId === 'draw_2_discard_2'
-    const drawn = drawing ? state.deck.slice(0, 2) : []
+  if (legal.cardId === 'monster_transform') {
+    const hand = state[handKey].map(card => card.stats?.includes('monster') ? { ...card,
+      stats: card.stats.map(stat => stat === 'monster' ? legal.targetUid : stat) } : card)
+    return { ...state, [handKey]: hand, [activatedKey]: activated }
+  }
+
+  if (['draw_2_discard_2', 'monster_draw_discard', 'discard_for_damage'].includes(legal.cardId)) {
+    const drawing = legal.cardId !== 'discard_for_damage'
+    // Snapshot stats at activation; subsequent draws or discards cannot change the debt.
+    const count = legal.cardId === 'monster_draw_discard' ? (getHandStats(state[handKey]).monster ?? 0) : 2
+    const drawn = drawing ? state.deck.slice(0, count) : []
     const hand = [...state[handKey], ...drawn]
-    const remaining = drawing ? Math.min(2, hand.length) : null
+    const remaining = drawing ? Math.min(count, hand.length) : null
     return { ...state, [handKey]: hand, [activatedKey]: activated,
       deck: state.deck.slice(drawn.length),
       [`${side}DrawnCount`]: (state[`${side}DrawnCount`] ?? 0) + drawn.length,

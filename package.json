@@ -18,6 +18,7 @@
     "opponent:test": "node --test scripts/opponent-ai-tests.mjs",
     "david:test": "node --test scripts/david-bot-tests.mjs scripts/david-concurrent-tests.mjs",
     "tabletop:test": "node --test scripts/tabletop-tests.mjs scripts/tabletop-resolution-tests.mjs scripts/shield-points-tests.mjs",
+    "monsters:test": "node --test scripts/monsters-tests.mjs",
     "newcards:test": "node --test scripts/new-cards-tests.mjs",
     "felix:test": "node --test scripts/felix-bot-tests.mjs scripts/felix-new-cards-tests.mjs scripts/felix-nc-browser-tests.mjs",
     "opponent:benchmark": "node scripts/opponent-ai-benchmark.mjs",

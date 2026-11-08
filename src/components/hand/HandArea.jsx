@@ -4,6 +4,7 @@ import CardButton from '../card/CardButton'
 import { MotionAnchor, useCardMotion } from '../animation/CardMotionContext'
 import { CARD_ASPECT, computeGridFit, computeRowFit, useElementSize } from '../../hooks/useFitLayout'
 import { getCardCharge } from '../card/cardMeta'
+import { SvgIcon } from '../ui/GameIcon'
 
 const ENTER_STAGGER_MS = 85
 const EMPTY = []
@@ -15,6 +16,8 @@ export default function HandArea({
   slots = 5,
   maxCardHeight = Infinity,
   hidden = false,
+  hiddenIds = EMPTY,
+  secretIds = EMPTY,
   selectedIds = EMPTY,
   discardIds = EMPTY,
   onToggle,
@@ -93,6 +96,7 @@ export default function HandArea({
       {cardWidth > 0 ? (
         <div className={['hand-area__row', overlap ? 'hand-area__row--overlap' : ''].filter(Boolean).join(' ')} style={rowStyle}>
           {hand.map((card, index) => {
+            const cardHidden = hidden || hiddenIds.includes(card.uid)
             const slotKey = motionSection ? `${motionSection}::${card.uid}` : ''
             const isSuppressed = suppressedSet.has(card.uid)
             const isMasked = isSuppressed || Boolean(slotKey && (hiddenSlots[slotKey] ?? 0) > 0)
@@ -103,7 +107,7 @@ export default function HandArea({
                 leadMs: enterBaseDelayMs,
                 mountedAt,
                 animateOnMount,
-                flip: !hidden,
+                flip: !cardHidden,
               }
               : null
             const slotStyle = {
@@ -112,10 +116,12 @@ export default function HandArea({
               zIndex: overlap ? index + 1 : undefined,
             }
 
-            const button = (
+            const button = <>
+              {secretIds.includes(card.uid) ? <span className="hand-area__secret" title="Secret card · hidden from opponent" aria-label="Secret card · hidden from opponent"><SvgIcon name="eye-off" /></span> : null}
+              {
               <CardButton
                 card={card}
-                hidden={hidden}
+                hidden={cardHidden}
                 selected={selectedSet.has(card.uid)}
                 discardMarked={discardSet.has(card.uid)}
                 active={activeIds.has(card.uid)}
@@ -134,7 +140,7 @@ export default function HandArea({
                 enterFrom={enterFrom}
                 inspectContextHand={contextHand}
               />
-            )
+              }</>
 
             if (!motionSection) {
               return <div key={card.uid} className="hand-area__slot" style={slotStyle}>{button}</div>

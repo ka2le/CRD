@@ -8,6 +8,8 @@ export const PRE_BATTLE_CARD_IDS = new Set([
   'recycle_card',
   'draw_2_discard_2',
   'discard_for_damage',
+  'monster_draw_discard',
+  'monster_transform',
 ])
 
 function drawCards(deck, count) {

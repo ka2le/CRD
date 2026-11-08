@@ -36,6 +36,7 @@ export default function CardButton({
   hint = null,
   enterFrom = null,
   inspectContextHand = null,
+  animateMotion = true,
 }) {
   const buttonRef = useRef(null)
   const innerRef = useRef(null)
@@ -48,7 +49,7 @@ export default function CardButton({
   // Enter: FLIP from a previous zone, or deal from a pile (face down, flips up).
   useLayoutEffect(() => {
     const element = buttonRef.current
-    if (!element || isDummy) return undefined
+    if (!element || isDummy || !animateMotion) return undefined
 
     const finalRect = element.getBoundingClientRect()
     const previousRect = takeCardRect(uid)

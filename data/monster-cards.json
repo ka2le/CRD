@@ -1,0 +1,194 @@
+{
+  "cards": [
+    {
+      "id": "monster1",
+      "name": "Monster",
+      "copies": 7,
+      "type": "stat",
+      "stats": [
+        "monster"
+      ],
+      "effect": {},
+      "cd": 0,
+      "images": [
+        "https://cdn.midjourney.com/4b0905bf-3033-4882-a3ba-476e91dfb0b8/0_0.png",
+        "https://cdn.midjourney.com/683a3cba-9a15-4207-9e42-c75850b847cc/0_0.png",
+        "https://cdn.midjourney.com/d8913ad5-7cc7-49fc-906b-9c329bcc4bb9/0_0.png",
+        "https://cdn.midjourney.com/6a9622c7-fa63-48ac-88e7-3b89d2d926a5/0_0.png",
+        "https://cdn.midjourney.com/f2f40a23-d352-40f8-b712-24e1e6b7223a/0_0.png",
+        "https://cdn.midjourney.com/8c4f738b-a2f8-4741-949c-f944120a9dd7/0_0.png",
+        "https://cdn.midjourney.com/6a169f35-1379-42a9-ac1a-d85530bc620c/0_0.png"
+      ]
+    },
+    {
+      "id": "monster_attack",
+      "name": "Monster Attack",
+      "copies": 7,
+      "type": "action",
+      "stats": [],
+      "effect": {
+        "dmg": 1,
+        "dmgType": "monster"
+      },
+      "cd": 0,
+      "images": [
+        "https://cdn.midjourney.com/05bf2359-92cd-43c6-a4e6-8f6d74d11cbe/0_0.png",
+        "https://cdn.midjourney.com/9519d277-16cb-41d7-8ec8-356ee6228295/0_0.png",
+        "https://cdn.midjourney.com/16d11a34-1f9c-45a3-9a8a-9c4c0599e7d3/0_0.png",
+        "https://cdn.midjourney.com/f163e3a5-ff3d-47c9-92e6-e218f1313909/0_0.png",
+        "https://cdn.midjourney.com/368f5e41-b923-4904-8bfc-8fc4d914b6a9/0_0.png",
+        "https://cdn.midjourney.com/6d684b63-120a-4323-9906-35c98629475c/0_0.png",
+        "https://cdn.midjourney.com/749b8b3a-0523-442c-90c0-8c08c106afb7/0_0.png"
+      ]
+    },
+    {
+      "id": "monster2",
+      "name": "Double Monster",
+      "copies": 1,
+      "type": "stat",
+      "stats": [
+        "monster",
+        "monster"
+      ],
+      "effect": {},
+      "cd": 0,
+      "images": [
+        "https://cdn.midjourney.com/2700d206-2c42-49f9-b35b-d09aaff2fc47/0_1.png",
+        "https://cdn.midjourney.com/7faf5453-6a64-4efa-91d9-9a0d5971b4b7/0_0.png",
+        "https://cdn.midjourney.com/058a91ce-92ad-49b9-9b21-161976e6ecea/0_0.png"
+      ]
+    },
+    {
+      "id": "monster3",
+      "name": "Triple Monster",
+      "copies": 1,
+      "type": "stat",
+      "stats": [
+        "monster",
+        "monster",
+        "monster"
+      ],
+      "effect": {},
+      "cd": 0,
+      "images": [
+        "https://cdn.midjourney.com/2cb5ccaf-2c08-4878-a7bb-ef553cc56527/0_0.png"
+      ]
+    },
+    {
+      "id": "monster_ulti",
+      "name": "Monster Ultimate",
+      "copies": 2,
+      "type": "action",
+      "stats": [],
+      "effect": {
+        "dmg": 2,
+        "dmgType": "monster"
+      },
+      "cd": 0,
+      "images": [
+        "https://cdn.midjourney.com/01d0aeeb-2277-4a7d-9e78-f6f970fc7c7b/0_0.png",
+        "https://cdn.midjourney.com/71e26fcd-beda-489e-b64e-c8a897af684e/0_0.png"
+      ]
+    },
+    {
+      "id": "monster_draw_discard",
+      "name": "Monster Draw / Discard",
+      "copies": 1,
+      "type": "action",
+      "stats": [],
+      "effect": {},
+      "cd": 0,
+      "images": [
+        "https://cdn.midjourney.com/c93d5335-1b63-4150-8c9a-3d0b57603f74/0_0.png"
+      ],
+      "customEffect": [
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/monster2.png",
+        "×",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/card_add.png",
+        "<br>",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/monster2.png",
+        "×",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/extra_icons/card_subtract.png"
+      ]
+    },
+    {
+      "id": "monster_transform",
+      "name": "Monster Transformation",
+      "copies": 1,
+      "type": "action",
+      "stats": [],
+      "effect": {},
+      "cd": 0,
+      "images": [
+        "https://cdn.midjourney.com/109fd2ac-24c4-424b-b0e0-91f978ebf30a/0_0.png"
+      ],
+      "customEffect": [
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/monster2.png",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/arrow2.png",
+        "<br>",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/rabbit.png",
+        "/",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/robot_sharp.png",
+        "/",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/dragon.png"
+      ]
+    },
+    {
+      "id": "monster_critter_dmg",
+      "name": "Monster \u00d7 Critter",
+      "copies": 1,
+      "type": "action",
+      "stats": [],
+      "effect": {},
+      "cd": 0,
+      "images": [
+        "https://cdn.midjourney.com/f965723e-8787-44d8-8989-8fbb968a0ea4/0_0.png"
+      ],
+      "customEffect": [
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/rabbit.png",
+        "×",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/monster2.png",
+        "×",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/suit_hearts_broken.png"
+      ]
+    },
+    {
+      "id": "monster_robot_dmg",
+      "name": "Monster \u00d7 Robot",
+      "copies": 1,
+      "type": "action",
+      "stats": [],
+      "effect": {},
+      "cd": 0,
+      "images": [
+        "https://cdn.midjourney.com/de58c5aa-2fa9-4695-af17-7091204d0b63/0_0.png"
+      ],
+      "customEffect": [
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/robot_sharp.png",
+        "×",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/monster2.png",
+        "×",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/suit_hearts_broken.png"
+      ]
+    },
+    {
+      "id": "monster_dragon_dmg",
+      "name": "Monster \u00d7 Dragon",
+      "copies": 1,
+      "type": "action",
+      "stats": [],
+      "effect": {},
+      "cd": 0,
+      "images": [
+        "https://cdn.midjourney.com/c4f59636-b45e-4347-b5f5-d6b58a895717/0_0.png"
+      ],
+      "customEffect": [
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/dragon.png",
+        "×",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/monster2.png",
+        "×",
+        "https://ka2le.github.io/chatgpt-apps3/images/mp/suit_hearts_broken.png"
+      ]
+    }
+  ]
+}

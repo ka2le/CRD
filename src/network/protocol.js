@@ -10,15 +10,18 @@ export const PLAYER_ACTIONS = new Set([
   'CANCEL_PLAYER_RECYCLE_PICK', 'CLOSE_PRE_BATTLE_INFO_OVERLAY',
   'DISCARD_PLAYER_PREPARATION_CARD', 'FINISH_PLAYER_PREPARATION_DISCARD',
   'TOGGLE_PREPARATION_DISCARD', 'SUBMIT_PREPARATION_DISCARD', 'CANCEL_PLAYER_PREPARATION_DISCARD',
+  'CHOOSE_MONSTER_TRANSFORM', 'CANCEL_MONSTER_TRANSFORM',
   'CHOOSE_TABLETOP_TYPE', 'CANCEL_TABLETOP_TYPE', 'START_BATTLE',
+  'PLACE_LINEUP_CARD', 'LOCK_LINEUP',
 ])
 
 export function validAction(action) {
   if (!action || !PLAYER_ACTIONS.has(action.type)) return false
   if (JSON.stringify(action).length > MAX_ACTION_BYTES) return false
-  if (Object.keys(action).some((key) => !['type', 'uid', 'damageType'].includes(key))) return false
+  if (Object.keys(action).some((key) => !['type', 'uid', 'damageType', 'slot'].includes(key))) return false
+  if (action.type === 'PLACE_LINEUP_CARD' && (!Number.isInteger(action.slot) || action.slot < -1 || action.slot >= 15)) return false
   if (action.uid !== undefined && (typeof action.uid !== 'string' || action.uid.length > 160)) return false
-  return action.damageType === undefined || ['critter', 'robot', 'dragon'].includes(action.damageType)
+  return action.damageType === undefined || ['critter', 'robot', 'dragon', 'monster'].includes(action.damageType)
 }
 
 export function randomToken(bytes = 32) {

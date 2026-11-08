@@ -7,7 +7,7 @@ import { formatAverage } from '../card/cardMeta'
 export function StatChips({ stats = {}, compact = false }) {
   return (
     <div className={['stat-chips', compact ? 'stat-chips--compact' : ''].filter(Boolean).join(' ')}>
-      {CLASS_KEYS.map((key) => {
+      {CLASS_KEYS.filter(key => key !== 'monster' || stats.monster !== undefined).map((key) => {
         const value = stats?.[key] ?? 0
         return (
           <span key={key} className={['stat-chip', `stat-chip--${key}`, value === 0 ? 'stat-chip--zero' : ''].filter(Boolean).join(' ')}>

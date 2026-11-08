@@ -2,6 +2,10 @@ import { getExpandedCoreDeck } from './cards.js'
 import { chooseTabletopType, getTabletopProfile } from './tabletop.js'
 
 const SCENARIOS = {
+  monsters: {
+    player: ['monster2', 'monster_draw_discard', 'monster_transform', 'monster_attack', 'monster_critter_dmg', 'critter1'],
+    opponent: ['monster3', 'monster_ulti', 'monster_attack', 'shield2', 'critter1', 'monster1'],
+  },
   specialist: {
     player: ['single_faction_2', 'robot2', 'robot1', 'copy_card_in_hand', 'robot_attack'],
     opponent: ['single_faction_2', 'robot_critter', 'critter_shield', 'critter1', 'swarm'],
@@ -91,7 +95,7 @@ export function createDevScenario({ name = 'bonuses', mode = 'draft', result = f
   }
   return {
     game: {
-      mode: gameMode, phase: 'battle-ready', devScenario: name,
+      mode: gameMode, ...(rules === 'monsters' ? { handSize: 6, packSize: 6 } : {}), phase: 'battle-ready', devScenario: name,
       playerHand, opponentHand, deck,
       draftRow: [], draftDiscard: [], playerDiscards: [], opponentDiscards: [],
       packNumber: 5, picksThisPack: 2, currentPicker: null, firstPicker: 'player', pendingOpponentPickUid: null,
