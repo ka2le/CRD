@@ -80,13 +80,6 @@ const COMPACT_EFFECT_IDS = new Set(['monster_critter_dmg', 'monster_robot_dmg', 
 function CardEffectRow({ card }) {
   const hasStructuredEffect = Boolean(card.effect?.dmg || card.effect?.shield)
   let tokens = hasStructuredEffect ? getEffectTokens(card) : getCustomEffectTokens(card)
-  if (card.id === 'critter_shield') {
-    tokens = [
-      { type: 'icon', value: getStatIcon('critter'), alt: 'Critter stat' },
-      { type: 'line-break' },
-      { type: 'icon', value: DISPLAY_ICONS.shield, alt: 'shield' },
-    ]
-  }
   if (card.tabletop && card.id === 'double_dmg') {
     tokens = [
       { type: 'text', value: '2*' }, { type: 'icon', value: DISPLAY_ICONS.star, alt: 'faction bonus' },
@@ -109,7 +102,7 @@ function CardEffectRow({ card }) {
 
   const compact = COMPACT_EFFECT_IDS.has(card.id)
   if (compact) tokens = tokens.filter((token) => token.type !== 'line-break')
-  const stacked = ['monster_draw_discard', 'monster_transform'].includes(card.id) || card.id === 'critter_shield' || card.id === 'no_stats_to_2'
+  const stacked = ['monster_draw_discard', 'monster_transform'].includes(card.id) || card.id === 'no_stats_to_2'
   const rows = [[]]
   for (const token of tokens) {
     if (token.type === 'line-break') rows.push([])
@@ -136,6 +129,7 @@ function CardStatColumn({ card }) {
           if (!icon) return null
           return <IconToken key={`${stat}-${index}`} src={icon} alt={stat} />
         })}
+        {card.id === 'critter_shield' ? <IconToken src={DISPLAY_ICONS.shield} alt="shield" /> : null}
       </div>
     </div>
   )
@@ -253,8 +247,8 @@ export default function CardVisual({ card, hidden = false, charge = null }) {
           <CopyGlitch src={getImageUrl(card.copyOverlayImage)} />
         ) : null}
         <div className="card-visual__shade" />
-        {(card.type === 'stat' || card.stats?.length) && card.id !== 'critter_shield' ? <CardStatColumn card={card} /> : null}
-        {card.type === 'action' || card.effect?.shield ? <CardEffectRow card={card} /> : null}
+        {card.type === 'stat' || card.stats?.length ? <CardStatColumn card={card} /> : null}
+        {(card.type === 'action' || card.effect?.shield) && card.id !== 'critter_shield' ? <CardEffectRow card={card} /> : null}
         {card.id === 'discard_for_damage' && card.sacrificedPower > 0 ? (
           <div className="card-visual__overlay card-visual__stored-power" aria-label={`${card.sacrificedPower} stored power`}>
             <TextToken value={card.sacrificedPower} />

@@ -7,26 +7,6 @@
   place-items: center;
 }
 
-/* Turn light: a soft wash toward whoever is picking. */
-.pack-area::before {
-  content: '';
-  position: absolute;
-  inset: -2% 0;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-}
-
-.pack-area--turn-player::before {
-  opacity: 1;
-  background: radial-gradient(70% 45% at 50% 100%, rgba(214, 190, 140, 0.15), transparent 70%);
-}
-
-.pack-area--turn-opponent::before {
-  opacity: 1;
-  background: radial-gradient(70% 45% at 50% 0%, rgba(199, 115, 122, 0.15), transparent 70%);
-}
-
 .pack-area__grid {
   position: relative;
   display: flex;

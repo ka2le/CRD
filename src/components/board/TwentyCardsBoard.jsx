@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import CardButton from '../card/CardButton'
 import CardVisual from '../card/CardVisual'
 import { SvgIcon } from '../ui/GameIcon'
 import { useElementSize } from '../../hooks/useFitLayout'
+import { sortTwentyPool } from '../card/cardOrder'
 import './TwentyCardsBoard.css'
 
 export default function TwentyCardsBoard({ pool, lineup, locked, onPlace, onLock }) {
@@ -12,6 +13,7 @@ export default function TwentyCardsBoard({ pool, lineup, locked, onPlace, onLock
   const gesture = useRef(null)
   const suppressClick = useRef(false)
   const assigned = new Set(lineup.filter(Boolean))
+  const sortedPool = useMemo(() => sortTwentyPool(pool), [pool])
   const compact = size.width < 650
   const landscape = !compact && size.height < 420
   const width = Math.max(25, Math.min((size.width - (landscape ? 90 : 54)) / (compact ? 5 : 10),
@@ -73,7 +75,7 @@ export default function TwentyCardsBoard({ pool, lineup, locked, onPlace, onLock
       </div>)}
     </div>
     <div className="twenty-board__pool" data-lineup-slot="-1">
-      {pool.filter(card => !assigned.has(card.uid)).map(cardView)}
+      {sortedPool.filter(card => !assigned.has(card.uid)).map(cardView)}
       {selected && assigned.has(selected) ? <button type="button" className="twenty-board__return ui-button"
         onClick={() => { onPlace(selected, -1); setSelected(null) }}>Return to hand</button> : null}
     </div>
