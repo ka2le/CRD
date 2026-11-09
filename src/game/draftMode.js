@@ -37,7 +37,7 @@ function finalizeIfDraftComplete(game) {
     return {
       ...game,
       phase: 'battle-ready',
-      ...(game.handSize ? { draftDiscard: [...game.draftDiscard, ...markCards(game.draftRow, 'discarded')] } : {}),
+      draftDiscard: [...game.draftDiscard, ...markCards(game.draftRow, 'discarded')],
       currentPicker: null,
       pendingOpponentPickUid: null,
       draftRow: [],

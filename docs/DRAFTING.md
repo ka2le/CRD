@@ -8,6 +8,8 @@ Both modes are implemented. Reviewed 2026-10-18 against the mode modules and `us
 
 Reveal five cards, let each side pick one, discard the remaining three, then reveal a fresh five. Alternate first picker per pack. Five packs produce five-card hands. The intended first-pack starter also alternates between games.
 
+The final pick also puts all three remaining cards into `draftDiscard` before preparation starts, for 15 discarded cards across five packs. Both players can Recycle those final-pack leftovers. Monsters uses six packs of six, leaving 24 discards.
+
 `src/game/draftMode.js` exposes these transitions:
 
 | Phase | Transition |
@@ -24,7 +26,6 @@ Reveal five cards, let each side pick one, discard the remaining three, then rev
 
 Source-review exceptions:
 
-- Final picks clear the row immediately, bypassing final discard. Only 12 of the intended 15 leftovers reach `draftDiscard`.
 - Initialization and the first New Game both start human-first; later resets alternate. Settings/mode changes do not consistently consume the starter toggle.
 - Preparation gives each side a separate discard snapshot, so recycle removal is not shared.
 

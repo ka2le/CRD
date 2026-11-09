@@ -25,6 +25,45 @@ function session(game, opponentAi = 'rules') {
     nextDraftStartingPicker: 'player', suppressedHandCardIds: { player: [], opponent: [] } }
 }
 
+test('every draft pack, including the last, contributes all unpicked cards to preparation discards', () => {
+  for (const tabletop of [false, 'abilities-main', 'abilities-new-cards', 'monsters']) {
+    for (const firstPicker of ['player', 'opponent']) for (const wildDeck of [false, true]) {
+      let game = createDraftGame({ tabletop, firstPicker, wildDeck, seed: 91 })
+      const originalIds = [...game.draftRow, ...game.deck].map(card => card.uid).sort()
+      const expectedDiscards = []
+      let finalLeftovers = []
+      while (game.phase !== 'battle-ready') {
+        if (['draft-player-pick', 'draft-opponent-thinking'].includes(game.phase)) {
+          const uid = game.currentPicker === 'player' ? game.draftRow[0].uid : game.pendingOpponentPickUid
+          const leftovers = game.draftRow.filter(card => card.uid !== uid).map(card => card.uid)
+          if (game.picksThisPack === 1) expectedDiscards.push(...leftovers)
+          if (game.packNumber === (game.handSize ?? 5) && game.picksThisPack === 1) finalLeftovers = leftovers
+          game = game.currentPicker === 'player' ? applyDraftPick(game, uid) : resolveOpponentDraftPick(game)
+        } else if (game.phase === 'draft-pack-clearing') game = commitDraftDiscard(game)
+        else if (game.phase === 'draft-pack-dealing') game = revealNextDraftPack(game)
+        else assert.fail(`Unexpected phase: ${game.phase}`)
+      }
+      assert.equal(game.draftDiscard.length, tabletop === 'monsters' ? 24 : 15)
+      assert.deepEqual(game.draftDiscard.map(card => card.uid), expectedDiscards)
+      assert(game.draftDiscard.every(card => card.draftAnimation === 'discarded'))
+      assert.deepEqual(game.draftRow, [])
+      assert.deepEqual([...game.playerHand, ...game.opponentHand, ...game.draftDiscard, ...game.deck]
+        .map(card => card.uid).sort(), originalIds, 'every physical card stays in exactly one zone')
+      const source = getExpandedCoreDeck({ tabletop }).find(card => card.id === 'recycle_card')
+      for (const side of ['player', 'opponent']) {
+        let prep = createPreparationState({ ...game, [`${side}Hand`]: [source] })
+        assert.deepEqual(prep[`${side}Discard`].map(card => card.uid), expectedDiscards)
+        const targetUid = finalLeftovers[0]
+        const action = getPreparationActions(prep, side).find(action => action.sourceUid === source.uid && action.targetUid === targetUid)
+        assert(action, 'Recycle can recover a leftover from the final pack')
+        prep = applyPreparationAction(prep, side, action)
+        assert(prep[`${side}Hand`].some(card => card.uid === targetUid))
+        assert(!prep[`${side}Discard`].some(card => card.uid === targetUid))
+      }
+    }
+  }
+})
+
 test('secret opening gives disjoint private packs, one secret each, then full alternating draft', () => {
   for (const tabletop of [false, 'abilities-new-cards', 'monsters']) for (const firstPicker of ['player', 'opponent']) {
     let game = createDraftGame({ tabletop, firstPicker, seed: 91, secretCard: true })
