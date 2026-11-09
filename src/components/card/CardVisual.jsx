@@ -153,6 +153,27 @@ function CardCooldown({ card, charge = null }) {
   )
 }
 
+function BossPrint({ card }) {
+  const factions = ['critter', 'robot', 'dragon']
+  const filter = card.bossRule
+  return <>
+    <div className="card-visual__boss-engine">
+      {factions.map((f, i) => card.bossAttacks[i] > 0 ? <div key={f}>
+        <IconToken src={getStatIcon(f)} alt={`${f} attack`} /><TextToken value="×" />
+        {Array.from({ length: card.bossAttacks[i] }, (_, j) => <IconToken key={j} src={DISPLAY_ICONS.dmg} alt="damage" />)}
+      </div> : null)}
+      {card.bossShield > 0 ? <div><TextToken value={card.bossShield} /><IconToken src={DISPLAY_ICONS.shield} alt="shield points" /></div> : null}
+    </div>
+    <div className="card-visual__boss-feed" aria-label={card.bossDescription}>
+      <TextToken value={filter === 'random' ? '1 ?' : '∀'} />
+      {filter === 'critter' ? <IconToken src={getStatIcon('critter')} alt="Critter stats or attacks" />
+        : filter === 'attacks' ? <IconToken src={DISPLAY_ICONS.dmg} alt="attacks" />
+          : filter === 'stats' ? factions.map(f => <IconToken key={f} src={getStatIcon(f)} alt={`${f} stats`} />) : null}
+      <TextToken value="→" /><IconToken src={getStatIcon('monster')} alt="absorbed by boss" />
+    </div>
+  </>
+}
+
 // Copy card "photocopy glitch": the copy source's art bleeds through in a few
 // misfed scan bands (each nudged sideways) on top of the faint full overlay.
 // Bands are in card units (635 x 888). The tall band at y=262 sits over the
@@ -247,6 +268,7 @@ export default function CardVisual({ card, hidden = false, charge = null }) {
           <CopyGlitch src={getImageUrl(card.copyOverlayImage)} />
         ) : null}
         <div className="card-visual__shade" />
+        {card.bossRule ? <BossPrint card={card} /> : null}
         {card.type === 'stat' || card.stats?.length ? <CardStatColumn card={card} /> : null}
         {(card.type === 'action' || card.effect?.shield) && card.id !== 'critter_shield' ? <CardEffectRow card={card} /> : null}
         {card.id === 'discard_for_damage' && card.sacrificedPower > 0 ? (

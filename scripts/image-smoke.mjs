@@ -15,12 +15,13 @@ for (const base of ['/', '/CRD/']) {
   const server = await createServer({ base, server: { middlewareMode: true }, appType: 'custom' })
   try {
     const { default: CardVisual } = await server.ssrLoadModule('/src/components/card/CardVisual.jsx')
+    const { BOSSES, bossCard } = await server.ssrLoadModule('/src/game/bossBattle.js')
     const { STAT_ICONS, DISPLAY_ICONS } = await server.ssrLoadModule('/src/components/card/cardData.js')
     for (const source of [...Object.values(STAT_ICONS), ...Object.values(DISPLAY_ICONS).filter((value) => value !== 'CRD')]) {
       assert.ok(source.startsWith(`${base}images/`), source)
     }
     let count = 0
-    for (const card of cards) {
+    for (const card of [...cards, ...BOSSES.map(b => bossCard(b.id))]) {
       for (let imageIndex = 0; imageIndex < card.images.length; imageIndex += 1) {
         const html = renderToStaticMarkup(createElement(CardVisual, {
           card: { ...card, imageIndex, copyOverlayImage: cards[0].images[0] },

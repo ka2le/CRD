@@ -13,7 +13,7 @@ const BATTLE_RULES = [
   { value: 'abilities-new-cards', label: 'Abilities+NewCards' },
 ]
 
-export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, settings, onUpdateSettings, battleAnimation = true, onBattleAnimation, onHelp, onScoreCard, onCollection, onTestDeck, onRoom, inRoom = false, canConfigure = true, humanOpponent = false }) {
+export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, settings, onUpdateSettings, battleAnimation = true, onBattleAnimation, onHelp, onScoreCard, onCollection, onTestDeck, onRoom, inRoom = false, canConfigure = true, humanOpponent = false, onBossBattle, bossMode = false, onLeaveBoss, onBossOptions, onRestartBoss, onReplayPrep }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
   const menuRef = useRef(null)
@@ -89,10 +89,15 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
           </button> : null}
           <button type="button" disabled={!canConfigure} className="screen-menu__item screen-menu__item--primary" onClick={() => run(onNewGame)}>
             <SvgIcon name="replay" />
-            <span>New game</span>
+            <span>{bossMode ? 'Fresh deal' : 'New game'}</span>
           </button>
 
-          <button type="button" className="screen-menu__item" onClick={() => run(onRoom)}><SvgIcon name="online" /><span>{inRoom ? 'Room & players' : 'Play online'}</span></button>
+          {!bossMode ? <button type="button" className="screen-menu__item" onClick={() => run(onRoom)}><SvgIcon name="online" /><span>{inRoom ? 'Room & players' : 'Play online'}</span></button> : <button type="button" className="screen-menu__item" onClick={() => run(onLeaveBoss)}><SvgIcon name="replay" /><span>Normal play</span></button>}
+          {bossMode ? <>
+            <button type="button" className="screen-menu__item screen-menu__item--primary" onClick={() => run(onBossOptions)}><SvgIcon name="flask" /><span>Boss options</span></button>
+            <button type="button" className="screen-menu__item" onClick={() => run(onRestartBoss)}><SvgIcon name="replay" /><span>Restart same deal</span></button>
+            <button type="button" disabled={!onReplayPrep} className="screen-menu__item" onClick={() => run(onReplayPrep)}><SvgIcon name="replay" /><span>Replay prep</span></button>
+          </> : <>
           <fieldset className="screen-menu__game-controls" disabled={!canConfigure}>
           <div className="screen-menu__segmented" role="radiogroup" aria-label="Mode">
             <button
@@ -140,6 +145,10 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
             <span className="screen-menu__switch" aria-hidden="true" />
             <SvgIcon name="eye-off" /><span>Secret Card</span>
           </label> : null}
+
+          {settings.testing && !inRoom && onBossBattle ? <button type="button" className="screen-menu__item" onClick={() => run(onBossBattle)}>
+            <GameIcon name="monster" /><span>Boss battle · Co-op</span>
+          </button> : null}
 
           {settings.testing ? (
             <div className="screen-menu__group">
@@ -212,6 +221,7 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
           ) : null}
 
           </fieldset>
+          </>}
           {/* Personal display preference: not a shared room setting, never deals a new game. */}
           <label className="screen-menu__toggle">
             <input

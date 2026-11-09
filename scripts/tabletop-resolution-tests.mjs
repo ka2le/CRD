@@ -172,7 +172,7 @@ test('the animation-only release preserves the preceding saved games and rooms',
 test('completed and animation-off resolutions render the final ability-adjusted ledger', async () => {
   const server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: 'custom' })
   try {
-    const { default: Resolution } = await server.ssrLoadModule('/src/components/battle/TabletopResolution.jsx')
+    const { default: Resolution, LiveTabletopLedger } = await server.ssrLoadModule('/src/components/battle/TabletopResolution.jsx')
     const { game } = createDevScenario({ name: 'bonuses' })
     const result = resolveTabletopBattle(game.playerHand, game.opponentHand, { playerType: chooseTabletopType(game.playerHand) })
     for (const props of [{ animate: true, finished: true }, { animate: false, finished: false }]) {
@@ -180,6 +180,19 @@ test('completed and animation-off resolutions render the final ability-adjusted 
       assert.match(html, /ttr--done/)
       for (const side of RESOLUTION_SIDES) {
         assert.match(html, new RegExp(`data-ttr="${side}-total[^"]*">${result[side].score}<`))
+      }
+    }
+    for (const side of RESOLUTION_SIDES) {
+      const enemy = side === 'player' ? 'opponent' : 'player'
+      const html = renderToStaticMarkup(createElement(LiveTabletopLedger, {
+        hand: result[`${side}Hand`], enemyHand: result[`${enemy}Hand`], name: 'Boss',
+      }))
+      assert.match(html, /ttr--live/)
+      assert.doesNotMatch(html, /ttr__controls|is-loss|is-win/)
+      assert.match(html, new RegExp(`data-ttr="opponent-total[^"]*">${result[side].score}<`))
+      for (const faction of ['critter', 'robot', 'dragon']) {
+        assert.match(html, new RegExp(`data-ttr="opponent-${faction}-stat">${result[side].stats[faction]}<`))
+        assert.match(html, new RegExp(`data-ttr="opponent-${faction}-dmg">${result[side].contributions[faction]}<`))
       }
     }
   } finally { await server.close() }

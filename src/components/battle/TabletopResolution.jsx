@@ -4,6 +4,7 @@ import { GameIcon, SvgIcon } from '../ui/GameIcon'
 import { Crown } from '../overlay/AbilityCards'
 import { buildTabletopResolutionPlan, emptyLedgerSide, finalLedgerSide } from '../../game/tabletopResolution'
 import { createResolutionRunner } from './tabletopResolutionRunner'
+import { chooseTabletopType, resolveTabletopBattle } from '../../game/tabletop'
 
 const FACTIONS = ['critter', 'robot', 'dragon']
 // Each player keeps a separate row: opponent above, player below.
@@ -86,6 +87,22 @@ function LedgerRow({ side, name, plan, state, focus, current, stage, winner, cro
       </div>
     </div>
   )
+}
+
+// The same completed row as the battle animation, kept current for a visible
+// hand during drafting/preparation. Opposing hands only supply shield points.
+export function LiveTabletopLedger({ hand, enemyHand, name = 'Monster' }) {
+  const plan = useMemo(() => {
+    const result = resolveTabletopBattle(hand, enemyHand, { playerType: chooseTabletopType(hand) })
+    return buildTabletopResolutionPlan(result)?.player
+  }, [hand, enemyHand])
+  if (!plan) return null
+  return <section className="ttr ttr--live" aria-label={`${name} live totals`}>
+    <div className="ttr__rows">
+      <LedgerRow side="opponent" name={name} plan={plan} state={finalLedgerSide(plan)} stage="live"
+        bonusFirst={plan.rules !== 'threshold'} showNeutral />
+    </div>
+  </section>
 }
 
 // Tabletop battle resolution: counts stats, then damage, main faction, abilities,

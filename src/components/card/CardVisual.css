@@ -5,6 +5,30 @@
   container-type: inline-size;
 }
 
+.card-visual__boss-engine {
+  position: absolute;
+  top: 4cqw;
+  right: 4cqw;
+  display: grid;
+  gap: 1cqw;
+}
+.card-visual__boss-engine > div { display: flex; align-items: center; justify-content: flex-end; }
+.card-visual__boss-engine .card-visual__text-token { font-size: 10cqw; }
+.card-visual__boss-feed {
+  position: absolute;
+  bottom: 3cqw;
+  left: 3cqw;
+  right: 3cqw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 3cqw;
+  background: #071019d9;
+  padding: 2cqw 0;
+}
+.card-visual__boss-feed .card-visual__icon-token { width: 12cqw; }
+.card-visual__boss-feed .card-visual__text-token { font-size: 10cqw; padding: 0 1cqw; }
+
 .card-visual__art-shell {
   position: absolute;
   inset: 0;

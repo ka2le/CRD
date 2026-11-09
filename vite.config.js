@@ -31,7 +31,8 @@ function offlineApp() {
   }
 }
 
-const rulesFiles = [...readdirSync('src/game').filter((name) => name.endsWith('.js')).sort().map((name) => `src/game/${name}`),
+// Boss co-op has a separate save version and cannot change normal matches/rooms.
+const rulesFiles = [...readdirSync('src/game').filter((name) => name.endsWith('.js') && name !== 'bossBattle.js').sort().map((name) => `src/game/${name}`),
   'data/cards.json', 'data/tabletop-cards.json', 'data/new-cards.json', 'data/monster-cards.json', 'data/dan-opening.json', 'data/dan-pairs.json', 'data/dan-round3-net.json', 'data/david-opponents.json', 'data/david-opponents.meta.json']
 const gameVersion = createHash('sha256').update(rulesFiles.map((path) => readFileSync(path, 'utf8').replace(/\r\n/g, '\n')).join('\n')).digest('hex').slice(0, 16)
 

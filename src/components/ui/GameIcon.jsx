@@ -17,6 +17,11 @@ export function GameIcon({ name, className = '', style, title }) {
 }
 
 const SVG_PATHS = {
+  swap: (
+    <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 7h16m-4-4 4 4-4 4M20 17H4m4-4-4 4 4 4" />
+    </g>
+  ),
   'eye-off': (
     <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
       <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" />

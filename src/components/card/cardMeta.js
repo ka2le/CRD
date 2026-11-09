@@ -95,6 +95,7 @@ function capitalize(value) {
 
 export function getCardSummary(card) {
   if (!card) return { timing: '', text: '' }
+  if (card.bossRule) return { timing: `Boss · ${card.bossPackSize} cards per pack`, text: `${card.bossDescription} Absorption happens only after draft packs, never from refresh or preparation discards. Bosses use passive printed effects and faction abilities; they do not activate preparation specials.` }
   if (card.id === 'critter_shield') return { timing: 'Passive special', text: TABLETOP_TEXT.critter_shield }
   if (card.type === 'stat') {
     const counts = CLASS_ORDER

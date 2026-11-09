@@ -41,6 +41,8 @@ import { getHandAverageDamage } from './game/cardEvaluator'
 import { getCardTabletopTypes } from './game/tabletop'
 import { getOpponentAiName } from './game/opponentAi'
 import { getLocalDisplaySeat, localPlayerName } from './game/localMultiplayer'
+import BossBattle from './components/boss/BossBattle'
+import { BOSS_MODE_STORAGE } from './game/bossBattle'
 
 const BATTLE_HEALTH = 21
 const RESULT_LABELS = { player: 'Victory', opponent: 'Defeat', tie: 'Draw' }
@@ -59,7 +61,7 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value))
 }
 
-function AppContent() {
+function AppContent({ onBossBattle }) {
   const { animateCardMove, getAnchorRect, maskSlot, unmaskSlot } = useCardMotion()
   const room = useRoom()
   const session = useGameSession({ animateCardMove, getAnchorRect, maskSlot, unmaskSlot, room })
@@ -438,6 +440,7 @@ function AppContent() {
             <SvgIcon name="eye" /><span>{session.localPlay.showAll ? 'Hide' : 'Show all'}</span>
           </button> : null}
           <ScreenMenu
+            onBossBattle={onBossBattle}
             onNewGame={handleNewGame}
             gameMode={gameMode}
             onChangeGameMode={handleGameModeChange}
@@ -663,10 +666,17 @@ function AppContent() {
 }
 
 function App() {
+  const [bossMode, setBossMode] = useState(() => {
+    try { return !new URLSearchParams(window.location.hash.slice(1)).has('room') && localStorage.getItem(BOSS_MODE_STORAGE) === 'true' } catch { return false }
+  })
+  function changeBossMode(value) {
+    try { localStorage.setItem(BOSS_MODE_STORAGE, String(value)) } catch { /* Storage may be unavailable. */ }
+    setBossMode(value)
+  }
   return (
     <CardMotionProvider>
       <CardInspectProvider>
-        <AppContent />
+        {bossMode ? <BossBattle onExit={() => changeBossMode(false)} /> : <AppContent onBossBattle={() => changeBossMode(true)} />}
       </CardInspectProvider>
     </CardMotionProvider>
   )

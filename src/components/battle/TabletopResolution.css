@@ -19,6 +19,13 @@
   justify-self: center;
 }
 
+.ttr--live { grid-template-columns: minmax(0, 1fr); }
+.ttr--live .ttr-row { grid-template-columns: minmax(0, 1fr) auto; }
+@media (max-width: 640px) {
+  .ttr--live .ttr-row { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+  .ttr--live .ttr-sum { justify-self: end; }
+}
+
 .ttr-row {
   position: relative;
   display: grid;
