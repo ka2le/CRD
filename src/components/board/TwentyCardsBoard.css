@@ -1,27 +1,46 @@
-.twenty-board { width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 5px; }
-.twenty-board__heading { display: flex; align-items: center; gap: 9px; color: var(--brass-hi); font-size: .9rem; }
-.twenty-board__heading > span { color: var(--t2); font-variant-numeric: tabular-nums; }
-.twenty-board__lanes { display: flex; flex-direction: column; gap: 5px; }
-.twenty-board__lane { display: flex; position: relative; gap: 5px; }
-.twenty-board__round { position: absolute; right: calc(100% + 9px); top: 40%; font-weight: 800; color: var(--brass-hi); }
-.twenty-board__slot, .twenty-board__card { position: relative; width: var(--lineup-w); aspect-ratio: 635 / 888; flex-shrink: 0; }
+.twenty-board { width: 100%; height: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-user-select: none; }
+.twenty-board__layout { display: flex; align-items: center; justify-content: center; gap: var(--lineup-divider); }
+.twenty-board--stacked .twenty-board__layout { flex-direction: column; }
+/* Stacked: the pool sits under the card columns, not under the round numbers. */
+.twenty-board--stacked .twenty-board__pool { margin-left: var(--lineup-label); margin-right: var(--lineup-label); }
+.twenty-board--stacked .twenty-board__lanes { margin-right: var(--lineup-label); }
+
+.twenty-board__lanes { display: flex; flex-direction: column; gap: var(--lineup-gap); }
+.twenty-board__lane { display: flex; position: relative; gap: var(--lineup-gap); border-radius: 7px; transition: transform .16s ease, box-shadow .16s ease, background-color .16s ease; }
+.twenty-board__lane.is-lifted { background: #16213a; box-shadow: 0 0 0 1px var(--brass-hi), 0 6px 18px #0007; }
+.twenty-board__lane.is-lane-target { outline: 1px dashed var(--b2); outline-offset: 2px; }
+.is-lane-dragging .twenty-board__lane.is-lane-target { outline: 2px solid var(--brass-hi); background: #ffffff08; }
+
+.twenty-board__handle { width: var(--lineup-label); flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--brass-hi); cursor: grab; touch-action: none; }
+.twenty-board__handle:hover:not(:disabled), .twenty-board__handle[aria-pressed="true"] { background: #ffffff0d; }
+.twenty-board__handle:disabled { cursor: default; color: var(--t2); }
+.is-lane-dragging, .is-lane-dragging * { cursor: grabbing !important; }
+.twenty-board__round { font-weight: 800; font-size: calc(var(--lineup-label) * .55); line-height: 1; font-variant-numeric: tabular-nums; }
+.twenty-board__grip { width: calc(var(--lineup-label) * .72); height: calc(var(--lineup-label) * .72); color: var(--t1, var(--t2)); opacity: .75; }
+.twenty-board__handle:hover .twenty-board__grip, .twenty-board__handle[aria-pressed="true"] .twenty-board__grip { color: var(--brass-hi); opacity: 1; }
+
+.twenty-board__slot, .twenty-board__card, .twenty-board__pool-slot, .twenty-board__used { position: relative; width: var(--lineup-w); aspect-ratio: 635 / 888; flex-shrink: 0; }
 .twenty-board__card { --card-w: var(--lineup-w); touch-action: none; }
 .twenty-board__card .card { width: 100%; height: 100%; }
-.twenty-board__empty { width: 100%; height: 100%; color: var(--t2); font-size: 1.2rem; border: 1px dashed var(--b2); border-radius: 5px; background: #ffffff06; }
-.twenty-board__slot.is-target { outline: 1px solid var(--brass-hi); border-radius: 5px; }
-.twenty-board__replace { position: absolute; inset: 0; z-index: 2; cursor: pointer; background: transparent; border: 0; }
-.twenty-board__pool { display: grid; grid-template-columns: repeat(10, var(--lineup-w)); gap: 5px; justify-content: center; align-content: center; min-height: calc(var(--lineup-w) * 888 / 635 * 2 + 5px); width: 100%; border-top: 1px solid var(--b2); padding-top: 7px; }
-.twenty-board__return { grid-column: span 2; align-self: center; }
-.twenty-board__footer { width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: .75rem; color: var(--t2); }
+.twenty-board__empty { width: 100%; height: 100%; padding: 0; border: 1px dashed var(--b2); border-radius: 5px; background: #ffffff06; transition: border-color .12s ease, background-color .12s ease; }
+.twenty-board__slot.is-next .twenty-board__empty { border-color: color-mix(in srgb, var(--brass-hi) 65%, transparent); background: color-mix(in srgb, var(--brass-hi) 6%, transparent); }
+.twenty-board__slot.is-target .twenty-board__empty { border: 1px solid color-mix(in srgb, var(--brass-hi) 70%, transparent); background: color-mix(in srgb, var(--brass-hi) 10%, transparent); cursor: pointer; }
+
+.twenty-board__pool { display: grid; grid-template-columns: repeat(5, var(--lineup-w)); gap: var(--lineup-gap); border-radius: 7px; padding: 0; }
+.twenty-board__pool.is-return-target { outline: 1px dashed var(--b2); outline-offset: 3px; cursor: pointer; }
+/* A placed card leaves its silhouette behind, so the rest of the pool never moves. */
+.twenty-board__used { border-radius: 5px; pointer-events: none; }
+.twenty-board__used > * { width: 100%; height: 100%; opacity: .14; filter: grayscale(1); }
+.twenty-board__used::after { content: ''; position: absolute; inset: 0; border: 1px dashed var(--b1); border-radius: 5px; }
+.twenty-board__used.is-home::after { border: 1px solid var(--brass-hi); }
+.is-return-target .twenty-board__used { pointer-events: auto; }
+
+.twenty-board.is-locked .twenty-board__pool { opacity: .5; }
 .twenty-board__ghost { position: fixed; pointer-events: none; z-index: 10000; width: var(--lineup-w); aspect-ratio: 635 / 888; transform: translate(-50%, -50%) rotate(3deg); opacity: .9; }
-.twenty-board--landscape { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 22px minmax(0, 1fr) 36px; justify-items: center; }
-.twenty-board--landscape .twenty-board__heading, .twenty-board--landscape .twenty-board__footer { grid-column: 1 / -1; }
-.twenty-board--landscape .twenty-board__pool { grid-template-columns: repeat(5, var(--lineup-w)); min-height: 0; border-top: 0; padding-top: 0; }
+.twenty-board__ghost > * { width: 100%; height: 100%; }
+
 .table--lineup { grid-template-rows: auto minmax(0, 1fr) auto; }
 .table--lineup .table__zone--opponent { display: none; }
+.table--lineup .table__zone--center { max-width: none; }
 .match-score { color: var(--brass-hi); font-weight: 700; font-size: .85rem; white-space: nowrap; }
-@media (max-width: 649px) {
-  .twenty-board__pool { grid-template-columns: repeat(5, var(--lineup-w)); min-height: calc(var(--lineup-w) * 888 / 635 * 4 + 15px); }
-  .twenty-board__footer { font-size: .65rem; gap: 6px; }
-  .twenty-board__footer .ui-button { font-size: .75rem; padding: 7px; min-height: 34px; }
-}
+.table__action--lock { white-space: nowrap; }

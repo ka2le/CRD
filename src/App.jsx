@@ -326,6 +326,16 @@ function AppContent() {
     }
   }
 
+  if (lineupPhase && !localHandoff) {
+    const lineupComplete = new Set(game.playerLineup.filter(Boolean)).size === game.playerLineup.length
+    primaryAction = (
+      <button type="button" className="ui-button ui-button--primary table__action table__action--lock"
+        disabled={!lineupComplete || game.playerLocked || session.onlineBlocked} onClick={session.lockLineup}>
+        <SvgIcon name="check" /><span>{game.playerLocked ? 'Waiting' : 'Lock in'}</span>
+      </button>
+    )
+  }
+
   const phasePips = game.mode === 'draft'
     ? <Pips total={game.handSize ?? 5} current={game.phase === 'battle-ready' ? (game.handSize ?? 5) + 1 : game.packNumber} done={game.phase === 'battle-ready' ? (game.handSize ?? 5) : game.packNumber - 1} />
     : game.mode === '20cards' ? <span className="match-score">Round {game.roundIndex + 1} · {matchScore.player} – {matchScore.opponent}</span>
@@ -470,7 +480,7 @@ function AppContent() {
           {!game.devScenario ? <ShuffleIntro key={dealId} /> : null}
           {lineupPhase && !localHandoff ? <TwentyCardsBoard key={`${dealId}-${localSeat ?? 'solo'}`}
             pool={game.playerPool} lineup={game.playerLineup} locked={game.playerLocked}
-            onPlace={session.placeLineupCard} onLock={session.lockLineup} /> : null}
+            onPlace={session.placeLineupCard} /> : null}
           {layout === 'draft' && !localHandoff && !(game.secretOpening && opponentThinking) ? (
             <PackArea
               packKey={`${dealId}-${game.packNumber}-${game.secretOpening ? localSeat ?? 'secret' : 'public'}`}

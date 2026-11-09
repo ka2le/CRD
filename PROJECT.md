@@ -17,3 +17,6 @@ Testing includes Monsters, Secret Card Draft and 20Cards. Monsters adds the four
 ## Offline update repair (2026-11-08)
 
 Reload now loads a fully installed update while other game tabs stay open. Existing games retain their cached AI workers offline. The explicit `?update=1` link recovers an old cached menu without clearing the saved game. See `docs/LOCAL_PLAY.md`.
+
+
+**2026-11-09 — 20Cards lineup controls:** Larger adaptive card layout, fixed pool positions with placed-card silhouettes, double-tap placement/return, tap or drag round handles to swap rows, and main action-bar Lock in. Normal mode logic, cards and bot models unchanged.

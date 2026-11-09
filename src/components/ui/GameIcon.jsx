@@ -123,6 +123,13 @@ const SVG_PATHS = {
       <path d="M5 4.5h14M12 20V9M7 13.5l5-5 5 5" />
     </g>
   ),
+  grip: (
+    <g fill="currentColor">
+      <circle cx="9" cy="6" r="1.7" /><circle cx="15" cy="6" r="1.7" />
+      <circle cx="9" cy="12" r="1.7" /><circle cx="15" cy="12" r="1.7" />
+      <circle cx="9" cy="18" r="1.7" /><circle cx="15" cy="18" r="1.7" />
+    </g>
+  ),
   fullscreen: (
     <g fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
       <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
