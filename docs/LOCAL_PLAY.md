@@ -24,16 +24,21 @@ as soon as both players are ready, with no additional confirmations.
 The installed PWA supports local and AI play offline after its first complete
 online installation. Production builds precache every playable asset, including
 AI workers and local fonts. Online rooms still require connectivity. Updates
-activate only after their complete offline download succeeds. Reloading
-loads the latest installed build even while another game tab remains open. Those
-open games keep running their loaded code, and their older cached AI workers stay
-available offline until the older pages close. A navigation with no other open
-game pages clears superseded caches. Browser storage must remain available.
+activate only after their complete offline download succeeds. Opening or refreshing
+an online game at the ordinary URL checks for updates and automatically loads the
+new build once it is ready. No special query parameter is needed. The saved deal
+is restored after that reload.
 
-If an older installed version keeps showing an outdated menu, open
-`https://ka2le.github.io/CRD/?update=1` while online. This explicit recovery link
-reloads that page after the new offline build installs, preserving the saved game
-and leaving other game windows alone.
+If an update arrives after you have started interacting with the game, play
+continues uninterrupted. A dot appears on the menu button and **Update game**
+loads the new build when you choose, or you can refresh normally. Bringing the
+app back into focus also checks for updates, at most once a minute.
+
+Older installations without the automatic-update listener migrate once when
+the new worker activates. Older cached scripts and AI workers remain available
+to open games while offline; superseded caches are removed when no other game
+pages need them. Failed downloads leave the installed game usable. Browser
+storage must remain available.
 
 Verify with `npm run build`, `npm run lint`, and
 `node --test scripts/pwa-tests.mjs scripts/local-multiplayer-tests.mjs scripts/play-menu-tests.mjs scripts/room-tests.mjs`.

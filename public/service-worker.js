@@ -18,6 +18,22 @@ async function cleanAfterNavigation(event) {
   if (!clients.some((client) => !navigating.includes(client.id))) await removeOldCaches()
 }
 
+function managesUpdates(client) {
+  if (!client.postMessage) return Promise.resolve(false)
+  return new Promise((resolve) => {
+    const channel = new MessageChannel()
+    const finish = (managed) => {
+      clearTimeout(timeout)
+      channel.port1.close()
+      resolve(managed)
+    }
+    const timeout = setTimeout(() => finish(false), 1000)
+    channel.port1.onmessage = (event) => finish(event.data === 'CRD_UPDATE_MANAGED')
+    try { client.postMessage({ type: 'CRD_UPDATE_CHECK' }, [channel.port2]) }
+    catch { finish(false) }
+  })
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME)
@@ -37,11 +53,13 @@ self.addEventListener('activate', (event) => {
     await self.clients.claim()
     const clients = await self.clients.matchAll({ type: 'window' })
     if (!clients.length) await removeOldCaches()
-    // Opt-in recovery for pages loaded by the original cache-first worker.
-    // Only this explicit update link reloads; other active games are untouched.
-    for (const client of clients) {
+    // Upgrade older pages that have no update listener, including installations
+    // predating automatic updates. Newer pages manage reloads without disrupting
+    // an active game. The legacy migration also works at the ordinary app URL.
+    const managed = await Promise.all(clients.map(managesUpdates))
+    for (const [index, client] of clients.entries()) {
+      if (managed[index]) continue
       const url = new URL(client.url)
-      if (url.searchParams.get('update') !== '1') continue
       url.searchParams.delete('update')
       // Navigation can wait for activation; awaiting it here would deadlock.
       client.navigate(url.href).catch(() => {})

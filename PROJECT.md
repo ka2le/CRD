@@ -20,3 +20,8 @@ Reload now loads a fully installed update while other game tabs stay open. Exist
 
 
 **2026-11-09 — 20Cards lineup controls:** Larger adaptive card layout, fixed pool positions with placed-card silhouettes, double-tap placement/return, tap or drag round handles to swap rows, and main action-bar Lock in. Normal mode logic, cards and bot models unchanged.
+
+
+## Automatic app updates (2026-11-09)
+
+Ordinary online opens and refreshes load a fully installed update automatically, without a special URL. An update arriving during active play shows a menu dot and Update game instead of interrupting the game. Older installations migrate once; saved deals and offline play are preserved. See `docs/LOCAL_PLAY.md`.

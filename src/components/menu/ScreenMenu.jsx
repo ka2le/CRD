@@ -1,7 +1,8 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
 import './ScreenMenu.css'
 import { GameIcon, SvgIcon } from '../ui/GameIcon'
 import { getOpponentAiOptions } from '../../game/opponentAi'
+import { getAppUpdate, subscribeAppUpdate, reloadApp } from '../../pwaUpdates.js'
 
 // Playable scoring modes. Abilities Prototype is intentionally hidden.
 const BATTLE_RULES = [
@@ -17,6 +18,7 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
   const [fullscreen, setFullscreen] = useState(false)
   const menuRef = useRef(null)
   const popoverRef = useRef(null)
+  const updateAvailable = useSyncExternalStore(subscribeAppUpdate, getAppUpdate, () => false)
 
   useEffect(() => {
     function handlePointerDown(event) {
@@ -72,7 +74,7 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
     <div className="screen-menu" ref={menuRef}>
       <button
         type="button"
-        className="screen-menu__trigger ui-button ui-button--icon"
+        className={`screen-menu__trigger ui-button ui-button--icon${updateAvailable ? ' has-update' : ''}`}
         aria-label="Open menu"
         aria-expanded={menuOpen}
         onClick={() => setMenuOpen((open) => !open)}
@@ -82,6 +84,9 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
 
       {menuOpen && (
         <div className="screen-menu__popover ui-panel" ref={popoverRef}>
+          {updateAvailable ? <button type="button" className="screen-menu__item screen-menu__item--primary" onClick={reloadApp}>
+            <SvgIcon name="replay" /><span>Update game</span>
+          </button> : null}
           <button type="button" disabled={!canConfigure} className="screen-menu__item screen-menu__item--primary" onClick={() => run(onNewGame)}>
             <SvgIcon name="replay" />
             <span>New game</span>

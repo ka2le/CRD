@@ -31,14 +31,16 @@ const http=require('node:http');const fs=require('node:fs/promises');const path=
  const oldScripts=await oldPage.evaluate(()=>[...document.scripts].map(s=>s.src));
  await page.evaluate(()=>{window.controllerChanges=0;navigator.serviceWorker.addEventListener('controllerchange',()=>window.controllerChanges++)});
  directory=path.resolve(process.env.CRD_UPDATE_DIR||'dist');
+ const nextHtml=await fs.readFile(path.join(directory,'index.html'),'utf8');
+ const nextScript=nextHtml.match(/src="([^"]+\.js)"/)[1];
  await page.evaluate(async()=>{await(await navigator.serviceWorker.getRegistration()).update()});
  if(expectFixed){
  if(process.env.CRD_RECOVERY) await page.waitForURL('http://127.0.0.1:4211/CRD/',{timeout:30000});
- else await page.waitForFunction(()=>window.controllerChanges>0,null,{timeout:30000});
+ else await page.waitForFunction(expected=>[...document.scripts].some(s=>s.src.endsWith(expected)),nextScript,{timeout:30000});
  }else{
  await page.waitForFunction(async()=>Boolean((await navigator.serviceWorker.getRegistration()).waiting),null,{timeout:30000});
  }
- if(!process.env.CRD_RECOVERY) await page.reload();
+ if(!expectFixed&&!process.env.CRD_RECOVERY) await page.reload();
  await page.getByRole('button',{name:'Open menu',exact:true}).click();
  const result=await page.evaluate(async()=>{const r=await navigator.serviceWorker.getRegistration();return {waiting:!!r.waiting,testing:JSON.parse(localStorage.getItem('crd-local-game-v1')).state.settings.testing,scripts:[...document.scripts].map(x=>x.src)}});
  result.hasTwentyCards=await page.getByRole('radio',{name:'20Cards',exact:true}).count()>0;
@@ -48,12 +50,13 @@ const http=require('node:http');const fs=require('node:fs/promises');const path=
  if(expectFixed){
  const after=await page.evaluate(()=>{const g=JSON.parse(localStorage.getItem('crd-local-game-v1')).state.game;return [g.playerHand,g.opponentHand,g.deck,g.draftRow].map(cards=>cards.map(c=>c.uid))});
  assert.deepEqual(after,before);result.savedDealPreserved=true;
- assert.deepEqual(await oldPage.evaluate(()=>[...document.scripts].map(s=>s.src)),oldScripts);
+ assert.notDeepEqual(await oldPage.evaluate(()=>[...document.scripts].map(s=>s.src)),oldScripts);
+ assert.equal(new URL(oldPage.url()).search,'');
  await context.setOffline(true);
  const oldWorker=originalWorker;
  assert(oldWorker);
  assert.equal(await oldPage.evaluate(async url=>(await fetch(url)).ok,oldWorker),true);
- result.oldGameRemainsOpen=true;result.oldWorkerAvailableOffline=true;
+ result.legacyPageMigratesWithoutQuery=true;result.oldWorkerAvailableOffline=true;
  }
  console.log(JSON.stringify(result));
  await fs.writeFile(process.env.CRD_BROWSER_RECEIPT||'logs/pwa-update-browser.json',JSON.stringify(result,null,2));

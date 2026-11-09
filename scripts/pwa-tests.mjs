@@ -15,6 +15,17 @@ function worker(scope = '/CRD/', failInstall = false, windowClients = []) {
   let skipped = false
   const url = (request) => typeof request === 'string' ? request : request.url ?? request.href
   const origin = 'https://game.example'
+  const clients = windowClients.map((client) => ({
+    async navigate() {},
+    postMessage(message, [port]) { port.postMessage('CRD_UPDATE_MANAGED') },
+    ...client,
+  }))
+  class MessageChannel {
+    constructor() {
+      this.port1 = { close() {}, onmessage: null }
+      this.port2 = { postMessage: (data) => queueMicrotask(() => this.port1.onmessage?.({ data })) }
+    }
+  }
   const cache = () => {
     const entries = new Map()
     return {
@@ -33,14 +44,14 @@ function worker(scope = '/CRD/', failInstall = false, windowClients = []) {
     }
   }
   const context = {
-    URL, Request, Response,
+    URL, Request, Response, MessageChannel, setTimeout, clearTimeout,
     caches: {
       async open(name) { if (!stores.has(name)) stores.set(name, cache()); return stores.get(name) },
       async keys() { return [...stores.keys()] },
       async delete(name) { deleted.push(name); return stores.delete(name) },
     },
     self: { registration: { scope: `${origin}${scope}` }, location: { origin },
-      clients: { async claim() { claimed = true }, async matchAll() { return windowClients } },
+      clients: { async claim() { claimed = true }, async matchAll() { return clients } },
       async skipWaiting() { skipped = true },
       addEventListener(type, handler) { handlers.set(type, handler) } },
     fetch() { throw new Error('Network is offline') },
@@ -134,11 +145,12 @@ test('reload gets the new shell while other open games retain their offline AI w
   assert(runtime.stores.has('crd-pwa:/:unrelated-app'))
 })
 
-test('only an explicit update link reloads an already open page during activation', async () => {
+test('ordinary URLs migrate old pages while managed games control their own reloads', async () => {
   const navigated = []
   const runtime = worker('/CRD/', false, [
     { id: 'playing', url: 'https://game.example/CRD/', async navigate() { throw new Error('Active game reloaded') } },
-    { id: 'updating', url: 'https://game.example/CRD/?update=1&resume=1#room', async navigate(url) { navigated.push(url) } },
+    { id: 'updating', url: 'https://game.example/CRD/?resume=1#room', postMessage: undefined,
+      async navigate(url) { navigated.push(url) } },
   ])
   await runtime.run('install')
   await runtime.run('activate')

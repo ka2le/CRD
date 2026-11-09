@@ -5,10 +5,22 @@
 }
 
 .screen-menu__trigger {
+  position: relative;
   width: 34px;
   height: 34px;
   border-color: var(--b0);
   background: rgba(214, 190, 140, 0.03);
+}
+
+.screen-menu__trigger.has-update::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--brass-hi);
 }
 
 .screen-menu__popover {
