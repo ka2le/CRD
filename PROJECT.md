@@ -25,3 +25,8 @@ Reload now loads a fully installed update while other game tabs stay open. Exist
 ## Automatic app updates (2026-11-09)
 
 Ordinary online opens and refreshes load a fully installed update automatically, without a special URL. An update arriving during active play shows a menu dot and Update game instead of interrupting the game. Older installations migrate once; saved deals and offline play are preserved. See `docs/LOCAL_PLAY.md`.
+
+
+## Boss co-op (release verified 2026-11-12)
+
+Testing offers Boss battle · Co-op with two human players, separate drafts, personal Pocket/Refresh/Swap/2-now powers and independent preparation. Boss options retain both draft presets, configurable absorption and team scoring, same-deal restart, prep replay and test navigation. Pocket and Swap remain available through preparation. Normal NC rules and bot models are unchanged. See `docs/BOSS_BATTLES.md`.

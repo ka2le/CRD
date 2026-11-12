@@ -1,6 +1,6 @@
 # Boss co-op exploration
 
-Local Testing mode added 9 November 2026. Menu → Testing → Boss battle · Co-op.
+Testing mode added 9 November 2026; public release verified 12 November 2026. Menu → Testing → Boss battle · Co-op.
 Two humans share the screen: Player 1 bottom left, Player 2 bottom right, boss at
 the top. All hands are open. Uses the current NC73 Regular cards and adopted
 Abilities scoring. This is separate from the four-faction Monsters ruleset.
