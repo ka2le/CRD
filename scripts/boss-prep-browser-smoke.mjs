@@ -20,30 +20,38 @@ const fixture = bossReducer({ ...initial, phase: 'prepare', hands, deck,
 const browser = await chromium.launch({ headless: true })
 const errors = [], results = []
 try {
-  for (const viewport of [{ width: 1360, height: 900 }, { width: 390, height: 844 }, { width: 844, height: 390 }]) {
+  for (const draftMode of ['shared', 'separate']) for (const viewport of [{ width: 1360, height: 900 }, { width: 390, height: 844 }, { width: 844, height: 390 }]) {
     const context = await browser.newContext({ viewport })
     await context.addInitScript(s => {
       if (!localStorage.getItem('crd-boss-run-v1')) {
         localStorage.setItem('crd-boss-mode-v1', 'true')
         localStorage.setItem('crd-boss-run-v1', JSON.stringify(s))
       }
-    }, fixture)
+    }, { ...fixture, options: { ...fixture.options, draftMode } })
     const page = await context.newPage()
     page.on('pageerror', e => errors.push(e.message))
     const read = () => page.evaluate(() => JSON.parse(localStorage.getItem('crd-boss-run-v1')))
-    const button = name => page.getByRole('button', { name, exact: true })
-    const main = () => page.locator('.boss-dock > .table__action')
+    const button = name => page.getByRole('button', { name: name.endsWith(' Pocket') ? new RegExp(`^${name}:`) : name, exact: true })
+    const main = () => page.locator('.boss-dock .table__action')
     const focus = seat => page.locator(`[data-seat="${seat}"] .boss-player-name`).click()
     const readyHand = async seat => {
-      const types = page.locator(`[data-seat="${seat}"] .boss-factions button`)
-      if (await types.count()) await types.first().click()
+      const types = page.locator(`[data-seat="${seat}"] .boss-faction-status button`)
+      const choices = page.locator(`[data-seat="${seat}"] .boss-faction-prompt .faction-picker__option`)
+      if (await choices.count()) await choices.first().click()
+      else if (await types.count()) { await types.first().click(); await choices.first().click() }
       else await focus(seat)
       assert.equal(await main().textContent(), 'Ready')
       await main().click()
     }
     const card = (seat, uid) => page.locator(`[data-seat="${seat}"] [data-card-uid="${uid}"]`)
     const tap = (seat, uid) => card(seat, uid).click({ position: { x: 6, y: 12 } })
-    const phase = expected => page.waitForFunction(e => JSON.parse(localStorage.getItem('crd-boss-run-v1'))?.phase === e, expected)
+    const phase = async expected => {
+    await page.waitForFunction(e => JSON.parse(localStorage.getItem('crd-boss-run-v1'))?.phase === e, expected)
+    if (expected === 'result') {
+      const skip = page.getByRole('button', { name: 'Skip to result', exact: true })
+      if (await skip.count()) await skip.click()
+    }
+  }
     const layout = async name => {
       await page.waitForTimeout(350)
       const overflow = await page.locator('.boss-hero button').evaluateAll(nodes => nodes.flatMap(n => {
@@ -51,16 +59,18 @@ try {
         return r.width && (r.left < p.left - 2 || r.right > p.right + 2 || r.top < p.top - 2 || r.bottom > p.bottom + 2) ? [n.getAttribute('aria-label')] : []
       }))
       assert.deepEqual(overflow, [])
-      await page.screenshot({ path: `${output}/${name}-${viewport.width}.png` })
+      await page.screenshot({ path: `${output}/${draftMode}-${name}-${viewport.width}.png` })
     }
-    await page.goto(process.env.CRD_URL || 'http://127.0.0.1:5188/')
+    await page.goto(process.env.CRD_URL || 'http://127.0.0.1:5173/')
     await phase('prepare')
     await layout('prepare')
     assert.equal(await main().count(), 1)
     assert.equal(await page.locator('.boss-prep-controls').count(), 0)
     await focus(1)
-    assert.equal(await main().isDisabled(), true) // This hand has three eligible types.
-    await page.locator('[data-seat="1"] .boss-factions button').first().click()
+    assert.equal(await main().textContent(), 'Choose faction') // This hand has three eligible types.
+    await main().click()
+    assert.equal(await page.getByRole('group', { name: 'Player 2 · Main faction', exact: true }).count(), 1)
+    await page.locator('[data-seat="1"] .boss-faction-prompt .faction-picker__option').first().click()
     assert.equal(await main().isEnabled(), true)
     const copy = hands[0].find(c => c.id === 'copy_card_in_hand')
     const robot = hands[0].find(c => c.id === 'robot1')
@@ -80,7 +90,7 @@ try {
     await tap(0, draw.uid)
     await tap(0, attack.uid)
     await tap(1, sacrifice.uid)
-    assert.equal(await page.locator('[data-seat="0"] .card--selected').count(), 1)
+    assert.equal(await page.locator('[data-seat="0"] .card--discard-marked').count(), 1)
     let s = await read()
     assert.equal(s.prep.playerPendingDiscard.remaining, 2)
     assert.equal(s.prep.opponentPendingDiscard.remaining, null)
@@ -95,7 +105,7 @@ try {
     await main().click()
     assert.equal((await read()).prep.playerPendingDiscard, null)
     assert.ok((await read()).prep.opponentPendingDiscard)
-    assert.equal(await page.locator('[data-seat="1"] .card--selected').count(), 1)
+    assert.equal(await page.locator('[data-seat="1"] .card--discard-marked').count(), 1)
     await focus(1); await button('Cancel').click()
     assert.equal((await read()).prep.opponentPendingDiscard, null)
     assert.equal((await read()).prep.opponentHand.some(c => c.uid === dragon.uid), true)
@@ -115,23 +125,14 @@ try {
     await phase('result')
     s = await read()
     assert.deepEqual(s.result, resolveBossBattle(s))
-    const physical = [...s.prep.playerHand, ...s.prep.opponentHand, ...s.prep.deck, ...s.prep.playerDiscard, ...s.pockets]
+    const physical = [...s.prep.playerHand, ...s.prep.opponentHand, ...s.prep.deck, ...s.prep.playerDiscard, ...s.pockets.filter(Boolean)]
     assert.equal(physical.length, 73)
     assert.equal(new Set(physical.map(c => c.uid)).size, 73)
     await page.locator('.boss-result-actions').getByRole('button', { name: 'Replay prep', exact: true }).click()
     assert.deepEqual((await read()).prep, fixture.prep)
-    // Powers remain usable after picking and even on a locked prep hand.
-    await readyHand(1)
-    assert.equal((await read()).prep.opponentFinished, true)
-    await button('Player 2 Pocket').click()
-    await page.locator('.boss-pocket-preview .card').click()
-    await tap(1, dragon.uid)
-    await main().click()
-    s = await read()
-    assert.equal(s.prep.opponentFinished, false)
-    assert.equal(s.types[1], null)
-    assert.equal(s.prep.opponentHand.some(c => c.uid === s.pockets[1].uid), true)
-    assert.equal(s.prep.playerDiscard.some(c => c.uid === dragon.uid), true)
+    // Pocket is a draft reserve and closes when preparation begins.
+    assert.equal(await button('Player 2 Pocket').isDisabled(), true)
+    assert.equal(await button('Player 1 Pocket').isDisabled(), true)
     await tap(1, draw2.uid)
     await readyHand(1)
     await button('Player 1 Swap').click()
@@ -154,16 +155,16 @@ try {
     await button('Open menu').click()
     await page.locator('.screen-menu__popover').getByRole('button', { name: 'Replay prep', exact: true }).click()
     assert.deepEqual((await read()).prep, fixture.prep)
-    assert.deepEqual((await read()).pocketUsed, [false, false])
+    assert.deepEqual((await read()).pockets, fixture.pockets)
     await readyHand(1)
     assert.equal((await read()).prep.playerFinished, false)
     await readyHand(0)
     await phase('result')
-    results.push({ viewport, pass: true })
+    results.push({ draftMode, viewport, pass: true })
     await context.close()
   }
   assert.deepEqual(errors, [])
   await writeFile(`${output}/verification.json`, JSON.stringify({ pass: true, results, errors,
-    checks: ['both hands immediately interactive', 'Copy target survives other hand draw', 'independent staged discards', 'overlapping pending actions/reload', 'cancel only own sacrifice', 'shared Recycle', 'Ready during other hand debt', 'Pocket replaces a locked hand card and reopens only its owner', 'Swap reopens both hands and moves used-special markers', 'Refresh absent in prep', 'pending discards block Swap', 'both Ready orders', 'physical uniqueness', 'exact prep replay including power charges', 'desktop/portrait/landscape controls and cards'] }, null, 2))
+    checks: ['both hands immediately interactive', 'Copy target survives other hand draw', 'independent staged discards', 'overlapping pending actions/reload', 'cancel only own sacrifice', 'shared Recycle', 'Ready during other hand debt', 'Pocket remains visible and closes after prep begins', 'Swap reopens both hands and moves used-special markers', 'Refresh absent in prep', 'pending discards block Swap', 'both Ready orders', 'physical uniqueness', 'exact prep replay including power charges', 'desktop/portrait/landscape controls and cards'] }, null, 2))
   console.log(`Independent boss prep browser checks passed: ${output}`)
 } finally { await browser.close() }

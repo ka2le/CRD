@@ -10,7 +10,7 @@ Abilities scoring. This is separate from the four-faction Monsters ruleset.
 Open the top-right menu → **Boss options**, or tap the rules summary on setup.
 This is an exploratory project: neither preset replaces the other, and their
 individual rules can be mixed. Rule changes apply with **Apply rules & restart
-deal**, returning to setup with the same shuffle seed and pocket choices.
+deal**, returning to setup with the same shuffle seed and empty Pockets.
 Closing without applying leaves the encounter unchanged. Test mode and animation
 preferences take effect immediately.
 
@@ -29,13 +29,19 @@ first picker. Absorption
 and lower-power doubling are independent options. The four draft tools can each
 be disabled; the reducer enforces disabled tools as well as the UI.
 
-In separate drafts **each player has one charge of every power per encounter**:
-Pocket, Refresh, Swap and “2 now”. All four controls share one compact icon strip
-in that player's column, between their pack and hand. Refresh only changes a card
-in the initiating player's own pack. Swap still exchanges one card between the two
+In both draft modes **each player has a reusable Pocket and one charge each of
+Refresh, Swap and “2 now” per encounter**. Pocket appears as a tiny face-up reserve
+beside the player's name, using the ordinary discard-pile presentation. An empty
+reserve shows an empty card slot. Tap it to highlight eligible cards directly,
+select one, then Accept in the bottom dock; Cancel leaves all cards unchanged.
+The reserve remains visible but inactive during prep/results. The other three
+tools share a compact icon strip between that player's pack and hand. Refresh only changes a card
+in the shared pack or the initiating player's own separate pack. Swap still exchanges one card between the two
 hands, as confirmed by the creator, but spends only the initiating player's
-charge. Pocket and Swap remain usable after the last pick, through absorption
-and during preparation. Refresh remains pack-only; it never replaces hand cards.
+charge. Pocket exchanges pack cards during that player's turn or once both players
+have finished picking, before absorption. After final absorption, it exchanges
+cards with its owner's hand until Prepare is pressed. Swap remains usable during
+preparation. Refresh remains pack-only; it never replaces hand cards.
 
 Borrowed picks may be interleaved with the other player's pick and still skip
 only the borrowing player's next round. “2 now” can also be used after the normal
@@ -45,8 +51,17 @@ round; each takes two picks and passes the next round, preserving final hand
 sizes. Reload, undo and checkpoints preserve personal charges and outstanding
 picks. Restart/new deals replenish both sets. Existing separate saves without
 personal charge fields preserve their old remaining shared charges for both
-players; restart the same deal for two fresh sets. The original shared-draft
-preset retains its shared Refresh/Swap/“2 now” charges.
+players; restart the same deal for two fresh sets. Legacy shared-draft saves also
+preserve spent shared charges when migrating to personal powers.
+
+Before absorption, **Switch latests** exchanges the cards most recently
+picked by the two players in the current round, without spending a Swap charge.
+It is available in both draft modes, even with Swap disabled, and may be reversed.
+Both players must have picked this round. With “2 now”, only the latest of the
+borrower's picks is eligible. Pocket holds a separate reserve and does not change
+the latest picks;
+previous-round cards and post-absorption exchanges still require Swap. Reload and
+test-mode undo retain the eligible cards.
 
 With all-leftover collection, each boss keeps its starting engine but overrides
 its printed filter. Its card and help show the current rule. An ordinary five-
@@ -59,13 +74,13 @@ Replay controls are always available in Boss options; same-deal restart and prep
 replay are also in the top-right menu, and prep replay is on the result screen:
 
 - **Restart same deal** resets picks, tools and prep and begins drafting with
-  the same boss, seed, rules and pocket choices.
+  the same boss, seed and rules, with empty Pockets.
 - **Fresh deal** returns to setup with a new shuffle, preserving selected rules,
-  boss, tools settings and pocket choices.
+  boss and tool settings, with empty Pockets.
 - **Replay prep** restores both hands, draw deck and shared discard pile from
   the start of preparation, resetting activations, mandatory discard debts,
-  Ready flags, faction choices and the previous result. Pocket and Swap charges
-  return to their values at the start of prep, together with the original hands.
+  Ready flags, faction choices and the previous result. Reserved Pocket cards and
+  Swap charges return to their values at the start of prep, with the original hands.
 - **Choose boss** starts setup for any boss directly.
 - **Test mode** enables navigation here in Boss options and up to 40 action undos,
   including across reload; it adds no persistent main-table badge or shortcuts.
@@ -81,10 +96,22 @@ Existing v1 saves without options retain the original shared/filter/doubling
 rules; switching to the new preset is explicit. Prep replay also reconstructs
 the original draft boundary for legacy saves without checkpoints.
 
+UI corrections, 13 November: normal Abilities Main + New Cards Draft is the
+reference for interactions and presentation. Pocket targets directly on the
+table, with no preview sheet. Required discards use normal red discard markers.
+After battle the center shows the shared Abilities ledger for Player 1, Player 2
+and the boss, followed by the team sum. Each row uses the actual chosen faction
+and complete final stats, typed/neutral damage, bonus, shield reduction and score.
+The regular animation runner counts each participant in that order, with the
+same fast-forward/skip controls. Turning Battle animation off shows final scores
+immediately. Core boss effects animate the printed symbols on its portrait.
+The eye opens those same full scores; rewind replays preparation. Narrow portrait
+rows keep faction cells together and put the final formula underneath.
+
 UI corrections, 9 November: cards retain their standard proportions with no
 blurred artwork extension. The existing menu stays top right and the existing
 physical deck/discard stacks appear in the bottom dock. Above the boss cards,
-the regular Abilities resolution ledger stays visible and updates immediately:
+the regular Abilities resolution ledger stays visible during drafting/prep and updates immediately:
 stats and damage per faction, neutral damage, ability bonus, opposing shield
 reduction and final score. It uses the same ledger row and scoring as the normal
 end animation, without running the count-up sequence during drafting.
@@ -94,19 +121,26 @@ Draft/hand areas remain borderless, but retain the normal buttons and Abilities
 ledger styling rather than flattening those controls. The bottom player hands
 use the original horizontal HandArea rows instead of card grids, with overlap
 on narrow screens and a measured height cap in landscape. The bottom dock uses
-the original SideRail styling: status left, deck/discard beside the action on
-the right. Options groups retain spacing rather than extra fieldset boxes.
+the original SideRail styling: compact contextual guidance at the left, a boxed turn label
+in the center, and deck/discard beside the action group at the right. Options groups retain spacing rather than extra fieldset boxes.
 
 In short landscape screens, the boss ledger uses a second header line beneath
 the boss name, leaving the boss card band at full height. Absorbed count and View
 have been removed completely: the cards are already visible and can be held to
 inspect. They now use all the width previously reserved for those controls.
 
-The two aligned columns identify the players without repeated visible labels.
+Both hand labels show Player 1 / Player 2. The current player's name has a filled
+highlight. The bottom row reuses the centered, boxed multiplayer turn label:
+“Player 1’s Turn”, with no action instructions attached. Only one name is current:
+separate drafts follow the next pending picker visually while either player can
+still pick first. During prep, the selected hand owns the turn label. Latest-pick
+exchange uses a swap icon and “Switch latests” directly beside Absorb in the dock,
+never over the pack cards. See [the required UI conventions](UI.md).
 Power buttons retain names for tooltips and assistive technology. A brief
-“Round N” notice fades at each new round; there are no permanent pick/round
-instructions or disabled “Pick a card” button. Only contextual targeting/discard
-guidance and actions that require a press appear in the bottom rail. Rules,
+“Round N” notice fades at each new round. There is no disabled “Pick a card”
+button. Contextual targeting/discard guidance accompanies the current player in
+the bottom rail. Card containers allow the normal activation stars and rings to
+extend outside the cards, with padding to keep them inside the screen. Rules,
 test status, undo and navigation belong in Boss options.
 
 ## Encounters
@@ -136,14 +170,21 @@ Only original draft leftovers feed it, not refresh or preparation discards.
 
 ## Draft items
 
-- Each player equips one basic stat or ordinary attack as a Pocket card before
-  the encounter. Those two physical cards are removed from the shuffled pool.
-  Pocket replaces a normal pick, once per player; it does not add a sixth pick.
-  After picking, it can instead replace one card in its owner's hand, including
-  during prep. Before absorption, the outgoing card returns to that player's
-  pack; after absorption, it enters shared Recycle without feeding the boss
-  retroactively. During prep, only that hand reopens and loses its type choice.
-  Its choice carries between encounters.
+- Each player starts with an **empty Pocket**, a reusable reserve slot. During
+  their pick turn, or after both players finish picking and before Absorb, choose
+  a pack card to reserve. The existing Pocket card replaces it in the same pack
+  position; if Pocket is empty, draw one replacement from the undealt deck.
+  Pocket does not spend a pick, change the pack size or grant a combat-hand slot.
+  Separate drafts can target only the owner's pack. The reserve is safe from
+  absorption; a returned card becomes an ordinary pack card and can be picked or
+  absorbed. Exchanges can be repeated while the timing window is open.
+  After the final absorption and before Prepare, the same operation exchanges a
+  card with the owner's hand. An empty Pocket still draws the replacement, keeping
+  the hand size unchanged. Pocket closes during prep, and its held card remains
+  outside combat. No cards are discarded by these exchanges. Reload, undo and
+  checkpoints preserve the reserve and deck cursor. Legacy unused starting cards
+  become reserves; spent legacy cards remain in their current hand/pile and do
+  not become duplicate reserve cards. Restart/new encounters start empty.
 - Refresh replaces one row card from the undealt deck. Select the
   card and Accept. It remains usable on leftovers after picking, but not during
   prep. The old card is set aside, unavailable to the boss or Recycle.
@@ -156,7 +197,7 @@ Only original draft leftovers feed it, not refresh or preparation discards.
 - “2 now” borrows that player's next pack's pick. It grants an extra
   pick now and skips their next round, preserving the selected four/five drafted
   cards per player. It can be used after the normal pick while leftovers remain;
-  it is unavailable in the final round or prep. Pocket can occupy either pick.
+  it is unavailable in the final round or prep. Pocket exchanges spend neither pick.
 
 Charges reset each encounter. These are initial tools, not a campaign reward
 system. There is no route map, inventory economy, solo or online mode yet.
@@ -167,15 +208,22 @@ Both hands prepare independently, with no first player or required turn order.
 Either player can activate specials and choose a faction in their own lane.
 The familiar large Accept/Ready button stays in the bottom-right corner.
 Touching a hand or choosing its damage type directs that button to that hand;
-an underline under its score identifies the current confirmation context. This
+a filled player-name highlight identifies the current confirmation context. This
 focus does not block the other hand's actions. Cancel also stays in the bottom
 rail. There are no per-player Ready checkboxes. Either Ready order works, and
 battle resolves only when both hands are ready.
 
 As in normal play, a hand with multiple eligible damage types must choose its
-own type before Ready enables. A sole eligible type is automatic. Eligible
-ordinary cards can select their single matching type; faction icons handle
-multiple choices. Changing one hand invalidates only that hand's choice.
+own type before locking. The action says Choose faction until a choice is made.
+A sole eligible type is automatic. Eligible
+ordinary highlighted cards select their single matching type directly after
+specials. Cards with multiple eligible types open the regular game's
+`FactionChoices` in a reserved band above that hand. Choose faction opens the
+same controls, and Main type lets the player revise a choice before Ready.
+Neutral-only, zero-damage and empty hands offer every legal faction directly.
+There is no duplicate tiny faction-icon strip or popup covering the cards.
+Each hand keeps its own choices, leaving the other hand usable. Changing one
+hand invalidates only that hand's choice.
 
 Draw, Copy, Recycle, redraw, draw/discard and sacrifices use the official prep
 reducer. Shared deck/discard changes commit atomically for each action. Both
@@ -188,7 +236,7 @@ changes affect only that hand's choice. Ready locks only its own hand. Pending
 debts survive reload; prep replay restores both initial hands and shared piles.
 
 Swap uses two opposing horizontal arrows, distinct from the curved replay/undo
-symbol, in both personal strips and the original shared tool.
+symbol, in both players' personal strips.
 
 Each hero applies **all** boss shields at normal C1/R1/D0 costs. The team's
 shields add together and reduce the boss's score once at its chosen faction's
@@ -220,6 +268,11 @@ normal-match/room fingerprinting.
   shared Recycle and exit, plus desktop and phone layout/image checks.
   Set `CRD_PLAYWRIGHT_MODULE` if Playwright is installed outside this project.
 - Screenshots and browser receipt: `artifacts/ui/boss-battle/`.
+- `node scripts/boss-shared-ui-browser-smoke.mjs`: both modes at desktop,
+  portrait and landscape sizes; personal controls/charges, bottom-row turns and
+  player highlights, free latest-pick exchange/reload/absorption boundary,
+  neutral/zero-power faction prompts, either-hand Ready, and unclipped animated
+  activation stars/rings. Screenshots/receipt: `artifacts/ui/boss-shared-parity/`.
 - `node scripts/boss-options-browser-smoke.mjs`: both presets, options,
   separate-pack ownership, additive scoring, four-round variant, disabled tools,
   reload/restart/replay/undo/jumps and desktop/phone layout. Screenshots/receipt:
@@ -227,10 +280,21 @@ normal-match/room fingerprinting.
 - `node scripts/boss-prep-browser-smoke.mjs`: either hand first, independent
   Copy/discard staging, overlapping pending actions, reload/cancellation/shared
   Recycle, both Ready orders, physical uniqueness and exact replay at desktop,
-  portrait and landscape sizes. Also checks Pocket on a locked hand, Swap of a
+  portrait and landscape sizes. Also checks Pocket closes during prep, Swap of a
   used special, independent charges and prep replay refunds. Latest evidence:
   `artifacts/ui/boss-late-powers/prep/`; draft/options regression:
   `artifacts/ui/boss-late-powers/options/`.
+- `node scripts/boss-pocket-browser-smoke.mjs`: both draft modes at desktop,
+  portrait and landscape sizes; empty/filled inline Pocket piles, direct targeting, replacement draws,
+  reusable exchanges, normal-pick preservation, turn restrictions, pre-absorption
+  exchanges, reload, final own-hand exchanges, physical-card conservation and
+  Pocket closure at prep. Evidence: `artifacts/ui/boss-pocket-reserve/`.
+- `node scripts/boss-draft-parity-browser-smoke.mjs`: both presets at five
+  desktop/portrait/landscape sizes, direct single-type and multi-type card
+  selection, neutral/empty hands, committed factions, every displayed stat and
+  damage total, Robot bonus, Dragon extra stat, pooled shields, team sum, result
+  sheet and replay. Current UI evidence for this and the Pocket/shared/prep
+  suites: `artifacts/ui/boss-draft-parity/`.
 
 This prototype does not change the normal NC deck/rules, models or research
 archives and does not authorize new balance collection, fitting or deployment.

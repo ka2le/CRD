@@ -1,5 +1,72 @@
 # UI and animation design
 
+## Required workflow and current conventions
+
+Read this guide at the start of every repository task. Before UI edits, inspect the
+referenced live component and stylesheet; carry the same design into other modes.
+When the user corrects UI, update this section in the same change with the general
+convention, an example, and the source that future work should reuse. Reconcile
+older descriptions elsewhere in the docs. Explicit newer user requests take priority.
+
+- **Normal NC Draft is the reference flow for Boss mode (13 November 2026).**
+  Reuse Abilities Main + New Cards components and interactions. Pocket is a tiny
+  face-up `Pile` beside its owner's name, with an empty slot before reserving a
+  card. Tapping it immediately highlights eligible pack/hand targets; select a
+  card and use the existing bottom-right Accept, or Cancel. Do not add a preview
+  sheet and a second “Choose a card” step. The reserve remains visible, inactive,
+  after its exchange window closes. Source: `board/Pile.jsx`, `BossBattle.jsx`.
+- **Faction selection follows the cards.** As in `App.jsx` and
+  `useGameSession.js`, highlight eligible cards after specials; one eligible
+  faction selects directly and multiple factions open `FactionChoices`.
+  Boss keeps those shared choices in a reserved band above the relevant hand,
+  so both players can prepare independently without covering either hand.
+  Neutral/empty hands get all legal choices. A single Main type / Choose faction
+  control replaces the duplicate tiny faction-icon strip. Required discards use
+  `HandArea`'s red discard markers, matching normal preparation.
+- **Show every participant's Abilities breakdown at the result.** Player 1,
+  Player 2 and the boss each get the regular `TabletopResolution` ledger row:
+  faction stats and damage, neutral damage, committed faction, bonus, shields
+  and final damage. Put the team sum underneath. Use actual committed scores,
+  including pooled team shields against the boss; never reselect a faction for
+  display. Reuse the regular count-up runner in Player 1 / Player 2 / boss order,
+  with fast-forward, skip and the existing Battle animation preference.
+  Example: Robot damage `2 + 3 − 4 = 1`, followed by the other player's
+  row and the boss row. Sources: `battle/TabletopResolution.jsx`,
+  `boss/BossScores.jsx`, `game/tabletopResolution.js`. Check
+  `scripts/boss-draft-parity-browser-smoke.mjs` at desktop, portrait and landscape.
+- **Reuse established UI.** Match existing multiplayer/player-bar controls before
+  introducing a new layout or explanation. Keep cards unobscured by action controls.
+- **Turn identity is compact and centered.** Use the boxed multiplayer rail label
+  (`.side-rail__turn`, `src/App.css`; markup in `src/components/hud/SideRail.jsx`)
+  in the bottom row for same-screen co-op, with just **Name’s Turn**. Example:
+  **Player 2’s Turn**. Put required targeting/discard guidance separately; do not
+  append “pick a card” or other instructions to the turn label.
+- **One current player, one highlighted name.** Emphasize only the named player's
+  label beside their hand. Multiple players being allowed to act does not mean
+  highlighting both as current. In separate-pack co-op, use the next pending
+  picker as the visual turn cue while retaining either-player-first input. During
+  prep, use the hand whose confirmation is currently selected.
+- **Related actions belong together in the dock.** Put a secondary action directly
+  beside its primary action in one button group. The co-op latest-pick exchange is
+  **swap icon + Switch latests**, immediately beside **Absorb**. Use the existing
+  `SvgIcon name="swap"`. Keep the wording short; “picks” and “Free” do not belong
+  on this button. Explain timing/cost in help if needed. Do not overlay it on the
+  draft cards or absorption highlights. Keep the two buttons adjacent on phones;
+  move other dock content to another row when space is tight.
+- **Player-specific decisions stay with that player's hand.** Use the regular
+  faction choices over the relevant hand, including neutral-only/zero damage;
+  personal tools remain in that player's strip. Card stars and rings must remain
+  visible outside the card and hand containers.
+- **Review actual layout.** Check desktop, phone portrait and phone landscape,
+  including initial/next turn, preparation, and the Absorb action group. Verify
+  centered turn text, exactly one current-name highlight, adjacent related buttons,
+  and unobscured cards. Examples live in `src/components/boss/BossBattle.jsx` and
+  `BossBattle.css`; browser coverage is `scripts/boss-shared-ui-browser-smoke.mjs`.
+
+Feedback incorporated 12 November 2026: a verbose left-aligned turn instruction,
+simultaneous current-player highlights, and a “Switch latest picks · Free” overlay
+on draft cards were rejected. The conventions above replace those presentations.
+
 Normal play uses NC and the Regular deck. The Testing switch appears before the Battle section. Battle-rule choices, opponent-card visibility, Wild deck and Test deck appear only with Testing enabled. Turning Testing off restores the normal rules, redealing only if the effective setup changes. Older non-testing saved setups migrate to NC; new online rooms also use normal NC settings.
 
 > Naming policy (2026-10-22): **Abilities = `abilities-main`** (formerly Abilities v2). The original is **Abilities Prototype** (`abilities-prototype`), hidden and excluded from balance testing unless explicitly requested. Generic tabletop requests mean main; Threshold must be named explicitly. Historical raw IDs/paths remain unchanged. See [ruleset naming policy](RULESET_NAMES.md).
@@ -13,7 +80,7 @@ Added 2026-10-18 with the table redesign. Rules logic is unchanged. This file de
 ## Principles
 
 - The cards carry the information. The UI adds only what the cards can't show: whose turn it is, totals, health, timing and progress.
-- Use symbols, colour, position and motion before labels. Primary actions may use one word; the rest is icons.
+- Use symbols, colour, position and motion before labels. Use short verb labels for primary actions and existing icons for secondary controls. Add concise secondary labels where the current conventions or user request call for them.
 - Teaching is opt-in: long-press or right-click any card to inspect it, and Menu → How to play opens a visual timing sheet.
 - Mobile portrait comes first, and every layout fits the screen with no page scroll.
 

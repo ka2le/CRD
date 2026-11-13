@@ -1,5 +1,5 @@
-import { buildShuffledDeck, getExpandedCoreDeck } from './cards.js'
-import { applyPreparationAction, createPreparationState, preparationDiscardPatch } from './preparationState.js'
+import { buildShuffledDeck } from './cards.js'
+import { applyPreparationAction, createPreparationState } from './preparationState.js'
 import { chooseTabletopType, getTabletopProfile, scoreTabletopHand } from './tabletop.js'
 
 export const BOSS_SAVE_VERSION = 1
@@ -7,7 +7,6 @@ export const BOSS_STORAGE = 'crd-boss-run-v1'
 export const BOSS_MODE_STORAGE = 'crd-boss-mode-v1'
 const RULES = 'abilities-new-cards'
 const FACTIONS = ['critter', 'robot', 'dragon']
-export const POCKET_IDS = ['critter1', 'robot1', 'dragon1', 'swarm', 'robot_attack', 'dragons_breath']
 export const BOSS_PRESETS = {
   original: { draftMode: 'shared', absorption: 'boss', weakerBonus: true, rounds: 5,
     pockets: true, refresh: true, swap: true, double: true },
@@ -19,14 +18,28 @@ export const bossOptions = state => ({ ...BOSS_PRESETS.original, ...state.option
 export const bossPackSize = state => bossOptions(state).draftMode === 'separate' ? 4 : bossDefinition(state.bossId).packSize
 export const bossDraftRows = state => bossOptions(state).draftMode === 'separate' ? state.rows : [state.row]
 export const bossActiveRow = (state, seat = state.turns[0] ?? 0) => bossDraftRows(state)[bossOptions(state).draftMode === 'separate' ? seat : 0]
-export const bossToolCharges = (state, seat) => bossOptions(state).draftMode === 'separate'
-  ? state.playerTools?.[seat] ?? state.tools : state.tools
+export const bossToolCharges = (state, seat) => bossOptions(state).draftMode === 'shared' && !state.personalTools
+  ? state.tools : state.playerTools?.[seat] ?? state.tools
+export const bossCanSwitchLatest = state => ['draft', 'collect'].includes(state.phase)
+  && [0, 1].every(i => state.latestPicks?.[i] && state.hands[i].some(c => c.uid === state.latestPicks[i]))
+
+// A spent legacy Pocket already lives in a hand/pile; it is not a reserve card.
+export const bossPocketCard = (state, seat) => state.pocketMode !== 'reserve' && state.pocketUsed?.[seat]
+  ? null : state.pockets[seat] ?? null
+
+export function bossPocketWindow(state, seat) {
+  if (!bossOptions(state).pockets || ![0, 1].includes(seat)) return null
+  const separate = bossOptions(state).draftMode === 'separate'
+  const picking = state.phase === 'draft' && state.turns.includes(seat) && (separate || state.turns[0] === seat)
+  if ((picking || state.phase === 'collect') && bossActiveRow(state, seat)?.length) return 'pack'
+  if (state.phase === 'collected' && state.pack === bossOptions(state).rounds && state.hands[seat].length) return 'hand'
+  return null
+}
 
 function spendTool(state, seat, tool) {
-  if (bossOptions(state).draftMode === 'shared') return { tools: { ...state.tools, [tool]: 0 } }
-  // Old separate-draft saves conservatively carry their shared remaining charges
+  // Old saves conservatively carry their shared remaining charges
   // into both seats. Restart/new deals give each player a fresh personal set.
-  return { playerTools: [0, 1].map(i => ({ ...bossToolCharges(state, i), ...(i === seat ? { [tool]: 0 } : {}) })) }
+  return { personalTools: true, playerTools: [0, 1].map(i => ({ ...bossToolCharges(state, i), ...(i === seat ? { [tool]: 0 } : {}) })) }
 }
 
 function normalizeOptions(options) {
@@ -76,7 +89,6 @@ export const BOSSES = [
     rule: 'Absorbs leftover cards with Critter stats or Critter attacks. Starts with two shield points.' },
 ]
 export const bossDefinition = id => BOSSES.find(b => b.id === id) ?? BOSSES[0]
-const catalog = () => getExpandedCoreDeck({ tabletop: RULES })
 
 export function bossCard(id, options) {
   const b = bossDefinition(id)
@@ -106,21 +118,15 @@ export function matchesBossFilter(card, filter) {
   return false
 }
 
-export function createBossRun({ bossId = BOSSES[0].id, seed = Date.now(), pockets = ['robot1', 'dragon1'], cleared = [], options, testMode = false } = {}) {
+export function createBossRun({ bossId = BOSSES[0].id, seed = Date.now(), cleared = [], options, testMode = false } = {}) {
   const b = bossDefinition(bossId)
   const deck = buildShuffledDeck({ tabletop: RULES, seed })
-  const pocketCards = pockets.map((id, seat) => {
-    const chosen = POCKET_IDS.includes(id) ? id : 'critter1'
-    const index = deck.findIndex(c => c.id === chosen)
-    const [card] = deck.splice(index, 1)
-    return { ...card, uid: `pocket_${seat}_${card.uid}` }
-  })
   return { version: BOSS_SAVE_VERSION, bossId: b.id, seed, randomState: (seed >>> 0) || 1,
     options: normalizeOptions(options), testMode, history: [], draftStart: null, prepStart: null,
     phase: 'setup', pack: 1, deck, row: [], rows: [], hands: [[], []], absorbed: [], discard: [], refreshed: [],
-    pockets: pocketCards, pocketUsed: [false, false], tools: { refresh: 1, swap: 1, double: 1 },
-    playerTools: [0, 1].map(() => ({ refresh: 1, swap: 1, double: 1 })),
-    turns: [0, 1], debt: [false, false], prep: null, types: [null, null], activeSeat: 0,
+    pocketMode: 'reserve', pockets: [null, null], tools: { refresh: 1, swap: 1, double: 1 },
+    personalTools: true, playerTools: [0, 1].map(() => ({ refresh: 1, swap: 1, double: 1 })),
+    turns: [0, 1], debt: [false, false], latestPicks: [null, null], prep: null, types: [null, null], activeSeat: 0,
     cleared, result: null, lastAbsorbed: [] }
 }
 
@@ -129,6 +135,7 @@ function consumeTurn(state, card, fromRow, seat = state.turns[0]) {
   const turns = state.turns.filter((_, i) => i !== state.turns.indexOf(seat))
   const separate = bossOptions(state).draftMode === 'separate'
   return { ...state, hands, turns,
+    latestPicks: [0, 1].map(i => i === seat ? card.uid : state.latestPicks?.[i] ?? null),
     row: fromRow && !separate ? state.row.filter(c => c.uid !== card.uid) : state.row,
     rows: fromRow && separate ? state.rows.map((row, i) => i === seat ? row.filter(c => c.uid !== card.uid) : row) : state.rows,
     phase: turns.length ? 'draft' : 'collect' }
@@ -179,14 +186,10 @@ function transition(state, action) {
   // identifies its owner; seat-specific tools supply the owner explicitly.
   const seat = options.draftMode === 'separate'
     ? action.seat ?? (action.uid ? state.rows.findIndex(row => row.some(c => c.uid === action.uid)) : state.turns[0])
-    : state.turns[0]
-  const canPick = state.phase === 'draft' && state.turns.includes(seat)
+    : action.seat ?? state.turns[0] ?? 0
+  const canPick = state.phase === 'draft' && state.turns.includes(seat) && (options.draftMode === 'separate' || seat === state.turns[0])
   const toolSeat = action.seat ?? seat ?? 0
   const packOpen = ['draft', 'collect'].includes(state.phase) && [0, 1].includes(seat) && bossActiveRow(state, seat)?.length > 0
-  if (action.type === 'pocket-choice' && options.pockets && state.phase === 'setup' && [0, 1].includes(action.seat) && POCKET_IDS.includes(action.id)) {
-    return createBossRun({ bossId: state.bossId, seed: state.seed, cleared: state.cleared, options, testMode: state.testMode,
-      pockets: state.pockets.map((c, i) => i === action.seat ? action.id : c.id) })
-  }
   if (action.type === 'start' && state.phase === 'setup') {
     const next = dealPack({ ...state, phase: 'draft' })
     return { ...next, draftStart: snapshot(next) }
@@ -195,27 +198,24 @@ function transition(state, action) {
     const card = canPick ? bossActiveRow(state, seat).find(c => c.uid === action.uid) : null
     return card ? consumeTurn(state, card, true, seat) : state
   }
-  if (action.type === 'pocket' && options.pockets && [0, 1].includes(toolSeat) && !state.pocketUsed[toolSeat] && action.uid && ['draft', 'collect', 'collected', 'prepare'].includes(state.phase)) {
-    const side = toolSeat ? 'opponent' : 'player'
-    if (state.prep?.[`${side}PendingDiscard`]) return state
-    const hand = state.prep?.[`${side}Hand`] ?? state.hands[toolSeat]
-    const old = hand.find(c => c.uid === action.uid)
-    if (!old) return state
-    const replacement = hand.map(c => c.uid === old.uid ? state.pockets[toolSeat] : c)
-    const patch = { pocketUsed: state.pocketUsed.map((v, i) => i === toolSeat ? true : v),
-      types: state.types.map((v, i) => i === toolSeat ? null : v) }
-    if (state.phase === 'prepare') return { ...state, ...patch, activeSeat: toolSeat,
-      prep: { ...state.prep, [`${side}Hand`]: replacement, [`${side}Finished`]: false,
-        ...preparationDiscardPatch(state.prep, side, [...state.prep.playerDiscard, old]) } }
-    const open = ['draft', 'collect'].includes(state.phase)
-    return { ...state, ...patch, hands: state.hands.map((h, i) => i === toolSeat ? replacement : h),
-      ...(open ? options.draftMode === 'separate'
-        ? { rows: state.rows.map((r, i) => i === toolSeat ? [...r, old] : r) }
-        : { row: [...state.row, old] }
-        : { discard: [...state.discard, old] }) }
-  }
-  if (action.type === 'pocket' && options.pockets && canPick && !state.pocketUsed[seat]) {
-    return consumeTurn({ ...state, pocketUsed: state.pocketUsed.map((v, i) => i === seat ? true : v) }, state.pockets[seat], false, seat)
+  if (action.type === 'pocket' && [0, 1].includes(toolSeat) && action.uid) {
+    const source = bossPocketWindow(state, toolSeat)
+    if (!source) return state
+    const cards = source === 'pack' ? bossActiveRow(state, toolSeat) : state.hands[toolSeat]
+    const card = cards.find(c => c.uid === action.uid)
+    const held = bossPocketCard(state, toolSeat), replacement = held ?? state.deck[0]
+    if (!card || !replacement) return state
+    const replace = cards => cards.map(c => c.uid === card.uid ? replacement : c)
+    return { ...state, pocketMode: 'reserve',
+      pockets: [0, 1].map(i => i === toolSeat ? card : bossPocketCard(state, i)),
+      deck: held ? state.deck : state.deck.slice(1),
+      ...(source === 'hand' ? {
+        hands: state.hands.map((hand, i) => i === toolSeat ? replace(hand) : hand),
+        latestPicks: [0, 1].map(i => i === toolSeat && state.latestPicks?.[i] === card.uid ? replacement.uid : state.latestPicks?.[i] ?? null),
+        types: state.types.map((type, i) => i === toolSeat ? null : type),
+      } : options.draftMode === 'separate'
+        ? { rows: state.rows.map((row, i) => i === toolSeat ? replace(row) : row) }
+        : { row: replace(state.row) }) }
   }
   if (action.type === 'refresh' && options.refresh && packOpen && bossToolCharges(state, seat).refresh && state.deck.length) {
     const card = bossActiveRow(state, seat).find(c => c.uid === action.uid)
@@ -227,10 +227,11 @@ function transition(state, action) {
   if (action.type === 'double' && options.double && packOpen && state.pack < options.rounds && bossToolCharges(state, seat).double && !state.debt[seat]) {
     return { ...state, phase: 'draft', turns: [seat, ...state.turns], debt: state.debt.map((v, i) => i === seat ? true : v), ...spendTool(state, seat, 'double') }
   }
-  if (action.type === 'swap' && options.swap && ['draft', 'collect', 'collected', 'prepare'].includes(state.phase) && [0, 1].includes(toolSeat) && bossToolCharges(state, toolSeat).swap) {
+  const freeSwitch = action.type === 'switch-latest' && bossCanSwitchLatest(state)
+  if (freeSwitch || action.type === 'swap' && options.swap && ['draft', 'collect', 'collected', 'prepare'].includes(state.phase) && [0, 1].includes(toolSeat) && bossToolCharges(state, toolSeat).swap) {
     if (state.prep?.playerPendingDiscard || state.prep?.opponentPendingDiscard) return state
     const hands = state.prep ? [state.prep.playerHand, state.prep.opponentHand] : state.hands
-    const a = hands[0].find(c => c.uid === action.a), c = hands[1].find(c => c.uid === action.b)
+    const a = hands[0].find(c => c.uid === (freeSwitch ? state.latestPicks[0] : action.a)), c = hands[1].find(c => c.uid === (freeSwitch ? state.latestPicks[1] : action.b))
     if (!a || !c) return state
     const swapped = hands.map((hand, i) => hand.map(v => v.uid === (i ? c.uid : a.uid) ? (i ? a : c) : v))
     if (state.phase === 'prepare') {
@@ -243,14 +244,16 @@ function transition(state, action) {
         prep: { ...state.prep, playerHand: swapped[0], opponentHand: swapped[1],
           playerFinished: false, opponentFinished: false, playerActivated: activated[0], opponentActivated: activated[1] } }
     }
-    return { ...state, hands: swapped, ...spendTool(state, toolSeat, 'swap') }
+    return { ...state, hands: swapped,
+      latestPicks: freeSwitch ? [c.uid, a.uid] : [0, 1].map(i => [a.uid, c.uid].includes(state.latestPicks?.[i]) ? null : state.latestPicks?.[i] ?? null),
+      ...(!freeSwitch ? spendTool(state, toolSeat, 'swap') : {}) }
   }
   if (action.type === 'collect' && state.phase === 'collect') return collect(state)
   if (action.type === 'next' && state.phase === 'collected') {
     if (state.pack === options.rounds) return beginPreparation(state)
     const pack = state.pack + 1
     const turns = [pack % 2 ? 0 : 1, pack % 2 ? 1 : 0].filter(i => !state.debt[i])
-    return dealPack({ ...state, pack, turns, debt: [false, false], phase: turns.length ? 'draft' : 'collect', lastAbsorbed: [] })
+    return dealPack({ ...state, pack, turns, debt: [false, false], latestPicks: [null, null], phase: turns.length ? 'draft' : 'collect', lastAbsorbed: [] })
   }
   if (action.type === 'seat' && state.phase === 'prepare' && [0, 1].includes(action.seat) &&
       !state.prep[`${action.seat ? 'opponent' : 'player'}Finished`]) return { ...state, activeSeat: action.seat }
@@ -312,7 +315,7 @@ export function bossReducer(state, action) {
   if (action.type === 'test-mode') return { ...state, testMode: Boolean(action.enabled), history: [] }
   if (action.type === 'restart' || action.type === 'options') {
     const next = createBossRun({ bossId: state.bossId, seed: state.seed,
-      pockets: state.pockets.map(c => c.id), cleared: state.draftStart?.cleared ?? state.cleared,
+      cleared: state.draftStart?.cleared ?? state.cleared,
       options: action.type === 'options' ? action.options : bossOptions(state), testMode: state.testMode })
     return action.type === 'restart' ? transition(next, { type: 'start' }) : next
   }
@@ -337,8 +340,6 @@ export function bossReducer(state, action) {
     return { ...next, history: [...(state.history ?? []), snapshot(state)].slice(-40) }
   }
   const next = transition(state, action)
-  if (next === state || action.type === 'new' || action.type === 'pocket-choice' || action.type === 'seat') return next
+  if (next === state || action.type === 'new' || action.type === 'seat') return next
   return state.testMode ? { ...next, history: [...(state.history ?? []), snapshot(state)].slice(-40) } : next
 }
-
-export function pocketCatalog() { return POCKET_IDS.map(id => catalog().find(c => c.id === id)) }

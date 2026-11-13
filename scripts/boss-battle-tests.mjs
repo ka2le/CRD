@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { BOSSES, BOSS_PRESETS, bossOptions, bossActiveRow, bossDraftRows, bossToolCharges, bossCore, bossHand, bossReducer as step, createBossRun, matchesBossFilter, resolveBossBattle } from '../src/game/bossBattle.js'
+import { BOSSES, BOSS_PRESETS, bossOptions, bossActiveRow, bossDraftRows, bossToolCharges, bossCanSwitchLatest, bossPocketCard, bossPocketWindow, bossCore, bossHand, bossReducer as step, createBossRun, matchesBossFilter, resolveBossBattle } from '../src/game/bossBattle.js'
 import { getExpandedCoreDeck } from '../src/game/cards.js'
 import { createPreparationState, getPreparationActions } from '../src/game/preparationState.js'
 import { getTabletopProfile, scoreTabletopHand, chooseTabletopType } from '../src/game/tabletop.js'
@@ -43,7 +43,7 @@ test('every boss collects exactly its leftovers on all five packs, once, with co
     })
     assert.deepEqual(s.hands.map(h => h.length), [5, 5])
     assert.equal(s.absorbed.length, expected)
-    const all = [...s.hands.flat(), ...s.absorbed, ...s.discard, ...s.deck, ...s.pockets]
+    const all = [...s.hands.flat(), ...s.absorbed, ...s.discard, ...s.deck, ...s.pockets.filter(Boolean)]
     assert.equal(all.length, 73)
     assert.equal(new Set(all.map(c => c.uid)).size, 73)
     assert.equal(s.prep.sharedDiscard, true)
@@ -58,34 +58,40 @@ test('random absorption is reproducible across saved reload and unrelated action
   s = step(s, { type: 'pick', uid: s.row[0].uid })
   s = step(s, { type: 'pick', uid: s.row[0].uid })
   assert.deepEqual(step(s, { type: 'collect' }), step(JSON.parse(JSON.stringify(s)), { type: 'collect' }))
-  assert.equal(step(s, { type: 'double' }), s)
+  assert.equal(step(s, { type: 'pick', uid: s.row[0].uid }), s)
 })
 
-test('borrowed pick is repaid next pack; Pocket still consumes a pick and never creates a sixth drafted card', () => {
+test('borrowed pick is repaid next pack; Pocket reserves an extra card without consuming a pick', () => {
   for (const firstSeat of [0, 1]) {
     let s = start()
     if (firstSeat) s = step(s, { type: 'pick', uid: s.row[0].uid })
     s = step(s, { type: 'double' })
     assert.equal(s.turns.filter(i => i === firstSeat).length, 2)
-    s = step(s, { type: 'pocket' })
-    assert.equal(s.pocketUsed[firstSeat], true)
+    const reserve = bossActiveRow(s)[0], turns = [...s.turns]
+    s = step(s, { type: 'pocket', uid: reserve.uid })
+    assert.deepEqual(s.turns, turns)
+    assert.equal(s.pockets[firstSeat].uid, reserve.uid)
+    s = step(s, { type: 'pick', uid: bossActiveRow(s)[0].uid })
     while (s.phase === 'draft') s = step(s, { type: 'pick', uid: s.row[0].uid })
     s = step(step(s, { type: 'collect' }), { type: 'next' })
     assert.equal(s.turns.includes(firstSeat), false)
     s = finishDraft(s)
     assert.deepEqual(s.hands.map(h => h.length), [5, 5])
-    assert.equal(s.hands[firstSeat].filter(c => c.uid.startsWith('pocket_')).length, 1)
-    assert.equal(s.tools.double, 0)
+    assert.equal(s.hands[firstSeat].some(c => c.uid === reserve.uid), false)
+    assertPhysicalCards(s)
+    assert.equal(bossToolCharges(s, firstSeat).double, 0)
+    assert.equal(bossToolCharges(s, 1 - firstSeat).double, 1)
   }
 })
 
-test('Refresh sets aside a dangerous card, Swap exchanges ownership, both spend one shared charge', () => {
+test('shared-draft Refresh and Swap each spend only the initiating players charge', () => {
   let s = start()
   const old = s.row[0], replacement = s.deck[0]
   s = step(s, { type: 'refresh', uid: old.uid })
   assert.equal(s.row[0].uid, replacement.uid)
   assert.equal(s.refreshed[0].uid, old.uid)
-  assert.equal(s.tools.refresh, 0)
+  assert.equal(bossToolCharges(s, 0).refresh, 0)
+  assert.equal(bossToolCharges(s, 1).refresh, 1)
   assert.equal(step(s, { type: 'refresh', uid: replacement.uid }), s)
   s = step(s, { type: 'pick', uid: s.row[0].uid })
   s = step(s, { type: 'pick', uid: s.row[0].uid })
@@ -94,7 +100,8 @@ test('Refresh sets aside a dangerous card, Swap exchanges ownership, both spend 
   s = step(s, { type: 'swap', a: a.uid, b: b.uid })
   assert.equal(s.hands[0][0].uid, b.uid)
   assert.equal(s.hands[1][0].uid, a.uid)
-  assert.equal(s.tools.swap, 0)
+  assert.equal(bossToolCharges(s, 1).swap, 0)
+  assert.equal(bossToolCharges(s, 0).swap, 1)
   assert.equal(s.absorbed.some(c => c.uid === old.uid), false)
 })
 
@@ -210,10 +217,161 @@ test('sacrifice can cancel before committing, including an already charged recyc
 
 function assertPhysicalCards(s) {
   const all = [...s.hands.flat(), ...s.absorbed, ...s.discard, ...s.deck, ...bossDraftRows(s).flat(), ...s.refreshed,
-    ...s.pockets.filter((c, i) => !s.pocketUsed[i])]
+    ...[0, 1].map(i => bossPocketCard(s, i)).filter(Boolean)]
   assert.equal(all.length, 73)
   assert.equal(new Set(all.map(c => c.uid)).size, 73)
 }
+
+test('empty Pockets draw exactly once, then reusable pack exchanges conserve cards and never spend normal picks', () => {
+  for (const options of Object.values(BOSS_PRESETS)) {
+    let s = start({ options, testMode: true })
+    assert.deepEqual(s.pockets, [null, null])
+    assert.equal(s.deck.length + bossDraftRows(s).flat().length, 73)
+    const card = bossActiveRow(s, 0)[0], replacement = s.deck[0], before = s
+    assert.equal(step(s, { type: 'pocket', seat: 1, uid: card.uid }), s) // Off turn or wrong pack.
+    s = step(s, { type: 'pocket', seat: 0, uid: card.uid })
+    assert.equal(s.pockets[0].uid, card.uid)
+    assert.equal(bossActiveRow(s, 0)[0].uid, replacement.uid)
+    assert.equal(s.deck.length, before.deck.length - 1)
+    assert.deepEqual(s.turns, before.turns)
+    assert.deepEqual(s.hands, before.hands)
+    assert.deepEqual(s.playerTools, before.playerTools)
+    assert.deepEqual(step(s, { type: 'undo' }).pockets, [null, null])
+    assertPhysicalCards(s)
+    const second = bossActiveRow(s, 0)[1], deck = s.deck
+    s = step(JSON.parse(JSON.stringify(s)), { type: 'pocket', seat: 0, uid: second.uid })
+    assert.equal(bossActiveRow(s, 0)[1].uid, card.uid)
+    assert.equal(s.pockets[0].uid, second.uid)
+    assert.deepEqual(s.deck, deck)
+    assert.deepEqual(s.turns, before.turns)
+    assertPhysicalCards(s)
+    s = step(s, { type: 'pick', seat: 0, uid: card.uid })
+    assert.equal(s.hands[0][0].uid, card.uid)
+    assert.equal(s.turns.includes(0), false)
+    assert.equal(step(s, { type: 'pocket', seat: 0, uid: bossActiveRow(s, 0)[0].uid }), s)
+    s = step(s, { type: 'pick', seat: 1, uid: bossActiveRow(s, 1)[0].uid })
+    assert.equal(bossPocketWindow(s, 0), 'pack')
+    const leftover = bossActiveRow(s, 0)[0]
+    s = step(s, { type: 'pocket', seat: 0, uid: leftover.uid })
+    assert.equal(s.pockets[0].uid, leftover.uid)
+    assert.equal(bossActiveRow(s, 0).some(c => c.uid === second.uid), true)
+    s = step(s, { type: 'collect' })
+    assert.equal(s.absorbed.some(c => c.uid === leftover.uid), false)
+    assert.equal(s.discard.some(c => c.uid === leftover.uid), false)
+    assert.equal(step(s, { type: 'pocket', seat: 0, uid: s.hands[0][0].uid }), s)
+    assertPhysicalCards(s)
+    assert.deepEqual(step(s, { type: 'restart' }).pockets, [null, null])
+  }
+})
+
+test('empty final Pockets draw hand replacements, and empty-deck or disabled exchanges cannot destroy a card', () => {
+  for (const options of Object.values(BOSS_PRESETS)) {
+    let boundary
+    finishDraft(start({ options }), s => { if (s.phase === 'collected' && s.pack === options.rounds) boundary = s })
+    const old = boundary.hands[1][0], drawn = boundary.deck[0]
+    const s = step(boundary, { type: 'pocket', seat: 1, uid: old.uid })
+    assert.equal(s.pockets[1].uid, old.uid)
+    assert.equal(s.hands[1][0].uid, drawn.uid)
+    assert.equal(s.deck.length, boundary.deck.length - 1)
+    assertPhysicalCards(s)
+    const emptyDeck = { ...boundary, deck: [] }
+    assert.equal(step(emptyDeck, { type: 'pocket', seat: 1, uid: old.uid }), emptyDeck)
+    const disabled = { ...boundary, options: { ...options, pockets: false } }
+    assert.equal(step(disabled, { type: 'pocket', seat: 1, uid: old.uid }), disabled)
+    const heldWithoutDeck = { ...s, deck: [] }
+    const swapped = step(heldWithoutDeck, { type: 'pocket', seat: 1, uid: drawn.uid })
+    assert.equal(swapped.hands[1][0].uid, old.uid)
+    assert.deepEqual(swapped.deck, [])
+  }
+})
+
+test('legacy saves keep unused Pocket cards but never duplicate a previously spent Pocket', () => {
+  for (const used of [false, true]) {
+    let s = start()
+    const old = s.row[0]
+    s = step(s, { type: 'pick', uid: old.uid })
+    delete s.pocketMode
+    s.pockets = [old, null]
+    s.pocketUsed = [used, false]
+    if (!used) s.hands[0] = [] // Old starting Pocket remained outside the hand.
+    assert.equal(bossPocketCard(s, 0)?.uid ?? null, used ? null : old.uid)
+    s = step(s, { type: 'pick', uid: s.row[0].uid })
+    const reserve = s.row[0], drawn = s.deck[0], beforeDeck = s.deck.length
+    s = step(s, { type: 'pocket', seat: 0, uid: reserve.uid })
+    assert.equal(s.pockets[0].uid, reserve.uid)
+    assert.equal(s.row[0].uid, used ? drawn.uid : old.uid)
+    assert.equal(s.deck.length, beforeDeck - Number(used))
+    assertPhysicalCards(s)
+  }
+})
+
+test('both draft modes freely exchange only this rounds latest picks until absorption, preserving charges and reload/undo', () => {
+  for (const preset of Object.values(BOSS_PRESETS)) {
+    let s = start({ options: { ...preset, swap: false }, testMode: true })
+    assert.equal(bossCanSwitchLatest(s), false)
+    s = step(s, { type: 'pick', uid: bossActiveRow(s)[0].uid })
+    assert.equal(step(s, { type: 'switch-latest' }), s)
+    s = step(s, { type: 'pick', uid: bossActiveRow(s)[0].uid })
+    const before = JSON.parse(JSON.stringify(s)), latest = [...s.latestPicks]
+    assert.equal(bossCanSwitchLatest(s), true)
+    s = step(JSON.parse(JSON.stringify(s)), { type: 'switch-latest' })
+    assert.deepEqual(s.hands.map(h => h.at(-1).uid), latest.toReversed())
+    assert.deepEqual(s.playerTools, before.playerTools)
+    assert.deepEqual(s.turns, before.turns)
+    assert.deepEqual(bossDraftRows(s), bossDraftRows(before))
+    assertPhysicalCards(s)
+    assert.deepEqual(step(s, { type: 'undo' }).hands, before.hands)
+    s = step(s, { type: 'switch-latest' })
+    assert.deepEqual(s.hands, before.hands)
+    s = step(s, { type: 'collect' })
+    assert.equal(bossCanSwitchLatest(s), false)
+    assert.equal(step(s, { type: 'switch-latest' }), s)
+    s = step(s, { type: 'next' })
+    assert.deepEqual(s.latestPicks, [null, null])
+    assert.equal(step(s, { type: 'switch-latest' }), s)
+    const older = s.hands.map(h => h[0].uid)
+    while (s.phase === 'draft') s = step(s, { type: 'pick', uid: bossActiveRow(s)[0].uid })
+    s = step(s, { type: 'switch-latest' })
+    assert.deepEqual(s.hands.map(h => h[0].uid), older)
+    assertPhysicalCards(s)
+  }
+})
+
+test('free exchange preserves the reserved Pocket and only switches the last borrowed pick, never a skipped round', () => {
+  for (const preset of Object.values(BOSS_PRESETS)) {
+    let s = start({ options: preset })
+    s = step(s, { type: 'double', seat: 0 })
+    while (s.phase === 'draft') s = step(s, { type: 'pick', uid: bossActiveRow(s)[0].uid })
+    const first = s.hands[0][0].uid, last = s.hands[0].at(-1).uid
+    assert.equal(s.latestPicks[0], last)
+    const reserve = bossActiveRow(s, 0)[0]
+    s = step(s, { type: 'pocket', seat: 0, uid: reserve.uid })
+    assert.equal(s.latestPicks[0], last)
+    s = step(s, { type: 'switch-latest' })
+    assert.equal(s.hands[0][0].uid, first)
+    assert.equal(s.hands[1].at(-1).uid, last)
+    assert.equal(s.pockets[0].uid, reserve.uid)
+    assertPhysicalCards(s)
+    s = step(step(s, { type: 'collect' }), { type: 'next' })
+    while (s.phase === 'draft') s = step(s, { type: 'pick', uid: bossActiveRow(s)[0].uid })
+    assert.equal(bossCanSwitchLatest(s), false)
+    assert.equal(step(s, { type: 'switch-latest' }), s)
+  }
+})
+
+test('shared personal tools respect pick order and migrate legacy shared charges without restoring spent powers', () => {
+  let s = start()
+  assert.equal(step(s, { type: 'pocket', seat: 1 }), s)
+  assert.equal(step(s, { type: 'pick', seat: 1, uid: s.row[0].uid }), s)
+  delete s.personalTools
+  s.tools = { refresh: 0, swap: 1, double: 1 }
+  for (const seat of [0, 1]) assert.equal(bossToolCharges(s, seat).refresh, 0)
+  s = step(s, { type: 'double', seat: 1 })
+  assert.deepEqual(s.turns, [1, 0, 1])
+  assert.equal(bossToolCharges(s, 1).double, 0)
+  assert.equal(bossToolCharges(s, 0).double, 1)
+  for (const seat of [0, 1]) assert.equal(bossToolCharges(s, seat).refresh, 0)
+})
 
 test('new default gives each player an independent four-card pack and absorbs every leftover', () => {
   for (const b of BOSSES) {
@@ -269,8 +427,11 @@ test('either separate player can use tools before the other picks, with per-seat
   const refreshed = s
   s = step(s, { type: 'double', seat: 1 })
   assert.equal(s.turns.filter(i => i === 1).length, 2)
-  s = step(s, { type: 'pocket', seat: 1 })
-  assert.equal(s.hands[1][0].uid, s.pockets[1].uid)
+  const reserve = s.rows[1][0]
+  s = step(s, { type: 'pocket', seat: 1, uid: reserve.uid })
+  assert.equal(s.pockets[1].uid, reserve.uid)
+  assert.deepEqual(s.hands.map(h => h.length), [0, 0])
+  s = step(s, { type: 'pick', seat: 1, uid: s.rows[1][0].uid })
   assert.equal(s.hands[0].length, 0)
   s = step(s, { type: 'pick', seat: 0, uid: s.rows[0][0].uid })
   assert.equal(s.phase, 'draft')
@@ -297,7 +458,7 @@ test('mixed options preserve four/five-card budgets, own-pack tools, filters and
     if (seat) s = step(s, { type: 'pick', uid: bossActiveRow(s)[0].uid })
     s = step(s, { type: 'refresh', uid: bossActiveRow(s)[0].uid })
     s = step(s, { type: 'double' })
-    s = step(s, { type: 'pocket' })
+    s = step(s, { type: 'pocket', uid: bossActiveRow(s)[0].uid })
     s = finishDraft(s, assertPhysicalCards)
     assert.deepEqual(s.hands.map(h => h.length), [rounds, rounds])
     assertPhysicalCards(s)
@@ -403,10 +564,12 @@ test('separate players each get all powers; own-pack Refresh and both borrowed p
     assert.equal(s.turns.length, 4)
     assert.deepEqual(bossToolCharges(step(JSON.parse(JSON.stringify(s)), { type: 'undo' }), 1), bossToolCharges(beforeSecond, 1))
     for (const seat of [1, 0]) {
-      s = step(s, { type: 'pocket', seat })
+      const reserve = s.rows[seat][0]
+      s = step(s, { type: 'pocket', seat, uid: reserve.uid })
+      assert.equal(s.pockets[seat].uid, reserve.uid)
+      s = step(s, { type: 'pick', seat, uid: s.rows[seat][0].uid })
       s = step(s, { type: 'pick', seat, uid: s.rows[seat][0].uid })
       assert.equal(s.hands[seat].length, 2)
-      assert.equal(s.pocketUsed[seat], true)
     }
     assert.equal(s.phase, 'collect')
     const beforeSwaps = JSON.parse(JSON.stringify(s.hands))
@@ -464,7 +627,7 @@ function prepareCard(s, seat, id, targetUid) {
 }
 function assertPrepPhysical(s) {
   const all = [...s.prep.playerHand, ...s.prep.opponentHand, ...s.prep.deck, ...s.prep.playerDiscard,
-    ...s.absorbed, ...s.refreshed, ...s.pockets.filter((_, i) => !s.pocketUsed[i])]
+    ...s.absorbed, ...s.refreshed, ...[0, 1].map(i => bossPocketCard(s, i)).filter(Boolean)]
   assert.equal(all.length, 73)
   assert.equal(new Set(all.map(c => c.uid)).size, 73)
   assert.deepEqual(s.prep.playerDiscard, s.prep.opponentDiscard)
@@ -553,7 +716,7 @@ test('each hand must choose its own eligible damage type before Ready when there
   assert.equal(s.phase, 'result')
 })
 
-test('after the last pick, Refresh can still change own leftovers, 2-now borrows, and Pocket substitutes without adding cards', () => {
+test('after the last pick, Refresh and Pocket change leftovers, and 2-now borrows without altering hand budgets', () => {
   for (const rounds of [4, 5]) {
     let s = start({ options: { ...BOSS_PRESETS.separate, rounds } })
     s = step(s, { type: 'pick', seat: 0, uid: s.rows[0][0].uid })
@@ -565,10 +728,11 @@ test('after the last pick, Refresh can still change own leftovers, 2-now borrows
     assert.equal(s.phase, 'draft')
     assert.deepEqual(s.turns, [0])
     s = step(s, { type: 'pick', seat: 0, uid: s.rows[0][0].uid })
-    const old = s.hands[0][0]
+    const old = s.rows[0][0], hands = s.hands
     s = step(s, { type: 'pocket', seat: 0, uid: old.uid })
-    assert.equal(s.hands[0][0].uid, s.pockets[0].uid)
-    assert.equal(s.rows[0].some(c => c.uid === old.uid), true)
+    assert.equal(s.pockets[0].uid, old.uid)
+    assert.equal(s.rows[0].some(c => c.uid === old.uid), false)
+    assert.deepEqual(s.hands, hands)
     assert.deepEqual(s.hands.map(h => h.length), [2, 1])
     assertPhysicalCards(s)
     s = step(step(s, { type: 'collect' }), { type: 'next' })
@@ -579,25 +743,32 @@ test('after the last pick, Refresh can still change own leftovers, 2-now borrows
   }
 })
 
-test('Pocket during preparation replaces only its owners card, reopens that hand, and replays exactly', () => {
-  let s = prepFixture(['copy_card_in_hand', 'robot1', 'robot_attack', 'critter1'], ['draw_2_extra', 'discard_for_damage', 'recycle_card', 'dragon1'])
-  const original = JSON.parse(JSON.stringify(s))
-  s = readyHand(s, 1)
-  const old = s.prep.opponentHand[0], beforeOther = s.prep.playerHand
-  s = step(s, { type: 'pocket', seat: 1, uid: old.uid })
-  assert.equal(s.prep.opponentHand[0].uid, s.pockets[1].uid)
-  assert.equal(s.prep.opponentFinished, false)
-  assert.equal(s.types[1], null)
-  assert.deepEqual(s.prep.playerHand, beforeOther)
-  assert.equal(s.prep.playerDiscard.some(c => c.uid === old.uid), true)
-  assert.equal(s.absorbed.length, 0)
-  assert.equal(step(s, { type: 'pocket', seat: 1, uid: s.prep.opponentHand[0].uid }), s)
-  assert.equal(step(s, { type: 'refresh', seat: 0, uid: s.prep.playerHand[0].uid }), s)
-  assert.equal(step(s, { type: 'double', seat: 0 }), s)
-  assertPrepPhysical(s)
-  const replay = step(JSON.parse(JSON.stringify(s)), { type: 'replay-prep' })
-  assert.deepEqual(replay.prep, original.prep)
-  assert.deepEqual(replay.pocketUsed, [false, false])
+test('final Pocket exchanges replace only the owners hand before prep and remain outside combat and prep actions', () => {
+  for (const options of Object.values(BOSS_PRESETS)) {
+    let s = start({ options, testMode: true })
+    const reserve = bossActiveRow(s)[0]
+    s = step(s, { type: 'pocket', uid: reserve.uid })
+    let boundary
+    finishDraft(s, before => { if (before.phase === 'collected' && before.pack === options.rounds) boundary = before })
+    s = JSON.parse(JSON.stringify(boundary))
+    const before = s, old = s.hands[0][0], deck = s.deck
+    assert.equal(bossPocketWindow(s, 0), 'hand')
+    assert.equal(step(s, { type: 'pocket', seat: 0, uid: s.hands[1][0].uid }), s)
+    s = step(s, { type: 'pocket', seat: 0, uid: old.uid })
+    assert.equal(s.hands[0][0].uid, reserve.uid)
+    assert.equal(s.pockets[0].uid, old.uid)
+    assert.deepEqual(s.hands[1], before.hands[1])
+    assert.deepEqual(s.deck, deck)
+    assert.deepEqual(s.discard, before.discard)
+    assertPhysicalCards(s)
+    assert.deepEqual(step(s, { type: 'undo' }).pockets, before.pockets)
+    s = step(s, { type: 'next' })
+    assert.equal(s.prep.playerHand[0].uid, reserve.uid)
+    assert.equal(bossPocketWindow(s, 0), null)
+    assert.equal(step(s, { type: 'pocket', seat: 0, uid: reserve.uid }), s)
+    assertPrepPhysical(s)
+    assert.deepEqual(step(s, { type: 'replay-prep' }).pockets, s.pockets)
+  }
 })
 
 test('prep Swap moves actual prepared cards and their activation history, reopens both hands and clears both type choices', () => {
@@ -631,8 +802,7 @@ test('hand-changing powers preserve required discard transactions instead of inv
   assert.equal(step(s, { type: 'swap', seat: 1, a: s.prep.playerHand[1].uid, b: s.prep.opponentHand[0].uid }), s)
   assert.equal(step(s, { type: 'pocket', seat: 0, uid: s.prep.playerHand[1].uid }), s)
   const debt = s.prep.playerPendingDiscard
-  s = step(s, { type: 'pocket', seat: 1, uid: s.prep.opponentHand[0].uid })
+  assert.equal(step(s, { type: 'pocket', seat: 1, uid: s.prep.opponentHand[0].uid }), s)
   assert.deepEqual(s.prep.playerPendingDiscard, debt)
-  assert.equal(s.pocketUsed[1], true)
   assertPrepPhysical(s)
 })

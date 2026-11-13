@@ -30,3 +30,8 @@ Ordinary online opens and refreshes load a fully installed update automatically,
 ## Boss co-op (release verified 2026-11-12)
 
 Testing offers Boss battle · Co-op with two human players, separate drafts, personal Pocket/Refresh/Swap/2-now powers and independent preparation. Boss options retain both draft presets, configurable absorption and team scoring, same-deal restart, prep replay and test navigation. Pocket and Swap remain available through preparation. Normal NC rules and bot models are unchanged. See `docs/BOSS_BATTLES.md`.
+
+
+## Boss Draft controls and results (2026-11-13)
+
+Boss uses the normal Draft presentation: tiny face-up Pocket reserves beside player names, direct card targeting, shared faction choices above each hand, normal discard markers, and the regular animated breakdown for both players and the boss. Pocket is reusable during draft and final hand exchange, then stays visible but inactive during preparation. Switch latests sits beside Absorb. Normal saved games and rooms remain compatible. The shared local dev/preview address is http://127.0.0.1:5173/ with strict port selection. See `docs/UI.md` and `docs/BOSS_BATTLES.md`.

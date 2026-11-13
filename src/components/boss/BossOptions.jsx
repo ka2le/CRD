@@ -45,7 +45,7 @@ export default function BossOptions({ state, onClose, onApply, onAction, onNewDe
           <Toggle key={key} label={label} checked={draft[key]} onChange={v => change({ [key]: v })} />)}</div>
       </fieldset>
       <div className="boss-options-apply"><button className="ui-button ui-button--primary" onClick={() => onApply(draft)}>Apply rules & restart deal</button>
-        <p>Returns to setup with this seed and pocket choices. New rules apply to the whole encounter.</p></div>
+        <p>Returns to setup with this seed and empty Pockets. New rules apply to the whole encounter.</p></div>
       <fieldset>
         <legend>Replay & navigation</legend>
         <div className="boss-options-actions">

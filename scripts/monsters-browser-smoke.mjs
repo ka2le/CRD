@@ -12,7 +12,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
   page.setDefaultTimeout(12000)
   page.on('pageerror', error => errors.push(error.message))
-  await page.goto(process.env.CRD_URL || 'http://127.0.0.1:5183/')
+  await page.goto(process.env.CRD_URL || 'http://127.0.0.1:5173/')
   const read = () => page.evaluate(() => JSON.parse(localStorage.getItem('crd-local-game-v1')).state)
   const menu = () => page.getByRole('button', { name: 'Open menu', exact: true }).click()
   const collection = async () => { await menu(); await page.getByRole('button', { name: 'Collection', exact: true }).click() }

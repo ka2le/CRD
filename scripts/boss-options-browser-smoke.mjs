@@ -11,20 +11,28 @@ const errors = []
 try {
   const page = await browser.newPage({ viewport: { width: 1360, height: 900 } })
   page.on('pageerror', e => errors.push(e.message))
-  await page.goto(process.env.CRD_URL || 'http://127.0.0.1:5187/')
+  await page.goto(process.env.CRD_URL || 'http://127.0.0.1:5173/')
   const read = () => page.evaluate(() => JSON.parse(localStorage.getItem('crd-boss-run-v1')))
-  const button = name => page.getByRole('button', { name, exact: true })
-  const main = () => page.locator('.boss-dock > button')
+  const button = name => page.getByRole('button', { name: name.endsWith(' Pocket') ? new RegExp(`^${name}:`) : name, exact: true })
+  const main = () => page.locator('.boss-dock .table__action')
   const readyHand = async seat => {
-    const types = page.locator(`[data-seat="${seat}"] .boss-factions button`)
-    if (await types.count()) await types.first().click()
+    const types = page.locator(`[data-seat="${seat}"] .boss-faction-status button`)
+    const choices = page.locator(`[data-seat="${seat}"] .boss-faction-prompt .faction-picker__option`)
+    if (await choices.count()) await choices.first().click()
+    else if (await types.count()) { await types.first().click(); await choices.first().click() }
     else await page.locator(`[data-seat="${seat}"] .boss-player-name`).click()
     assert.equal(await main().textContent(), 'Ready')
     await main().click()
   }
   const options = async () => { await button('Open menu').click(); await button('Boss options').click() }
   const shot = async name => { await page.waitForTimeout(450); await page.screenshot({ path: `${output}/${name}.png` }) }
-  const phase = expected => page.waitForFunction(e => JSON.parse(localStorage.getItem('crd-boss-run-v1'))?.phase === e, expected)
+  const phase = async expected => {
+    await page.waitForFunction(e => JSON.parse(localStorage.getItem('crd-boss-run-v1'))?.phase === e, expected)
+    if (expected === 'result') {
+      const skip = page.getByRole('button', { name: 'Skip to result', exact: true })
+      if (await skip.count()) await skip.click()
+    }
+  }
   const pick = async which => {
     const s = await read()
     const row = s.options.draftMode === 'separate' ? `[data-draft-seat="${which ?? s.turns[0]}"]` : '[data-draft-seat="shared"]'
@@ -93,12 +101,14 @@ try {
   await button('Player 2 2 now').click()
   await pick(1); await phase('collect')
   assert.deepEqual((await read()).hands.map(h => h.length), [1, 2])
+  const pocketedLeftover = (await read()).rows[0][0]
   await button('Player 1 Pocket').click()
-  await page.locator('.boss-pocket-preview .card').click()
-  await page.locator(`[data-seat="0"] [data-card-uid="${firstPick.uid}"]`).click()
+
+  await page.locator(`[data-draft-seat="0"] [data-card-uid="${pocketedLeftover.uid}"]`).click()
   await main().click()
-  assert.equal((await read()).rows[0].some(c => c.uid === firstPick.uid), true)
-  assert.equal((await read()).hands[0][0].uid, (await read()).pockets[0].uid)
+  assert.equal((await read()).rows[0].some(c => c.uid === pocketedLeftover.uid), false)
+  assert.equal((await read()).pockets[0].uid, pocketedLeftover.uid)
+  assert.equal((await read()).hands[0][0].uid, firstPick.uid)
   await button('Open menu').click(); await button('Restart same deal').click()
   for (const seat of [1, 0]) {
     await button(`Player ${seat + 1} Refresh`).click()
@@ -131,7 +141,10 @@ try {
   assert.doesNotMatch(await page.locator('.boss-dock').innerText(), /Test mode|Undo|Jump|Both players pick|Round/)
   assert.equal(await button('View').count(), 0)
   assert.equal(await page.getByRole('button', { name: 'Pick a card', exact: true }).count(), 0)
-  for (const seat of [0, 1]) assert.equal(await page.locator(`[data-seat="${seat}"] .boss-player-powers button`).count(), 4)
+  for (const seat of [0, 1]) {
+    assert.equal(await page.locator(`[data-seat="${seat}"] .boss-player-powers button`).count(), 3)
+    assert.equal(await page.locator(`[data-pocket-seat="${seat}"] .pile`).count(), 1)
+  }
   for (const v of [{ width: 390, height: 844 }, { width: 844, height: 390 }]) {
     await page.setViewportSize(v)
     await layout()
@@ -163,7 +176,7 @@ try {
   s = await read()
   assert.equal(s.result.weakerBonus, 0)
   assert.equal(s.result.teamPower, s.result.heroes[0].score + s.result.heroes[1].score)
-  assert.equal(await page.locator('.boss-result__bonus').count(), 0)
+  assert.equal(await page.locator('.boss-team-score small').count(), 0)
   await shot('result-desktop')
   await page.locator('.boss-result-actions').getByRole('button', { name: 'Replay prep', exact: true }).click()
   assert.deepEqual((await read()).prep, beforePrep.prep)
@@ -174,12 +187,18 @@ try {
   // Player 2's tools can also go first and repay only Player 2's next-round pick.
   await button('Player 2 2 now').click()
   await button('Player 2 Pocket').click()
-  await page.locator('.boss-pocket-preview .card').click()
+
+  await page.locator('[data-draft-seat="1"] [data-card-uid]').first().click()
+  await main().click()
+  await pick(1)
   assert.deepEqual((await read()).hands.map(h => h.length), [0, 1])
   assert.equal(await button('Player 1 2 now').isEnabled(), true)
   await button('Player 1 2 now').click()
   await button('Player 1 Pocket').click()
-  await page.locator('.boss-pocket-preview .card').click()
+
+  await page.locator('[data-draft-seat="0"] [data-card-uid]').first().click()
+  await main().click()
+  await pick(0)
   await pick(0)
   await phase('draft')
   await pick(1)

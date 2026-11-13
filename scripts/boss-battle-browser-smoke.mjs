@@ -14,17 +14,25 @@ try {
   const page = await browser.newPage({ viewport: { width: 1360, height: 900 } })
   page.setDefaultTimeout(30000)
   page.on('pageerror', e => errors.push(e.message))
-  await page.goto(process.env.CRD_URL || 'http://127.0.0.1:5187/')
+  await page.goto(process.env.CRD_URL || 'http://127.0.0.1:5173/')
   const read = () => page.evaluate(() => JSON.parse(localStorage.getItem('crd-boss-run-v1')))
-  const main = () => page.locator('.boss-dock > button')
+  const main = () => page.locator('.boss-dock .table__action')
   const readyHand = async seat => {
-    const types = page.locator(`[data-seat="${seat}"] .boss-factions button`)
-    if (await types.count()) await types.first().click()
+    const types = page.locator(`[data-seat="${seat}"] .boss-faction-status button`)
+    const choices = page.locator(`[data-seat="${seat}"] .boss-faction-prompt .faction-picker__option`)
+    if (await choices.count()) await choices.first().click()
+    else if (await types.count()) { await types.first().click(); await choices.first().click() }
     else await page.locator(`[data-seat="${seat}"] .boss-player-name`).click()
     await main().click()
   }
   const saveShot = async name => { await page.waitForTimeout(600); await page.screenshot({ path: `${output}/${name}.png` }) }
-  const phase = async expected => { await page.waitForFunction(e => JSON.parse(localStorage.getItem('crd-boss-run-v1'))?.phase === e, expected) }
+  const phase = async expected => {
+    await page.waitForFunction(e => JSON.parse(localStorage.getItem('crd-boss-run-v1'))?.phase === e, expected)
+    if (expected === 'result') {
+      const skip = page.getByRole('button', { name: 'Skip to result', exact: true })
+      if (await skip.count()) await skip.click()
+    }
+  }
   const pick = async () => {
     const s = await read()
     await page.locator('.boss-center [data-card-uid]').filter({ visible: true }).first().click()
@@ -82,14 +90,17 @@ try {
   assert.equal(await page.locator('.boss-enemy .ttr--live').count(), 1)
   assert.equal(await page.locator('.boss-piles .pile--discard').count(), 1)
   assert.equal(await page.locator('.boss-piles .pile--deck').count(), 1)
-  await page.getByRole('button', { name: 'Refresh', exact: true }).click()
+  await page.getByRole('button', { name: 'Player 1 Refresh', exact: true }).click()
   await page.locator('.boss-center [data-card-uid]').first().click()
   await main().click()
   assert.equal((await read()).refreshed.length, 1)
-  await page.getByRole('button', { name: '2 now', exact: true }).click()
-  await page.getByRole('button', { name: 'Pocket', exact: true }).click()
-  await page.locator('.boss-pocket-preview .card').click()
-  assert.equal((await read()).hands[0].length, 1)
+  await page.getByRole('button', { name: 'Player 1 2 now', exact: true }).click()
+  await page.getByRole('button', { name: /^Player 1 Pocket:/ }).click()
+
+  await page.locator('.boss-center [data-card-uid]').first().click()
+  await main().click()
+  assert.equal((await read()).hands[0].length, 0)
+  await pick()
   await pick()
   await pick()
   await phase('collect')
@@ -100,11 +111,11 @@ try {
   assert.equal(liveStats.some(n => Number(n) > 0), (await read()).absorbed.some(c => c.stats?.length))
   await main().click()
   assert.deepEqual((await read()).turns, [1])
-  await page.getByRole('button', { name: 'Swap', exact: true }).click()
+  await page.getByRole('button', { name: 'Player 2 Swap', exact: true }).click()
   await page.locator('[data-seat="0"] [data-card-uid]').first().click()
   await page.locator('[data-seat="1"] [data-card-uid]').first().click()
   await main().click()
-  assert.equal((await read()).tools.swap, 0)
+  assert.equal((await read()).playerTools[1].swap, 0)
   await saveShot('draft-desktop')
   for (const viewport of [{ width: 390, height: 844 }, { width: 844, height: 390 }]) {
     await page.setViewportSize(viewport)
@@ -129,8 +140,8 @@ try {
   await readyHand(0)
   await phase('result')
   await saveShot('result-desktop')
-  await page.getByRole('button', { name: 'Details', exact: true }).click()
-  assert.equal(await page.locator('.boss-result-details .tabletop-formula').count(), 3)
+  await page.getByRole('button', { name: 'Battle scores', exact: true }).click()
+  assert.equal(await page.locator('.sheet .boss-scoreboard .ttr-row').count(), 3)
   await page.getByRole('button', { name: 'Close', exact: true }).click()
 
   // All four cards start playable encounters, including larger random packs.

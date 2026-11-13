@@ -29,7 +29,7 @@ function iconElement(name) {
   return icon
 }
 
-export function createResolutionRunner({ root, fx, getSpeed, update }) {
+export function createResolutionRunner({ root, fx, getSpeed, update, sides = RESOLUTION_SIDES, opponentSides = OTHER, findCard }) {
   let cancelled = false
   const timers = new Set()
   const animations = new Set()
@@ -62,6 +62,7 @@ export function createResolutionRunner({ root, fx, getSpeed, update }) {
 
   // ---------- table lookups ----------
   function cardElement(side, uid) {
+    if (findCard) return findCard(side, uid)
     return document.querySelector(`.table__zone--${side} [data-card-uid="${CSS.escape(uid)}"]`)
   }
 
@@ -365,7 +366,7 @@ export function createResolutionRunner({ root, fx, getSpeed, update }) {
     if (!cards.length) return
     focus(side, sidePlan.mainType)
     patch(side, () => ({ shieldShown: true }))
-    const enemy = OTHER[side]
+    const enemy = opponentSides[side]
     for (const uid of cards) {
       const reduction = cost * pointsByUid[uid]
       const icon = cardIcons(enemy, uid, 'shield', 1)[0]
@@ -395,7 +396,7 @@ export function createResolutionRunner({ root, fx, getSpeed, update }) {
     focus(null)
     setCurrent(null)
     set((ledger) => ({ ...ledger, stage: 'compare' }))
-    for (const side of RESOLUTION_SIDES) bump(slot(side, 'total'))
+    for (const side of sides) bump(slot(side, 'total'))
     await wait(420)
     if (plan.tiebreak) {
       const side = plan.tiebreak
@@ -410,7 +411,7 @@ export function createResolutionRunner({ root, fx, getSpeed, update }) {
   async function run(plan) {
     await wait(350)
     // One player's whole count, then the other's, then the comparison.
-    for (const side of RESOLUTION_SIDES) {
+    for (const side of sides) {
       setCurrent(side)
       await wait(150)
       await countHand(plan, side)

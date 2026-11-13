@@ -39,6 +39,9 @@ const gameVersion = createHash('sha256').update(rulesFiles.map((path) => readFil
 // https://vite.dev/config/
 export default defineConfig({
   base: process.env.GITHUB_PAGES === 'true' ? '/CRD/' : '/',
+  // One stable local address for CRD. A busy port must never create a second URL.
+  server: { host: '127.0.0.1', port: 5173, strictPort: true },
+  preview: { host: '127.0.0.1', port: 5173, strictPort: true },
   plugins: [react(), offlineApp()],
   define: { 'import.meta.env.CRD_GAME_VERSION': JSON.stringify(gameVersion) },
 })

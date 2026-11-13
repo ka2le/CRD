@@ -16,6 +16,9 @@ export default function Pile({
   pulse = false,
   onOpen = null,
   label,
+  disabled = false,
+  selected,
+  title,
 }) {
   const [shufflingKey, setShufflingKey] = useState(null)
 
@@ -43,9 +46,13 @@ export default function Pile({
         pulse ? 'pile--pulse' : '',
         isShuffling ? 'pile--shuffling' : '',
         onOpen ? 'pile--clickable' : '',
+        selected ? 'pile--selected' : '',
       ].filter(Boolean).join(' ')}
       onClick={onOpen ?? undefined}
       aria-label={label ? `${label}: ${count}` : undefined}
+      aria-pressed={selected}
+      disabled={onOpen ? disabled : undefined}
+      title={title}
     >
       <MotionAnchor section={sections} className="pile__anchor">
         <span className="pile__stack" aria-hidden="true">

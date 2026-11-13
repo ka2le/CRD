@@ -166,6 +166,8 @@ test('discarding an entire NC or Monster hand still animates its zero count', ()
 test('the animation-only release preserves the preceding saved games and rooms', () => {
   assert(compatibleGameVersion('c2f132f0bf12af94', 'current'))
   assert(compatibleGameVersion('c2f132f0bf12af94:rooms-2', 'current:rooms-2'))
+  assert(compatibleGameVersion('6ff798c8b70afda0', 'current'))
+  assert(compatibleGameVersion('6ff798c8b70afda0:rooms-2', 'current:rooms-2'))
   assert.equal(compatibleGameVersion('unrelated-rules', 'current'), false)
 })
 

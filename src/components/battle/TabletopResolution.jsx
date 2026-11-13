@@ -23,7 +23,7 @@ function initialLedger(plan, done) {
   }
 }
 
-function LedgerRow({ side, name, plan, state, focus, current, stage, winner, crowned, bonusFirst, showNeutral }) {
+export function TabletopLedgerRow({ side, visualSide = side, name, plan, state, focus, current, stage, winner, crowned, bonusFirst, showNeutral }) {
   const mainType = state.main ? plan.mainType : null
   const settled = stage === 'done'
   const outcome = settled ? (winner === 'tie' ? 'tie' : winner === side ? 'win' : 'loss') : null
@@ -47,7 +47,7 @@ function LedgerRow({ side, name, plan, state, focus, current, stage, winner, cro
   ) : null
 
   return (
-    <div className={['ttr-row', `ttr-row--${side}`, outcome ? `is-${outcome}` : '',
+    <div className={['ttr-row', `ttr-row--${visualSide}`, outcome ? `is-${outcome}` : '',
       current ? (current === side ? 'is-current' : 'is-waiting') : ''].filter(Boolean).join(' ')} aria-label={name}>
       <span className="ttr-row__name">{name}</span>
       <div className="ttr-row__cells">
@@ -99,7 +99,7 @@ export function LiveTabletopLedger({ hand, enemyHand, name = 'Monster' }) {
   if (!plan) return null
   return <section className="ttr ttr--live" aria-label={`${name} live totals`}>
     <div className="ttr__rows">
-      <LedgerRow side="opponent" name={name} plan={plan} state={finalLedgerSide(plan)} stage="live"
+      <TabletopLedgerRow side="opponent" name={name} plan={plan} state={finalLedgerSide(plan)} stage="live"
         bonusFirst={plan.rules !== 'threshold'} showNeutral />
     </div>
   </section>
@@ -166,7 +166,7 @@ export default function TabletopResolution({ result, animate = true, finished = 
     <section ref={rootRef} className={['ttr', `ttr--${shown.stage}`].join(' ')} aria-label="Battle resolution">
       <div className="ttr__rows">
         {ROW_ORDER.map((side) => (
-          <LedgerRow key={side} side={side} name={names[side]} plan={plan[side]} state={shown[side]}
+          <TabletopLedgerRow key={side} side={side} name={names[side]} plan={plan[side]} state={shown[side]}
             focus={shown.focus} current={shown.current} stage={shown.stage} winner={plan.winner} crowned={shown.tiebreak === side}
             bonusFirst={plan.bonusFirst} showNeutral={showNeutral} />
         ))}

@@ -38,7 +38,7 @@ function emptyDamage() {
   return { critter: 0, robot: 0, dragon: 0, neutral: 0 }
 }
 
-function buildSide(hand, score, enemyHand) {
+export function buildTabletopSidePlan(hand, score, enemyHand) {
   const main = isMainAbilityRules(score.rules)
   const base = getTabletopBaseProfile(hand)
   const classes = score.rules === 'monsters' ? MONSTER_FACTIONS : TABLETOP_CLASSES
@@ -130,8 +130,8 @@ export function buildTabletopResolutionPlan(result) {
   return {
     rules,
     bonusFirst: isMainAbilityRules(rules),
-    player: buildSide(result.playerHand, { ...result.player, rules }, result.opponentHand),
-    opponent: buildSide(result.opponentHand, { ...result.opponent, rules }, result.playerHand),
+    player: buildTabletopSidePlan(result.playerHand, { ...result.player, rules }, result.opponentHand),
+    opponent: buildTabletopSidePlan(result.opponentHand, { ...result.opponent, rules }, result.playerHand),
     winner: result.winner,
     tiebreak: result.reason === 'critter-tiebreak' ? result.winner : null,
   }

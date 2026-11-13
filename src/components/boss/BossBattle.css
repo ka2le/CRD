@@ -5,7 +5,8 @@
 .boss-heading .g-icon { width: 24px; height: 24px; }
 .boss-table { --boss-lane-gap: clamp(14px, 3vw, 28px); display: grid; grid-template-rows: minmax(0, .9fr) minmax(0, 1.15fr) minmax(0, 1fr); gap: 6px; min-height: 0; padding: 0 max(6px, env(safe-area-inset-left)); }
 .boss-table--resolve { grid-template-rows: minmax(0, 1fr) minmax(85px, .4fr) minmax(0, 1.45fr); }
-.boss-table--result { grid-template-rows: minmax(0, .9fr) minmax(155px, .65fr) minmax(0, 1.3fr); }
+.boss-table--result { grid-template-rows: minmax(0, .8fr) auto minmax(0, 1fr); }
+.boss-table--result .boss-enemy { grid-template-rows: minmax(0, 1fr); }
 .boss-enemy { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 6px 10px; min-height: 0; width: min(1250px, 100%); justify-self: center; }
 .boss-enemy > .ttr { grid-column: 1 / -1; }
 .boss-enemy .ttr-cell, .boss-enemy .ttr-sum { font-size: clamp(.8rem, 1.6vw, 1.25rem); }
@@ -29,12 +30,14 @@
 .boss-player-powers .ui-button { position: relative; width: 30px; height: 30px; min-height: 30px; padding: 0; }
 .boss-player-powers .g-icon, .boss-player-powers .svg-icon { width: 18px; height: 18px; }
 .boss-double-icon { position: absolute; right: 2px; bottom: 1px; font: 700 .65rem var(--mono); }
-.boss-hero > .boss-zone-label { height: 38px; flex-basis: 38px; }
-.boss-hero > .boss-zone-label--prepare { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px; height: auto; min-height: 38px; flex-basis: auto; flex-shrink: 0; padding-inline: 2px; }
-.boss-zone-label--prepare > .boss-player-powers { grid-column: 1; grid-row: 1; }
-.boss-zone-label--prepare > .boss-factions { grid-column: 2; grid-row: 1; flex-wrap: wrap; justify-content: center; gap: 2px; }
-.boss-zone-label--prepare > .boss-player-name { grid-column: 3; grid-row: 1; }
-.boss-zone-label--prepare .boss-factions .ui-button { width: 24px; height: 24px; min-height: 24px; }
+.boss-pocket-intro { text-align: center; color: var(--t1); font-size: .8rem; line-height: 1.5; }
+.boss-hero > .boss-zone-label { height: auto; min-height: 52px; flex: 0 0 auto; flex-wrap: wrap; }
+.boss-player-identity { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+.boss-pocket { display: flex; align-items: center; gap: 5px; padding: 3px 8px 5px 3px; }
+.boss-pocket .pile { --pile-w: 25px; }
+.boss-pocket > span { color: var(--t2); font-size: .6rem; }
+.boss-pocket .pile__count { min-width: 15px; height: 14px; font-size: .55rem; padding: 0 3px; }
+.boss-pocket .pile:disabled { opacity: .65; }
 .boss-result-actions { display: flex; gap: 6px; }
 .boss-rule-summary { border: 0; background: none; color: var(--t1); font-size: .75rem; text-align: center; padding: 4px; flex-shrink: 0; }
 .boss-rule-summary span { color: var(--brass-hi); }
@@ -57,9 +60,11 @@
 .boss-center-summary .boss-power { font-size: 2rem; color: var(--brass-hi); }
 .boss-center-summary > .g-icon { width: 40px; height: 40px; opacity: .3; }
 .boss-heroes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 0; gap: var(--boss-lane-gap); }
-.boss-hero { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
-.boss-hero--active .boss-player-name { color: var(--brass-hi); }
-.boss-hero-cards { flex: 1; min-height: 0; display: flex; align-items: center; }
+.boss-hero { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: visible; }
+.boss-hero--current .boss-player-name { color: var(--brass-hi); }
+.boss-hero--current .boss-player-name > span:first-child { background: var(--brass-hi); color: var(--surface-lo); border-radius: 4px; padding: 4px 6px; box-shadow: 0 0 0 1px var(--brass-hi); }
+.boss-hero--focus .boss-player-name > span:first-child { outline: 2px solid var(--player); outline-offset: 2px; }
+.boss-hero-cards { flex: 1; min-height: 0; display: flex; align-items: center; padding: 12px 8px 8px; }
 .boss-hero-cards > .hand-area { height: 100%; min-height: 0 !important; }
 .boss-hero .hand-area__slot--empty { border: 0; background: none; }
 .boss-player-name { background: none; border: 0; padding: 3px 0; margin-left: auto; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
@@ -67,82 +72,136 @@
 .boss-hero--focus .boss-player-name { box-shadow: inset 0 -1px 0 var(--player); }
 .boss-power { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; font-family: var(--mono); color: var(--t0); }
 .boss-power .g-icon { width: 18px; height: 18px; }
-.boss-factions { display: flex; gap: 3px; }
-.boss-factions:empty { display: none; }
-.boss-factions .ui-button { width: 30px; height: 30px; padding: 1px; min-width: 24px; min-height: 24px; }
-.boss-factions [aria-pressed=true] { border-color: var(--player); background: #a8814433; }
-.boss-dock { display: flex; gap: 12px; height: auto; min-height: calc(var(--dock-h) + var(--rail-bottom)); padding-block: 5px max(5px, var(--rail-bottom)); }
-.boss-piles { order: 2; padding: 0 9px 4px 4px; }
-.boss-tools { order: 1; display: flex; flex-wrap: wrap; gap: 5px; }
+.boss-faction-status { display: flex; justify-content: center; flex-shrink: 0; }
+.boss-faction-status .ui-button { display: inline-flex; align-items: center; gap: 5px; min-height: 28px; padding: 3px 8px; font-size: .72rem; }
+.boss-dock { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; height: auto; min-height: calc(var(--dock-h) + var(--rail-bottom)); padding-block: 5px max(5px, var(--rail-bottom)); }
+.boss-dock-context { grid-column: 1; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.boss-dock-context:has(.boss-instruction:empty):has(.boss-tools:empty) { display: none; }
+.boss-dock .boss-turn { grid-column: 2; position: static; transform: none; width: max-content; max-width: none; justify-self: center; }
+.boss-dock .boss-turn strong { white-space: nowrap; }
+.boss-dock-end { grid-column: 3; display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 12px; min-width: 0; }
+.boss-piles { padding: 0 9px 4px 4px; flex-shrink: 0; }
+.boss-tools { display: flex; flex-wrap: wrap; gap: 5px; }
 .boss-tools:empty { display: none; }
-.boss-dock > .table__action { order: 3; flex-shrink: 0; }
+.boss-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .boss-tools .ui-button { display: flex; align-items: center; gap: 4px; padding: 6px 9px; min-height: 36px; font-size: .75rem; }
 .boss-tools .g-icon, .boss-tools .svg-icon { width: 18px; height: 18px; }
 .boss-shell button:focus-visible { outline: 2px solid var(--brass-hi); outline-offset: 2px; }
-.boss-instruction { order: 0; flex: 1; color: var(--brass-hi); font-size: .8rem; }
+.boss-instruction { display: flex; flex-direction: column; gap: 3px; color: var(--t1); font-size: .72rem; }
+.boss-instruction:empty { display: none; }
+.boss-switch-latest { display: flex; align-items: center; gap: 5px; white-space: nowrap; font-size: .75rem; min-height: 36px; padding: 6px 10px; }
+.boss-switch-latest .svg-icon { width: 17px; height: 17px; }
+.boss-faction-prompt { width: min(100%, 380px); align-self: center; flex-shrink: 0; }
+.boss-faction-prompt .faction-picker { padding: 5px 3px; gap: 5px; }
+.boss-faction-prompt .faction-picker__option { min-height: 54px; min-width: 0; gap: 4px; padding: 6px 2px; font-size: .7rem; }
+.boss-faction-prompt .faction-picker__option .g-icon { font-size: 26px; }
 .boss-setup { display: flex; flex-direction: column; justify-content: space-around; gap: 12px; min-height: 0; padding: 8px 12px; }
 .boss-choices { display: flex; align-items: center; justify-content: center; gap: clamp(8px, 2vw, 24px); min-height: 0; flex: 1; }
 .boss-choice { width: min(20vw, 230px); aspect-ratio: 635 / 888; position: relative; }
 .boss-choice > .card { width: 100%; }
 .boss-choice > span { position: absolute; top: 100%; left: 0; right: 0; text-align: center; padding-top: 4px; font-size: .7rem; }
-.boss-pocket-setup { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; height: 27%; flex-shrink: 0; margin-top: 20px; }
-.boss-pocket-setup > div { display: flex; flex-direction: column; min-height: 0; gap: 5px; font-size: .75rem; color: var(--t1); }
-.boss-pocket-options { display: flex; justify-content: center; gap: 4px; min-height: 0; flex: 1; }
-.boss-pocket-options > div { height: 100%; aspect-ratio: 635 / 888; max-width: calc((100% - 20px) / 6); }
-.boss-pocket-options .card { width: 100%; }
-.boss-pocket-preview { width: min(200px, 40vw); aspect-ratio: 635 / 888; margin: auto; }
 .boss-shell .card { height: auto; aspect-ratio: 635 / 888; }
 .boss-shell .card-visual__blur { display: none; }
 .boss-help { font-size: .9rem; line-height: 1.65; color: var(--t1); }
 .boss-choices--sheet { padding: 10px 0 25px; }
-.boss-result { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
-.boss-result__title { font-family: var(--display); font-size: clamp(1.4rem, 4vw, 3rem); color: var(--brass-hi); }
-.boss-result__equation { display: flex; align-items: center; gap: clamp(5px, 1.6vw, 22px); font-family: var(--mono); font-size: clamp(1rem, 3vw, 2.4rem); padding-bottom: 9px; }
-.boss-result__bonus { position: relative; color: var(--player); }
-.boss-result__bonus small { position: absolute; top: 100%; left: 50%; translate: -50%; font-size: .6rem; white-space: nowrap; }
+.boss-result { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; width: 100%; min-width: 0; }
+.boss-result-heading { display: flex; align-items: center; justify-content: center; gap: 16px; }
+.boss-result__title { font-family: var(--display); font-size: clamp(1.3rem, 3vw, 2rem); color: var(--brass-hi); }
+.boss-scoreboard { grid-template-columns: minmax(0, 1fr); width: 100%; }
+.boss-scoreboard .ttr__rows { width: min(100%, 850px); }
+.boss-scoreboard .ttr-row { grid-template-columns: 85px minmax(0, 1fr) auto; }
+.boss-scoreboard .ttr-row__name { display: block; }
+.boss-scoreboard .ttr-cell, .boss-scoreboard .ttr-sum { font-size: clamp(.85rem, 1.5vw, 1.25rem); }
+.boss-team-score { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 7px; padding: 3px; min-height: 30px; font: .85rem var(--mono); }
+.boss-count-controls { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; }
+.boss-count-controls .ui-button { min-width: 30px; min-height: 30px; width: 30px; height: 30px; }
+.boss-team-score > strong { display: inline-flex; align-items: center; gap: 4px; color: var(--brass-hi); }
+.boss-team-score .g-icon { color: var(--damage); }
+.boss-team-score small, .boss-team-score__tie { font: .7rem var(--font); color: var(--t1); }
 .boss-result--animate { animation: boss-result-in .5s var(--ease-spring); }
 @keyframes boss-result-in { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: scale(1); } }
 @media (max-width: 700px) {
+  .boss-hero > .boss-zone-label { padding: 3px; gap: 5px; }
+  .boss-player-identity { order: -1; width: 100%; justify-content: flex-end; gap: 7px; }
+  .boss-player-name { display: inline-flex; align-items: center; gap: 5px; }
+  .boss-player-name .boss-power { font-size: .65rem; }
+  .boss-pocket { padding-right: 5px; gap: 2px; }
+  .boss-pocket > span { display: none; }
+  .boss-faction-status .ui-button { font-size: .65rem; }
+  .boss-faction-prompt .faction-picker__option { font-size: .6rem; }
   .boss-option-select { grid-template-columns: 85px minmax(0, 1fr); gap: 6px; }
   .boss-option-select select { font-size: .76rem; }
-  .boss-dock { flex-wrap: wrap; gap: 5px; }
-  .boss-tools { order: -1; flex-basis: 100%; }
-  .boss-factions .ui-button { min-width: 19px; min-height: 22px; }
-  .boss-factions .g-icon { width: 16px; height: 16px; }
+  .boss-dock { grid-template-columns: minmax(0, 1fr); gap: 5px; }
+  .boss-dock-context { grid-column: 1; grid-row: 2; }
+  .boss-dock .boss-turn { grid-column: 1; grid-row: 1; }
+  .boss-dock-end { grid-column: 1; grid-row: 3; gap: 5px; }
+  .boss-dock--turn:not(:has(.table__action)) { display: flex; }
+  .boss-dock--turn:not(:has(.table__action)) .boss-turn { position: absolute; left: 50%; top: calc((100% - var(--rail-bottom)) / 2); transform: translate(-50%, -50%); }
+  .boss-dock--turn:not(:has(.table__action)) .boss-dock-end { margin-left: auto; }
+  .boss-dock-end .boss-piles { margin-right: auto; padding-right: 0; }
+  .boss-actions { gap: 5px; }
+  .boss-switch-latest { padding-inline: 7px; font-size: .7rem; }
   .boss-zone-label { font-size: .65rem; }
   .boss-enemy .ttr-cell, .boss-enemy .ttr-sum { font-size: .72rem; }
   .boss-choice { width: 21vw; }
   .boss-choices { flex-wrap: wrap; align-content: center; gap: 26px 14px; }
   .boss-setup > .boss-choices .boss-choice { width: min(30vw, 19vh); }
-  .boss-pocket-setup { height: 18%; }
+  .boss-scoreboard .ttr-row { grid-template-columns: 55px minmax(0, 1fr); gap: 3px; }
+  .boss-scoreboard .ttr-row__name { grid-column: 1; grid-row: 1; font-size: .67rem; }
+  .boss-scoreboard .ttr-row__cells { grid-column: 2; grid-row: 1; }
+  .boss-scoreboard .ttr-sum { grid-column: 2; grid-row: 2; justify-self: end; }
+  .boss-scoreboard .ttr-cell, .boss-scoreboard .ttr-sum { font-size: .9rem; }
+  .boss-scoreboard .ttr-row__cells { flex-wrap: wrap; }
+  .boss-team-score { font-size: .75rem; }
 }
 @media (max-width: 360px) {
   .boss-player-powers { gap: 2px; }
   .boss-player-powers .ui-button { width: 26px; height: 28px; min-height: 28px; }
+  .boss-scoreboard .ttr-cell, .boss-scoreboard .ttr-sum { font-size: .8rem; }
+  .boss-faction-prompt .faction-picker { gap: 2px; }
+  .boss-faction-prompt .faction-picker__option { font-size: .5rem; }
 }
 @media (max-height: 520px) {
+  .boss-faction-status { position: absolute; right: 0; top: 0; }
+  .boss-hero:has(.boss-faction-status) > .boss-zone-label { padding-right: 113px; }
+  .boss-faction-status .ui-button { min-height: 26px; font-size: .65rem; }
+  .boss-faction-prompt .faction-picker { padding: 1px 3px; }
+  .boss-faction-prompt .faction-picker__option { min-height: 28px; flex-direction: row; gap: 3px; }
+  .boss-faction-prompt .faction-picker__option .g-icon { font-size: 18px; }
   .boss-rule-summary { padding: 0; font-size: .65rem; }
   .boss-shell { grid-template-rows: 34px minmax(0, 1fr) auto; }
   .boss-setup { gap: 0; padding: 2px 8px; }
   .boss-setup > .boss-choices { flex-wrap: nowrap; }
   .boss-setup > .boss-choices .boss-choice { width: min(16vw, 27vh); }
-  .boss-pocket-setup { height: 24%; margin-top: 12px; }
   .boss-table { grid-template-rows: minmax(0, .8fr) minmax(0, 1fr) minmax(0, 1fr); gap: 2px; }
   .boss-table--resolve { grid-template-rows: minmax(0, .8fr) 55px minmax(0, 1fr); }
   .boss-table--resolve .boss-center-summary { gap: 3px; font-size: .65rem; }
   .boss-table--resolve .boss-center-summary .boss-power { font-size: 1rem; }
   .boss-table--resolve .boss-result { gap: 3px; }
-  .boss-table--result .boss-result { flex-direction: row; gap: 12px; }
+  .boss-table--result { grid-template-rows: minmax(0, .7fr) auto minmax(0, 1fr); }
+  .boss-table--result .boss-center { padding: 0; }
+  .boss-table--result .boss-result { flex-direction: row; gap: 10px; }
+  .boss-result-heading { flex-direction: column; gap: 4px; }
+  .boss-scoreboard .ttr__rows { gap: 2px; }
+  .boss-scoreboard .ttr-row { padding-block: 2px; }
+  .boss-scoreboard .ttr-cell, .boss-scoreboard .ttr-sum { font-size: .75rem; }
+  .boss-scoreboard .ttr-row__name { font-size: .67rem; }
+  .boss-team-score { padding: 0; font-size: .7rem; }
   .boss-table--resolve .boss-result__title { font-size: 1rem; }
   .boss-table--resolve .boss-result > .ui-button { min-height: 22px; padding: 2px 8px; font-size: .6rem; }
   .boss-zone-label { height: 23px; flex-basis: 23px; }
-  .boss-hero > .boss-zone-label { height: 32px; flex-basis: 32px; }
+  .boss-hero > .boss-zone-label { min-height: 36px; }
+  .boss-pocket .pile { --pile-w: 19px; }
+  .boss-pocket > span { display: none; }
+  .boss-player-identity { gap: 6px; }
   .boss-dock { min-height: 40px; padding-block: 3px; }
   .boss-tools .ui-button { min-height: 30px; padding: 3px 6px; }
 }
 
 @media (orientation: landscape) and (max-height: 520px) {
   .boss-shell { grid-template-rows: 50px minmax(0, 1fr) auto; }
+  .boss-shell--result { grid-template-rows: 34px minmax(0, 1fr) auto; }
+  .boss-table--result { grid-template-rows: minmax(0, .45fr) auto minmax(0, 1fr); }
   .boss-header { align-items: flex-start; }
   .boss-enemy { position: relative; grid-template-rows: minmax(0, 1fr); gap: 0 8px; }
   /* Share the header's second line instead of taking a row from the cards. */
