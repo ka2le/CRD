@@ -69,8 +69,8 @@ try {
   await button('Boss battle · Co-op').click()
   await phase('setup')
   let s = await read()
-  assert.equal(s.options.draftMode, 'separate')
-  assert.equal(s.options.absorption, 'all')
+  assert.equal(s.options.draftMode, 'shared')
+  assert.equal(s.options.absorption, 'boss')
   assert.equal(s.options.weakerBonus, false)
   await options()
   await shot('options-desktop')
@@ -81,7 +81,8 @@ try {
     await button('Apply rules & restart deal').scrollIntoViewIfNeeded()
   }
   await page.setViewportSize({ width: 1360, height: 900 })
-  await button('Close').click()
+  await button('Separate 4-card packs').click()
+  await button('Apply rules & restart deal').click()
   await main().click()
   await phase('draft')
   const original = await read()
@@ -105,7 +106,6 @@ try {
   await button('Player 1 Pocket').click()
 
   await page.locator(`[data-draft-seat="0"] [data-card-uid="${pocketedLeftover.uid}"]`).click()
-  await main().click()
   assert.equal((await read()).rows[0].some(c => c.uid === pocketedLeftover.uid), false)
   assert.equal((await read()).pockets[0].uid, pocketedLeftover.uid)
   assert.equal((await read()).hands[0][0].uid, firstPick.uid)
@@ -189,7 +189,6 @@ try {
   await button('Player 2 Pocket').click()
 
   await page.locator('[data-draft-seat="1"] [data-card-uid]').first().click()
-  await main().click()
   await pick(1)
   assert.deepEqual((await read()).hands.map(h => h.length), [0, 1])
   assert.equal(await button('Player 1 2 now').isEnabled(), true)
@@ -197,7 +196,6 @@ try {
   await button('Player 1 Pocket').click()
 
   await page.locator('[data-draft-seat="0"] [data-card-uid]').first().click()
-  await main().click()
   await pick(0)
   await pick(0)
   await phase('draft')
@@ -249,6 +247,8 @@ try {
   for (const seat of [1, 2]) assert.equal(await button(`Player ${seat} Swap`).isDisabled(), true)
   await options()
   await button('Original shared draft').click()
+  assert.equal(await page.getByLabel('Double the lower-power player', { exact: false }).isChecked(), false)
+  await page.getByLabel('Double the lower-power player', { exact: false }).check()
   await button('Apply rules & restart deal').click()
   await phase('setup')
   s = await read()

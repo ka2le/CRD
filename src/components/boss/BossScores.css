@@ -1,0 +1,72 @@
+.boss-scoreboard {
+  --boss-total-w: 48px;
+  --boss-score-gap: 5px;
+  container-type: inline-size;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  max-width: 620px;
+  padding: 0;
+}
+.boss-scoreboard .ttr__rows {
+  grid-template-columns: minmax(0, 1fr) var(--boss-total-w);
+  align-items: stretch;
+  gap: var(--boss-score-gap);
+  width: 100%;
+}
+.boss-scoreboard .ttr-row {
+  grid-column: 1;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 2px 4px;
+  padding: 3px 6px 3px 9px;
+  line-height: 1.2;
+}
+.boss-scoreboard .ttr-row__name { display: block; grid-column: 1; grid-row: 1; font-size: .65rem; }
+.boss-scoreboard .ttr-row__cells { grid-column: 2; grid-row: 1; justify-content: flex-start; flex-wrap: wrap; gap: 1px; }
+.boss-scoreboard .ttr-cell { font-size: clamp(.6rem, 2.5cqw, .95rem); gap: 2px; padding: 2px; }
+.boss-scoreboard .ttr-sum { grid-column: 1 / -1; grid-row: 2; justify-self: end; font-size: clamp(.7rem, 2.7cqw, 1rem); gap: .3em; }
+.boss-scoreboard .ttr-sum > * { flex-shrink: 0; }
+.boss-scoreboard .ttr-sum__total { transform: none; font-size: 1.15em; min-width: 0; }
+.boss-scoreboard .ttr-row--opponent { grid-row: 3; }
+/* A plain boss score needs no empty equation line. Its final value shares the
+   total column with the team box, while retaining the animation's real anchor. */
+.boss-scoreboard .ttr-row--opponent:not(:has(.ttr-sum__base)) .ttr-sum { display: contents; }
+.boss-scoreboard .ttr-row--opponent .ttr-sum__total {
+  position: absolute;
+  left: calc(100% + var(--boss-score-gap) + 1px);
+  top: -1px;
+  width: var(--boss-total-w);
+  height: calc(100% + 2px);
+  justify-content: center;
+  border: 1px solid var(--b0);
+  border-radius: 9px;
+  background: rgba(8, 13, 23, .9);
+  font-size: 1rem;
+}
+.boss-scoreboard .boss-team-score {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  border: 1px solid var(--b0);
+  border-radius: 9px;
+  background: rgba(8, 13, 23, .9);
+  font: 1rem var(--mono);
+  color: var(--brass-hi);
+}
+.boss-team-score strong { display: inline-flex; align-items: center; gap: 3px; font-weight: 500; }
+.boss-team-score .g-icon { color: var(--damage); font-size: .85em; }
+.boss-team-score.is-win { border-color: color-mix(in srgb, var(--brass) 70%, transparent); }
+.boss-team-score.is-loss { opacity: .62; }
+.boss-scoreboard .boss-count-controls { position: absolute; top: -34px; right: 12%; display: flex; gap: 5px; }
+.boss-count-controls .ui-button { min-width: 30px; min-height: 30px; width: 30px; height: 30px; }
+@container (min-width: 560px) {
+  .boss-scoreboard .ttr-row { grid-template-columns: 65px minmax(0, 1fr) auto; }
+  .boss-scoreboard .ttr-sum { grid-column: 3; grid-row: 1; }
+}
+@container (max-width: 280px) {
+  .boss-scoreboard .ttr-row { grid-template-columns: minmax(0, 1fr); }
+  .boss-scoreboard .ttr-row__cells { grid-column: 1; grid-row: 2; }
+  .boss-scoreboard .ttr-sum { grid-row: 3; }
+}

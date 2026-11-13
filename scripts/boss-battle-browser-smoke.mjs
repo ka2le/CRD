@@ -98,7 +98,6 @@ try {
   await page.getByRole('button', { name: /^Player 1 Pocket:/ }).click()
 
   await page.locator('.boss-center [data-card-uid]').first().click()
-  await main().click()
   assert.equal((await read()).hands[0].length, 0)
   await pick()
   await pick()
@@ -146,6 +145,8 @@ try {
 
   // All four cards start playable encounters, including larger random packs.
   for (const id of ['ironhide', 'wildmouth', 'briarback']) {
+    await page.getByRole('button', { name: 'Open menu', exact: true }).click()
+    await page.getByRole('button', { name: 'Boss options', exact: true }).click()
     await page.getByRole('button', { name: 'Choose boss', exact: true }).click()
     await page.locator(`.sheet [data-card-uid="boss_${id}"]`).click()
     await main().click()

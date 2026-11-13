@@ -8,11 +8,38 @@ When the user corrects UI, update this section in the same change with the gener
 convention, an example, and the source that future work should reuse. Reconcile
 older descriptions elsewhere in the docs. Explicit newer user requests take priority.
 
+- **Boss totals are part of the rows (13 November 2026, latest correction).**
+  One small damage box spans both player rows and contains only the combined team
+  total; align the boss total beneath it in the same column. Keep this structure
+  on desktop, portrait and landscape. Retain each participant's calculation, but
+  do not reserve an empty formula line for an unmodified boss score. Example:
+  player scores 3 and 0 share a `3` damage box; the boss's `8` is aligned below.
+  There is no separate Team equation underneath. Pocket is immediate: tap Pocket,
+  then a highlighted card to commit; keep Cancel in the dock without an Accept
+  step. Source: creator's two annotated follow-up screenshots and explicit Pocket
+  correction, 13 November. Reuse `boss/BossScores.jsx`, `BossScores.css` and
+  `BossBattle.jsx`; verify `scripts/boss-test-prep-browser-smoke.mjs` and
+  `scripts/boss-pocket-browser-smoke.mjs`.
+- **Boss cards get the available space (13 November 2026).** Keep result ledgers
+  compact, with formulas beside the faction cells when they fit. On desktop and
+  phone landscape, place the boss portrait/acquired cards beside the result
+  panel, with both player hands below. In short landscape, put player identity,
+  faction/damage and Pocket beside each hand. Narrow hands use the shared fitted
+  card grid so available height reveals every card without overlap; wide hands
+  retain a single row. Example: a five-card portrait hand can use 3 + 2, rather
+  than covering neighboring artwork. Final totals grow in normal layout, leaving
+  the equals sign unobscured. Remove the top boss-name/progress heading and corner
+  question-mark button; **Boss rules** belongs inside the existing menu. Keep the
+  menu clear of all cards. Source: creator's annotated landscape/portrait images
+  and follow-up in the 13 November mobile Boss UI task; implementation in
+  `boss/BossBattle.jsx`, `BossBattle.css`, `menu/ScreenMenu.jsx`; responsive checks
+  in `scripts/boss-responsive-browser-smoke.mjs`. This supersedes the earlier
+  Boss-only overlapping-row preference and second-header-line placement.
 - **Normal NC Draft is the reference flow for Boss mode (13 November 2026).**
   Reuse Abilities Main + New Cards components and interactions. Pocket is a tiny
   face-up `Pile` beside its owner's name, with an empty slot before reserving a
   card. Tapping it immediately highlights eligible pack/hand targets; select a
-  card and use the existing bottom-right Accept, or Cancel. Do not add a preview
+  card to exchange immediately, or Cancel from the dock. Do not add a preview
   sheet and a second “Choose a card” step. The reserve remains visible, inactive,
   after its exchange window closes. Source: `board/Pile.jsx`, `BossBattle.jsx`.
 - **Faction selection follows the cards.** As in `App.jsx` and
@@ -26,7 +53,8 @@ older descriptions elsewhere in the docs. Explicit newer user requests take prio
 - **Show every participant's Abilities breakdown at the result.** Player 1,
   Player 2 and the boss each get the regular `TabletopResolution` ledger row:
   faction stats and damage, neutral damage, committed faction, bonus, shields
-  and final damage. Put the team sum underneath. Use actual committed scores,
+  and final damage. Merge the team total into a box spanning the two player rows.
+  Use actual committed scores,
   including pooled team shields against the boss; never reselect a faction for
   display. Reuse the regular count-up runner in Player 1 / Player 2 / boss order,
   with fast-forward, skip and the existing Battle animation preference.

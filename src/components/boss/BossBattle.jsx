@@ -36,7 +36,7 @@ function Power({ value, type }) {
 function BossHeroHand({ slots, ...props }) {
   const [measureRef, size] = useElementSize()
   return <div className="boss-hero-cards" ref={measureRef}>
-    <HandArea {...props} layout="row" slots={size.width < 360 ? Math.min(3, slots) : slots}
+    <HandArea {...props} layout={size.width < 360 ? 'grid' : 'row'} slots={slots}
       maxCardHeight={Math.min(300, Math.max(0, size.height - 20))} />
   </div>
 }
@@ -135,7 +135,7 @@ export default function BossBattle({ onExit }) {
       setSelected(old => [...old.filter(id => !hands[index].some(c => c.uid === id)), uid]); return
     }
     if (target?.kind === 'pocket-exchange') {
-      if (index === target.seat) setSelected([uid])
+      if (index === target.seat) send({ type: 'pocket', seat: index, uid })
       return
     }
     if (!preparing || state.prep[`${index ? 'opponent' : 'player'}Finished`]) return
@@ -165,11 +165,6 @@ export default function BossBattle({ onExit }) {
     applyPrep(index, actions[0])
   }
   function accept() {
-    if (target?.kind === 'pocket-exchange') {
-      const action = { type: 'pocket', seat, uid: selected[0] }
-      send(action)
-      return
-    }
     if (target?.kind === 'refresh') { send({ type: 'refresh', uid: selected[0], seat: target.seat }); return }
     if (target?.kind === 'swap') {
       send({ type: 'swap', seat: target.seat, a: selected.find(uid => hands[0].some(c => c.uid === uid)), b: selected.find(uid => hands[1].some(c => c.uid === uid)) }); return
@@ -184,12 +179,12 @@ export default function BossBattle({ onExit }) {
     }
   }
 
-  const accepting = pending || ['refresh', 'swap', 'pocket-exchange'].includes(target?.kind)
+  const accepting = pending || ['refresh', 'swap'].includes(target?.kind)
   const primaryLabel = accepting ? 'Accept' : setup ? 'Draft' : state.phase === 'collect' ? 'Absorb'
     : state.phase === 'collected' ? (state.pack === options.rounds ? 'Prepare' : 'Next pack')
       : preparing ? needsType ? 'Choose faction' : 'Ready' : state.phase === 'result' ? (result.winner !== 'team' ? 'Try again' : allCleared ? 'New run' : 'Next boss') : 'Pick a card'
   const primaryDisabled = counting || drafting && !target || target?.kind === 'refresh' && selected.length !== 1 ||
-    target?.kind === 'swap' && selected.length !== 2 || target?.kind === 'pocket-exchange' && selected.length !== 1 || preparing && !target && (Boolean(prepTarget)
+    target?.kind === 'swap' && selected.length !== 2 || preparing && !target && (Boolean(prepTarget)
       || (pending ? pending.remaining !== null && discardSelections[seat].length !== pending.remaining : false))
   const currentSeat = target ? seat : drafting ? state.turns[0] : preparing ? seat : null
   const turnLabel = currentSeat === null || currentSeat === undefined ? '' : `Player ${currentSeat + 1}’s Turn`
@@ -203,8 +198,6 @@ export default function BossBattle({ onExit }) {
 
   return <div className={`app-shell boss-shell${state.phase === 'result' ? ' boss-shell--result' : ''}`}>
     <header className="boss-header">
-      <button className="ui-button ui-button--icon" aria-label="Boss rules" onClick={() => setPanel('help')}><SvgIcon name="help" /></button>
-      <button className="boss-heading" onClick={() => setPanel('bosses')} aria-label="Choose boss"><GameIcon name="monster" />{boss.name}<span>{state.cleared.length}/4</span></button>
       <ScreenMenu bossMode onLeaveBoss={onExit} onNewGame={() => newEncounter()} settings={{ testing: true }}
         onBossOptions={() => setPanel('options')} onRestartBoss={() => send({ type: 'restart' })}
         onReplayPrep={state.prep ? () => send({ type: 'replay-prep' }) : undefined}
@@ -242,7 +235,7 @@ export default function BossBattle({ onExit }) {
         </div> : rows.some(row => row.length) ? <div className={`boss-draft-packs${separate ? ' boss-draft-packs--separate' : ''}`}>
           {rows.map((row, i) => <div key={i} className={`boss-draft-pack${drafting && (!separate || state.turns.includes(i)) ? ' boss-draft-pack--active' : ''}`} data-draft-seat={separate ? i : 'shared'} role="group" aria-label={separate ? `Player ${i + 1} pack` : 'Shared pack'}>
             <HandArea hand={row} layout="grid" slots={bossPackSize(state)} maxCardHeight={380} animateOnMount={false}
-              onToggle={(drafting && (!separate || state.turns.includes(i)) && !target || ['draft', 'collect'].includes(state.phase) && (target?.kind === 'refresh' || target?.kind === 'pocket-exchange' && bossPocketWindow(state, target.seat) === 'pack') && (!separate || target.seat === i)) ? uid => target ? setSelected([uid]) : send({ type: 'pick', uid, ...(separate ? { seat: i } : {}) }) : undefined}
+              onToggle={(drafting && (!separate || state.turns.includes(i)) && !target || ['draft', 'collect'].includes(state.phase) && (target?.kind === 'refresh' || target?.kind === 'pocket-exchange' && bossPocketWindow(state, target.seat) === 'pack') && (!separate || target.seat === i)) ? uid => target?.kind === 'pocket-exchange' ? send({ type: 'pocket', seat: target.seat, uid }) : target ? setSelected([uid]) : send({ type: 'pick', uid, ...(separate ? { seat: i } : {}) }) : undefined}
               selectedIds={selected} readyIds={state.phase === 'collect' ? row.filter(c => options.absorption === 'all' || matchesBossFilter(c, boss.filter)).map(c => c.uid) : []}
               targetableIds={target && ['refresh', 'pocket-exchange'].includes(target.kind) && (!separate || target.seat === i) ? row.map(c => c.uid) : []}
               inspectContextHand={hands[separate ? i : seat]} />
@@ -328,7 +321,7 @@ export default function BossBattle({ onExit }) {
         </div> : null}
         <div className="boss-actions">
           {state.phase === 'collect' && bossCanSwitchLatest(state) && !target ? <button className="ui-button boss-switch-latest" onClick={() => send({ type: 'switch-latest' })}><SvgIcon name="swap" />Switch latests</button> : null}
-          {!drafting || target ? <button className="ui-button ui-button--primary table__action" title={preparing ? `${primaryLabel}: ${seat ? 'right' : 'left'} hand` : undefined} disabled={Boolean(primaryDisabled)} onClick={accept}><SvgIcon name="check" />{primaryLabel}</button> : null}
+          {target?.kind !== 'pocket-exchange' && (!drafting || target) ? <button className="ui-button ui-button--primary table__action" title={preparing ? `${primaryLabel}: ${seat ? 'right' : 'left'} hand` : undefined} disabled={Boolean(primaryDisabled)} onClick={accept}><SvgIcon name="check" />{primaryLabel}</button> : null}
         </div>
       </div>
     </footer>
@@ -349,7 +342,7 @@ export default function BossBattle({ onExit }) {
       <p>Each player has a reusable Pocket and their own Refresh, Swap and “2 now” charge. Refresh changes the shared pack or your own separate pack; borrowing only skips your next-round pick. Swap uses the initiating player’s charge. Pocket closes when prep begins. During prep, Swap reopens both hands so damage types can be confirmed again. Finish required discards before changing those cards.</p>
       <p>Both hands prepare independently. Use either hand’s specials at any time. Touch a hand or choose its damage type, then confirm with the large bottom-right Accept/Ready button. Multiple eligible damage types require a choice before locking. Each hand handles its own discards; draws and Recycle update the shared piles immediately. Either hand may lock first; battle resolves when both are Ready.</p>
       <p>Each hero applies the boss’s shields using normal faction costs. Your shields add together against the boss. Team power = {options.weakerBonus ? 'higher score + twice the lower score' : 'Player 1 score + Player 2 score'}. Either hero can supply the Critter tiebreak; a Critter boss cancels it. All usual Robot and Dragon abilities apply.</p>
-      <p>Pocket sits beside your name. Tap it, choose a highlighted card, then Accept; Cancel leaves the cards in place. The other tools stay in your power strip. The round number appears briefly when a new round starts. Boss options holds presets, rules, replay controls and test shortcuts; jumping to prep fills remaining picks with the first card in each pack.</p>
+      <p>Pocket sits beside your name. Tap it, then tap a highlighted card to exchange immediately; Cancel leaves the cards in place. The other tools stay in your power strip. The round number appears briefly when a new round starts. Boss options holds presets, rules, replay controls and Jump to prep, which starts sample hands with Copy, Draw 2 and faction cards.</p>
       <p>These four encounters are a first prototype. Boss starting engines and difficulty are provisional.</p>
     </div></Sheet>
     <ScoreSheet open={panel === 'score'} onClose={() => setPanel(null)} />

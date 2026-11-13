@@ -248,7 +248,7 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
           <div className="screen-menu__row">
             <button type="button" className="screen-menu__item" onClick={() => run(onHelp)}>
               <SvgIcon name="help" />
-              <span>How to play</span>
+              <span>{bossMode ? 'Boss rules' : 'How to play'}</span>
             </button>
             <button type="button" className="screen-menu__item screen-menu__item--square" onClick={() => run(toggleFullscreen)} aria-label={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}>
               <SvgIcon name="fullscreen" />

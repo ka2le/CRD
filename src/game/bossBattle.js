@@ -8,13 +8,13 @@ export const BOSS_MODE_STORAGE = 'crd-boss-mode-v1'
 const RULES = 'abilities-new-cards'
 const FACTIONS = ['critter', 'robot', 'dragon']
 export const BOSS_PRESETS = {
-  original: { draftMode: 'shared', absorption: 'boss', weakerBonus: true, rounds: 5,
+  original: { draftMode: 'shared', absorption: 'boss', weakerBonus: false, rounds: 5,
     pockets: true, refresh: true, swap: true, double: true },
   separate: { draftMode: 'separate', absorption: 'all', weakerBonus: false, rounds: 5,
     pockets: true, refresh: true, swap: true, double: true },
 }
 // Missing options mean the original prototype, including already-saved results.
-export const bossOptions = state => ({ ...BOSS_PRESETS.original, ...state.options })
+export const bossOptions = state => ({ ...BOSS_PRESETS.original, weakerBonus: true, ...state.options })
 export const bossPackSize = state => bossOptions(state).draftMode === 'separate' ? 4 : bossDefinition(state.bossId).packSize
 export const bossDraftRows = state => bossOptions(state).draftMode === 'separate' ? state.rows : [state.row]
 export const bossActiveRow = (state, seat = state.turns[0] ?? 0) => bossDraftRows(state)[bossOptions(state).draftMode === 'separate' ? seat : 0]
@@ -43,9 +43,9 @@ function spendTool(state, seat, tool) {
 }
 
 function normalizeOptions(options) {
-  const defaults = BOSS_PRESETS.separate
-  return { draftMode: options?.draftMode === 'shared' ? 'shared' : 'separate',
-    absorption: options?.absorption === 'boss' ? 'boss' : 'all',
+  const defaults = BOSS_PRESETS.original
+  return { draftMode: options?.draftMode === 'separate' ? 'separate' : defaults.draftMode,
+    absorption: options?.absorption === 'all' ? 'all' : defaults.absorption,
     rounds: options?.rounds === 4 ? 4 : 5,
     ...Object.fromEntries(['weakerBonus', 'pockets', 'refresh', 'swap', 'double'].map(k => [k, typeof options?.[k] === 'boolean' ? options[k] : defaults[k]])) }
 }
@@ -312,6 +312,20 @@ function transition(state, action) {
 // Navigation restores complete physical-card snapshots, including shared draws,
 // consumed tools, faction choices and the random cursor. It cannot duplicate cards.
 export function bossReducer(state, action) {
+  if (action.type === 'sample-prep') {
+    const fresh = createBossRun({ bossId: state.bossId, seed: state.seed, cleared: state.cleared,
+      options: bossOptions(state), testMode: state.testMode })
+    const deck = [...fresh.deck]
+    const take = id => deck.splice(deck.findIndex(card => card.id === id), 1)[0]
+    const hands = [
+      ['copy_card_in_hand', 'draw_2_extra', 'robot_attack', 'robot1', 'robot_dragon'],
+      ['dragon2', 'dragons_breath', 'dragon_ulti', 'shield2', 'dragon1'],
+    ].map(ids => ids.slice(0, bossOptions(fresh).rounds).map(take))
+    const filter = bossDefinition(fresh.bossId).filter
+    const absorbed = deck.filter(card => bossOptions(fresh).absorption === 'all' || filter === 'random' || matchesBossFilter(card, filter)).slice(0, 5)
+    const used = new Set(absorbed.map(card => card.uid))
+    return beginPreparation({ ...fresh, pack: bossOptions(fresh).rounds, hands, absorbed, deck: deck.filter(card => !used.has(card.uid)) })
+  }
   if (action.type === 'test-mode') return { ...state, testMode: Boolean(action.enabled), history: [] }
   if (action.type === 'restart' || action.type === 'options') {
     const next = createBossRun({ bossId: state.bossId, seed: state.seed,

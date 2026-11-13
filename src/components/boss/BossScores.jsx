@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { TabletopLedgerRow } from '../battle/TabletopResolution'
 import { createResolutionRunner } from '../battle/tabletopResolutionRunner'
 import { buildTabletopSidePlan, emptyLedgerSide, finalLedgerSide } from '../../game/tabletopResolution'
 import { GameIcon, SvgIcon } from '../ui/GameIcon'
+import './BossScores.css'
 
 const SIDES = ['hero1', 'hero2', 'boss']
 const OPPOSING = { hero1: 'boss', hero2: 'boss', boss: 'team' }
@@ -61,18 +63,16 @@ export default function BossScores({ result, hands, monsterHand, bossName, weake
         name={names[side]} plan={plan[side]} state={shown[side]} focus={shown.focus} current={shown.current} stage={shown.stage}
         winner={result.winner === 'draw' ? 'tie' : result.winner === (side === 'boss' ? 'boss' : 'team') ? side : null}
         crowned={shown.tiebreak === side} bonusFirst showNeutral />)}
-    </div>
-    <div className="boss-team-score" aria-label="Team damage" style={{ visibility: done ? 'visible' : 'hidden' }}>
-      <span>Team</span><span>{result.heroes[0].score} + {result.heroes[1].score}</span>
-      {weakerBonus ? <span title="Lower hand's damage added again">+ {result.weakerBonus} <small>lower hand</small></span> : null}
-      <span>=</span><strong>{result.teamPower}<GameIcon name="damage" /></strong>
-      {tiebreak ? <span className="boss-team-score__tie">Critter tiebreak</span> : result.winner === 'draw' ? <span className="boss-team-score__tie">Equal damage</span> : null}
+      <div className={`boss-team-score is-${result.winner === 'team' ? 'win' : result.winner === 'draw' ? 'tie' : 'loss'}`}
+        aria-label="Team damage" title={`Team: ${result.heroes[0].score} + ${result.heroes[1].score}${weakerBonus ? ` + ${result.weakerBonus} (lower hand)` : ''} = ${result.teamPower}${tiebreak ? ' · Critter tiebreak' : ''}`}>
+        <strong>{done ? result.teamPower : '–'}<GameIcon name="damage" /></strong>
+      </div>
     </div>
     {!done ? <div className="boss-count-controls">
       <button className="ui-button ui-button--icon" aria-label={speed > 1 ? 'Normal speed' : 'Fast forward'} aria-pressed={speed > 1}
         onClick={() => { speedRef.current = speed > 1 ? 1 : 2.5; setSpeed(speedRef.current) }}><GameIcon name="fast" /></button>
       <button className="ui-button ui-button--icon" aria-label="Skip to result" onClick={skip}><SvgIcon name="skip" /></button>
     </div> : null}
-    <div ref={fxRef} className="ttr__fx" aria-hidden="true" />
+    {typeof document !== 'undefined' ? createPortal(<div ref={fxRef} className="ttr__fx" aria-hidden="true" />, document.body) : null}
   </section>
 }

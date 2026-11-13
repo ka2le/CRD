@@ -51,10 +51,11 @@ export default function BossOptions({ state, onClose, onApply, onAction, onNewDe
         <div className="boss-options-actions">
           <button className="ui-button" onClick={() => go('restart')}>Restart same deal</button>
           <button className="ui-button" onClick={onNewDeal}>Fresh deal</button>
+          <button className="ui-button" onClick={() => go('sample-prep')}>Jump to prep</button>
           <button className="ui-button" disabled={!state.prep} onClick={() => go('replay-prep')}>Replay prep</button>
           <button className="ui-button" onClick={onChooseBoss}>Choose boss</button>
         </div>
-        <p>Restart repeats the shuffle. Replay prep restores both original hands, the deck and shared discard pile.</p>
+        <p>Jump to prep starts sample hands with Copy, Draw 2 and faction cards. Restart repeats the shuffle. Replay prep restores both original hands, the deck and shared discard pile.</p>
         <Toggle label="Test mode" checked={Boolean(state.testMode)} onChange={enabled => onAction({ type: 'test-mode', enabled })}
           detail="Enable undo and navigation here in Boss options." />
         {state.testMode ? <div className="boss-options-actions">

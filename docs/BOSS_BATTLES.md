@@ -1,8 +1,8 @@
 # Boss co-op exploration
 
 Testing mode added 9 November 2026; public release verified 12 November 2026. Menu → Testing → Boss battle · Co-op.
-Two humans share the screen: Player 1 bottom left, Player 2 bottom right, boss at
-the top. All hands are open. Uses the current NC73 Regular cards and adopted
+Two humans share the screen: Player 1 bottom left, Player 2 bottom right, boss in
+the upper area. All hands are open. Uses the current NC73 Regular cards and adopted
 Abilities scoring. This is separate from the four-faction Monsters ruleset.
 
 ## Options and quick experiments
@@ -16,10 +16,13 @@ preferences take effect immediately.
 
 | Preset | Draft per round | Boss collects | Team power |
 |---|---|---|---|
-| Separate 4-card packs (new default) | Each player picks one from their own four-card pack | Every leftover from both packs | Player 1 + Player 2 |
-| Original shared draft | Both players pick from one five-card pack (Wildmouth: six) | Its printed filter | Higher + twice lower |
+| Original shared draft (default) | Both players pick from one five-card pack (Wildmouth: six) | Its printed filter | Player 1 + Player 2 |
+| Separate 4-card packs | Each player picks one from their own four-card pack | Every leftover from both packs | Player 1 + Player 2 |
 
-Both presets default to **five rounds and five drafted cards per player**. Four
+Lower-player doubling defaults off in both presets and remains an optional rule.
+Existing encounters preserve their selected options; legacy saves without options
+retain their original doubled-lower scoring. Both presets default to **five rounds
+and five drafted cards per player**. Four
 refers to each separate pack's size, not the final hand. The rounds selector can
 also try four rounds/four picks each. In separate drafts both packs are active:
 either player can pick first, with no enforced order. A pick always goes to that
@@ -33,7 +36,7 @@ In both draft modes **each player has a reusable Pocket and one charge each of
 Refresh, Swap and “2 now” per encounter**. Pocket appears as a tiny face-up reserve
 beside the player's name, using the ordinary discard-pile presentation. An empty
 reserve shows an empty card slot. Tap it to highlight eligible cards directly,
-select one, then Accept in the bottom dock; Cancel leaves all cards unchanged.
+tap one to exchange immediately; Cancel in the bottom dock leaves all cards unchanged.
 The reserve remains visible but inactive during prep/results. The other three
 tools share a compact icon strip between that player's pack and hand. Refresh only changes a card
 in the shared pack or the initiating player's own separate pack. Swap still exchanges one card between the two
@@ -82,6 +85,11 @@ replay are also in the top-right menu, and prep replay is on the result screen:
   Ready flags, faction choices and the previous result. Reserved Pocket cards and
   Swap charges return to their values at the start of prep, with the original hands.
 - **Choose boss** starts setup for any boss directly.
+- **Jump to prep** is always available in Boss options, without enabling Test
+  mode. It starts a fresh sample of the current boss/rules with physical cards
+  from the same shuffled deck: Copy, Draw 2 and useful faction cards, plus a
+  second playable hand and boss acquisitions. The sample supports normal shared
+  draws, Copy, faction choices, scoring and Replay prep; no draft is required.
 - **Test mode** enables navigation here in Boss options and up to 40 action undos,
   including across reload; it adds no persistent main-table badge or shortcuts.
   **Back to draft start** restores the opening packs. **Fill picks & jump
@@ -96,11 +104,30 @@ Existing v1 saves without options retain the original shared/filter/doubling
 rules; switching to the new preset is explicit. Prep replay also reconstructs
 the original draft boundary for legacy saves without checkpoints.
 
+Latest totals correction, 13 November: the team total appears alone in a small
+box spanning both player rows, with the boss total aligned below. This is the
+same in every orientation; no separate Team equation below the ledger. All
+participant calculations remain visible. Unmodified boss damage uses a compact
+single line, without reserving an empty equation row. Pocket commits immediately
+on tapping a highlighted target; only Cancel remains while choosing.
+
+Responsive UI correction, 13 November: desktop/landscape results place the boss
+portrait and acquired cards beside a compact score panel, leaving the lower area
+for larger player hands. In short landscape, each player's name, faction/damage,
+Pocket and tools sit beside their cards. Narrow hands use the standard fitted
+grid and available height instead of covering neighboring cards; wide hands stay
+in a row. Formula totals reserve their enlarged width so the equals sign stays
+visible. The top boss-name/progress heading and corner question-mark button are
+removed; open **Boss rules** from the menu. Choose boss remains in Boss options.
+The menu keeps its top-right position without covering cards. See docs/UI.md and
+scripts/boss-responsive-browser-smoke.mjs. These supersede the earlier overlapping
+Boss rows and boss-name/second-header-line arrangement.
+
 UI corrections, 13 November: normal Abilities Main + New Cards Draft is the
 reference for interactions and presentation. Pocket targets directly on the
 table, with no preview sheet. Required discards use normal red discard markers.
 After battle the center shows the shared Abilities ledger for Player 1, Player 2
-and the boss, followed by the team sum. Each row uses the actual chosen faction
+and the boss, with a merged team total beside the player rows. Each row uses the actual chosen faction
 and complete final stats, typed/neutral damage, bonus, shield reduction and score.
 The regular animation runner counts each participant in that order, with the
 same fast-forward/skip controls. Turning Battle animation off shows final scores
@@ -118,14 +145,13 @@ end animation, without running the count-up sequence during drafting.
 
 Visual direction, corrected 9 November: stay close to the original game's UI.
 Draft/hand areas remain borderless, but retain the normal buttons and Abilities
-ledger styling rather than flattening those controls. The bottom player hands
-use the original horizontal HandArea rows instead of card grids, with overlap
-on narrow screens and a measured height cap in landscape. The bottom dock uses
+ledger styling rather than flattening those controls. Player hands reuse
+HandArea's row/grid fitting and preserve card proportions. The bottom dock uses
 the original SideRail styling: compact contextual guidance at the left, a boxed turn label
 in the center, and deck/discard beside the action group at the right. Options groups retain spacing rather than extra fieldset boxes.
 
-In short landscape screens, the boss ledger uses a second header line beneath
-the boss name, leaving the boss card band at full height. Absorbed count and View
+In short landscape screens, the live boss ledger sits beside the menu above
+the cards, leaving the boss card band at full height. Absorbed count and View
 have been removed completely: the cards are already visible and can be held to
 inspect. They now use all the width previously reserved for those controls.
 
@@ -243,7 +269,7 @@ shields add together and reduce the boss's score once at its chosen faction's
 normal cost. Calculate both heroes' complete scores, then:
 
 **Team power = Player 1 score + Player 2 score**, plus the lower score only when
-the doubling toggle is enabled (as in the original preset).
+the doubling toggle is enabled. It defaults off in both presets.
 
 Compare with the boss score. Either Critter hero supplies the team's Critter
 tiebreak; a Critter boss cancels it. Otherwise equal scores draw. The boss commits

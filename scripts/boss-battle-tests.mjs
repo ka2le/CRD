@@ -162,7 +162,7 @@ test('Swap stays available through final absorption and during preparation in ei
 })
 
 test('team applies shields per hero, doubles lower post-shield score and protects against boss using pooled shields', () => {
-  let s = finishDraft(start({ bossId: 'briarback' }))
+  let s = finishDraft(start({ bossId: 'briarback', options: { ...BOSS_PRESETS.original, weakerBonus: true } }))
   s = { ...s, absorbed: [], types: ['robot', 'dragon'], prep: { ...s.prep,
     playerHand: hand(['robot1', 'robot1', 'robot_attack', 'robot_attack', 'shield2']),
     opponentHand: hand(['dragon2', 'dragon1', 'dragon_ulti', 'bite', 'shield2']) } }
@@ -373,9 +373,43 @@ test('shared personal tools respect pick order and migrate legacy shared charges
   for (const seat of [0, 1]) assert.equal(bossToolCharges(s, seat).refresh, 0)
 })
 
-test('new default gives each player an independent four-card pack and absorbs every leftover', () => {
+test('new Boss games default to shared packs, printed absorption and additive team power', () => {
+  for (const boss of BOSSES) {
+    let s = createBossRun({ seed: 44, bossId: boss.id })
+    assert.deepEqual(bossOptions(s), BOSS_PRESETS.original)
+    assert.equal(s.options.weakerBonus, false)
+    s = step(s, { type: 'start' })
+    assert.equal(s.row.length, boss.packSize)
+    s = finishDraft(s, assertPhysicalCards)
+    const result = resolveBossBattle(s)
+    assert.equal(result.weakerBonus, 0)
+    assert.equal(result.teamPower, result.heroes[0].score + result.heroes[1].score)
+  }
+})
+
+test('Jump to prep creates physical sample hands with usable Copy/Draw 2 and a replay checkpoint, without enabling Test mode', () => {
+  for (const boss of BOSSES) for (const options of [BOSS_PRESETS.original, { ...BOSS_PRESETS.separate, rounds: 4 }]) {
+    const before = createBossRun({ seed: 771, bossId: boss.id, options })
+    const sample = step(before, { type: 'sample-prep' })
+    assert.equal(sample.phase, 'prepare')
+    assert.equal(sample.testMode, false)
+    assert.equal(sample.bossId, before.bossId)
+    assert.deepEqual(sample.options, before.options)
+    assert.deepEqual(sample.hands.map(h => h.length), [options.rounds, options.rounds])
+    assertPhysicalCards(sample)
+    assert.ok(getPreparationActions(sample.prep, 'player').some(a => a.cardId === 'copy_card_in_hand'))
+    const draw = getPreparationActions(sample.prep, 'player').find(a => a.cardId === 'draw_2_extra')
+    assert.ok(draw)
+    const drawn = step(sample, { type: 'prepare', seat: 0, action: draw })
+    assert.equal(drawn.prep.playerHand.length, options.rounds + 2)
+    assert.deepEqual(step(drawn, { type: 'replay-prep' }).prep, sample.prep)
+    assert.deepEqual(step(drawn, { type: 'sample-prep' }).prep, sample.prep)
+  }
+})
+
+test('separate preset gives each player an independent four-card pack and absorbs every leftover', () => {
   for (const b of BOSSES) {
-    let s = step(createBossRun({ seed: 44, bossId: b.id }), { type: 'start' })
+    let s = step(createBossRun({ seed: 44, bossId: b.id, options: BOSS_PRESETS.separate }), { type: 'start' })
     assert.equal(bossOptions(s).weakerBonus, false)
     assert.deepEqual(s.rows.map(r => r.length), [4, 4])
     assert.equal(step(s, { type: 'pick', seat: 0, uid: s.rows[1][0].uid }), s)
@@ -477,7 +511,7 @@ test('disabled draft tools are enforced in the reducer and legacy saves retain o
   assert.equal(step(s, { type: 'swap', a: s.hands[0][0].uid, b: s.hands[1][0].uid }), s)
   s = finishDraft(start())
   delete s.options; delete s.rows; delete s.draftStart; delete s.prepStart; delete s.history
-  assert.deepEqual(bossOptions(s), BOSS_PRESETS.original)
+  assert.deepEqual(bossOptions(s), { ...BOSS_PRESETS.original, weakerBonus: true })
   const r = resolveBossBattle(s)
   assert.equal(r.weakerBonus, Math.min(...r.heroes.map(h => h.score)))
   assert.deepEqual(step(s, { type: 'replay-prep' }).prep, s.prep)
