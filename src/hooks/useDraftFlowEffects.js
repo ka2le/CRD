@@ -1,3 +1,4 @@
+import { isDraftMode } from '../game/draftMode.js'
 import { useEffect, useRef } from 'react'
 import { startDraftPickFlight, animateDraftRowDiscard, getDraftDiscardSequenceMs } from './draftMotion'
 import { getPackDealMs } from './dealTiming'
@@ -35,7 +36,7 @@ export default function useDraftFlowEffects({
   const thinkingRef = useRef({ key: null, startedAt: 0 })
 
   useEffect(() => {
-    if (game.mode !== 'draft') return undefined
+    if (!isDraftMode(game.mode)) return undefined
 
     if (game.phase === 'draft-opponent-thinking') {
       // Measure the AI delay from when this decision started, not from each re-render,

@@ -1,4 +1,11 @@
-import { pickBestCardForHand } from './cardEvaluator.js'
+import { chooseDiscardIds, pickBestCardForHand, rankCardsForHand } from './cardEvaluator.js'
+
+// Ordinary redraw may keep every valuable card; this discard is mandatory.
+export function chooseHiddenDraftDiscardIds(hand) {
+  const chosen = chooseDiscardIds(hand, { discardCount: 1 })[0]
+    ?? rankCardsForHand(hand, hand).at(-1)?.card.uid
+  return chosen ? [chosen] : []
+}
 
 export function pickRandomDraftCardIndex(cards) {
   if (!cards.length) return -1

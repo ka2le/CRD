@@ -99,7 +99,7 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
             <button type="button" disabled={!onReplayPrep} className="screen-menu__item" onClick={() => run(onReplayPrep)}><SvgIcon name="replay" /><span>Replay prep</span></button>
           </> : <>
           <fieldset className="screen-menu__game-controls" disabled={!canConfigure}>
-          <div className="screen-menu__segmented" role="radiogroup" aria-label="Mode">
+          <div className={`screen-menu__segmented${settings.testing ? '' : ' screen-menu__segmented--three'}`} role="radiogroup" aria-label="Mode">
             <button
               type="button"
               role="radio"
@@ -109,6 +109,11 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
             >
               <GameIcon name="copy" />
               <span>Draft</span>
+            </button>
+            <button type="button" role="radio" aria-checked={gameMode === '6draft'}
+              className={gameMode === '6draft' ? 'is-on' : ''}
+              onClick={() => run(() => gameMode !== '6draft' && onChangeGameMode('6draft'))}>
+              <GameIcon name="copy" /><span>6draft</span>
             </button>
             <button
               type="button"
@@ -179,7 +184,7 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
               aria-label="Opponent"
             >
               {humanOpponent ? <option value="human">Player in room</option> : null}
-              {getOpponentAiOptions(gameMode, settings.tabletop, { secretCard: settings.secretCard }).map((option) => (
+              {getOpponentAiOptions(gameMode, settings.tabletop, { secretCard: settings.secretCard, wildDeck: settings.wildDeck }).map((option) => (
                 <option key={option.id} value={option.id}>{option.label}</option>
               ))}
               <option value="local">2 players · same screen</option>

@@ -1,3 +1,4 @@
+import { chooseFelixNc6Decision } from './felixNc6Bot.js'
 import model from '../../data/felix-handpairs-net.json' with { type: 'json' }
 import * as tt from './tabletop.js'
 import * as cards from './cards.js'
@@ -20,6 +21,7 @@ export const expandedFelixAdapter = makeAdapter(tt, cards,
   { totalThreshold: true, dragonOnly: true, blockBonus: true }, { tabletop: 'abilities-new-cards' })
 
 export function chooseFelixDecision(game, side = 'opponent', options = {}) {
+  if (game.mode === '6draft') return chooseFelixNc6Decision(game, side)
   if (game.mode !== 'draft') throw Error('FelixBot plays Draft only')
   if (isFelixNcGame(game)) return chooseFelixNcDecision(game, side)
   const pick = game[`${side}Hand`].length + 1

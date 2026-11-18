@@ -1,3 +1,4 @@
+import { isHiddenDraftDiscard } from '../game/draftMode.js'
 import { ROOM_PROTOCOL, MAX_MESSAGE_BYTES, ROOM_ID_PATTERN, randomToken, cleanName, validAction } from './protocol.js'
 import { loadProfile, PROFILE_KEY } from './profile.js'
 import { compatibleGameVersion } from './gameCompatibility.js'
@@ -290,9 +291,9 @@ export default class RoomClient {
       try {
         if (msg.actorId && (msg.actorId !== this.cached.presence?.guest?.id || msg.seatEpoch !== this.cached.presence?.guest?.epoch)) throw new Error('Player two changed devices. Resync your game.')
         const game = this.record.snapshot?.game
-        const discardAction = game?.mode === 'five-hand-discard' && ['TOGGLE_SELECTED', 'SUBMIT_DISCARD'].includes(msg.action?.type)
+        const discardAction = (game?.mode === 'five-hand-discard' || (game && isHiddenDraftDiscard(game))) && ['TOGGLE_SELECTED', 'SUBMIT_DISCARD'].includes(msg.action?.type)
         const sameDiscardPass = discardAction && msg.discardDeal === this.record.snapshot.dealId
-          && msg.discardPass === Math.min(game.playerDiscardsUsed, game.opponentDiscardsUsed) + 1
+          && msg.discardPass === (isHiddenDraftDiscard(game) ? 1 : Math.min(game.playerDiscardsUsed, game.opponentDiscardsUsed) + 1)
         if (!this.record.snapshot || (msg.revision !== this.record.revision && !sameDiscardPass)
           || (discardAction && msg.discardPass !== undefined && !sameDiscardPass)) throw new Error('The table changed. Please try that action again.')
         const snapshot = scoreRoomGame(applyRoomAction(this.record.snapshot, 'guest', msg.action))
@@ -335,8 +336,8 @@ export default class RoomClient {
         if (this.cached.connection !== 'connected' || !this.cached.presence?.host?.connected) throw new Error('Waiting for the host to reconnect')
         const game = this.record.snapshot.game
         const pendingAction = { type: 'action', id: randomToken(16), revision: this.record.revision, action,
-          ...(game.mode === 'five-hand-discard' && ['TOGGLE_SELECTED', 'SUBMIT_DISCARD'].includes(action.type)
-            ? { discardDeal: this.record.snapshot.dealId, discardPass: Math.min(game.playerDiscardsUsed, game.opponentDiscardsUsed) + 1 } : {}) }
+          ...((game.mode === 'five-hand-discard' || isHiddenDraftDiscard(game)) && ['TOGGLE_SELECTED', 'SUBMIT_DISCARD'].includes(action.type)
+            ? { discardDeal: this.record.snapshot.dealId, discardPass: (isHiddenDraftDiscard(game) ? 1 : Math.min(game.playerDiscardsUsed, game.opponentDiscardsUsed) + 1) } : {}) }
         this.save({ ...this.record, pendingAction })
         this.send(pendingAction)
       }

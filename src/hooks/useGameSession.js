@@ -1,3 +1,5 @@
+import { isDraftMode, isHiddenDraftDiscard } from '../game/draftMode.js'
+import { chooseHiddenDraftDiscardIds } from '../game/draftAi.js'
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { getCoreCards } from '../game/cards.js'
 import { createTwentyCardsGame, placeLineupCard, chooseBotLineup, lockLineup, beginTwentyCardsRound, twentyCardsScore } from '../game/twentyCards.js'
@@ -8,6 +10,7 @@ import { compatibleGameVersion } from '../network/gameCompatibility.js'
 import { createFiveHandDiscardGame, applyDiscardPhase, applyOpponentDiscardPhase } from '../game/fiveHandDiscard'
 import {
   createDraftGame,
+  applyHiddenDraftDiscard,
   applyDraftPick,
   resolveOpponentDraftPick,
   commitDraftDiscard,
@@ -69,7 +72,7 @@ function createSessionTiming(overrides = {}) {
 export function normalizePlaySettings(settings, patch = {}) {
   const testing = Boolean(patch.testing ?? settings.testing)
   const mode = patch.gameMode ?? settings.gameMode ?? 'draft'
-  const gameMode = ['draft', 'five-hand-discard', '20cards'].includes(mode) && (testing || mode !== '20cards') ? mode : 'draft'
+  const gameMode = ['draft', '6draft', 'five-hand-discard', '20cards'].includes(mode) && (testing || mode !== '20cards') ? mode : 'draft'
   const secretCard = testing && gameMode === 'draft' && Boolean(patch.secretCard ?? settings.secretCard)
   const specialMode = secretCard || gameMode === '20cards'
   const next = normalizeOpponentSettings(settings, {
@@ -115,14 +118,15 @@ function usesSearchOpponent(settings) {
 // pick so the draft flow waits for the search result instead of using it.
 function withOpponentAiTurn(game, settings) {
   if (!usesSearchOpponent(settings)) return game
-  if (game.mode !== 'draft' || game.phase !== 'draft-opponent-thinking') return game
+  if (!isDraftMode(game.mode) || game.phase !== 'draft-opponent-thinking') return game
   return { ...game, pendingOpponentPickUid: null }
 }
 
 // Identifies one opponent decision, so stale search results are ignored.
 export function getOpponentDecisionKey(dealId, game) {
+  if (isHiddenDraftDiscard(game)) return `${dealId}:hidden-discard`
   if (game.mode === '20cards') return `${dealId}:20cards:${game.roundIndex}:lineup`
-  if (game.mode === 'draft') return `${dealId}:draft:${game.packNumber}:${game.picksThisPack}`
+  if (isDraftMode(game.mode)) return `${dealId}:draft:${game.packNumber}:${game.picksThisPack}`
   if (game.concurrentOpponent) return `${dealId}:david-discard:${game.opponentDiscardsUsed}`
   return `${dealId}:discard:${game.phase}`
 }
@@ -130,7 +134,7 @@ export function getOpponentDecisionKey(dealId, game) {
 function createGameForMode(mode, draftFirstPicker = 'player', settings = DEFAULT_SETTINGS) {
   if (mode === '20cards') return createTwentyCardsGame({ wildDeck: settings.wildDeck, tabletop: settings.tabletop, monsterDeck: settings.monsterDeck })
   if (mode === 'five-hand-discard') return createFiveHandDiscardGame({ wildDeck: settings.wildDeck, tabletop: settings.tabletop, monsterDeck: settings.monsterDeck })
-  return withOpponentAiTurn(createDraftGame({ firstPicker: draftFirstPicker, secretCard: settings.testing && settings.secretCard, wildDeck: settings.wildDeck, tabletop: settings.tabletop, monsterDeck: settings.monsterDeck }), settings)
+  return withOpponentAiTurn(createDraftGame({ mode, firstPicker: draftFirstPicker, secretCard: settings.testing && settings.secretCard, wildDeck: settings.wildDeck, tabletop: settings.tabletop, monsterDeck: settings.monsterDeck }), settings)
 }
 
 function getNextDraftStartingPicker(current) {
@@ -223,7 +227,7 @@ function withDraftDealingAnimation(game) {
 }
 
 function createDraftGameWithDealing(firstPicker = 'player', settings = DEFAULT_SETTINGS) {
-  return withDraftDealingAnimation(createGameForMode('draft', firstPicker, settings))
+  return withDraftDealingAnimation(createGameForMode(settings.gameMode, firstPicker, settings))
 }
 
 function createInitialSessionState() {
@@ -392,7 +396,7 @@ export function sessionReducer(state, action) {
       const nextBattleInstance = state.battleInstance + 1
       const nextGameSessionKey = state.gameSessionKey + 1
 
-      if (nextMode === 'draft') {
+      if (isDraftMode(nextMode)) {
         const startingPicker = state.nextDraftStartingPicker
         const game = createDraftGameWithDealing(startingPicker, nextSettings)
 
@@ -476,6 +480,10 @@ export function sessionReducer(state, action) {
 
     case 'TOGGLE_SELECTED': {
       const { uid } = action
+      if (isHiddenDraftDiscard(state.game)) {
+        if (state.game.playerHiddenDiscard.length || !state.game.playerHand.some(card => card.uid === uid)) return state
+        return { ...state, selectedIds: state.selectedIds.includes(uid) ? [] : [uid] }
+      }
       const nextSelectedIds = state.selectedIds.includes(uid)
         ? state.selectedIds.filter((id) => id !== uid)
         : [...state.selectedIds, uid]
@@ -486,6 +494,11 @@ export function sessionReducer(state, action) {
     }
 
     case 'SUBMIT_DISCARD': {
+      if (isHiddenDraftDiscard(state.game)) {
+        if (state.selectedIds.length !== 1) return state
+        const game = applyHiddenDraftDiscard(state.game, 'player', state.selectedIds[0])
+        return { ...state, game, preBattle: createPreBattleState(game), selectedIds: [] }
+      }
       if (!state.game.phase.startsWith('player-discard')) return state
       // Search AI answers asynchronously, so the opponent's pass is deferred until it decides.
       const nextGame = applyDiscardPhase(state.game, state.selectedIds, {
@@ -504,6 +517,11 @@ export function sessionReducer(state, action) {
 
     case 'APPLY_OPPONENT_DISCARD': {
       if (action.decisionKey !== getOpponentDecisionKey(state.dealId, state.game)) return state
+      if (isHiddenDraftDiscard(state.game)) {
+        if (action.selectedIds?.length !== 1) return state
+        const game = applyHiddenDraftDiscard(state.game, 'opponent', action.selectedIds[0])
+        return { ...state, game, preBattle: createPreBattleState(game) }
+      }
       if (state.game.concurrentOpponent ? state.game.opponentDiscardsUsed >= 2 : !state.game.phase.startsWith('opponent-discard')) return state
       const handIds = new Set(state.game.opponentHand.map((card) => card.uid))
       const selectedIds = (action.selectedIds ?? []).filter((uid) => handIds.has(uid))
@@ -970,7 +988,8 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
   const localMultiplayer = !online && isLocalMultiplayer(localSession)
   const session = room?.session ?? localMultiplayerView(localSession)
   const dispatch = online ? room.dispatch : localDispatch
-  const onlineDiscardSubmitted = online && Boolean(session.discardReady?.[room.record?.role])
+  const onlineDiscardSubmitted = online && (isHiddenDraftDiscard(session.game)
+    ? Boolean(session.game.playerHiddenDiscard.length) : Boolean(session.discardReady?.[room.record?.role]))
   const onlineBlocked = online && (onlineDiscardSubmitted || room.record?.role === 'viewer' || room.busy || room.blocked || (room.record?.role !== 'host'
     && (room.connection !== 'connected' || !room.presence?.host?.connected)))
   const sequenceTimeoutsRef = useRef([])
@@ -998,12 +1017,15 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     suppressedHandCardIds,
   } = session
 
-  const discardPhase = game.mode === 'five-hand-discard' && game.phase.startsWith('player-discard')
-  const opponentDiscarding = game.mode === 'five-hand-discard' && game.phase.startsWith('opponent-discard')
-  const awaitingDiscardDecision = !online && !localMultiplayer && opponentDiscarding
+  const hiddenDraftDiscard = isHiddenDraftDiscard(game)
+  const discardPhase = (hiddenDraftDiscard && !game.playerHiddenDiscard.length)
+    || (game.mode === 'five-hand-discard' && game.phase.startsWith('player-discard'))
+  const opponentDiscarding = (hiddenDraftDiscard && Boolean(game.playerHiddenDiscard.length))
+    || (game.mode === 'five-hand-discard' && game.phase.startsWith('opponent-discard'))
+  const awaitingDiscardDecision = !online && !localMultiplayer && (hiddenDraftDiscard ? !game.opponentHiddenDiscard.length : opponentDiscarding)
   const searchOpponent = !online && !localMultiplayer && usesSearchOpponent(settings)
   const dealId = session.dealId
-  const awaitingSearchDraftPick = searchOpponent && game.mode === 'draft'
+  const awaitingSearchDraftPick = searchOpponent && isDraftMode(game.mode)
     && game.phase === 'draft-opponent-thinking' && !game.pendingOpponentPickUid
   const opponentDecisionKey = getOpponentDecisionKey(dealId, game)
   const awaitingLineupDecision = !online && !localMultiplayer && settings.opponentAi === 'sven-20cards'
@@ -1405,7 +1427,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
         dispatch({
           type: 'APPLY_OPPONENT_DISCARD',
           // A null choice (e.g. the opponent was switched mid-pass) falls back to the Rules AI.
-          selectedIds: choice?.selectedIds ?? chooseDiscardIds(game.opponentHand, { discardCount: 2 }),
+          selectedIds: choice?.selectedIds ?? (isHiddenDraftDiscard(game) ? chooseHiddenDraftDiscardIds(game.opponentHand) : chooseDiscardIds(game.opponentHand, { discardCount: 2 })),
           sourceRects,
           decisionKey: opponentDecisionKey,
         })
@@ -1546,7 +1568,7 @@ export default function useGameSession({ animateCardMove, getAnchorRect, maskSlo
     isPreBattleReady,
     discardCards: game.mode === '20cards' ? (game.phase === 'battle-ready' ? preBattle.playerDiscard : game.discardPile) : isPreBattleReady
       ? preBattle.playerDiscard
-      : (game.mode === 'draft' ? game.draftDiscard : game.playerDiscards),
+      : (isDraftMode(game.mode) ? game.draftDiscard : game.playerDiscards),
     resolvedPlayerHand,
     resolvedOpponentHand,
     testEditable: Boolean(testEditTarget),

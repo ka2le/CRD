@@ -2,11 +2,15 @@
 
 ## Required workflow and current conventions
 
+- **One Felix identity across supported modes (17 November 2026).** Keep the existing Felix option selected when switching between supported Draft and Regular NC 6draft modes. Route to the mode's qualified model internally; do not expose model suffixes or extra Felix menu entries. Six-draft discards and preparation use only the public opposing draft and the actor's private information. Source: creator's FelixNC6 integration request; reuse `opponentAi.js`, `felixNc6Bot.js` and `ScreenMenu`.
+
 Read this guide at the start of every repository task. Before UI edits, inspect the
 referenced live component and stylesheet; carry the same design into other modes.
 When the user corrects UI, update this section in the same change with the general
 convention, an example, and the source that future work should reuse. Reconcile
 older descriptions elsewhere in the docs. Explicit newer user requests take priority.
+
+- **6draft reuses normal Draft and hidden preparation (17 November 2026).** Put **6draft** beside Draft and Discard in the normal mode selector. Six alternating packs lead to a private **Discard 1** action using the existing red hand markers and bottom-right dock button; selecting another card replaces the selection. Both hands become private after the last pick and stay private through preparation. Example: six picks → one set aside → five starting cards, before Draw 2 or other preparation. Set-aside cards are separate from discard/Recycle, revealed by the **Set aside** pile only once battle resolution starts. Reuse `draftMode.js`, `App.jsx`, `HandArea` and `ScreenMenu`; source: creator's 6draft request, 16–17 November. Verify `scripts/6draft-browser-smoke.mjs` at desktop, portrait and landscape.
 
 - **Boss totals are part of the rows (13 November 2026, latest correction).**
   One small damage box spans both player rows and contains only the combined team

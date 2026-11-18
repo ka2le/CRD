@@ -266,6 +266,10 @@ function RulesHelp({ open, onClose, tabletop }) {
             <span>{tabletop === 'monsters' ? 'Draft: pick 1 of 6, opponent picks 1, the rest are discarded. Six packs; six picks each.' : 'Draft: pick 1 of 5, opponent picks 1, the rest are discarded. Five packs.'}</span>
           </div>
           <div className="help__fact">
+            <span className="help__chip"><SvgIcon name="eye-off" /></span>
+            <span>6draft: six alternating packs, then hide both hands and set aside one card each. Prepare with five cards. Set-aside cards cannot be Recycled and are revealed when battle resolution starts.</span>
+          </div>
+          <div className="help__fact">
             <span className="help__chip"><GameIcon name="redraw" /></span>
             <span>{tabletop === 'monsters' ? 'Discard mode: six cards, two redraws back to six.' : 'Discard mode: five cards, two redraws.'}</span>
           </div>

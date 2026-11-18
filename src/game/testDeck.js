@@ -1,3 +1,4 @@
+import { isDraftMode } from './draftMode.js'
 // Testing tools: inspect every card in the current game and rearrange them.
 // Pure helpers over a game (before battle-ready) or a preparation state.
 
@@ -74,7 +75,7 @@ export function getTestDeckZones({ game, preBattle, usePreparation }) {
 
   return [
     { key: 'opponentHand', label: 'Opponent hand', cards: source.opponentHand ?? [] },
-    !usePreparation && game.mode === 'draft' ? { key: 'draftRow', label: 'Pack', cards: game.draftRow ?? [] } : null,
+    !usePreparation && isDraftMode(game.mode) ? { key: 'draftRow', label: 'Pack', cards: game.draftRow ?? [] } : null,
     { key: 'playerHand', label: 'Your hand', cards: source.playerHand ?? [] },
     { key: 'deck', label: 'Deck · next draw first', cards: source.deck ?? [] },
     { key: 'discard', label: 'Discard', cards: discard },

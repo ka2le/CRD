@@ -5,11 +5,14 @@ import { completeOpponentPreBattle } from './preBattle.js'
 import { requestDavidAction } from './davidBotClient.js'
 import { chooseDanDecision } from './danBot.js'
 import { chooseFelixDecision } from './felixBot.js'
+import { snapshotFelixNc6Decision, completeFelixNc6Preparation, chooseFelixNc6Preparation } from './felixNc6Bot.js'
 import { getFelixPreparationOptions } from './felixNcBot.js'
 import { completeFastPreparation } from './fastPreparation.js'
 import { chooseFelixNcSecretDecision } from './felixNcSecretBot.js'
 import { chooseSvenTwentyLineup } from './svenTwentyCards.js'
 import { completeTestingBotPreparation } from './testingBotPreparation.js'
+import { isDraftMode, isHiddenDraftDiscard } from './draftMode.js'
+import { chooseHiddenDraftDiscardIds } from './draftAi.js'
 
 // Ids stay 'rules' / 'search' so saved settings keep working; the names are what players see.
 export const OPPONENT_AI_OPTIONS = [
@@ -26,7 +29,8 @@ export const TESTING_OPPONENT_AI_OPTIONS = [
   { ...OPPONENT_AI_OPTIONS.find(option => option.id === 'search'), id: 'sven-20cards' },
 ]
 
-export function getOpponentAiOptions(mode, tabletop = false, { secretCard = false } = {}) {
+export function getOpponentAiOptions(mode, tabletop = false, { secretCard = false, wildDeck = false } = {}) {
+  if (mode === '6draft') return OPPONENT_AI_OPTIONS.filter(option => ['rules', 'search', ...(tabletop === 'abilities-new-cards' && !wildDeck ? ['felix'] : [])].includes(option.id))
   if (mode === '20cards') return [OPPONENT_AI_OPTIONS[0], TESTING_OPPONENT_AI_OPTIONS[1]]
   if (secretCard) return [OPPONENT_AI_OPTIONS[0], ...(tabletop === 'abilities-new-cards' ? [TESTING_OPPONENT_AI_OPTIONS[0]] : [])]
   return OPPONENT_AI_OPTIONS.filter(option => tabletop !== 'monsters' || ['rules', 'search'].includes(option.id)).filter(option => tabletop !== 'abilities-new-cards' || !['dan', 'david'].includes(option.id)).filter(option => mode === 'five-hand-discard' ? !['dan', 'felix'].includes(option.id) : option.id !== 'david')
@@ -51,7 +55,9 @@ export function normalizeOpponentSettings(current, patch = {}) {
   if (selected === 'felix-nc-secret' && (!next.secretCard || next.tabletop !== 'abilities-new-cards')) selected = 'felix'
   if (selected === 'sven-20cards' && next.gameMode !== '20cards') selected = 'search'
   if (next.gameMode === '20cards' && isSearchOpponentAi(selected)) selected = 'sven-20cards'
-  if (next.secretCard && next.tabletop === 'abilities-new-cards' && selected === 'felix') selected = 'felix-nc-secret'
+  if (next.gameMode === '6draft' && selected === 'felix-nc-secret') selected = 'felix'
+  if (next.gameMode === '6draft' && !['local', 'rules', 'search', ...(next.tabletop === 'abilities-new-cards' && !next.wildDeck ? ['felix'] : [])].includes(selected)) selected = 'search'
+  if (next.gameMode === 'draft' && next.secretCard && next.tabletop === 'abilities-new-cards' && selected === 'felix') selected = 'felix-nc-secret'
   if ((next.secretCard || next.gameMode === '20cards') && selected !== 'local'
     && !getOpponentAiOptions(next.gameMode, next.tabletop, { secretCard: next.secretCard }).some(option => option.id === selected)) selected = 'rules'
   if (next.tabletop === 'abilities-new-cards' && ['dan', 'david'].includes(selected)) selected = 'shallow'
@@ -155,7 +161,8 @@ function snapshotGame(game) {
 }
 
 function rulesFallback(game) {
-  if (game.mode === 'draft') {
+  if (isHiddenDraftDiscard(game)) return { type: 'discard', selectedIds: chooseHiddenDraftDiscardIds(game.opponentHand) }
+  if (isDraftMode(game.mode)) {
     return { type: 'draft-pick', uid: pickBestCardForHand(game.draftRow, game.opponentHand)?.uid }
   }
   return { type: 'discard', selectedIds: chooseDiscardIds(game.opponentHand, { discardCount: 2 }) }
@@ -164,7 +171,7 @@ function rulesFallback(game) {
 // Search options for this decision: a profile entry is either one option set or { draft, discard }.
 export function getDecisionOptions(options, mode) {
   if (!options?.draft && !options?.discard) return options
-  return mode === 'draft' ? options.draft : options.discard
+  return isDraftMode(mode) ? options.draft : options.discard
 }
 
 function inlineSearch(game, profile) {
@@ -199,6 +206,10 @@ function requestFromWorker(game, message) {
  * to the player for retry; a slow David turn must never silently become Sven.
  */
 export function requestOpponentSearchAction(game, bot = 'search', options = {}) {
+  if (bot === 'felix' && game.mode === '6draft') {
+    const view = snapshotFelixNc6Decision(game)
+    return requestFromWorker(null, { game: view, side: 'opponent', bot }).catch(() => chooseFelixDecision(view).action)
+  }
   if (bot === 'felix-nc-secret') {
     return requestFromWorker(null, { game: snapshotSecretDraft(game), side: 'opponent', bot })
       .catch(() => new Promise((resolve, reject) => setTimeout(() => {
@@ -275,6 +286,12 @@ function inlinePreparation(preparation, game, profile) {
  * Always resolves: worker → short main-thread search → Rules AI preparation.
  */
 export function requestOpponentPreparation(preBattle, game, bot = 'search') {
+  if (bot === 'felix' && game.mode === '6draft') {
+    return completeFelixNc6Preparation(preBattle, game, 'opponent', state =>
+      requestFromWorker(null, { kind: 'felix-six-preparation', state })
+        .then(action => ({ action })).catch(() => chooseFelixNc6Preparation(state)))
+      .then(result => opponentPreparationPatch(result.preparation))
+  }
   if (bot === 'felix-nc-secret' || bot === 'sven-20cards') {
     const preparation = { ...snapshotPreparation(preBattle), playerHand: [], playerDiscard: preBattle.sharedDiscard ? preBattle.opponentDiscard : [],
       playerActivated: [], playerPendingDiscard: null, playerFinished: false }

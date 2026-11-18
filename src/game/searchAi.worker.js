@@ -2,6 +2,7 @@
 import { searchDecision, searchSidePreparation } from './searchAi.js'
 import { chooseDanDecision } from './danBot.js'
 import { chooseFelixDecision } from './felixBot.js'
+import { chooseFelixNc6Preparation } from './felixNc6Bot.js'
 import { completeFastPreparation } from './fastPreparation.js'
 import { chooseFelixNcSecretDecision } from './felixNcSecretBot.js'
 import { chooseSvenTwentyLineup } from './svenTwentyCards.js'
@@ -10,6 +11,11 @@ import { completeTestingBotPreparation } from './testingBotPreparation.js'
 self.onmessage = async (event) => {
   const { id, kind, game, side, options, preparation, bot } = event.data ?? {}
   try {
+    if (kind === 'felix-six-preparation') {
+      const result = chooseFelixNc6Preparation(event.data.state)
+      self.postMessage({ id, ok: true, action: result.action })
+      return
+    }
     if (kind === '20cards-lineup') {
       self.postMessage({ id, ok: true, action: chooseSvenTwentyLineup(event.data.pool, options) })
       return

@@ -12,6 +12,7 @@ export function getRulesText(rules = false) {
   const lines = [`Critters Robots Dragons — ${title}`, '',
     rules === 'monsters' ? 'Draft: pick 1 of 6, opponent picks 1, the rest are discarded. Six packs; six picks per player.' : 'Draft: pick 1 of 5, opponent picks 1, the rest are discarded. Five packs.',
     rules === 'monsters' ? 'Discard mode: six cards, two redraws back to six.' : 'Discard mode: five cards, two redraws.',
+    '6draft: six alternating draft packs, then hide both hands and set aside exactly one card each. Prepare with five cards. Set-aside cards stay hidden until battle resolution and cannot be Recycled.',
     'Use specials before battle, or press Battle to finish preparation.', '']
   if (rules) {
     const cost = main ? MAIN_ABILITY_SHIELD_COST : TABLETOP_SHIELD_COST

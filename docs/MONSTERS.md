@@ -34,6 +34,8 @@ Transformation changes card stats in the hand, preserving their identities and a
 
 Mixed products are neutral, do not count as Robot attacks, and are recomputed if Overwhelming grants a Dragon stat. Specialist counts Monster as a fourth possible sole faction. Re-enabled From Nothing retains its original two Critter/Robot/Dragon stats and gives no Monster stats.
 
+6draft is an additional hand-building option: six Monster packs, six picks per player, then a mandatory hidden discard each for five cards before preparation. The ordinary Monster Draft/Discard six-card rule above is unchanged. Set-aside cards cannot be Recycled and reveal only when battle resolution starts.
+
 ## Collection editor and recipes
 
 With Monsters and Testing selected, open **Collection → Edit deck counts**. Every NC/Monster definition has an inclusion toggle and an exact count from 0 to 30. From Nothing and Shield Ultimate are available here at zero by default; their normal NC visibility is unchanged. Cards excluded by the inherited Abilities rules (such as Shortcut and Chameleon) remain excluded.

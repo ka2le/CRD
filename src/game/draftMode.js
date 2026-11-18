@@ -2,6 +2,21 @@ import { startingHandSize, MONSTER_PACK_SIZE } from './monsters.js'
 import { buildShuffledDeck } from './cards.js'
 import { pickDraftCard } from './draftAi.js'
 
+export const isDraftMode = mode => mode === 'draft' || mode === '6draft'
+export const isHiddenDraftDiscard = game => game.mode === '6draft' && game.phase === 'draft-hidden-discard'
+export const draftPickCount = game => game.mode === '6draft' ? 6 : (game.handSize ?? 5)
+
+// These cards are set aside, never added to a discard or Recycle pool.
+export function applyHiddenDraftDiscard(game, side, uid) {
+  if (!isHiddenDraftDiscard(game) || !['player', 'opponent'].includes(side) || game[`${side}HiddenDiscard`]?.length) return game
+  const card = game[`${side}Hand`].find(card => card.uid === uid)
+  if (!card) return game
+  const next = { ...game, [`${side}Hand`]: game[`${side}Hand`].filter(card => card.uid !== uid),
+    [`${side}HiddenDiscard`]: [card], recentMoves: [] }
+  if (next.playerHiddenDiscard.length && next.opponentHiddenDiscard.length) next.phase = 'battle-ready'
+  return next
+}
+
 function drawCards(deck, count) {
   return {
     drawn: deck.slice(0, count),
@@ -33,10 +48,12 @@ function getRecentMoves(includeRecentMoves, moves) {
 }
 
 function finalizeIfDraftComplete(game) {
-  if (game.playerHand.length >= (game.handSize ?? 5) && game.opponentHand.length >= (game.handSize ?? 5)) {
+  if (game.playerHand.length >= draftPickCount(game) && game.opponentHand.length >= draftPickCount(game)) {
     return {
       ...game,
-      phase: 'battle-ready',
+      phase: game.mode === '6draft' ? 'draft-hidden-discard' : 'battle-ready',
+      ...(game.mode === '6draft' ? { playerDraftedHand: [...game.playerHand], opponentDraftedHand: [...game.opponentHand],
+        playerHiddenDiscard: [], opponentHiddenDiscard: [] } : {}),
       draftDiscard: [...game.draftDiscard, ...markCards(game.draftRow, 'discarded')],
       currentPicker: null,
       pendingOpponentPickUid: null,
@@ -59,9 +76,10 @@ export function createDraftGame({
   includeRecentMoves = true,
   openingDraftAnimation = 'idle',
   secretCard = false,
+  mode = 'draft',
 } = {}) {
   const deck = providedDeck ? [...providedDeck] : buildShuffledDeck({ wildDeck, tabletop, monsterDeck, seed, rng })
-  if (secretCard) {
+  if (secretCard && mode !== '6draft') {
     const playerSecretPack = markCards(deck.slice(0, 5), openingDraftAnimation)
     const opponentSecretPack = markCards(deck.slice(5, 10), openingDraftAnimation)
     return { mode: 'draft', secretCard: true, secretOpening: true, secretDiscardVersion: 1, handSize: startingHandSize(tabletop),
@@ -72,7 +90,7 @@ export function createDraftGame({
       playerHand: [], opponentHand: [], draftDiscard: [], picksThisPack: 0, packNumber: 1,
       pendingOpponentPickUid: null, recentMoves: [] }
   }
-  const handSize = startingHandSize(tabletop)
+  const handSize = mode === '6draft' ? 5 : startingHandSize(tabletop)
   const packSize = tabletop === 'monsters' ? MONSTER_PACK_SIZE : 5
   const openingDraw = drawCards(deck, packSize)
   const openingRow = markCards(openingDraw.drawn, openingDraftAnimation)
@@ -90,8 +108,8 @@ export function createDraftGame({
   }))
 
   return {
-    mode: 'draft',
-    ...(tabletop === 'monsters' ? { handSize, packSize } : {}),
+    mode,
+    ...(tabletop === 'monsters' || mode === '6draft' ? { handSize, packSize } : {}),
     phase: firstPicker === 'opponent' ? 'draft-opponent-thinking' : 'draft-player-pick',
     deck: openingDraw.rest,
     draftRow: openingRow,
@@ -115,7 +133,7 @@ export function applyDraftPick(game, pickedCardUid, options = {}) {
 
   if (game.phase !== 'draft-player-pick') return game
   if (game.currentPicker !== 'player') return game
-  if (game.playerHand.length >= (game.handSize ?? 5)) return game
+  if (game.playerHand.length >= draftPickCount(game)) return game
 
   const pickedCard = game.draftRow.find((card) => card.uid === pickedCardUid)
   if (!pickedCard) return game
@@ -168,7 +186,7 @@ export function resolveOpponentDraftPick(game, options = {}) {
 
   if (game.phase !== 'draft-opponent-thinking') return game
   if (game.currentPicker !== 'opponent') return game
-  if (game.opponentHand.length >= (game.handSize ?? 5)) return game
+  if (game.opponentHand.length >= draftPickCount(game)) return game
 
   const opponentPick = game.draftRow.find((card) => card.uid === game.pendingOpponentPickUid)
   if (!opponentPick) {

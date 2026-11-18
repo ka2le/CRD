@@ -1,9 +1,14 @@
-The Opponent dropdown includes **2 players · same screen** in Draft and Discard.
+The Opponent dropdown includes **2 players · same screen** in Draft, 6draft and Discard.
 Tap either player's name to rename them; names persist across games.
 
 Draft keeps P1's name and hand at the bottom and P2's at the top throughout,
 with a brief, non-blocking notice for the active player. Card previews use that
 player's hand. Play continues immediately, without a confirmation.
+
+In 6draft, both players privately set aside one card after the sixth pack, then
+prepare with five. Those cards stay outside the discard pile and cannot be
+recycled. The separate **Set aside** pile reveals them when battle resolution begins.
+
 Discard and preparation keep
 the table visible with both hands face down during a handoff; tap the eye beside
 the active player's name to reveal their hand. The other hand and its statistics
@@ -42,9 +47,11 @@ storage must remain available.
 
 Verify with `npm run build`, `npm run lint`, and
 `node --test scripts/pwa-tests.mjs scripts/local-multiplayer-tests.mjs scripts/play-menu-tests.mjs scripts/room-tests.mjs`.
-For production-browser checks, serve a Pages build (`GITHUB_PAGES=true`) with
-`vite preview --host 127.0.0.1 --port 4175` using the same environment variable,
-then run `node scripts/offline-local-browser-smoke.mjs` with Playwright installed.
+For production-browser checks, serve a Pages build (`GITHUB_PAGES=true`) at the
+shared **http://127.0.0.1:5173/** address with `npm run preview` using the same
+environment variable. Replace the verified CRD dev server for this check and
+restore dev afterward. Run `node scripts/offline-local-browser-smoke.mjs` with
+Playwright installed.
 `CRD_PLAYWRIGHT_MODULE`, `CRD_BROWSER_EXECUTABLE` and `CRD_URL` can override the
 tooling module, browser executable and preview URL. The smoke test clears the
 HTTP cache, disables networking, opens a new page, starts an unused AI worker,

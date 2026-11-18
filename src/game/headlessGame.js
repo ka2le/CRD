@@ -1,6 +1,8 @@
+import { isDraftMode, isHiddenDraftDiscard } from './draftMode.js'
+import { chooseHiddenDraftDiscardIds } from './draftAi.js'
 import { startingHandSize, MONSTER_PACK_SIZE } from './monsters.js'
 import {
-  createDraftGame, applyDraftPick, resolveOpponentDraftPick, commitDraftDiscard, revealNextDraftPack,
+  applyHiddenDraftDiscard, createDraftGame, applyDraftPick, resolveOpponentDraftPick, commitDraftDiscard, revealNextDraftPack,
 } from './draftMode.js'
 import { createFiveHandDiscardGame, applyDiscardPhase, applyOpponentDiscardPhase } from './fiveHandDiscard.js'
 import { getCoreCards, getExpandedCoreDeck } from './cards.js'
@@ -55,7 +57,8 @@ export function getHeadlessSpec(config = {}) {
   return {
     protocolVersion: HEADLESS_PROTOCOL_VERSION,
     rulesVersion: rulesVersion(config),
-    ...(config.tabletop === 'monsters' ? { handSize: startingHandSize(config.tabletop), packSize: MONSTER_PACK_SIZE } : {}),
+    ...(config.mode === '6draft' ? { handSize: 5, draftPicks: 6, packSize: config.tabletop === 'monsters' ? MONSTER_PACK_SIZE : 5 }
+      : config.tabletop === 'monsters' ? { handSize: startingHandSize(config.tabletop), packSize: MONSTER_PACK_SIZE } : {}),
     cardTypes: definitions.map((card) => ({
       id: card.id, type: card.type, stats: [...(card.stats ?? [])], effect: { ...(card.effect ?? {}) },
       cd: card.cd ?? null, copies: card.copies,
@@ -80,7 +83,10 @@ function discardActions(hand) {
 export function getLegalActions(state) {
   if (state.terminal) return []
   if (state.preparation) return getPreparationActions(state.preparation, state.actor)
-  if (state.game.mode === 'draft') {
+  if (isHiddenDraftDiscard(state.game)) return state.game[`${state.actor}Hand`].map((card, index) => ({
+    type: 'discard', mask: 2 ** index, selectedIds: [card.uid],
+  }))
+  if (isDraftMode(state.game.mode)) {
     return state.game.draftRow.map((card, index) => ({
       type: 'draft-pick', uid: card.uid, index, card: summarizeCard(card),
     }))
@@ -123,7 +129,8 @@ function resolveAction(state, action) {
 }
 
 function actorForGame(game) {
-  if (game.mode === 'draft') return game.currentPicker
+  if (isHiddenDraftDiscard(game)) return game.playerHiddenDiscard.length ? 'opponent' : 'player'
+  if (isDraftMode(game.mode)) return game.currentPicker
   return game.phase.startsWith('opponent-discard') ? 'opponent' : 'player'
 }
 
@@ -134,7 +141,7 @@ function revealEvent(game) {
 // Only automatic bookkeeping is advanced here. Decisions always pass through legal actions.
 function settle(state) {
   let { game, history, preparation } = state
-  if (!preparation && game.mode === 'draft') {
+  if (!preparation && isDraftMode(game.mode)) {
     if (game.phase === 'draft-pack-clearing') {
       history = [...history, { scope: 'public', type: 'draft-discard', cards: game.draftRow.map(summarizeCard) }]
       game = commitDraftDiscard(game, { includeRecentMoves: false })
@@ -177,7 +184,10 @@ function applyDecision(state, action) {
     const target = (action.cardId === 'recycle_card' ? before[`${side}Discard`] : before[`${side}Hand`])
       .find((card) => card.uid === action.targetUid)
     if (target) event.target = summarizeCard(target)
-  } else if (state.game.mode === 'draft') {
+  } else if (isHiddenDraftDiscard(state.game)) {
+    next.game = applyHiddenDraftDiscard(state.game, side, action.selectedIds[0])
+    event.cards = state.game[`${side}Hand`].filter(card => action.selectedIds.includes(card.uid)).map(summarizeCard)
+  } else if (isDraftMode(state.game.mode)) {
     const card = state.game.draftRow.find((entry) => entry.uid === action.uid)
     event.scope = 'public'
     event.card = summarizeCard(card)
@@ -203,7 +213,8 @@ function applyDecision(state, action) {
 export function chooseHeadlessBaselineAction(state) {
   if (state.preparation) return pickPreparationAction(state.preparation, state.actor)
   const hand = state.game[`${state.actor}Hand`]
-  if (state.game.mode === 'draft') {
+  if (isHiddenDraftDiscard(state.game)) return { type: 'discard', selectedIds: chooseHiddenDraftDiscardIds(hand) }
+  if (isDraftMode(state.game.mode)) {
     const index = typeof state.config.opponentStrategy === 'function'
       ? state.config.opponentStrategy(state.game.draftRow, { hand, observation: encodeObservation(state, state.actor) })
       : null
@@ -233,7 +244,7 @@ export function createHeadlessGame(config = {}) {
   if (!config || typeof config !== 'object' || Array.isArray(config)) throw new Error('config must be an object')
   const mode = config.mode ?? 'five-hand-discard'
   const control = config.control ?? 'player'
-  if (!['five-hand-discard', 'draft'].includes(mode)) throw new Error(`Unknown mode ${mode}`)
+  if (!['five-hand-discard', 'draft', '6draft'].includes(mode)) throw new Error(`Unknown mode ${mode}`)
   if (![...SIDES, 'both'].includes(control)) throw new Error(`Unknown control ${control}`)
   if (config.firstPicker !== undefined && !SIDES.includes(config.firstPicker)) throw new Error('Invalid firstPicker')
   if (config.seed !== undefined && (!Number.isSafeInteger(config.seed) || config.seed < 0)) throw new Error('seed must be a nonnegative integer')
@@ -247,12 +258,12 @@ export function createHeadlessGame(config = {}) {
     }
   }
   const deck = configuredDeck(config)
-  if (deck && deck.length < startingHandSize(config.tabletop) * (mode === 'draft' ? (config.tabletop === 'monsters' ? MONSTER_PACK_SIZE : 5) : 2)) throw new Error('Injected deck too small for initial hand building')
+  if (deck && deck.length < (mode === '6draft' ? 6 : startingHandSize(config.tabletop)) * (isDraftMode(mode) ? (config.tabletop === 'monsters' ? MONSTER_PACK_SIZE : 5) : 2)) throw new Error('Injected deck too small for initial hand building')
   const options = { ...config, wildDeck: config.wildDeck ?? true, deck: deck ?? undefined }
-  const game = mode === 'draft'
+  const game = isDraftMode(mode)
     ? createDraftGame({ ...options, includeRecentMoves: false, openingDraftAnimation: 'idle' })
     : createFiveHandDiscardGame(options)
-  const history = mode === 'draft' ? [revealEvent(game)] : SIDES.map((side) => ({
+  const history = isDraftMode(mode) ? [revealEvent(game)] : SIDES.map((side) => ({
     scope: config.revealOpponent ? 'public' : side, side,
     type: 'opening-hand', cards: game[`${side}Hand`].map(summarizeCard),
   }))
@@ -283,9 +294,10 @@ export function encodeObservation(state, side = state.config.control === 'both' 
   const hand = preparation ? preparation[`${side}Hand`] : game[`${side}Hand`]
   // Private enemy preparation is never exposed to the other seat before the result.
   const knownEnemy = preparation && state.terminal ? preparation[`${enemy}Hand`] : game[`${enemy}Hand`]
-  const visible = state.terminal || game.mode === 'draft' || Boolean(state.config.revealOpponent)
+  const privateSixDraft = game.mode === '6draft' && (isHiddenDraftDiscard(game) || Boolean(preparation))
+  const visible = state.terminal || (!privateSixDraft && (isDraftMode(game.mode) || Boolean(state.config.revealOpponent)))
   const opponentHand = visible ? knownEnemy : []
-  const publicDiscard = game.mode === 'draft' ? game.draftDiscard : game.playerDiscards
+  const publicDiscard = isDraftMode(game.mode) ? game.draftDiscard : game.playerDiscards
   const discard = preparation ? preparation[`${side}Discard`] : (game[`${side}Discards`] ?? publicDiscard ?? [])
   return {
     mode: game.mode,
@@ -300,8 +312,10 @@ export function encodeObservation(state, side = state.config.control === 'both' 
     playerHand: hand.map(summarizeCard),
     pendingDiscard: preparation?.[`${side}PendingDiscard`] ?? null,
     activatedUids: [...(preparation?.[`${side}Activated`] ?? [])],
-    opponentHandCount: knownEnemy.length,
+    opponentHandCount: privateSixDraft && !state.terminal ? 5 : knownEnemy.length,
     opponentHand: opponentHand.map(summarizeCard),
+    ...(game.mode === '6draft' ? { opponentDraftedHand: (game[`${enemy}DraftedHand`] ?? []).map(summarizeCard),
+      hiddenDiscard: (state.terminal ? [...game.playerHiddenDiscard, ...game.opponentHiddenDiscard] : game[`${side}HiddenDiscard`] ?? []).map(summarizeCard) } : {}),
     opponentHandIsCurrent: !preparation || state.terminal,
     draftRow: (game.draftRow ?? []).map(summarizeCard),
     packNumber: game.packNumber ?? 0,

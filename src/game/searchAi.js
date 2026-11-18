@@ -1,3 +1,5 @@
+import { isDraftMode, isHiddenDraftDiscard, draftPickCount } from './draftMode.js'
+import { chooseHiddenDraftDiscardIds } from './draftAi.js'
 // "Search AI (Medium)": a browser-side version of the offline rollout teacher
 // (see rolloutSearch.js / docs/AI_SEARCH.md, docs/AI_PREP_V5.md). For every legal
 // choice it samples worlds consistent with what the searching seat can actually see,
@@ -13,7 +15,6 @@
 // other seat's private hand or private preparation. Hidden cards are re-dealt
 // uniformly at random from everything it has not seen.
 import { createSeededRng, getCoreCards, shuffle } from './cards.js'
-import { startingHandSize } from './monsters.js'
 import { getLegalActions, stepHeadlessGame } from './headlessGame.js'
 import { chooseDiscardIds, pickBestCardForHand } from './cardEvaluator.js'
 import { pickPreparationAction } from './preBattle.js'
@@ -63,7 +64,7 @@ function makeState(game, side) {
 // Draft: both hands, the row and the discard pile are public. Only the deck order is unknown.
 function sampleDraftWorld(game, side, rng) {
   return makeState({
-    mode: 'draft',
+    mode: game.mode,
     ...(game.handSize ? { handSize: game.handSize, packSize: game.packSize } : {}),
     phase: side === 'opponent' ? 'draft-opponent-thinking' : 'draft-player-pick',
     deck: shuffleHidden(game.deck, rng),
@@ -77,6 +78,18 @@ function sampleDraftWorld(game, side, rng) {
     picksThisPack: game.picksThisPack,
     packNumber: game.packNumber,
     recentMoves: [],
+  }, side)
+}
+
+function sampleHiddenDraftWorld(game, side, rng) {
+  const enemy = otherSide(side)
+  // All six public picks remain possible. Never inspect the rival's locked choice.
+  const candidates = plainCards(game[`${enemy}DraftedHand`])
+  const shuffled = shuffle([...candidates], { rng })
+  return makeState({ ...game, deck: shuffleHidden(game.deck, rng),
+    [`${enemy}Hand`]: shuffled, [`${enemy}HiddenDiscard`]: [],
+    [`${side}Hand`]: plainCards(game[`${side}Hand`]),
+    [`${side}HiddenDiscard`]: [], recentMoves: [],
   }, side)
 }
 
@@ -105,7 +118,8 @@ function sampleDiscardWorld(game, side, rng) {
 function rulesAction(state) {
   if (state.preparation) return pickPreparationAction(state.preparation, state.actor)
   const hand = state.game[`${state.actor}Hand`]
-  if (state.game.mode === 'draft') {
+  if (isHiddenDraftDiscard(state.game)) return { type: 'discard', selectedIds: chooseHiddenDraftDiscardIds(hand) }
+  if (isDraftMode(state.game.mode)) {
     return { type: 'draft-pick', uid: pickBestCardForHand(state.game.draftRow, hand)?.uid }
   }
   return { type: 'discard', selectedIds: chooseDiscardIds(hand, { discardCount: 2 }) }
@@ -183,9 +197,10 @@ function playOut(state, side, rollout = 'prep-lookahead', maxDecisions = 400) {
 
 export function isSearchDecision(game, side = 'opponent') {
   if (!game) return false
-  if (game.mode === 'draft') {
+  if (isHiddenDraftDiscard(game)) return !game[`${side}HiddenDiscard`].length
+  if (isDraftMode(game.mode)) {
     return game.currentPicker === side && game.phase === `draft-${side === 'player' ? 'player-pick' : 'opponent-thinking'}`
-      && game.draftRow.length > 0 && game[`${side}Hand`].length < (game.handSize ?? startingHandSize())
+      && game.draftRow.length > 0 && game[`${side}Hand`].length < draftPickCount(game)
   }
   if (game.mode === 'five-hand-discard') return game.phase.startsWith(`${side}-discard`)
   return false
@@ -198,7 +213,7 @@ export function isSearchDecision(game, side = 'opponent') {
 export function searchDecision(game, side = 'opponent', options = {}) {
   const { minSamples, maxSamples, timeBudgetMs, seed, rollout, margin } = { ...DEFAULT_OPTIONS, ...options }
   if (!isSearchDecision(game, side)) throw new Error('Search AI called outside a draft/discard decision')
-  const sampleWorld = game.mode === 'draft' ? sampleDraftWorld : sampleDiscardWorld
+  const sampleWorld = isHiddenDraftDiscard(game) ? sampleHiddenDraftWorld : isDraftMode(game.mode) ? sampleDraftWorld : sampleDiscardWorld
   const rng = createSeededRng(Number.isSafeInteger(seed) ? seed : Math.floor(Math.random() * 0x7fffffff))
   const started = now()
 
@@ -273,12 +288,14 @@ const isCopiedCard = (card) => Boolean(card.isCopiedCard) || card.uid.includes('
 // inside each rollout. Unseen cards are sorted by UID, so no real deck order can leak.
 export function preparationView(preparation, game, side = 'opponent') {
   const enemy = otherSide(side)
-  const enemyPublicHand = game.mode === 'draft' ? plainCards(game[`${enemy}Hand`]) : null
+  const enemyDraftedHand = game.mode === '6draft' ? plainCards(game[`${enemy}DraftedHand`]) : null
+  const enemyPublicHand = isDraftMode(game.mode) && game.mode !== '6draft' ? plainCards(game[`${enemy}Hand`]) : null
   const enemyPublicPile = plainCards(preparation.sharedDiscard ? preparation[`${side}Discard`]
-    : game.mode === 'draft' ? (game.draftDiscard ?? []) : (game[`${enemy}Discards`] ?? game.draftDiscard ?? []))
+    : isDraftMode(game.mode) ? (game.draftDiscard ?? []) : (game[`${enemy}Discards`] ?? game.draftDiscard ?? []))
   const known = new Set([
     ...preparation[`${side}Hand`], ...preparation[`${side}Discard`],
     ...(enemyPublicHand ?? []), ...enemyPublicPile,
+    ...(enemyDraftedHand ?? []), ...(game[`${side}HiddenDiscard`] ?? []),
   ].map((card) => card.uid))
   const tabletop = normalizeTabletopRules([...preparation.playerHand, ...preparation.opponentHand, ...preparation.deck]
     .find((card) => card.tabletop)?.tabletop)
@@ -303,6 +320,7 @@ export function preparationView(preparation, game, side = 'opponent') {
     ownActivated: [...(preparation[`${side}Activated`] ?? [])],
     ownPendingDiscard: preparation[`${side}PendingDiscard`] ?? null,
     enemyPublicHand,
+    ...(enemyDraftedHand ? { enemyDraftedHand } : {}),
     enemyHandCount: game[`${enemy}Hand`].length,
     enemyPublicPile,
     unseen: [...unseen.values()].sort(byUid),
@@ -313,7 +331,8 @@ function samplePreparationWorld(view, rng) {
   const { side } = view
   const enemy = otherSide(side)
   const unseen = shuffle([...view.unseen], { rng })
-  const enemyHand = view.enemyPublicHand ?? unseen.splice(0, view.enemyHandCount)
+  const enemyHand = view.enemyDraftedHand ? shuffle([...view.enemyDraftedHand], { rng }).slice(0, 5)
+    : view.enemyPublicHand ?? unseen.splice(0, view.enemyHandCount)
   const game = {
     mode: view.mode, phase: 'battle-ready', deck: unseen, recentMoves: [],
     [`${side}Hand`]: view.ownHand, [`${enemy}Hand`]: enemyHand,

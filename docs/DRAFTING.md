@@ -2,7 +2,7 @@
 
 Testing also offers **Secret Card**, a private opening-choice variant of Draft, and **20Cards**, three locked five-card lanes chosen from twenty private cards. See [TESTING_HAND_MODES.md](TESTING_HAND_MODES.md) for their rules, privacy and match flow.
 
-Both modes are implemented. Reviewed 2026-10-18 against the mode modules and `useGameSession.js`.
+Draft, 6draft and Discard are implemented. See the mode modules and `useGameSession.js`.
 
 ## Draft
 
@@ -31,6 +31,16 @@ Source-review exceptions:
 
 These are recorded issues, not intended rule amendments.
 
+## 6draft
+
+Available beside Draft and Discard without Testing. Use the selected card pool, pack size and battle rules. Six packs alternate their first picker exactly as ordinary Draft, for six public picks each. Monsters keeps its six-card pack; every 6draft setup ends with five cards before preparation.
+
+After the twelfth pick, hide the hands. Each player must privately set aside exactly one card; no draws or preparation are allowed until both lock. The card stays in its owner's hidden set-aside zone, outside every discard pile and Recycle target list. The six public picks remain known, so any five may be retained. Prepare privately as usual; specials may then increase or change the five-card hand. Battle resolution reveals the hands and the separate Set aside pile. Reloads preserve the locks and privacy.
+
+RolfBot and SvenBot support picks, the mandatory discard and preparation. Sven samples possible five-card opposing hands from the six known picks, without using the real opposing discard or private preparation. Felix is also available with the Regular Abilities + New Cards deck and stays selected when switching between supported Draft and 6draft setups. Same-screen play uses the existing reveal handoffs. Online seats can lock either discard first.
+
+`draft-hidden-discard` is the phase between the final public pick and `battle-ready`. `applyHiddenDraftDiscard(game, side, uid)` removes exactly one card per seat and opens prep only after both commit. `playerDraftedHand` / `opponentDraftedHand` retain public pick knowledge; `playerHiddenDiscard` / `opponentHiddenDiscard` retain the private excluded cards.
+
 ## 5 Hand Discard
 
 `createFiveHandDiscardGame` deals five to the human, then five to the AI from the shared deck. Two `applyDiscardPhase` submissions lead through `player-discard-1`, `player-discard-2`, and `battle-ready`.
@@ -41,4 +51,4 @@ The human selects any subset, including empty, to replace. Refill preserves slot
 
 ## Shared boundary
 
-Both modes target five cards before preparation. Supported specials can then change hands and deck before shared combat. Normal/Wild Deck is a pool-copy setting, not a third mode or a deckbuilding interface. See `CURRENT_STATE.md` for findings and `RULES.md` for shared rules.
+Draft, 6draft and Discard target five cards before preparation; ordinary Monsters Draft/Discard uses six, while 6draft always uses five. Supported specials can then change hands and deck before shared combat. Normal/Wild Deck is a pool-copy setting, not a third mode or a deckbuilding interface. See `CURRENT_STATE.md` for findings and `RULES.md` for shared rules.

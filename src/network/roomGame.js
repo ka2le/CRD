@@ -1,6 +1,6 @@
 import { normalizePlaySettings, sessionReducer } from '../hooks/useGameSession.js'
 import { applyDiscardPhase, applyOpponentDiscardPhase } from '../game/fiveHandDiscard.js'
-import { resolveOpponentDraftPick, commitDraftDiscard, revealNextDraftPack } from '../game/draftMode.js'
+import { applyHiddenDraftDiscard, isHiddenDraftDiscard, resolveOpponentDraftPick, commitDraftDiscard, revealNextDraftPack } from '../game/draftMode.js'
 import { createPreparationState } from '../game/preparationState.js'
 import { getTabletopChoice, resolveTabletopBattle } from '../game/tabletop.js'
 import { simulateBattle } from '../game/engine.js'
@@ -80,6 +80,18 @@ export function applyRoomAction(state, seat, action) {
   if (!['host', 'guest'].includes(seat)) throw new Error('Viewers cannot play')
   if (!validAction(action)) throw new Error('Invalid game action')
   if (['TOGGLE_SELECTED', 'SUBMIT_DISCARD'].includes(action.type)) {
+    if (isHiddenDraftDiscard(state.game)) {
+      const side = seat === 'host' ? 'player' : 'opponent'
+      const key = seat === 'host' ? 'selectedIds' : 'otherSelectedIds'
+      if (state.game[`${side}HiddenDiscard`].length) throw new Error('Your discard is already submitted')
+      if (action.type === 'TOGGLE_SELECTED') {
+        if (!state.game[`${side}Hand`].some(card => card.uid === action.uid)) throw new Error('Choose a card from your hand')
+        return { ...state, [key]: state[key]?.includes(action.uid) ? [] : [action.uid] }
+      }
+      if (state[key]?.length !== 1) throw new Error('Discard exactly one card')
+      const game = applyHiddenDraftDiscard(state.game, side, state[key][0])
+      return settleSession({ ...state, game, [key]: [], preBattle: createPreparationState(game) })
+    }
     if (state.game.mode !== 'five-hand-discard' || !/^(player|opponent)-discard/.test(state.game.phase)) throw new Error('Discard is not available')
     // Older saved games may already have refilled the host's half of this pass.
     const ready = { host: state.game.phase.startsWith('opponent-discard'), ...state.discardReady }

@@ -4,7 +4,7 @@ import { GameIcon, SvgIcon } from '../ui/GameIcon'
 import { useElementSize } from '../../hooks/useFitLayout'
 
 // Browse a pile, or pick one card from it (recycle).
-export default function PileSheet({ open, cards = [], onClose, onPick = null, contextHand = [] }) {
+export default function PileSheet({ open, cards = [], onClose, onPick = null, contextHand = [], title = null }) {
   const [measureRef, size] = useElementSize()
   const columns = Math.max(3, Math.floor((size.width + 8) / 128))
   const cardWidth = size.width ? Math.floor((size.width - ((columns - 1) * 8)) / columns) : 100
@@ -18,7 +18,7 @@ export default function PileSheet({ open, cards = [], onClose, onPick = null, co
       title={(
         <>
           {picking ? <GameIcon name="recycle" style={{ color: 'var(--special)' }} /> : <SvgIcon name="trash" />}
-          <span>{cards.length}</span>
+          <span>{title ? `${title} · ` : ''}{cards.length}</span>
         </>
       )}
     >

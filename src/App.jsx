@@ -1,3 +1,4 @@
+import { isDraftMode, isHiddenDraftDiscard, draftPickCount } from './game/draftMode.js'
 import { useMemo, useState } from 'react'
 import { CardMotionProvider, useCardMotion } from './components/animation/CardMotionContext'
 import ImagePreloader from './components/card/ImagePreloader'
@@ -159,15 +160,20 @@ function AppContent({ onBossBattle }) {
   const [helpOpen, setHelpOpen] = useState(false)
   const [scoreOpen, setScoreOpen] = useState(false)
   const [pileOpen, setPileOpen] = useState(false)
+  const [setAsideOpen, setSetAsideOpen] = useState(false)
   // Deck browser: 'collection' (every card in the game) or 'test' (testing: the live deck/zones).
   const [deckView, setDeckView] = useState(null)
 
-  const testDeckAvailable = Boolean(settings.testing && !battleStarted && !session.localMultiplayer && game.mode !== '20cards' && !game.secretCard)
+  const testDeckAvailable = Boolean(settings.testing && !battleStarted && !session.localMultiplayer && game.mode !== '6draft' && game.mode !== '20cards' && !game.secretCard)
   const lineupPhase = game.mode === '20cards' && game.phase === 'lineup'
+  const hiddenDraftDiscard = isHiddenDraftDiscard(game)
+  const sixDraftPrivate = game.mode === '6draft' && (hiddenDraftDiscard || game.phase === 'battle-ready') && !battleStarted
+  const setAsideCards = battleStarted && game.mode === '6draft' ? [...game.playerHiddenDiscard, ...game.opponentHiddenDiscard] : []
 
   const layout = battleStarted
     ? 'battle'
-    : lineupPhase ? 'lineup' : (game.mode === 'draft' && game.phase !== 'battle-ready' ? 'draft' : 'focus')
+    : lineupPhase ? 'lineup' : (isDraftMode(game.mode) && !hiddenDraftDiscard && game.phase !== 'battle-ready' ? 'draft' : 'focus')
+  const handSlots = layout === 'draft' ? draftPickCount(game) : (game.handSize ?? 5)
 
   const playerHand = battleStarted ? (battlePlayback?.playerHand ?? resolvedPlayerHand) : resolvedPlayerHand
   const opponentHand = battleStarted ? (battlePlayback?.opponentHand ?? resolvedOpponentHand) : resolvedOpponentHand
@@ -178,10 +184,11 @@ function AppContent({ onBossBattle }) {
   const opponentAverage = getHandAverageDamage(opponentVisibleHand)
 
   const privateLocalTurn = session.localMultiplayer && !battleStarted && !session.localPlay.showAll
-    && (game.mode === 'five-hand-discard' || game.mode === '20cards' || game.secretOpening || game.phase === 'battle-ready')
+    && (sixDraftPrivate || game.mode === 'five-hand-discard' || game.mode === '20cards' || game.secretOpening || game.phase === 'battle-ready')
   const localHandoff = Boolean(session.localPlay?.handoff)
-  const opponentHidden = localHandoff || privateLocalTurn || (!battleStarted && (game.mode === '20cards' || (game.mode === 'five-hand-discard' && !settings.showOpponentCards)))
-  const opponentThinking = (game.mode === 'draft' && game.phase === 'draft-opponent-thinking') || opponentDiscarding
+  const opponentHidden = localHandoff || privateLocalTurn || (sixDraftPrivate && !(session.localMultiplayer && session.localPlay.showAll))
+    || (!battleStarted && (game.mode === '20cards' || (game.mode === 'five-hand-discard' && !settings.showOpponentCards)))
+  const opponentThinking = (isDraftMode(game.mode) && game.phase === 'draft-opponent-thinking') || opponentDiscarding
     || opponentPreparing
   const playerTurn = !session.onlineBlocked && (layout === 'draft' ? canPickDraftCard : layout === 'focus')
   const battleFinished = battleStarted && showBattleResult && !tabletopCounting
@@ -234,7 +241,7 @@ function AppContent({ onBossBattle }) {
   const topIdentity = <PlayerIdentity name={opponentName} wins={winsFor(rivalMember)}
     editable={session.localMultiplayer} label="Player name" onRename={(name) => session.renameLocalPlayer(rivalLocalSeat, name)}
     connected={!session.online || (room.connection === 'connected' && Boolean(rivalMember?.connected))} />
-  const dealLeadMs = game.mode === 'draft' ? (game.packNumber === 1 ? SHUFFLE_LEAD_MS : 0) : SHUFFLE_LEAD_MS
+  const dealLeadMs = isDraftMode(game.mode) ? (game.packNumber === 1 ? SHUFFLE_LEAD_MS : 0) : SHUFFLE_LEAD_MS
 
   // Row hands are capped relative to the table so the centre keeps the space.
   const tableHeight = tableSize.height || 700
@@ -308,9 +315,9 @@ function AppContent({ onBossBattle }) {
     } else if (discardPhase) {
       const count = selectedIds.length
       primaryAction = (
-        <button type="button" className="ui-button ui-button--primary table__action" disabled={session.onlineBlocked} onClick={handlePrimaryAction}>
+        <button type="button" className="ui-button ui-button--primary table__action" disabled={session.onlineBlocked || (hiddenDraftDiscard && count !== 1)} onClick={handlePrimaryAction}>
           {count > 0 ? <GameIcon name="redraw" /> : <SvgIcon name="check" />}
-          <span>{session.onlineDiscardSubmitted ? 'Waiting' : count > 0 ? `Redraw ${count}` : 'Keep'}</span>
+          <span>{session.onlineDiscardSubmitted ? 'Waiting' : hiddenDraftDiscard ? 'Discard 1' : count > 0 ? `Redraw ${count}` : 'Keep'}</span>
         </button>
       )
     } else {
@@ -338,8 +345,8 @@ function AppContent({ onBossBattle }) {
     )
   }
 
-  const phasePips = game.mode === 'draft'
-    ? <Pips total={game.handSize ?? 5} current={game.phase === 'battle-ready' ? (game.handSize ?? 5) + 1 : game.packNumber} done={game.phase === 'battle-ready' ? (game.handSize ?? 5) : game.packNumber - 1} />
+  const phasePips = isDraftMode(game.mode)
+    ? <Pips total={draftPickCount(game)} current={game.phase === 'battle-ready' || hiddenDraftDiscard ? draftPickCount(game) + 1 : game.packNumber} done={game.phase === 'battle-ready' || hiddenDraftDiscard ? draftPickCount(game) : game.packNumber - 1} />
     : game.mode === '20cards' ? <span className="match-score">Round {game.roundIndex + 1} · {matchScore.player} – {matchScore.opponent}</span>
     : <Pips total={2} current={discardPhase ? game.playerDiscardsUsed + 1 : (opponentDiscarding ? game.playerDiscardsUsed : 3)} done={opponentDiscarding ? game.playerDiscardsUsed - 1 : game.playerDiscardsUsed} />
 
@@ -374,7 +381,7 @@ function AppContent({ onBossBattle }) {
   }
   const factionPickerCard = playerHand.find((card) => card.uid === tabletopTypeCardUid)
   const playerHandProps = {
-    slots: game.handSize ?? 5,
+    slots: handSlots,
     hand: playerHand,
     hidden: localHandoff,
     hiddenIds: !battleStarted && game.secretCard && session.localMultiplayer && !game.secretOpening && localSeat === 'guest' ? playerHand.filter(card => card.secret).map(card => card.uid) : [],
@@ -465,7 +472,7 @@ function AppContent({ onBossBattle }) {
 
         <div className="table__zone table__zone--opponent">
           <HandArea
-            slots={game.handSize ?? 5}
+            slots={handSlots}
             key={`opp-${layout === 'battle' ? 'grid' : 'row'}`}
             {...opponentHandProps}
             layout={layout === 'battle' ? 'grid' : 'row'}
@@ -540,7 +547,7 @@ function AppContent({ onBossBattle }) {
         {layout !== 'focus' && layout !== 'lineup' ? (
           <div className="table__zone table__zone--player">
             <HandArea
-              slots={game.handSize ?? 5}
+              slots={handSlots}
               key={`player-${layout}`}
               {...playerHandProps}
               layout={layout === 'battle' ? 'grid' : 'row'}
@@ -569,6 +576,9 @@ function AppContent({ onBossBattle }) {
         >
           <EmoteBubble emote={emoteSide === 'player' ? emote : null} side="player" />
           {layout !== 'battle' ? piles : null}
+          {setAsideCards.length ? <Pile kind="discard" sections={[]} count={setAsideCards.length}
+            topCard={setAsideCards[setAsideCards.length - 1]} label="Set aside" title="Set aside"
+            onOpen={() => setSetAsideOpen(true)} /> : null}
           {primaryAction}
           {battleFinished && session.replayPreparation ? (
             <button type="button" className="ui-button ui-button--icon table__action" onClick={session.replayPreparation}
@@ -620,6 +630,8 @@ function AppContent({ onBossBattle }) {
         onClose={cancelPlayerRecyclePick}
         contextHand={playerHand}
       />
+      <PileSheet open={setAsideOpen && battleStarted && game.mode === '6draft'} cards={setAsideCards}
+        title="Set aside" onClose={() => setSetAsideOpen(false)} contextHand={playerHand} />
 
       <TestDeckSheet
         open={testDeckAvailable && deckView === 'test'}
