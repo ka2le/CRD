@@ -112,3 +112,46 @@
 .monster-editor__recipe textarea { width: 100%; resize: vertical; margin: 10px 0; font: 12px var(--mono); color: var(--t0); background: var(--surface-lo); border: 1px solid var(--b1); border-radius: 5px; padding: 10px; }
 .monster-editor__recipe .ui-button { margin: 4px 8px 0 0; }
 .monster-editor__recipe input[type=file] { max-width: 190px; }
+
+.collection__print-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 12px;
+}
+.collection__print-tools p { flex: 1 1 210px; margin: 0; color: var(--t1); font-size: 0.84rem; }
+.collection-print { display: none; }
+
+@page collection-cards { margin: 5mm; }
+@media print {
+  html:has(.collection-print), body:has(> .collection-print) {
+    height: auto;
+    overflow: visible;
+    background: white;
+    color-scheme: light;
+  }
+  body:has(> .collection-print) > :not(.collection-print) { display: none !important; }
+  .collection-print {
+    display: block;
+    page: collection-cards;
+    widows: 1;
+    orphans: 1;
+    font-size: 0;
+    line-height: 0;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .collection-print__card {
+    display: inline-block;
+    vertical-align: top;
+    width: 63.5mm;
+    height: 88.8mm;
+    margin: 0 0.5mm 0.5mm 0;
+    overflow: hidden;
+    line-height: normal;
+    break-inside: avoid;
+  }
+  .collection-print .card-visual__blur { display: none; }
+}

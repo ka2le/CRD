@@ -1,5 +1,8 @@
 import { useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import './CollectionSheet.css'
+import CardVisual from '../card/CardVisual'
+import { getFullCollection } from './fullCollection.js'
 import MonsterDeckEditor from './MonsterDeckEditor'
 import Sheet from './Sheet'
 import CardButton from '../card/CardButton'
@@ -21,7 +24,7 @@ function classRank(card) {
 }
 
 // Every physical copy in the selected deck, grouped; tap one to read about it.
-export default function CollectionSheet({ open, onClose, onSwitch = null, mode, tabletop = false, wildDeck = false, testing = false, monsterDeck, onUpdateSettings }) {
+export default function CollectionSheet({ open, full = false, onClose, onSwitch = null, mode, tabletop = false, wildDeck = false, testing = false, monsterDeck, onUpdateSettings }) {
   const inspect = useCardInspect()
   const [measureRef, size] = useElementSize()
   const [editing, setEditing] = useState(false)
@@ -32,7 +35,7 @@ export default function CollectionSheet({ open, onClose, onSwitch = null, mode, 
 
   const groups = useMemo(() => {
     // Use the same copies and artwork rotation as dealing the actual deck.
-    const deck = getExpandedCoreDeck({ mode, tabletop, wildDeck, monsterDeck })
+    const deck = full ? getFullCollection() : getExpandedCoreDeck({ mode, tabletop, wildDeck, monsterDeck })
     const copies = new Map()
     for (const card of deck) copies.set(card.id, (copies.get(card.id) ?? 0) + 1)
     const seen = new Set()
@@ -50,7 +53,7 @@ export default function CollectionSheet({ open, onClose, onSwitch = null, mode, 
           || a.id.localeCompare(b.id)
           || a.imageIndex - b.imageIndex),
     }))
-  }, [mode, tabletop, wildDeck, monsterDeck])
+  }, [full, mode, tabletop, wildDeck, monsterDeck])
 
   const total = groups.reduce((sum, group) => sum + group.cards.length, 0)
   const visible = filter === 'all' ? groups : groups.filter((group) => group.key === filter)
@@ -64,13 +67,17 @@ export default function CollectionSheet({ open, onClose, onSwitch = null, mode, 
       title={onSwitch ? <DeckViewTabs active="collection" count={total} onSwitch={onSwitch} /> : (
         <>
           <SvgIcon name="collection" />
-          <span>Collection</span>
+          <span>{full ? 'Full collection' : 'Collection'}</span>
           <span className="collection__count">{total}</span>
         </>
       )}
     >
       {canEdit ? <button type="button" className="ui-button monster-editor__toggle" aria-pressed={editing} onClick={() => setEditing(!editing)}>{editing ? 'View collection' : 'Edit deck counts'}</button> : null}
       {canEdit && editing ? <MonsterDeckEditor key={`${wildDeck}-${JSON.stringify(monsterDeck)}`} monsterDeck={monsterDeck} wildDeck={wildDeck} onApply={onUpdateSettings} /> : <>
+      {full && <div className="collection__print-tools">
+        <p>One set for Regular Abilities+NewCards. For Draft, set aside one basic Robot and one Double Critter. For 6draft, set aside one basic Dragon and Double Dragon.</p>
+        <button type="button" className="ui-button" onClick={() => window.print()}>Print all cards</button>
+      </div>}
       <div className="collection__filters" role="tablist" aria-label="Card type">
         {[{ key: 'all', label: 'All' }, ...GROUPS].map((option) => (
           <button
@@ -101,7 +108,7 @@ export default function CollectionSheet({ open, onClose, onSwitch = null, mode, 
                 <div key={card.uid} className="sheet-cards__slot collection__slot">
                   <CardButton card={card} onToggle={(uid) => inspect?.(byUid[uid] ?? card, [])} />
                   {card.collectionCopies ? (
-                    <span className="collection__copies" aria-label={`${card.collectionCopies} in deck`}>
+                    <span className="collection__copies" aria-label={`${card.collectionCopies} in ${full ? 'collection' : 'deck'}`}>
                       ×{card.collectionCopies}
                     </span>
                   ) : null}
@@ -112,6 +119,12 @@ export default function CollectionSheet({ open, onClose, onSwitch = null, mode, 
         ))}
       </div>
       </>}
+      {full && open && createPortal(
+        <div className="collection-print" aria-hidden="true">
+          {groups.flatMap(group => group.cards.map(card => (
+            <div className="collection-print__card" key={card.uid}><CardVisual card={card} /></div>
+          )))}
+        </div>, document.body)}
     </Sheet>
   )
 }

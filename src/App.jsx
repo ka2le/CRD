@@ -462,6 +462,7 @@ function AppContent({ onBossBattle }) {
             onHelp={() => setHelpOpen(true)}
             onScoreCard={() => setScoreOpen(true)}
             onCollection={() => setDeckView('collection')}
+            onFullCollection={() => setDeckView('full')}
             onTestDeck={() => setDeckView('test')}
             onRoom={() => setRoomOpen(true)}
             inRoom={Boolean(room.record)}
@@ -655,6 +656,8 @@ function AppContent({ onBossBattle }) {
         onChoose={(type) => choosePlayerTabletopType(tabletopTypeCardUid, type)}
         onClose={cancelTabletopTypeChoice} />
       <ScoreSheet open={scoreOpen} onClose={() => setScoreOpen(false)} />
+      {settings.testing && deckView === 'full' &&
+        <CollectionSheet open full onClose={() => setDeckView(null)} />}
       <CollectionSheet
         open={deckView === 'collection'}
         mode={game.poolOptions?.mode}

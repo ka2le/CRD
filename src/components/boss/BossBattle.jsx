@@ -202,6 +202,7 @@ export default function BossBattle({ onExit }) {
         onBossOptions={() => setPanel('options')} onRestartBoss={() => send({ type: 'restart' })}
         onReplayPrep={state.prep ? () => send({ type: 'replay-prep' }) : undefined}
         onHelp={() => setPanel('help')} onScoreCard={() => setPanel('score')} onCollection={() => setPanel('collection')}
+        onFullCollection={() => setPanel('full')}
         battleAnimation={animation} onBattleAnimation={setAnimation} />
     </header>
 
@@ -349,6 +350,7 @@ export default function BossBattle({ onExit }) {
     <Sheet open={panel === 'result' && Boolean(result)} title="Battle scores" onClose={() => setPanel(null)}>
       {result ? <BossScores result={result} hands={hands} monsterHand={monsterHand} bossName={boss.name} weakerBonus={options.weakerBonus} /> : null}
     </Sheet>
+    {panel === 'full' && <CollectionSheet open full onClose={() => setPanel(null)} />}
     <CollectionSheet open={panel === 'collection'} tabletop="abilities-new-cards" wildDeck={false} onClose={() => setPanel(null)} />
   </div>
 }

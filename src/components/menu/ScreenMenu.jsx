@@ -13,7 +13,7 @@ const BATTLE_RULES = [
   { value: 'abilities-new-cards', label: 'Abilities+NewCards' },
 ]
 
-export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, settings, onUpdateSettings, battleAnimation = true, onBattleAnimation, onHelp, onScoreCard, onCollection, onTestDeck, onRoom, inRoom = false, canConfigure = true, humanOpponent = false, onBossBattle, bossMode = false, onLeaveBoss, onBossOptions, onRestartBoss, onReplayPrep }) {
+export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, settings, onUpdateSettings, battleAnimation = true, onBattleAnimation, onHelp, onScoreCard, onCollection, onFullCollection, onTestDeck, onRoom, inRoom = false, canConfigure = true, humanOpponent = false, onBossBattle, bossMode = false, onLeaveBoss, onBossOptions, onRestartBoss, onReplayPrep }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
   const menuRef = useRef(null)
@@ -249,6 +249,10 @@ export default function ScreenMenu({ onNewGame, gameMode, onChangeGameMode, sett
               <span>Score card</span>
             </button>
           </div>
+
+          {settings.testing && <button type="button" className="screen-menu__item" onClick={() => run(onFullCollection)}>
+            <SvgIcon name="collection" /><span>Full collection</span>
+          </button>}
 
           <div className="screen-menu__row">
             <button type="button" className="screen-menu__item" onClick={() => run(onHelp)}>
