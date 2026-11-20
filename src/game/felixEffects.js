@@ -29,8 +29,8 @@ export function descriptor(card) {
 const sum=xs=>xs.reduce((a,b)=>a+b,0)
 const add=xs=>Array.from({length:C},(_,j)=>sum(xs.map(v=>v[j])))
 const lex=(a,b)=>{for(let i=0;i<a.length;i++)if(a[i]!==b[i])return a[i]-b[i];return 0}
-export function makeAdapter(tt,cards,semantics,{tabletop='abilities-main'}={}) {
-  const catalog=cards.getExpandedCoreDeck({wildDeck:false,tabletop})
+export function makeAdapter(tt,cards,semantics,{tabletop='abilities-main',mode}={}) {
+  const catalog=cards.getExpandedCoreDeck({wildDeck:false,tabletop,mode})
   const definitions=new Map(catalog.map(c=>[c.id,c])),e=c=>descriptor(c)
   const productRobot=tt.getTabletopProfile(['critter1','robot1','dragon1','one_off_each'].map(id=>definitions.get(id))).contributions.robot>0
   const zeroAll=tt.getTabletopProfile([]).types.length===3

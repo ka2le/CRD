@@ -33,7 +33,7 @@ These are recorded issues, not intended rule amendments.
 
 ## 6draft
 
-Available beside Draft and Discard without Testing. Use the selected card pool, pack size and battle rules. Six packs alternate their first picker exactly as ordinary Draft, for six public picks each. Monsters keeps its six-card pack; every 6draft setup ends with five cards before preparation.
+Available beside Draft and Discard without Testing. Regular Abilities+NewCards uses a 73-card six-draft pool. A third Double Critter replaces Double Dragon, and a ninth basic Robot replaces one of the five basic Dragons. Devour and Dragon Ultimate each give 2 power per Dragon stat. Wild and the other testing rulesets use their own pools. Six packs alternate their first picker exactly as ordinary Draft, for six public picks each. Monsters keeps its six-card pack; every 6draft setup ends with five cards before preparation.
 
 After the twelfth pick, hide the hands. Each player must privately set aside exactly one card; no draws or preparation are allowed until both lock. The card stays in its owner's hidden set-aside zone, outside every discard pile and Recycle target list. The six public picks remain known, so any five may be retained. Prepare privately as usual; specials may then increase or change the five-card hand. Battle resolution reveals the hands and the separate Set aside pile. Reloads preserve the locks and privacy.
 

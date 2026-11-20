@@ -644,7 +644,7 @@ function AppContent({ onBossBattle }) {
         contextHand={playerHand}
       />
 
-      <HelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} tabletop={settings.tabletop} />
+      <HelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} tabletop={settings.tabletop} mode={game.mode} poolMode={game.poolOptions?.mode} />
       <RoomSheet open={roomSheetOpen} onClose={closeRoomSheet} room={room} />
       <FactionPicker open={Boolean(isPreBattleReady && session.monsterTransformUid && !localHandoff)} title="Transform Monster stats into…"
         types={['critter', 'robot', 'dragon']} selectedType={null}
@@ -657,6 +657,7 @@ function AppContent({ onBossBattle }) {
       <ScoreSheet open={scoreOpen} onClose={() => setScoreOpen(false)} />
       <CollectionSheet
         open={deckView === 'collection'}
+        mode={game.poolOptions?.mode}
         onClose={() => setDeckView(null)}
         onSwitch={testDeckAvailable ? setDeckView : null}
         tabletop={settings.tabletop}

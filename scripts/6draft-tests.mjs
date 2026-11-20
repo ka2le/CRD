@@ -8,6 +8,30 @@ import { createPreparationState, getPreparationActions, applyPreparationAction }
 import { searchDecision, preparationView, searchPreparationDecision } from '../src/game/searchAi.js'
 import { getOpponentAiOptions, normalizeOpponentSettings } from '../src/game/opponentAi.js'
 
+test('only Regular NC six-draft deals the two stat swaps and reports the same physical catalog', () => {
+  const counts = cards => Object.fromEntries([...new Set(cards.map(c => c.id))].map(id => [id, cards.filter(c => c.id === id).length]))
+  for (const tabletop of [false, 'threshold', 'abilities-main', 'abilities-new-cards', 'monsters']) {
+    for (const wildDeck of [false, true]) {
+      const options = { tabletop, wildDeck, seed: 37 }
+      const normal = getHeadlessSpec({ ...options, mode: 'draft' })
+      const expected = counts(normal.poolCards)
+      assert.deepEqual(getHeadlessSpec({ ...options, mode: 'five-hand-discard' }).poolCards, normal.poolCards)
+      const six = getHeadlessSpec({ ...options, mode: '6draft' })
+      if (tabletop === 'abilities-new-cards' && !wildDeck) {
+        assert.deepEqual([expected.dragon1, expected.robot1, expected.rabbit2, expected.dragon2], [5, 8, 2, 1])
+        Object.assign(expected, { dragon1: 4, robot1: 9, rabbit2: 3 })
+        delete expected.dragon2
+        assert.equal(six.poolCards.length, 73)
+        assert.equal(expected.devour, 1)
+        assert.equal(expected.dragon_ulti, 1)
+      }
+      const game = createDraftGame({ ...options, mode: '6draft' })
+      assert.deepEqual(counts([...game.draftRow, ...game.deck]), expected)
+      assert.deepEqual(counts(six.poolCards), expected)
+    }
+  }
+})
+
 export function draftFixture(options = {}) {
   let game = createDraftGame({ mode: '6draft', tabletop: 'abilities-new-cards', seed: 71, ...options })
   const turns = []

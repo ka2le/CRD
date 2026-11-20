@@ -1,5 +1,5 @@
 import { startingHandSize, MONSTER_PACK_SIZE } from './monsters.js'
-import { buildShuffledDeck } from './cards.js'
+import { buildShuffledDeck, usesSixDraftStats } from './cards.js'
 import { pickDraftCard } from './draftAi.js'
 
 export const isDraftMode = mode => mode === 'draft' || mode === '6draft'
@@ -78,7 +78,7 @@ export function createDraftGame({
   secretCard = false,
   mode = 'draft',
 } = {}) {
-  const deck = providedDeck ? [...providedDeck] : buildShuffledDeck({ wildDeck, tabletop, monsterDeck, seed, rng })
+  const deck = providedDeck ? [...providedDeck] : buildShuffledDeck({ mode, wildDeck, tabletop, monsterDeck, seed, rng })
   if (secretCard && mode !== '6draft') {
     const playerSecretPack = markCards(deck.slice(0, 5), openingDraftAnimation)
     const opponentSecretPack = markCards(deck.slice(5, 10), openingDraftAnimation)
@@ -109,6 +109,7 @@ export function createDraftGame({
 
   return {
     mode,
+    ...(usesSixDraftStats({ mode, tabletop, wildDeck }) ? { poolOptions: { mode, tabletop, wildDeck } } : {}),
     ...(tabletop === 'monsters' || mode === '6draft' ? { handSize, packSize } : {}),
     phase: firstPicker === 'opponent' ? 'draft-opponent-thinking' : 'draft-player-pick',
     deck: openingDraw.rest,

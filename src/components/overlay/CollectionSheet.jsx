@@ -21,7 +21,7 @@ function classRank(card) {
 }
 
 // Every physical copy in the selected deck, grouped; tap one to read about it.
-export default function CollectionSheet({ open, onClose, onSwitch = null, tabletop = false, wildDeck = false, testing = false, monsterDeck, onUpdateSettings }) {
+export default function CollectionSheet({ open, onClose, onSwitch = null, mode, tabletop = false, wildDeck = false, testing = false, monsterDeck, onUpdateSettings }) {
   const inspect = useCardInspect()
   const [measureRef, size] = useElementSize()
   const [editing, setEditing] = useState(false)
@@ -32,7 +32,7 @@ export default function CollectionSheet({ open, onClose, onSwitch = null, tablet
 
   const groups = useMemo(() => {
     // Use the same copies and artwork rotation as dealing the actual deck.
-    const deck = getExpandedCoreDeck({ tabletop, wildDeck, monsterDeck })
+    const deck = getExpandedCoreDeck({ mode, tabletop, wildDeck, monsterDeck })
     const copies = new Map()
     for (const card of deck) copies.set(card.id, (copies.get(card.id) ?? 0) + 1)
     const seen = new Set()
@@ -50,7 +50,7 @@ export default function CollectionSheet({ open, onClose, onSwitch = null, tablet
           || a.id.localeCompare(b.id)
           || a.imageIndex - b.imageIndex),
     }))
-  }, [tabletop, wildDeck, monsterDeck])
+  }, [mode, tabletop, wildDeck, monsterDeck])
 
   const total = groups.reduce((sum, group) => sum + group.cards.length, 0)
   const visible = filter === 'all' ? groups : groups.filter((group) => group.key === filter)

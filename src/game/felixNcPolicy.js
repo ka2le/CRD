@@ -5,8 +5,8 @@ export const DRAFT_FEATURE_VERSION='felixnc-effects334-v1'
 export const PREP_FEATURE_VERSION='felixfnc-prep294-action120-v2'
 const sum=vs=>Array.from({length:C},(_,i)=>vs.reduce((n,v)=>n+v[i],0))
 const lex=(a,b)=>{for(let i=0;i<a.length;i++)if(a[i]!==b[i])return a[i]-b[i];return 0}
-export function createNCAdapter({tt,cards,makeAdapter,tabletop='abilities-new-cards',excluded=[]}){
-  const base=makeAdapter(tt,cards,{totalThreshold:true,dragonOnly:true,blockBonus:true},{tabletop})
+export function createNCAdapter({tt,cards,makeAdapter,tabletop='abilities-new-cards',mode,excluded=[]}){
+  const base=makeAdapter(tt,cards,{totalThreshold:true,dragonOnly:true,blockBonus:true},{tabletop,mode})
   const extra=c=>['single_faction_2','no_stats_to_2','draw_2_discard_2','discard_for_damage'].map(id=>Number(c.id===id))
   const descriptor=c=>[...base.descriptor(c),...extra(c)]
   const vectors=cs=>base.handDescriptors(cs).map((v,i)=>[...v,...extra(cs[i])])

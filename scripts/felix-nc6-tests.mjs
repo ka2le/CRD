@@ -66,7 +66,9 @@ test('installed model and public preparation reproduce saved candidate decisions
   const manifest = read(path.join(root, 'stages/NC6-120k-vs-previous/raw-manifest.json.gz'))
   for (const item of manifest.slice(0, 12)) {
     const r = read(item.file), config = { mode: '6draft', tabletop: 'abilities-new-cards', wildDeck: false, control: 'both', seed: r.seed, firstPicker: r.firstPicker }
-    let s = createHeadlessGame({ ...config, deck: buildShuffledDeck(config) })
+    let s = createHeadlessGame({ ...config, deck: buildShuffledDeck({ ...config, mode: 'draft' }) })
+    // The archived matches predate the six-draft stat swaps. Restore their saved pool metadata.
+    delete s.game.poolOptions
     for (const d of r.decisions) {
       assert.equal(s.actor, d.actor)
       if (d.actor === r.aSeat) {
@@ -77,5 +79,26 @@ test('installed model and public preparation reproduce saved candidate decisions
     }
     assert(s.terminal); assert.equal(s.battleResult.winner, r.battleResult.winner)
     for (const side of ['player', 'opponent']) for (const key of ['score', 'damageType', 'base', 'bonus', 'shields']) assert.equal(s.battleResult[side][key], r.battleResult[side][key])
+  }
+})
+
+test('adopted six-draft pool reproduces saved two-swap Felix decisions and outcomes', { skip: !process.env.CRD_NC6_BALANCE_ARCHIVE }, () => {
+  const folder = path.join(process.env.CRD_NC6_BALANCE_ARCHIVE, 'games', 'two-stat-swaps')
+  const records = JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(folder, '000.json.gz'))))
+  for (const record of records.slice(0, 12)) {
+    const config = { mode: '6draft', tabletop: 'abilities-new-cards', wildDeck: false, control: 'both', firstPicker: record.firstPicker }
+    const deck = record.deck.map(uid => ({ uid, id: uid.split('__')[0] }))
+    let state = createHeadlessGame({ ...config, deck, seed: record.seed })
+    for (const [side, action] of record.actions) {
+      assert.equal(state.actor, side)
+      const result = state.preparation
+        ? chooseFelixNc6Preparation(publicFelixNc6Preparation(state.preparation, state.game, side))
+        : chooseFelixNc6Decision(state.game, side)
+      assert.deepEqual(result.action, action)
+      state = stepHeadlessGame(state, result.action)
+    }
+    assert(state.terminal)
+    assert.equal(state.battleResult.winner, record.winner)
+    assert.deepEqual(['player', 'opponent'].map(side => state.battleResult[side].score), record.scores)
   }
 })

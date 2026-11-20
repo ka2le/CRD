@@ -2,6 +2,8 @@
 
 ## Required workflow and current conventions
 
+- **Rules and Collection follow the current deal (20 November 2026).** Show the active mode’s hand-building instructions and deck composition in How to play, Copy rules and Collection. For example, a new Regular NC six-draft shows three Double Critters and nine basic Robots. Read the deck selection saved with the deal so older hands retain their original collection. Source: creator’s six-draft balance adoption request. Reuse `HelpSheet`, `rulesText` and `CollectionSheet`.
+
 - **One Felix identity across supported modes (17 November 2026).** Keep the existing Felix option selected when switching between supported Draft and Regular NC 6draft modes. Route to the mode's qualified model internally; do not expose model suffixes or extra Felix menu entries. Six-draft discards and preparation use only the public opposing draft and the actor's private information. Source: creator's FelixNC6 integration request; reuse `opponentAi.js`, `felixNc6Bot.js` and `ScreenMenu`.
 
 Read this guide at the start of every repository task. Before UI edits, inspect the

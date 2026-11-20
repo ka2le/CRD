@@ -1,6 +1,6 @@
 # Gameplay rules
 
-**2026-11-17 — 6draft:** Six alternating draft packs produce six picks per player. Hide both hands, privately set aside exactly one card each, then prepare from five cards. The excluded cards stay hidden and outside discard/Recycle pools until battle resolution begins. Works with every selected card setup and resolver, including Monsters (five starting cards after this mode's discard). See [hand-building modes](DRAFTING.md).
+**2026-11-17 — 6draft:** Six alternating draft packs produce six picks per player. Hide both hands, privately set aside exactly one card each, then prepare from five cards. The excluded cards stay hidden and outside discard/Recycle pools until battle resolution begins. Regular Abilities+NewCards six-draft uses three Double Critters, nine basic Robots, four basic Dragons and zero Double Dragons. Dragon shield immunity, both Dragon 2× attacks and Robot Perfect Balance +3 apply. The draft procedure works with every selected card setup and resolver, including Monsters (five starting cards after this mode's discard). See [hand-building modes](DRAFTING.md).
 
 **2026-11-03:** Optional **Abilities+NewCards** mode adds From Nothing, Draw 2 / Discard 2, Shield Ultimate (3 shields), and Discard for Damage to current Abilities main. Available for Draft and Discard; original Abilities is unchanged. See [new-card rules](ABILITIES_NEW_CARDS.md).
 

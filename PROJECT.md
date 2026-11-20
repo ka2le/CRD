@@ -1,5 +1,7 @@
 # Critters Robots Dragons
 
+Regular Abilities+NewCards six-draft uses 73 cards. A third Double Critter replaces Double Dragon and a ninth basic Robot replaces one basic Dragon. Felix plays this deck with the existing six-draft model.
+
 The default game uses Abilities and the Regular 69-card deck, including seven ordinary Robot Attacks. Existing player preferences remain available. Draft defaults to DanBot; Discard defaults to DavidBot.
 
 Each Shield card supplies two shield points. Critter and Robot lose one power per enemy shield point after bonuses; Dragon is immune. Shield is Damage adds power equal to your own shield points, while those shields still block. Perfect Balance remains +3.

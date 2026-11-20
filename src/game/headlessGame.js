@@ -5,7 +5,7 @@ import {
   applyHiddenDraftDiscard, createDraftGame, applyDraftPick, resolveOpponentDraftPick, commitDraftDiscard, revealNextDraftPack,
 } from './draftMode.js'
 import { createFiveHandDiscardGame, applyDiscardPhase, applyOpponentDiscardPhase } from './fiveHandDiscard.js'
-import { getCoreCards, getExpandedCoreDeck } from './cards.js'
+import { getCoreCards, getExpandedCoreDeck, usesSixDraftStats } from './cards.js'
 import { getHandStats, simulateBattle } from './engine.js'
 import { chooseDiscardIds, pickBestCardForHand } from './cardEvaluator.js'
 import { pickPreparationAction } from './preBattle.js'
@@ -16,6 +16,7 @@ export const HEADLESS_PROTOCOL_VERSION = 2
 export const HEADLESS_RULES_VERSION = 'digital-21-50-preparation-v2'
 const rulesVersion = (config) => {
   const rules = normalizeTabletopRules(config.tabletop)
+  if (usesSixDraftStats({ ...config, wildDeck: config.wildDeck ?? true })) return 'tabletop-six-draft-nc73-stat-swaps-v1'
   if (rules === 'monsters') return 'monsters-v1'
   return rules ? `tabletop-single-score-${rules === 'abilities-new-cards' ? 'v6' : rules === 'abilities-main' ? 'v13' : 'v5'}-${rules}` : HEADLESS_RULES_VERSION
 }
@@ -48,8 +49,9 @@ function configuredDeck(config) {
 }
 
 export function getHeadlessSpec(config = {}) {
-  const pool = configuredDeck(config) ?? getExpandedCoreDeck({ wildDeck: config.wildDeck ?? true, tabletop: config.tabletop, monsterDeck: config.monsterDeck })
-  const definitions = getCoreCards({ tabletop: config.tabletop, includeDisabled: config.tabletop === 'monsters' }).map((card) => config.tabletop ? toTabletopCard(card, config.tabletop) : card)
+  const options = { ...config, wildDeck: config.wildDeck ?? true, includeDisabled: config.tabletop === 'monsters' }
+  const pool = configuredDeck(config) ?? getExpandedCoreDeck(options)
+  const definitions = getCoreCards(config.deck ? { ...options, mode: undefined } : options).map((card) => config.tabletop ? toTabletopCard(card, config.tabletop) : card)
   // A recycle adds one card; at most every original recycle and copy source can do so.
   const maxHandCards = pool.length + pool.filter((card) => (
     card.id === 'recycle_card' || card.id === 'copy_card_in_hand'

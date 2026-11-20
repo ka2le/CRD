@@ -12,15 +12,21 @@ import { createNC6Bridge, createNC6Preparation } from './felixNc6Bridge.js'
 import { createProbabilityPreparation } from './probabilityPreparationCore.js'
 
 export const FELIX_NC6_CHECKPOINT_SHA256 = model.checkpoint_sha256
-const adapter = createNCAdapter({ tt, cards, makeAdapter })
-const policy = createNCDraftPolicy(model, adapter)
-const bridge = createNC6Bridge(frozen, createFiveAdapter({ tt, cards, makeAdapter }))
+function policiesForDeck(mode) {
+  const options = { tt, cards, makeAdapter, mode }
+  return {
+    policy: createNCDraftPolicy(model, createNCAdapter(options)),
+    bridge: createNC6Bridge(frozen, createFiveAdapter(options)),
+  }
+}
+const sixDraft = policiesForDeck('6draft')
+const originalDeck = policiesForDeck('draft')
 const prepare = createNC6Preparation({ search, prep, rules, tt, createProbabilityPreparation })
 const other = side => side === 'player' ? 'opponent' : 'player'
 
 export function snapshotFelixNc6Decision(game, side = 'opponent') {
   const enemy = other(side)
-  return { mode: game.mode, phase: game.phase, draftRow: game.draftRow ?? [],
+  return { mode: game.mode, poolOptions: game.poolOptions, phase: game.phase, draftRow: game.draftRow ?? [],
     [`${side}Hand`]: game[`${side}Hand`],
     [`${enemy}Hand`]: game.phase === 'draft-hidden-discard' ? game[`${enemy}DraftedHand`] : game[`${enemy}Hand`],
     playerDraftedHand: game.playerDraftedHand, opponentDraftedHand: game.opponentDraftedHand }
@@ -29,6 +35,7 @@ export function snapshotFelixNc6Decision(game, side = 'opponent') {
 export function chooseFelixNc6Decision(game, side = 'opponent') {
   const view = snapshotFelixNc6Decision(game, side)
   if (view.mode !== '6draft' || ![...view.playerHand, ...view.opponentHand, ...view.draftRow].every(c => c.tabletop === 'abilities-new-cards')) throw Error('Felix six-draft requires Abilities+NewCards')
+  const { policy, bridge } = view.poolOptions?.mode === '6draft' ? sixDraft : originalDeck
   if (view.phase === 'draft-hidden-discard') return bridge.discard(view[`${side}Hand`], view[`${other(side)}DraftedHand`])
   return { ...policy.choose(view, side), kernel: 'FelixNC6-neural-draft', checkpointSha256: FELIX_NC6_CHECKPOINT_SHA256 }
 }

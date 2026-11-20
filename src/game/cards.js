@@ -39,15 +39,24 @@ export const CORE_CARD_IDS = new Set([
 // 'threshold', or explicit hidden 'abilities-prototype'.
 const NC_COPY_ADJUSTMENTS = { swarm: 1, dragons_breath: -1, dragon1: -1, robot_attack: 1 }
 
+const SIX_DRAFT_STAT_ADJUSTMENTS = { dragon2: -1, rabbit2: 1, dragon1: -1, robot1: 1 }
+
+export function usesSixDraftStats({ mode, tabletop, wildDeck }) {
+  return mode === '6draft' && normalizeTabletopRules(tabletop) === 'abilities-new-cards' && !wildDeck
+}
+
 export function getCoreCards(options = {}) {
   const core = cardsData.cards.filter((card) => CORE_CARD_IDS.has(card.id))
   const rules = normalizeTabletopRules(options.tabletop)
   if (!rules) return core
+  const sixDraft = usesSixDraftStats(options)
+  const statAdjustments = sixDraft ? SIX_DRAFT_STAT_ADJUSTMENTS : {}
   return [...core, ...tabletopCardsData.cards, ...(['abilities-new-cards', 'monsters'].includes(rules) ? newCardsData.cards : []), ...(rules === 'monsters' ? monsterCardsData.cards : [])]
     .filter((card) => (!card.disabled || (rules === 'monsters' && options.includeDisabled)) && isCardInTabletopRules(card, rules))
     .map((card) => ['abilities-new-cards', 'monsters'].includes(rules)
-      ? { ...card, copies: card.copies + (NC_COPY_ADJUSTMENTS[card.id] ?? 0) }
+      ? { ...card, copies: card.copies + (NC_COPY_ADJUSTMENTS[card.id] ?? 0) + (statAdjustments[card.id] ?? 0) }
       : card)
+    .filter((card) => !sixDraft || card.copies > 0)
 }
 
 function getExpandedCopies(card, wildDeck = false) {
