@@ -106,7 +106,7 @@ test('deck recipes are exact physical counts, include disabled cards, roundtrip,
   const empty = Object.fromEntries(definitions.map(c => [c.id, 0]))
   assert.throws(() => buildShuffledDeck({ ...options, monsterDeck: empty }), /at least 36/)
   assert.equal(getHeadlessSpec(recipe).poolCards.length, deck.length)
-  assert.equal(getHeadlessSpec(recipe).rulesVersion, 'monsters-v1')
+  assert.equal(getHeadlessSpec(recipe).rulesVersion, 'monsters-v2-shield-damage2')
 })
 
 test('both game modes finish using the same configured deck and deterministic baseline', () => {

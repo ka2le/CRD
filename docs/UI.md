@@ -2,6 +2,8 @@
 
 ## Required workflow and current conventions
 
+- **Shield Is Damage prints its full multiplier (24 November 2026).** In every Abilities Main rules variant and hand-building mode, show the existing shield × damage formula with two damage icons: each shield point gives 2 neutral power and still blocks. For example, one ordinary Shield gives 4 power; Critter Guard gives 2. Reuse `CardVisual`, `cardMeta`, `HelpSheet` and `rulesText` so played, inspected, collected and printed cards agree. Source: creator's adoption request after the 2,000-game paired Shield Is Damage test.
+
 - **Full collection is the print set (20 November 2026).** With Testing enabled, open **Full collection** from the menu to browse or print one set for Regular Abilities+NewCards Draft and 6draft. Share copies between recipes and use their tabletop faces. For example, include the fifth basic Dragon from Draft and the ninth basic Robot from 6draft. Source: creator’s physical collection request. Reuse `CollectionSheet` and the deck builder.
 
 - **Rules and Collection follow the current deal (20 November 2026).** Show the active mode’s hand-building instructions and deck composition in How to play, Copy rules and Collection. For example, a new Regular NC six-draft shows three Double Critters and nine basic Robots. Read the deck selection saved with the deal so older hands retain their original collection. Source: creator’s six-draft balance adoption request. Reuse `HelpSheet`, `rulesText` and `CollectionSheet`.

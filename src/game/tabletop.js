@@ -27,6 +27,10 @@ export function normalizeTabletopRules(value) {
   return 'abilities-main'
 }
 
+export function getShieldDamageMultiplier(rules) {
+  return isMainAbilityRules(normalizeTabletopRules(rules)) ? 2 : 1
+}
+
 // Saved settings must not silently reopen the hidden prototype in normal play.
 export function normalizePlayableTabletopRules(value) {
   const rules = normalizeTabletopRules(value)
@@ -274,7 +278,7 @@ function computeProfile(hand = [], extraStats = {}) {
     else if (card.effect?.dmgType) power = (card.tabletopAttackUnits ?? (ULTIMATES.has(card.id) ? 2 : 1)) * stats[type]
     else if (card.id === 'bite') power = isMainAbilityRules(rules) ? 2 : 1
     else if (card.id === 'discard_for_damage') power = card.sacrificedPower ?? 0
-    else if (card.id === 'shield_is_dmg') power = shields
+    else if (card.id === 'shield_is_dmg') power = shields * getShieldDamageMultiplier(rules)
     else if (rules === 'monsters' && MONSTER_PRODUCTS[card.id]) power = stats[MONSTER_PRODUCTS[card.id]] * stats.monster
     else if (card.id === 'one_off_each') power = stats.critter * stats.robot * stats.dragon
     else if (card.id === 'any_off_each') power = stats.critter + stats.robot + stats.dragon

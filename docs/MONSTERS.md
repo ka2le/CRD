@@ -1,5 +1,7 @@
 # Monsters
 
+Shield Is Damage follows the shared Abilities Main rule: each copy adds 2 neutral power per own shield point, while shields still block (creator adoption, 24 November 2026).
+
 Added 2026-11-06; included in the 2026-11-08 release. Select **Testing → Battle → Monsters**. This is a separate experimental ruleset (`monsters` / `monsters-v1`) built on the current Abilities+NewCards pool. Normal play keeps the NC ruleset; Monsters is available with Testing enabled.
 
 ## Starting rules
@@ -46,7 +48,7 @@ With Monsters and Testing selected, open **Collection → Edit deck counts**. Ev
 
 The recipe's `tabletop`, `wildDeck` and `monsterDeck` can be passed directly to `getExpandedCoreDeck`, `createHeadlessGame` and `getHeadlessSpec`. Add a game `mode`, `seed` and `control` as usual. The headless spec exposes the real pool counts, unique physical UIDs, six-card sizes and `monsters-v1` domain. Keep future Monster data separate from existing three-faction training data.
 
-RolfBot, SvenBot and same-screen human play are available. Sven supports both six-card Draft and Discard; its rollouts preserve Monster sizes and restore hidden transformed cards before sampling. Existing three-faction trained opponents remain excluded.
+RolfBot, SvenBot and same-screen human play are available. Sven supports both six-card Draft and Discard; its rollouts preserve Monster sizes and restore hidden transformed cards before sampling. Existing three-faction trained opponents remain excluded. The separate FelixM campaign in the sibling SimpleLLM project (`crd-monsters-felixm-20261106-v1`) is complete and independently reviewed. The offline agent is trained on 80,000 actual Monster games and tested in 2,000 matches:59.75% versus its adapted FelixNC bootstrap and51.94% versus live Sven (draws worth half; Sven95% interval48.88–55.00%). It is qualified for the default96-card Regular Monster Draft. Browser adoption remains a separate step.
 
 ## Assets and verification
 

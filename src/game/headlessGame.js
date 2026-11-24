@@ -1,6 +1,6 @@
 import { isDraftMode, isHiddenDraftDiscard } from './draftMode.js'
 import { chooseHiddenDraftDiscardIds } from './draftAi.js'
-import { startingHandSize, MONSTER_PACK_SIZE } from './monsters.js'
+import { startingHandSize, MONSTER_PACK_SIZE, MONSTERS_RULES_VERSION } from './monsters.js'
 import {
   applyHiddenDraftDiscard, createDraftGame, applyDraftPick, resolveOpponentDraftPick, commitDraftDiscard, revealNextDraftPack,
 } from './draftMode.js'
@@ -16,9 +16,9 @@ export const HEADLESS_PROTOCOL_VERSION = 2
 export const HEADLESS_RULES_VERSION = 'digital-21-50-preparation-v2'
 const rulesVersion = (config) => {
   const rules = normalizeTabletopRules(config.tabletop)
-  if (usesSixDraftStats({ ...config, wildDeck: config.wildDeck ?? true })) return 'tabletop-six-draft-nc73-stat-swaps-v1'
-  if (rules === 'monsters') return 'monsters-v1'
-  return rules ? `tabletop-single-score-${rules === 'abilities-new-cards' ? 'v6' : rules === 'abilities-main' ? 'v13' : 'v5'}-${rules}` : HEADLESS_RULES_VERSION
+  if (usesSixDraftStats({ ...config, wildDeck: config.wildDeck ?? true })) return 'tabletop-six-draft-nc73-stat-swaps-v2-shield-damage2'
+  if (rules === 'monsters') return MONSTERS_RULES_VERSION
+  return rules ? `tabletop-single-score-${rules === 'abilities-new-cards' ? 'v7' : rules === 'abilities-main' ? 'v14' : 'v5'}-${rules}` : HEADLESS_RULES_VERSION
 }
 const SIDES = ['player', 'opponent']
 const otherSide = (side) => side === 'player' ? 'opponent' : 'player'

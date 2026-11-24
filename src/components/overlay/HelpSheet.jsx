@@ -150,7 +150,7 @@ function AbilitiesMainHelp({ rules }) {
           <span className="help__op">=</span>
           <span className="help__term"><span className="help__chip help__chip--score"><GameIcon name="star" /></span><small>score</small></span>
         </div>
-        <p className="help__caption">Ordinary Shield cards give {MAIN_ABILITY_RULES.shieldValue} shield.{rules === 'abilities-new-cards' ? ' Critter Guard adds one Critter stat and one shield point.' : ''} Subtract enemy shield points after effects and bonuses, stopping at zero. Critters and Robots lose 1 power per point; Dragons are immune. Shield is Damage adds power equal to your shield points.</p>
+        <p className="help__caption">Ordinary Shield cards give {MAIN_ABILITY_RULES.shieldValue} shield.{rules === 'abilities-new-cards' ? ' Critter Guard adds one Critter stat and one shield point.' : ''} Subtract enemy shield points after effects and bonuses, stopping at zero. Critters and Robots lose 1 power per point; Dragons are immune. Shield is Damage adds 2 neutral power per shield point. Your shields still block.</p>
       </section>
 
       <section className="help__block">

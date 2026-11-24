@@ -1,4 +1,4 @@
-export const MONSTERS_RULES_VERSION = 'monsters-v1'
+export const MONSTERS_RULES_VERSION = 'monsters-v2-shield-damage2'
 export const MONSTER_FACTIONS = ['critter', 'robot', 'dragon', 'monster']
 export const MONSTER_TRANSFORM_TARGETS = ['critter', 'robot', 'dragon']
 export const MONSTER_PRODUCTS = {

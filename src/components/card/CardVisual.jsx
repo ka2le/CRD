@@ -1,6 +1,7 @@
 import './CardVisual.css'
 import { DISPLAY_ICONS, getStatIcon } from './cardData'
 import { getImageUrl } from './imageAssets'
+import { getShieldDamageMultiplier } from '../../game/tabletop'
 
 function IconToken({ src, alt, className = '' }) {
   // className may carry modifiers such as --up (rotated arrow).
@@ -86,7 +87,10 @@ function CardEffectRow({ card }) {
     ]
   }
   if (card.id === 'shield_is_dmg') {
-    tokens = [{ type: 'icon', value: DISPLAY_ICONS.shield, alt: 'own shields' }, { type: 'text', value: '*' }, { type: 'icon', value: DISPLAY_ICONS.dmg, alt: 'power' }]
+    tokens = [
+      { type: 'icon', value: DISPLAY_ICONS.shield, alt: 'own shields' }, { type: 'text', value: '*' },
+      ...Array.from({ length: getShieldDamageMultiplier(card.tabletop) }, () => ({ type: 'icon', value: DISPLAY_ICONS.dmg, alt: 'power' })),
+    ]
   }
   if (card.tabletop && card.id === 'shortcut') {
     // Two up arrows: count the bonus two tiers higher.

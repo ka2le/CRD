@@ -2,7 +2,7 @@
 
 Current Abilities (`abilities-main`) pool: **69 Regular / 97 Wild**, with seven ordinary Robot Attacks (creator-adopted 2026-10-26). Perfect Balance remains +3. Hidden Abilities Prototype: 70 Regular / 100 Wild; Chameleon remains there. Both exclude Shortcut, 2× and C+R+D; main also excludes Chameleon. Historical counts below predate exclusions.
 
-Current Abilities Shields supply **2 shield points per card**, blocking one power per point from Critters or Robots; Dragons are immune. Shield is Damage adds power equal to your total shield points (2 per Shield card), and shields still block. This uses the card's actual shield value rather than counting Shield cards. The seventh Robot Attack and its artwork remain active pending separate nerf tests.
+Current Abilities Shields supply **2 shield points per card**, blocking one power per point from Critters or Robots; Dragons are immune. Shield Is Damage adds **2 neutral power per shield point** (4 per ordinary Shield card); shields still block. This creator-adopted rule (24 November 2026) applies to Abilities Main and its variants in Draft, Discard and 6draft. Critter Guard supplies one shield point, giving 2 neutral power. Copies of Shield Is Damage each add the full amount. Digital Battle, Threshold and Prototype keep their existing behavior. This uses actual shield points rather than counting Shield cards.
 
 > Naming policy (2026-10-22): **Abilities = `abilities-main`** (formerly Abilities v2). The original is **Abilities Prototype** (`abilities-prototype`), hidden and excluded from balance testing unless explicitly requested. Generic tabletop requests mean main; Threshold must be named explicitly. Historical raw IDs/paths remain unchanged. See [ruleset naming policy](RULESET_NAMES.md).
 

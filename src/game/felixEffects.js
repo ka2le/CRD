@@ -1,3 +1,5 @@
+import { getShieldDamageMultiplier } from './tabletop.js'
+
 // Felix v1: identities are resolved ONLY at the official-engine adapter boundary.
 // The learned contract contains numeric mechanics, never card IDs or embeddings.
 // Browser-safe invariant checks; the numeric contract matches the frozen research adapter.
@@ -15,7 +17,7 @@ export function descriptor(card) {
   v[7]=Math.max(0,effect.shield??0)
   if(card.id==='bite')v[6]=effect.dmg??2
   else if(card.id==='one_off_each')v[8]=1
-  else if(card.id==='shield_is_dmg')v[9]=1
+  else if(card.id==='shield_is_dmg')v[9]=getShieldDamageMultiplier(card.tabletop)
   else if(card.id==='draw_2_extra')v[10]=2
   else if(card.id==='draw_all_new_1'){v[11]=1;v[12]=1}
   else if(card.id==='copy_card_in_hand')v[13]=1

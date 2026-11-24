@@ -1,4 +1,4 @@
-import { isMainAbilityRules } from '../../game/tabletop'
+import { isMainAbilityRules, getShieldDamageMultiplier } from '../../game/tabletop'
 import { getHandAverageDamage } from '../../game/cardEvaluator'
 import { isPreBattleActivatableCard } from '../../game/preBattle'
 import { TABLETOP_SHIELD_COST, MAIN_ABILITY_SHIELD_COST } from '../../game/tabletop'
@@ -82,7 +82,7 @@ const TABLETOP_TEXT = {
     if (isMainAbilityRules(card.tabletop)) return `${points} shields. Blocks ${points} power from Critters or Robots after bonuses. Dragons are immune.`
     return `${points} shield${points === 1 ? '' : 's'}. Each shield point reduces enemy Critter power by ${cost.critter}, Robot by ${cost.robot}, Dragon by ${cost.dragon}, ${isMainAbilityRules(card.tabletop) ? 'after all bonuses and effects' : 'before bonuses'}.`
   },
-  shield_is_dmg: 'Adds 1 power per shield point in your hand. Your shields still block.',
+  shield_is_dmg: (card) => `Adds ${getShieldDamageMultiplier(card.tabletop)} neutral power per shield point in your hand. Your shields still block.`,
   one_off_each: (card) => isMainAbilityRules(card.tabletop)
     ? 'Neutral power = Critter * Robot * Dragon stats. Does not count as a Robot attack for Perfect Balance. Choose among tied main factions; with no typed damage, choose any faction.'
     : 'Robot power = Critter * Robot * Dragon stats. Counts as a Robot attack if it deals damage.',

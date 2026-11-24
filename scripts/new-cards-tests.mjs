@@ -33,7 +33,7 @@ test('revised NC pool keeps both Dragon ultimates and Critter Guard supplies a r
   const h = hand('critter_shield', 'swarm', 'shield_is_dmg')
   assert.deepEqual(getHandStats(h), { critter: 1, robot: 0, dragon: 0 })
   assert.equal(getTabletopProfile(h).shields, 1)
-  assert.equal(getTabletopProfile(h).base, 2)
+  assert.equal(getTabletopProfile(h).base, 3)
   assert.deepEqual(getHandStats(hand('no_stats_to_2', 'critter_shield')), { critter: 1, robot: 0, dragon: 0 })
   const main = getExpandedCoreDeck({ tabletop: 'abilities-main' })
   assert.equal(main.filter(c => c.id === 'swarm').length, 8)
@@ -62,14 +62,14 @@ test('NC has four enabled additions; disabled definitions remain available for r
 
 test('3 shields block Critters and Robots, Dragons stay immune, shield damage and copies scale', () => {
   const h = hand('shield_ulti', 'shield2', 'shield_is_dmg')
-  assert.equal(getTabletopProfile(h).base, 5)
+  assert.equal(getTabletopProfile(h).base, 10)
   assert.equal(getTabletopProfile(h).shields, 5)
   const engine = hand('robot2', 'robot_ulti')
   assert.equal(scoreTabletopHand(engine, 3, 'robot').score, 4)
   assert.equal(scoreTabletopHand(hand('dragon2','dragon_ulti'), 3, 'dragon').score, 4)
   let s = prep(hand('shield_ulti', 'copy_card_in_hand', 'shield_is_dmg'))
   s = applyPreparationAction(s, 'player', { type:'prepare', sourceUid:s.playerHand[1].uid, targetUid:s.playerHand[0].uid })
-  assert.equal(getTabletopProfile(s.playerHand).base, 6)
+  assert.equal(getTabletopProfile(s.playerHand).base, 12)
 })
 
 test('Specialist doubles only one stat faction, with multiple cards and pips allowed', () => {

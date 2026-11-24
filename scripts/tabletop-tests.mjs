@@ -26,7 +26,7 @@ test('headless deals real tabletop pools, advertises a distinct rules version an
   for (const tabletop of ['threshold', 'abilities-prototype', 'abilities-main']) {
     const spec = getHeadlessSpec({ tabletop })
     assert(spec.rulesVersion.includes(tabletop))
-    assert.equal(spec.rulesVersion, `tabletop-single-score-${tabletop === 'abilities-main' ? 'v13' : 'v5'}-${tabletop}`)
+    assert.equal(spec.rulesVersion, `tabletop-single-score-${tabletop === 'abilities-main' ? 'v14' : 'v5'}-${tabletop}`)
     assert.equal(spec.poolCards.length, tabletop === 'threshold' ? 109 : tabletop === 'abilities-main' ? 97 : 100)
     assert.equal(spec.cardTypes.find((c) => c.id === 'robot_attack').effect.dmg, 1)
     for (const mode of ['draft', 'five-hand-discard']) {
