@@ -1,58 +1,48 @@
-import { isMainAbilityRules } from '../../game/tabletop'
-import { getCoreCards } from '../../game/cards'
+import { isMainAbilityRules, normalizeTabletopRules } from '../../game/tabletop'
 import { getCardSummary } from '../card/cardMeta'
-import { MAIN_ABILITY_RULES, MAIN_ABILITY_SHIELD_COST, TABLETOP_SHIELD_COST, TABLETOP_THRESHOLDS, PERFECT_BALANCE_BONUS, toTabletopCard } from '../../game/tabletop'
+import { TABLETOP_THRESHOLDS, PERFECT_BALANCE_BONUS } from '../../game/tabletop'
+import { getRulesTitle, getRulesCards, getHandBuildingFacts, getMainAbilityNotes, getShieldRuleText, getMainShieldText, MONSTER_RULES_TEXT } from './rulesPresentation'
 
 // Plain text includes the meaning of the illustrated rules, rather than losing icons
 // when copying the sheet's DOM text. Card descriptions use the same source as inspection.
-export const SIX_DRAFT_FLOW = 'Take one card each from six packs, alternating first pick. Privately set aside one of your six cards and prepare the other five. Set-aside cards stay outside Recycle and are revealed at battle.'
-export const SIX_DRAFT_STATS = 'In this 73-card deck, a third Double Critter replaces Double Dragon, and a ninth basic Robot replaces one basic Dragon. Four basic Dragons remain. Devour and Dragon Ultimate each deal 2 power per Dragon stat.'
-
-export function getRulesText(rules = false, mode, poolMode) {
+export function getRulesText(rules = false, mode, poolMode, options = {}) {
+  rules = normalizeTabletopRules(rules)
   const main = isMainAbilityRules(rules)
   const prototype = rules === 'abilities-prototype'
-  const title = rules === 'monsters' ? 'Monsters' : rules === 'abilities-new-cards' ? 'Abilities+NewCards' : main ? 'Abilities' : prototype ? 'Abilities Prototype' : rules ? 'Threshold' : 'Battle'
+  const title = getRulesTitle(rules)
+  const notes = getMainAbilityNotes(rules)
   const lines = [`Critters Robots Dragons — ${title}`, '']
-  if (mode === '6draft') {
-    lines.push(`6draft — ${SIX_DRAFT_FLOW}`)
-    if (poolMode === '6draft') lines.push(SIX_DRAFT_STATS)
-  } else {
-    lines.push(
-      rules === 'monsters' ? 'Draft: pick 1 of 6, opponent picks 1, the rest are discarded. Six packs; six picks per player.' : 'Draft: pick 1 of 5, opponent picks 1, the rest are discarded. Five packs.',
-      rules === 'monsters' ? 'Discard mode: six cards, two redraws back to six.' : 'Discard mode: five cards, two redraws.',
-      '6draft: six alternating draft packs, then hide both hands and set aside exactly one card each. Prepare with five cards. Set-aside cards stay hidden until battle resolution and cannot be Recycled.')
-  }
+  lines.push(...getHandBuildingFacts(rules, mode, { ...options, poolMode }).map(fact => fact.text))
   lines.push('Use specials before battle, or press Battle to finish preparation.', '')
   if (rules) {
-    const cost = main ? MAIN_ABILITY_SHIELD_COST : TABLETOP_SHIELD_COST
     lines.push('Each ordinary attack gives 1 power per matching stat; Ultimates (including Devour) give 2. Add all attacks.',
       `Bite adds ${main ? 2 : 1} power, no stats needed.`,
       main ? 'Your largest typed damage contribution determines your main faction. If tied, choose among the tied factions. With no typed damage, choose any faction, even at zero power. One of Each is neutral damage and does not count for Perfect Balance.' : 'Your largest faction contribution is your main faction. If tied, choose before battle. Neutral-only power counts as Robot.',
-      `Each enemy shield removes ${cost.critter} Critter power, ${cost.robot} Robot power or ${cost.dragon} Dragon power. Power stops at zero.`)
+      getShieldRuleText(rules))
     if (main || prototype) {
       if (prototype) lines.push('Adapt: the Critter stats on one stat card become a Critter attack, used automatically when it scores more. Other stats stay.')
-      lines.push(main ? `Perfect Balance: with Robot as main faction, equal positive Robot stats and Robot attack units add +${PERFECT_BALANCE_BONUS} before shields. Robot Ultimate counts as two attacks; One of Each does not count.` : `Perfect Balance: with Robot as main faction, equal positive Robot stats and Robot attacks add +${PERFECT_BALANCE_BONUS} after shields. Robot Ultimate counts as two attacks; Critter * Robot * Dragon counts as one if it deals damage.`,
-        main ? `Overwhelming: with Dragon as main faction, ${MAIN_ABILITY_RULES.overwhelmingAt}+ total power before bonuses and shields adds one Dragon stat. Neutral and other-faction damage count toward the threshold. Recalculate all attacks once; keep the original faction choices.` : 'Overwhelming: 7+ Dragon power before shields adds one Dragon stat. Recalculate all attacks once.',
+      lines.push(main ? notes.robot : `Perfect Balance: with Robot as main faction, equal positive Robot stats and Robot attacks add +${PERFECT_BALANCE_BONUS} after shields. Robot Ultimate counts as two attacks; Critter * Robot * Dragon counts as one if it deals damage.`,
+        main ? notes.dragon : 'Overwhelming: 7+ Dragon power before shields adds one Dragon stat. Recalculate all attacks once.',
         main ? 'Apply all effects and bonuses first, then subtract enemy shields from the total, floored at zero. Power + Perfect Balance − enemy shields = score. Higher score wins.' : 'Power − enemy shields + Perfect Balance = score. Higher score wins.',
-        main ? 'Critter main faction wins equal scores against Robot or Dragon. Two Critter hands still tie.' : 'Equal scores tie.')
+        main ? notes.critter : 'Equal scores tie.')
     } else {
       lines.push(`After shields, your main faction earns one bonus: ${Object.entries(TABLETOP_THRESHOLDS).map(([type, { at, bonus }]) => `${type} +${bonus} at ${at} power`).join(', ')}.`,
         'Power − enemy shields + bonus = score. Higher score wins; equal scores tie.')
     }
     if (main) lines.push('Devour and Dragon Ultimate each give 2 power per Dragon stat. Devour does not grant a main faction choice.')
-    if (main) lines.push(`Ordinary Shield cards give ${MAIN_ABILITY_RULES.shieldValue} shield points.${rules === 'abilities-new-cards' ? ' Critter Guard adds one Critter stat and one shield point.' : ''} Shields block Critter and Robot power equally; Dragons are immune. Shield is Damage adds 2 neutral power per shield point, while your shields still block.`)
+    if (main) lines.push(getMainShieldText(rules))
   } else {
     lines.push('Attacks fire when the round is a multiple of their cooldown. Damage = attack damage * matching stats.',
       'Ordinary Critter attacks: 1 damage per stat every round. Robot: 2 every 2 rounds. Dragon: 3 every 3 rounds.',
       'Shields block damage on the round they fire. Both sides attack simultaneously.',
       'Taking 21 damage means defeat. If both reach 21 at once, more total damage dealt wins; equal totals tie. No defeat by round 50 means a tie.')
   }
-  if (rules === 'monsters') lines.push('Monsters uses all four factions. Monsters have no faction bonus; each enemy shield removes 1 Monster power. Mixed Monster attacks deal neutral power equal to Monster stats times the other printed faction. Monster Transformation changes all current Monster stats to one chosen original faction; later draws are unchanged. The collection editor in Testing saves exact copy counts and a deck recipe.')
-  lines.push('', 'Cards')
-  for (const source of getCoreCards({ tabletop: rules, mode: poolMode })) {
-    const card = rules ? toTabletopCard(source, rules) : source
+  if (rules === 'monsters') lines.push(MONSTER_RULES_TEXT)
+  const cards = getRulesCards({ ...options, tabletop: rules, mode: poolMode })
+  lines.push('', `Cards — ${cards.reduce((sum, card) => sum + card.copies, 0)} in deck`)
+  for (const card of cards) {
     const { timing, text } = getCardSummary(card)
-    lines.push(`${card.name}: ${timing}. ${text}`)
+    lines.push(`${card.name}: ${timing}. ${text} (${card.copies} in deck)`)
   }
   lines.push('', 'Hold or right-click any card to inspect it.')
   return lines.join('\n')

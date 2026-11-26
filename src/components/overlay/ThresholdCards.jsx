@@ -33,6 +33,7 @@ function Columns({ at, children }) {
 export function ThresholdLedgerCard() {
   return (
     <div className="sc-card ab-ledger th-card" aria-label="Score card: thresholds">
+      <div className="ab-rules-title">Threshold · bonus after shields</div>
       {THRESHOLDS.map(({ cls, at, bonus, shield }) => (
         <div key={cls} className="ab-ledger__row">
           <GameIcon name={cls} className={`th-icon sc-${cls}`} />
@@ -50,6 +51,7 @@ export function ThresholdLedgerCard() {
 export function ThresholdBandsCard() {
   return (
     <div className="sc-card ab-bands th-card" aria-label="Score card: threshold bands">
+      <div className="ab-rules-title">Threshold · bonus after shields</div>
       {THRESHOLDS.map(({ cls, short, at, bonus, shield }) => (
         <div key={cls} className={`ab-band ab-band--${short}`}>
           <GameIcon name={cls} className="ab-band__mark" />

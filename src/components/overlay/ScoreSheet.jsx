@@ -4,6 +4,8 @@ import Sheet from './Sheet'
 import { GameIcon } from '../ui/GameIcon'
 import { MainAbilityBandsCard, MainAbilityLedgerCard } from './AbilityCards'
 import { ThresholdBandsCard, ThresholdLedgerCard } from './ThresholdCards'
+import { isMainAbilityRules } from '../../game/tabletop'
+import { getRulesTitle } from './rulesPresentation'
 
 const CARD_W = 315
 const CARD_H = 440
@@ -65,10 +67,11 @@ function useCardLayout(open) {
   return [trackRef, fit]
 }
 
-export default function ScoreSheet({ open, onClose }) {
+export default function ScoreSheet({ open, onClose, tabletop = false }) {
   const [trackRef, { scale, columns }] = useCardLayout(open)
   const sideBySide = columns > 0
   const [active, setActive] = useState(0)
+  const cards = isMainAbilityRules(tabletop) ? [...CARDS.slice(2), ...CARDS.slice(0, 2)] : CARDS
 
   function handleScroll(event) {
     const track = event.currentTarget
@@ -83,24 +86,24 @@ export default function ScoreSheet({ open, onClose }) {
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title={<GameIcon name="star" />} className="score-sheet" placement="top">
+    <Sheet open={open} onClose={onClose} title={<><GameIcon name="star" /><span>Score cards{tabletop ? ` · ${getRulesTitle(tabletop)}` : ' · Tabletop rules'}</span></>} className="score-sheet" placement="top">
       <div
         ref={trackRef}
         className={['score-sheet__track', sideBySide ? 'is-side' : 'is-carousel'].join(' ')}
         style={{ '--sc-gap': `${GAP}px`, '--sc-columns': columns || 1 }}
         onScroll={sideBySide ? undefined : handleScroll}
       >
-        {CARDS.map(({ key, Card }) => (
+        {cards.map(({ key, Card }) => (
           <div key={key} className="score-sheet__slot" style={{ width: CARD_W * scale, height: CARD_H * scale }}>
             <div className="score-sheet__scaler" style={{ transform: `scale(${scale})` }}>
-              <Card />
+              <Card rules={isMainAbilityRules(tabletop) ? tabletop : 'abilities-main'} />
             </div>
           </div>
         ))}
       </div>
       {!sideBySide ? (
         <div className="score-sheet__dots" role="tablist">
-          {CARDS.map(({ key }, index) => (
+          {cards.map(({ key }, index) => (
             <button
               key={key}
               type="button"

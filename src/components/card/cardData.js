@@ -1,23 +1,19 @@
 import { getImageUrl } from './imageAssets'
+import { ICON_SOURCES, CLASS_KEYS } from '../ui/iconSources'
 
 const localIcons = (icons) => Object.fromEntries(
   Object.entries(icons).map(([key, source]) => [key, getImageUrl(source)]),
 )
 
-export const STAT_ICONS = localIcons({
-  monster: 'https://ka2le.github.io/chatgpt-apps3/images/mp/monster2.png',
-  robot: 'https://ka2le.github.io/chatgpt-apps3/images/mp/robot_sharp.png',
-  critter: 'https://ka2le.github.io/chatgpt-apps3/images/mp/rabbit.png',
-  dragon: 'https://ka2le.github.io/chatgpt-apps3/images/mp/dragon.png',
-})
+export const STAT_ICONS = localIcons(Object.fromEntries(CLASS_KEYS.map(key => [key, ICON_SOURCES[key]])))
 
 export const DISPLAY_ICONS = {
   ...localIcons({
-    dmg: 'https://ka2le.github.io/chatgpt-apps3/images/mp/suit_hearts_broken.png',
-    cd: 'https://ka2le.github.io/chatgpt-apps3/images/mp/hourglass.png',
-    shield: 'https://ka2le.github.io/chatgpt-apps3/images/mp/shield.png',
-    star: 'https://ka2le.github.io/chatgpt-apps3/images/mp/star.png',
-    arrow: 'https://ka2le.github.io/chatgpt-apps3/images/mp/arrow2.png',
+    dmg: ICON_SOURCES.damage,
+    cd: ICON_SOURCES.cd,
+    shield: ICON_SOURCES.shield,
+    star: ICON_SOURCES.star,
+    arrow: ICON_SOURCES.arrow,
   }),
   cardBackMark: 'CRD',
 }

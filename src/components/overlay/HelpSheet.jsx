@@ -1,15 +1,15 @@
-import { isMainAbilityRules } from '../../game/tabletop'
+import { isMainAbilityRules, normalizeTabletopRules } from '../../game/tabletop'
 import { useMemo, useState } from 'react'
 import './HelpSheet.css'
 import Sheet from './Sheet'
 import CardVisual from '../card/CardVisual'
-import { getCardSummary } from '../card/cardMeta'
+import { getCardSummary, getCardGroup } from '../card/cardMeta'
 import { useCardInspect } from './inspectContext'
 import { Crown } from './AbilityCards'
 import { GameIcon, SvgIcon } from '../ui/GameIcon'
-import { getCoreCards } from '../../game/cards'
-import { getRulesText, SIX_DRAFT_FLOW, SIX_DRAFT_STATS } from './rulesText'
-import { TABLETOP_THRESHOLDS, MAIN_ABILITY_RULES, PERFECT_BALANCE_BONUS, TABLETOP_SHIELD_COST, MAIN_ABILITY_SHIELD_COST, toTabletopCard } from '../../game/tabletop'
+import { getRulesText } from './rulesText'
+import { getRulesTitle, getRulesCards, getHandBuildingFacts, getMainAbilityNotes, getShieldCosts, getMainShieldText, MONSTER_RULES_TEXT } from './rulesPresentation'
+import { TABLETOP_THRESHOLDS, MAIN_ABILITY_RULES, PERFECT_BALANCE_BONUS } from '../../game/tabletop'
 
 const ROUNDS = [1, 2, 3, 4, 5, 6]
 const LANES = [
@@ -37,7 +37,7 @@ function ShieldCost({ value }) {
 }
 
 // One lane per faction: what an enemy shield costs it, and its ability as requirement → result.
-const ABILITY_LANES = [
+const abilityLanes = (rules) => [
   {
     cls: 'critter',
     name: 'Win ties',
@@ -45,12 +45,11 @@ const ABILITY_LANES = [
       <>
         <span className="help__chip help__chip--critter"><GameIcon name="critter" /></span>
         <span className="help__op">=</span>
-        <span className="help__chip"><GameIcon name="robot" className="help__c-robot" /><span className="help__slash">/</span><GameIcon name="dragon" className="help__c-dragon" /></span>
+        <span className="help__chip"><GameIcon name="robot" className="help__c-robot" /><span className="help__slash">/</span><GameIcon name="dragon" className="help__c-dragon" />{rules === 'monsters' && <><span className="help__slash">/</span><GameIcon name="monster" /></>}</span>
         <Arrow />
         <span className="help__chip help__chip--critter help__crowned"><Crown className="help__crown" /><GameIcon name="critter" /></span>
       </>
     ),
-    note: 'Equal scores against Robots or Dragons go to Critters. Two Critter hands still tie.',
   },
   {
     cls: 'robot',
@@ -64,7 +63,6 @@ const ABILITY_LANES = [
         <span className="help__chip help__chip--bonus">+{PERFECT_BALANCE_BONUS} <GameIcon name="damage" /></span>
       </>
     ),
-    note: 'As many Robot stats as Robot attack units (at least one each), added before shields. Robot Ultimate counts as two attacks. One of Each is neutral and does not count.',
   },
   {
     cls: 'dragon',
@@ -76,36 +74,29 @@ const ABILITY_LANES = [
         <span className="help__chip help__chip--dragon">+ <GameIcon name="dragon" /></span>
       </>
     ),
-    note: `With Dragon as main faction, ${MAIN_ABILITY_RULES.overwhelmingAt}+ total power before bonuses and shields adds one Dragon stat. Include neutral and other-faction power. Recalculate attacks once; keep the original faction choices.`,
   },
 ]
 
 // Special cards in this rule set, in reading order: Ultimates, other power cards, shields, then preparation.
-const CLASS_ORDER = ['critter', 'robot', 'dragon']
+const CLASS_ORDER = ['critter', 'robot', 'dragon', 'monster']
 function specialRank(card) {
   if (card.effect?.dmgType) return CLASS_ORDER.indexOf(card.effect.dmgType) + (card.id === 'devour' ? 0.5 : 0)
   if (card.effect?.shield) return 20
   return getCardSummary(card).timing === 'Before battle' ? 30 : 10
 }
 
-function useSpecialCards(rules) {
-  return useMemo(() => getCoreCards({ tabletop: rules })
-    .filter((card) => card.type !== 'stat' && !card.tags?.includes('base-attack'))
-    .map((card) => ({ ...toTabletopCard(card, rules), uid: `help__${card.id}`, imageIndex: 0 }))
-    .sort((a, b) => specialRank(a) - specialRank(b) || a.id.localeCompare(b.id)), [rules])
-}
-
-function SpecialCards({ rules }) {
+function SpecialCards({ cards }) {
   const inspect = useCardInspect()
-  const cards = useSpecialCards(rules)
+  const specials = cards.filter(card => getCardGroup(card) === 'special' || (getCardGroup(card) === 'attack' && !card.tags?.includes('base-attack')))
+    .sort((a, b) => specialRank(a) - specialRank(b) || a.id.localeCompare(b.id))
   return (
     <section className="help__block">
-      <h3 className="help__heading"><GameIcon name="star" />Special cards<span className="help__count">{cards.length}</span></h3>
+      <h3 className="help__heading"><GameIcon name="star" />Special cards<span className="help__count">{specials.length}</span></h3>
       <div className="help__specials">
-        {cards.map((card) => {
+        {specials.map((card) => {
           const { timing, text } = getCardSummary(card)
           return (
-            <button key={card.id} type="button" className="help__special" onClick={() => inspect?.(card, [])}>
+            <button key={card.id} type="button" className="help__special" data-help-card={card.id} onClick={() => inspect?.(card, [])}>
               <span className="help__special-card"><CardVisual card={card} /></span>
               <span className="help__special-text">
                 <span className={['help__special-timing', timing === 'Before battle' ? 'is-prep' : '', card.effect?.shield ? 'is-shield' : ''].filter(Boolean).join(' ')}>{timing}</span>
@@ -119,7 +110,10 @@ function SpecialCards({ rules }) {
   )
 }
 
-function AbilitiesMainHelp({ rules }) {
+export function AbilitiesMainHelp({ rules }) {
+  const notes = getMainAbilityNotes(rules)
+  const costs = getShieldCosts(rules)
+  const lanes = [...abilityLanes(rules), ...(rules === 'monsters' ? [{ cls: 'monster', name: 'No faction bonus', rule: <span className="help__chip"><GameIcon name="monster" /> 0 <GameIcon name="damage" /></span> }] : [])]
   return (
     <>
       <section className="help__block">
@@ -148,39 +142,40 @@ function AbilitiesMainHelp({ rules }) {
           <span className="help__op">−</span>
           <span className="help__term"><span className="help__chip help__chip--shield"><GameIcon name="shield" /></span><small>enemy shields</small></span>
           <span className="help__op">=</span>
-          <span className="help__term"><span className="help__chip help__chip--score"><GameIcon name="star" /></span><small>score</small></span>
+          <span className="help__term"><span className="help__chip help__chip--score"><GameIcon name="damage" /></span><small>score</small></span>
         </div>
-        <p className="help__caption">Ordinary Shield cards give {MAIN_ABILITY_RULES.shieldValue} shield.{rules === 'abilities-new-cards' ? ' Critter Guard adds one Critter stat and one shield point.' : ''} Subtract enemy shield points after effects and bonuses, stopping at zero. Critters and Robots lose 1 power per point; Dragons are immune. Shield is Damage adds 2 neutral power per shield point. Your shields still block.</p>
+        <p className="help__caption">{getMainShieldText(rules)}</p>
       </section>
 
       <section className="help__block">
         <div className="help__lanes">
-          {ABILITY_LANES.map(({ cls, name, rule, note }) => (
+          {lanes.map(({ cls, name, rule }) => (
             <div key={cls} className={`help__ability help__ability--${cls}`}>
               <span className="help__lane-icon"><GameIcon name={cls} /></span>
-              <ShieldCost value={MAIN_ABILITY_SHIELD_COST[cls]} />
+              <ShieldCost value={costs[cls]} />
               <span className="help__ability-name">{name}</span>
               <span className="help__ability-rule">{rule}</span>
-              <span className="help__ability-note">{note}</span>
+              <span className="help__ability-note">{notes[cls]}</span>
             </div>
           ))}
         </div>
         <p className="help__caption">Your largest typed damage contribution sets your main faction, shield cost and ability. If tied, tap a highlighted card and choose among tied factions. With no typed damage, choose any faction, even at zero power. One of Each deals neutral damage.</p>
       </section>
 
-      <SpecialCards rules={rules} />
     </>
   )
 }
 
-export default function HelpSheet({ open, onClose, tabletop = false, mode, poolMode }) {
-  // Separate state per rules screen, including when changing mode while help is open.
-  return <RulesHelp mode={mode} poolMode={poolMode} key={`${open}-${tabletop}-${mode}-${poolMode}`} open={open} onClose={onClose} tabletop={tabletop} />
+export default function HelpSheet({ open, onClose, tabletop = false, mode, poolMode, wildDeck = false, monsterDeck, secretCard = false }) {
+  return <RulesHelp key={`${open}-${tabletop}-${mode}-${poolMode}`} open={open} onClose={onClose}
+    tabletop={normalizeTabletopRules(tabletop)} mode={mode} poolMode={poolMode} wildDeck={wildDeck} monsterDeck={monsterDeck} secretCard={secretCard} />
 }
 
-function RulesHelp({ open, onClose, tabletop, mode, poolMode }) {
+function RulesHelp({ open, onClose, tabletop, mode, poolMode, wildDeck, monsterDeck, secretCard }) {
   const [copyStatus, setCopyStatus] = useState('')
-  const rulesText = useMemo(() => getRulesText(tabletop, mode, poolMode), [tabletop, mode, poolMode])
+  const rulesText = useMemo(() => getRulesText(tabletop, mode, poolMode, { wildDeck, monsterDeck, secretCard }), [tabletop, mode, poolMode, wildDeck, monsterDeck, secretCard])
+  const cards = useMemo(() => getRulesCards({ tabletop, mode: poolMode, wildDeck, monsterDeck }), [tabletop, poolMode, wildDeck, monsterDeck])
+  const handFacts = getHandBuildingFacts(tabletop, mode, { poolMode, wildDeck, secretCard })
   async function copyRules() {
     try {
       await navigator.clipboard.writeText(rulesText)
@@ -189,23 +184,20 @@ function RulesHelp({ open, onClose, tabletop, mode, poolMode }) {
       setCopyStatus('Select and copy the rules below.')
     }
   }
-  const newCards = ['abilities-new-cards', 'monsters'].includes(tabletop)
   const abilitiesMain = isMainAbilityRules(tabletop)
-  const shieldCosts = abilitiesMain ? MAIN_ABILITY_SHIELD_COST : TABLETOP_SHIELD_COST
+  const shieldCosts = getShieldCosts(tabletop)
   return (
-    <Sheet open={open} onClose={onClose} title={<SvgIcon name="help" />}>
+    <Sheet open={open} onClose={onClose} title={<><SvgIcon name="help" /><span>{getRulesTitle(tabletop)}</span></>}>
       <div className="help">
         <div className="help__copy">
           <button type="button" className="ui-button" onClick={copyRules}>Copy rules</button>
           <span role="status">{copyStatus}</span>
         </div>
         {copyStatus === 'Select and copy the rules below.' ? <textarea aria-label="Rules to copy" readOnly value={rulesText} onFocus={(event) => event.target.select()} rows={10} /> : null}
-        {mode === '6draft' && <section className="help__block help__facts">
-          <div className="help__fact"><SvgIcon name="eye-off" /><span><strong>6draft</strong> · {SIX_DRAFT_FLOW}</span></div>
-          {poolMode === '6draft' && <div className="help__fact"><SvgIcon name="collection" /><span>{SIX_DRAFT_STATS}</span></div>}
-        </section>}
-          {tabletop === 'monsters' ? <div className="help__fact"><GameIcon name="monster" /><span><strong>Monsters</strong> adds a fourth faction with no faction bonus yet. Each enemy shield blocks 1 Monster power. Mixed attacks multiply Monster stats by the other printed faction and deal neutral power. Monster Draw / Discard uses your Monster stat count when activated. Transformation changes all current Monster stats into your choice of Critter, Robot or Dragon. In Testing, open Collection → Edit deck counts to change the pool and save a recipe. FelixM training comes later; RolfBot is available for now.</span></div> : null}
-          {newCards ? <div className="help__fact"><span><strong>Abilities+NewCards</strong> uses Abilities rules plus four cards: Specialist gives 2 power per stat when your stats belong to exactly one faction; Critter Guard adds one Critter stat and one shield point; Draw 2 / Discard 2 draws first, then requires two discards, which can include itself; Discard for Damage lets you discard cards for 1 neutral power each. It may discard itself, then deals no damage. Copies need their own sacrifices. Both discard effects happen during preparation.</span></div> : null}
+        <section className="help__block help__facts">
+          {handFacts.map(({ icon, text }) => <div className="help__fact" key={text}><span className="help__chip"><GameIcon name={icon} /></span><span>{text}</span></div>)}
+          {tabletop === 'monsters' && <div className="help__fact"><span className="help__chip"><GameIcon name="monster" /></span><span>{MONSTER_RULES_TEXT}</span></div>}
+        </section>
         {abilitiesMain ? <AbilitiesMainHelp rules={tabletop} /> : tabletop ? <section className="help__block help__facts">
           <div className="help__fact"><GameIcon name="damage" /><span>Each ordinary attack gives 1 power per matching stat. Add all attacks.</span></div>
           <div className="help__fact"><GameIcon name="star" /><span>Your largest class contribution is your main damage type. If tied, tap a highlighted card before battle. Neutral-only power uses Robot.</span></div>
@@ -265,25 +257,12 @@ function RulesHelp({ open, onClose, tabletop, mode, poolMode }) {
             <span>Glowing specials can be used before the battle.</span>
           </div>
           </> : <div className="help__fact"><span className="help__chip help__chip--special"><GameIcon name="star" /></span><span>Use specials before battle, or press Battle to finish preparation.</span></div>}
-          {mode !== '6draft' && <>
-            <div className="help__fact">
-              <span className="help__chip"><GameIcon name="draw" /></span>
-              <span>{tabletop === 'monsters' ? 'Draft: pick 1 of 6, opponent picks 1, the rest are discarded. Six packs; six picks each.' : 'Draft: pick 1 of 5, opponent picks 1, the rest are discarded. Five packs.'}</span>
-            </div>
-            <div className="help__fact">
-              <span className="help__chip"><SvgIcon name="eye-off" /></span>
-              <span>6draft: six alternating packs, then hide both hands and set aside one card each. Prepare with five cards. Set-aside cards cannot be Recycled and are revealed when battle resolution starts.</span>
-            </div>
-            <div className="help__fact">
-              <span className="help__chip"><GameIcon name="redraw" /></span>
-              <span>{tabletop === 'monsters' ? 'Discard mode: six cards, two redraws back to six.' : 'Discard mode: five cards, two redraws.'}</span>
-            </div>
-          </>}
           <div className="help__fact help__fact--tip">
             <span className="help__chip"><SvgIcon name="eye" /></span>
             <span>Hold or right-click any card to inspect it.</span>
           </div>
         </section>
+        <SpecialCards cards={cards} />
       </div>
     </Sheet>
   )

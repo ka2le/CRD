@@ -57,7 +57,7 @@ const SPECIAL_TEXT = {
   shield2: 'Blocks 2 damage this round.',
   bite: '3 damage, no stats needed.',
   extra_turn: 'Not in play yet.',
-  no_stats_to_2: 'With no stat cards in your hand, start with 2 of every stat. Does not stack. Overwhelming can add its extra Dragon stat.',
+  no_stats_to_2: 'With no stat cards in your hand, start with 2 Critter, 2 Robot and 2 Dragon stats. Does not stack. Overwhelming can add its extra Dragon stat.',
   draw_2_discard_2: 'Draw 2 cards, then discard 2 cards from your hand. You may discard this card. Finish discarding before using another special.',
   discard_for_damage: 'Discard any number of cards during this activation. Gain 1 neutral power per card discarded. You may discard this card too; it then deals no damage. Copies start at 0 and need their own discards.',
 }
@@ -79,7 +79,7 @@ const TABLETOP_TEXT = {
   shield2: (card) => {
     const cost = isMainAbilityRules(card.tabletop) ? MAIN_ABILITY_SHIELD_COST : TABLETOP_SHIELD_COST
     const points = card.effect?.shield ?? 1
-    if (isMainAbilityRules(card.tabletop)) return `${points} shields. Blocks ${points} power from Critters or Robots after bonuses. Dragons are immune.`
+    if (isMainAbilityRules(card.tabletop)) return `${points} shields. Blocks ${points} power from Critters or Robots${card.tabletop === 'monsters' ? ' or Monsters' : ''} after bonuses. Dragons are immune.`
     return `${points} shield${points === 1 ? '' : 's'}. Each shield point reduces enemy Critter power by ${cost.critter}, Robot by ${cost.robot}, Dragon by ${cost.dragon}, ${isMainAbilityRules(card.tabletop) ? 'after all bonuses and effects' : 'before bonuses'}.`
   },
   shield_is_dmg: (card) => `Adds ${getShieldDamageMultiplier(card.tabletop)} neutral power per shield point in your hand. Your shields still block.`,
@@ -106,9 +106,9 @@ export function getCardSummary(card) {
   }
 
   const timing = isPreBattleActivatableCard(card) ? 'Before battle'
-    : card.id === 'no_stats_to_2' && card.tabletop === 'abilities-new-cards' ? 'Passive stats'
+    : card.id === 'no_stats_to_2' && ['abilities-new-cards', 'monsters'].includes(card.tabletop) ? 'Passive stats'
     : card.tabletop && card.effect?.shield ? 'Tabletop shield'
-    : card.tabletop && (card.effect?.dmg || TABLETOP_TEXT[card.id]) ? 'Tabletop power' : getTimingLabel(card.cd)
+    : card.tabletop ? 'Tabletop power' : getTimingLabel(card.cd)
   const tabletopText = card.tabletop ? TABLETOP_TEXT[card.id] : null
   if (tabletopText) return { timing, text: typeof tabletopText === 'function' ? tabletopText(card) : tabletopText }
   if (SPECIAL_TEXT[card.id]) return { timing, text: SPECIAL_TEXT[card.id] }
@@ -159,6 +159,6 @@ export function getCardGroup(card) {
   if (card.id === 'critter_shield') return 'special'
   if (card.type === 'stat') return 'stat'
   if (card.id === 'single_faction_2') return 'special'
-  if (card.id === 'single_faction_2' || card.effect?.dmgType || ((card.cd ?? 0) > 0 && card.effect?.dmg)) return 'attack'
+  if (card.effect?.dmgType || ((card.cd ?? 0) > 0 && card.effect?.dmg)) return 'attack'
   return 'special'
 }

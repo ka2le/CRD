@@ -6,6 +6,8 @@ Added 2026-11-06; included in the 2026-11-08 release. Select **Testing → Battl
 
 ## Starting rules
 
+Help, copied rules and Collection use the same selected Regular/Wild/custom recipe, including zero counts and explicitly enabled optional cards. Specialist's printed formula includes Monster; passive mixed products are labelled Tabletop power. Critter wins equal scores against Monster, and ordinary shields block Monster at one power per point. Reference cards show all four factions using actual game faces. The shared 6draft flow finishes with five cards; 20Cards always uses three five-card lanes, while ordinary Monster Draft/Discard starts with six.
+
 - All four factions play together. Monsters have no faction ability yet. A Monster main faction loses one power per enemy shield point.
 - Existing Critter tiebreak, Robot Perfect Balance and Dragon Overwhelming/immunity remain in effect.
 - Discard starts with six cards per seat. Each of the two redraws replaces the selected cards, preserving a six-card hand.

@@ -1,3 +1,5 @@
+**2026-11-26 — Rules and visual consistency:** Rules, copied instructions, inspection and Collection share the selected deck and card faces. Reference cards identify their ruleset and include the Monster faction. Secret Draft, 6draft, Discard and 20Cards show their own instructions. Boss rules reuse the Abilities explanations. Corrected missing Critter Guard help, Monster Specialist icons, passive timing and shield documentation.
+
 # Critters Robots Dragons
 
 Regular Abilities+NewCards six-draft uses 73 cards. A third Double Critter replaces Double Dragon and a ninth basic Robot replaces one basic Dragon. Felix plays this deck with the existing six-draft model.

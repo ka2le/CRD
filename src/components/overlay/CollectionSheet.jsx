@@ -24,7 +24,7 @@ function classRank(card) {
 }
 
 // Every physical copy in the selected deck, grouped; tap one to read about it.
-export default function CollectionSheet({ open, full = false, onClose, onSwitch = null, mode, tabletop = false, wildDeck = false, testing = false, monsterDeck, onUpdateSettings }) {
+export default function CollectionSheet({ open, full = false, onClose, onSwitch = null, mode, gameMode, secretCard = false, tabletop = false, wildDeck = false, testing = false, monsterDeck, onUpdateSettings }) {
   const inspect = useCardInspect()
   const [measureRef, size] = useElementSize()
   const [editing, setEditing] = useState(false)
@@ -73,7 +73,7 @@ export default function CollectionSheet({ open, full = false, onClose, onSwitch 
       )}
     >
       {canEdit ? <button type="button" className="ui-button monster-editor__toggle" aria-pressed={editing} onClick={() => setEditing(!editing)}>{editing ? 'View collection' : 'Edit deck counts'}</button> : null}
-      {canEdit && editing ? <MonsterDeckEditor key={`${wildDeck}-${JSON.stringify(monsterDeck)}`} monsterDeck={monsterDeck} wildDeck={wildDeck} onApply={onUpdateSettings} /> : <>
+      {canEdit && editing ? <MonsterDeckEditor key={`${wildDeck}-${JSON.stringify(monsterDeck)}`} monsterDeck={monsterDeck} wildDeck={wildDeck} mode={gameMode} secretCard={secretCard} onApply={onUpdateSettings} /> : <>
       {full && <div className="collection__print-tools">
         <p>One set for Regular Abilities+NewCards. For Draft, set aside one basic Robot and one Double Critter. For 6draft, set aside one basic Dragon and Double Dragon.</p>
         <button type="button" className="ui-button" onClick={() => window.print()}>Print all cards</button>

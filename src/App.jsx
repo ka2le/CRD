@@ -645,7 +645,8 @@ function AppContent({ onBossBattle }) {
         contextHand={playerHand}
       />
 
-      <HelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} tabletop={settings.tabletop} mode={game.mode} poolMode={game.poolOptions?.mode} />
+      <HelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} tabletop={settings.tabletop} mode={game.mode} poolMode={game.poolOptions?.mode}
+        wildDeck={Boolean(settings.wildDeck)} monsterDeck={settings.monsterDeck} secretCard={Boolean(game.secretCard)} />
       <RoomSheet open={roomSheetOpen} onClose={closeRoomSheet} room={room} />
       <FactionPicker open={Boolean(isPreBattleReady && session.monsterTransformUid && !localHandoff)} title="Transform Monster stats into…"
         types={['critter', 'robot', 'dragon']} selectedType={null}
@@ -655,12 +656,14 @@ function AppContent({ onBossBattle }) {
         selectedType={tabletopChoice.selectedType}
         onChoose={(type) => choosePlayerTabletopType(tabletopTypeCardUid, type)}
         onClose={cancelTabletopTypeChoice} />
-      <ScoreSheet open={scoreOpen} onClose={() => setScoreOpen(false)} />
+      <ScoreSheet open={scoreOpen} onClose={() => setScoreOpen(false)} tabletop={settings.tabletop} />
       {settings.testing && deckView === 'full' &&
         <CollectionSheet open full onClose={() => setDeckView(null)} />}
       <CollectionSheet
         open={deckView === 'collection'}
         mode={game.poolOptions?.mode}
+        gameMode={game.mode}
+        secretCard={Boolean(game.secretCard)}
         onClose={() => setDeckView(null)}
         onSwitch={testDeckAvailable ? setDeckView : null}
         tabletop={settings.tabletop}

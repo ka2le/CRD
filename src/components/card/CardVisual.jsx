@@ -103,6 +103,13 @@ function CardEffectRow({ card }) {
       { type: 'icon', value: getStatIcon(type), alt: `choose ${type}` },
     ])
   }
+  if (card.tabletop === 'monsters' && card.id === 'single_faction_2') {
+    tokens = ['critter', 'robot', 'dragon', 'monster'].flatMap((type, index) => [
+      ...(index ? [{ type: 'text', value: '|' }] : []),
+      { type: 'icon', value: getStatIcon(type), alt: type },
+    ]).concat({ type: 'text', value: '*' },
+      Array.from({ length: 2 }, () => ({ type: 'icon', value: DISPLAY_ICONS.dmg, alt: 'damage' })))
+  }
 
   const compact = COMPACT_EFFECT_IDS.has(card.id)
   if (compact) tokens = tokens.filter((token) => token.type !== 'line-break')

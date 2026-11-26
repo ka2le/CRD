@@ -1,10 +1,10 @@
 # Abilities+NewCards
 
-Added locally on 2026-11-03. Select **Menu → Battle → Abilities+NewCards**, then choose Draft or Discard. This separate ruleset (`abilities-new-cards`) inherits all current Abilities main scoring, faction eligibility, bonuses, and shield immunity. Existing modes and their decks retain their rules.
+Added locally on 2026-11-03; now the normal ruleset. Choose Draft, 6draft or Discard in the menu; Testing also offers Secret Card Draft and 20Cards. This separate ruleset (`abilities-new-cards`) inherits all current Abilities main scoring, faction eligibility, bonuses, and shield immunity. Existing modes and their decks retain their rules.
 
 Adopted 2026-11-06: **From Nothing and Shield Ultimate are hidden from the deck and collection**, with their definitions and artwork retained for possible restoration. Critter Guard supplies one Critter stat and one shield. The NC pool has 9 Swarms, 8 ordinary Robot attacks, 5 basic Dragon stats and 7 ordinary Dragon attacks. Both Dragon double-damage attacks and Dragon shield immunity remain.
 
-The Regular deck has **73 cards**. Wild has **109**, including three of each enabled addition. Specialist and Critter Guard appear under Specials. Shield Is Damage uses shield × damage in every mode.
+The Regular deck has **73 cards**. Wild has **109**, including three of each enabled addition. Specialist and Critter Guard appear under Specials. Shield Is Damage prints shield × two damage icons and adds 2 neutral power per shield point, retaining its defensive shield effect. Regular 6draft uses the same 73-card total with the two stat swaps described in [Drafting](DRAFTING.md); Wild keeps its ordinary recipe.
 
 | Card | Rule |
 | --- | --- |
@@ -17,10 +17,10 @@ Both discard effects place cards in that player's existing Recycle pool and can 
 
 All four enabled additions use the normal draft/discard flow. Nothing activates on acquisition. Specialist scores during battle; Critter Guard is passive; the other two activate during preparation. Pending discard choices survive saves and are supported for both room seats.
 
-RolfBot, IngaBot, SvenBot and Felix are available in NC Draft. Selecting Felix uses the qualified FelixNC draft model and bounded native preparation (12,000 nodes, depth 8). NC Discard retains its mode-specific alternatives. Dan and David are excluded here. Headless states use `tabletop-single-score-v6-abilities-new-cards`.
+RolfBot, IngaBot, SvenBot and Felix are available in NC Draft. Selecting Felix uses the qualified FelixNC draft model and bounded native preparation (12,000 nodes, depth 8). NC Discard retains its mode-specific alternatives. Dan and David are excluded here. Headless states use `tabletop-single-score-v7-abilities-new-cards`.
 
 Validation: `npm run newcards:test`, existing tabletop/headless/opponent/room regressions, lint, assets check and production build. These verify mechanics and integration, not competitive balance. A development-only fixture is available at `?scenario=new-cards&rules=abilities-new-cards` (add `&mode=discard` for Discard preparation).
 
 Card faces use icons and numeric/formula symbols only, following the creator’s original card designs. Explanations belong in rules, collection, and press/inspect views; do not add prose labels or text banners to in-game cards. The original statless symbol is `0 → ★★`; draw/discard uses paired add-card and subtract-card icons.
 
-The hidden From Nothing definition retains its no-stat-card replacement (2 of each faction), and Shield Ultimate retains its 3 shields. These effects remain supported for archived fixtures and possible future restoration. Neither card appears in the current playable pool.
+The hidden From Nothing definition retains its no-stat-card replacement (2 Critter, 2 Robot and 2 Dragon stats), and Shield Ultimate retains its 3 shields. These effects remain supported for archived fixtures and possible future restoration. Neither card appears in the normal NC pool; a custom Monster recipe may explicitly enable them.

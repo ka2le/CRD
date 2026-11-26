@@ -11,42 +11,6 @@
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 0.1em 0.25em rgba(0, 0, 0, 0.65);
 }
 
-.ab-pc--c { background: radial-gradient(120% 90% at 60% 70%, #3c7a55 0%, #1f4b34 45%, var(--critter-deep) 100%); }
-.ab-pc--r { background: radial-gradient(120% 90% at 60% 70%, #3d5f96 0%, #22375f 45%, var(--robot-deep) 100%); }
-.ab-pc--d { background: radial-gradient(120% 90% at 60% 70%, #8e3d2a 0%, #5a241c 45%, var(--dragon-deep) 100%); }
-
-.ab-pc .ab-pc__wm {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  translate: -50% -50%;
-  font-size: 2em;
-  color: #fff;
-  opacity: 0.09;
-}
-
-.ab-pc__corner {
-  position: absolute;
-  left: 0.12em;
-  top: 0.12em;
-  display: flex;
-  align-items: center;
-  gap: 0.05em;
-  filter: drop-shadow(0 0.03em 0.05em rgba(0, 0, 0, 0.8));
-}
-
-.ab-pc .ab-pc__stat { font-size: 1.25em; color: #f2e8d2; }
-.ab-pc--r .ab-pc__stat { font-size: 1.02em; }
-.ab-pc .ab-pc__atk { font-size: 0.84em; color: #f2e8d2; }
-.ab-pc .ab-pc__heart { font-size: 0.68em; color: #e8676e; }
-
-.ab-pc__x {
-  margin: 0 0.04em;
-  font-family: var(--mono);
-  font-size: 0.46em;
-  color: #f2e8d2;
-}
-
 /* ---------- rule glyphs ---------- */
 .ab-rule {
   position: relative;
@@ -245,3 +209,22 @@
 .ab-cols__plus { font-family: var(--display); font-size: 24px; font-weight: 700; line-height: 1; color: var(--brass); }
 .ab-hearts { display: inline-grid; grid-template-columns: repeat(2, 1em); gap: 0.18em; font-size: 22px; color: #e0656c; filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.5)); }
 .ab-ledger.ab-flex .ab-name { margin-bottom: 8px; }
+
+/* Current reference cards share the played card faces and label the ruleset. */
+.ab-flex { display: flex; flex-direction: column; padding: 12px 16px; }
+.ab-rules-title { flex: none; text-align: center; font: 10px var(--mono); color: var(--brass-hi); padding: 2px 0 7px; }
+.ab-flex .ab-ledger__row, .ab-flex .ab-band { flex: 1; height: auto; min-height: 0; padding: 5px 42px 5px 0; }
+.ab-flex.ab-bands { padding: 12px 12px; }
+.ab-flex .ab-band { padding-left: 8px; border-radius: 4px; }
+.ab-flex .ab-pc { font-size: 13px; width: 3em; height: auto; aspect-ratio: 635 / 888; }
+.ab-flex .ab-rule { margin-top: 3px; gap: 5px; }
+.ab-flex .ab-name, .ab-flex .ab-band__name { font-size: 11px; letter-spacing: 0.04em; margin-bottom: 3px; }
+.ab-flex .ab-band__top .g-icon, .ab-flex .ab-name .g-icon { font-size: 19px; }
+.ab-flex .ab-tab { width: 30px; right: 0; font-size: 13px; padding: 7px 0; }
+.ab-note { display: block; position: relative; font-size: 9px; line-height: 1.25; margin-top: 4px; color: var(--t1); }
+.ab-monsters .ab-pc { font-size: 10px; }
+.ab-monsters .ab-vs__others { font-size: 19px; }
+.ab-monsters .ab-vs .ab-vs__c, .ab-monsters .ab-crowned .ab-crowned__who { font-size: 24px; }
+.ab-monsters .ab-crowned__crown { width: 18px; height: 14px; }
+.ab-band--m { background: var(--monster-deep); }
+.sc-monster { color: var(--monster); }

@@ -1,4 +1,6 @@
 /* Threshold score cards: reuse the ability-card rows, bands and shield tabs (AbilityCards.css). */
+.th-card.ab-ledger .ab-ledger__row { height: 126px; }
+.th-card.ab-bands > .ab-rules-title { padding-top: 12px; }
 .th-card .th-icon {
   position: relative;
   font-size: 30px;

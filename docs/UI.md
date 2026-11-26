@@ -2,6 +2,8 @@
 
 ## Required workflow and current conventions
 
+- **Rules use the game's faces and selected deck (26 November 2026).** Use `CardVisual` for card examples and `iconSources` for both printed and UI icons. Share mode-aware descriptions through `rulesPresentation`; Help, Copy rules and inspection must include the same enabled cards and actual copy counts as Collection, including custom Monster recipes. Label reference cards by ruleset and put the active family first; Monster references include its fourth faction. Example: Critter Guard appears with its stat and shield in help, Monster Specialist prints all four factions, and 20Cards explains its locked three-hand match. Source: creator's broad consistency and code-reuse request in this chat. Verify desktop, portrait and landscape with `scripts/rules-consistency-browser-smoke.mjs`.
+
 - **Shield Is Damage prints its full multiplier (24 November 2026).** In every Abilities Main rules variant and hand-building mode, show the existing shield × damage formula with two damage icons: each shield point gives 2 neutral power and still blocks. For example, one ordinary Shield gives 4 power; Critter Guard gives 2. Reuse `CardVisual`, `cardMeta`, `HelpSheet` and `rulesText` so played, inspected, collected and printed cards agree. Source: creator's adoption request after the 2,000-game paired Shield Is Damage test.
 
 - **Full collection is the print set (20 November 2026).** With Testing enabled, open **Full collection** from the menu to browse or print one set for Regular Abilities+NewCards Draft and 6draft. Share copies between recipes and use their tabletop faces. For example, include the fifth basic Dragon from Draft and the ninth basic Robot from 6draft. Source: creator’s physical collection request. Reuse `CollectionSheet` and the deck builder.
@@ -159,7 +161,7 @@ Card size is computed, not set by breakpoints (`hooks/useFitLayout.js`):
 - **Rails** (`hud/SideRail.jsx`): stat totals (class icon + count, dimmed at 0) and average damage per round. In battle the average is replaced by a 21-segment health bar, a shield badge, hit numbers and blocked numbers.
 - **Opponent rail:** a thinking indicator while the AI picks, progress pips (5 packs or 2 redraws), and the menu.
 - **Dock:** the deck pile, the discard pile (tap to browse it in a sheet), and the primary action: Redraw N / Keep, or Battle.
-- **Score card** (`overlay/ScoreSheet.jsx`): four visible cards: two Threshold and two Abilities (`abilities-main`) layouts. Main cards show Win Ties, Perfect Balance+3, Dragon7+→one extra stat and shield tabs−1/−2/0. Prototype components and artwork remain in source but are not mounted. Cards fit a grid on desktop and a swipe carousel on phones. Digital combat is unaffected.
+- **Score card** (`overlay/ScoreSheet.jsx`): four visible cards: two Threshold and two Abilities (`abilities-main`) layouts. The active tabletop family appears first, and each card labels its ruleset. Main cards use real card faces and show Win Ties, Perfect Balance+3 before shields, Dragon7+ total power→one extra stat and shield tabs−1/−1/0. Monsters adds its fourth faction with shield cost−1 and no faction bonus. Prototype components and artwork remain in source but are not mounted. Cards fit a grid on desktop and a swipe carousel on phones. Digital combat is unaffected.
 - **Pack:** the card the AI is about to take gets a rose reticle once the deal has landed. On desktop, hovering a pack card shows the change in your average damage per round.
 
 ## Animations

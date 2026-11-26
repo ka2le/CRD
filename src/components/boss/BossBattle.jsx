@@ -10,6 +10,7 @@ import ScreenMenu from '../menu/ScreenMenu'
 import Sheet from '../overlay/Sheet'
 import PileSheet from '../overlay/PileSheet'
 import ScoreSheet from '../overlay/ScoreSheet'
+import { AbilitiesMainHelp } from '../overlay/HelpSheet'
 import CollectionSheet from '../overlay/CollectionSheet'
 import { FactionChoices } from '../overlay/FactionPicker'
 import { GameIcon, SvgIcon } from '../ui/GameIcon'
@@ -345,8 +346,9 @@ export default function BossBattle({ onExit }) {
       <p>Each hero applies the boss’s shields using normal faction costs. Your shields add together against the boss. Team power = {options.weakerBonus ? 'higher score + twice the lower score' : 'Player 1 score + Player 2 score'}. Either hero can supply the Critter tiebreak; a Critter boss cancels it. All usual Robot and Dragon abilities apply.</p>
       <p>Pocket sits beside your name. Tap it, then tap a highlighted card to exchange immediately; Cancel leaves the cards in place. The other tools stay in your power strip. The round number appears briefly when a new round starts. Boss options holds presets, rules, replay controls and Jump to prep, which starts sample hands with Copy, Draw 2 and faction cards.</p>
       <p>These four encounters are a first prototype. Boss starting engines and difficulty are provisional.</p>
+      <div className="help"><AbilitiesMainHelp rules="abilities-new-cards" /></div>
     </div></Sheet>
-    <ScoreSheet open={panel === 'score'} onClose={() => setPanel(null)} />
+    <ScoreSheet open={panel === 'score'} onClose={() => setPanel(null)} tabletop="abilities-new-cards" />
     <Sheet open={panel === 'result' && Boolean(result)} title="Battle scores" onClose={() => setPanel(null)}>
       {result ? <BossScores result={result} hands={hands} monsterHand={monsterHand} bossName={boss.name} weakerBonus={options.weakerBonus} /> : null}
     </Sheet>

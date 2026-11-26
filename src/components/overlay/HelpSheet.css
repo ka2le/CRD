@@ -233,6 +233,7 @@
 .help__ability--critter { --lane: var(--critter); }
 .help__ability--robot { --lane: var(--robot); }
 .help__ability--dragon { --lane: var(--dragon); }
+.help__ability--monster { --lane: var(--monster); }
 
 .help__ability .help__lane-icon {
   grid-area: icon;
